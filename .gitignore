@@ -1,0 +1,38 @@
+CMakeLists.txt.user
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+Testing
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps
+CMakeUserPresets.json
+
+thirdParty/
+
+# Папки сборки
+bin/
+obj/
+build/
+dist/
+*.build/
+
+# Папки IDE
+.vs/
+.vscode/
+.idea/
+
+# Папки зависимостей
+packages/
+node_modules/
+
+# Логи
+logs/
+*.log
+
+# Временные файлы
+temp/
+tmp/
