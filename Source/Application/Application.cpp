@@ -13,7 +13,7 @@ namespace CE
     return std::chrono::duration<float>(currentTime - startTime).count();
   }
 
-  Application::Application()
+  Application::Application(AppInfo* info) : m_info{info}
   {
     CE_CORE_DEBUG("Application created");
   }
@@ -27,6 +27,8 @@ namespace CE
   {
     CE_CORE_DISPLAY("=== Initializing Application ===");
 
+    m_RenderSystem = std::make_unique<RenderSystem>(m_info);
+    m_RenderSystem->Initialize();
     // Создаем GameInstance
     m_GameInstance = std::make_unique<CEGameInstance>();
     m_GameInstance->Initialize();
@@ -84,6 +86,7 @@ namespace CE
         CE_CORE_DEBUG("Frames count reach 5 request exit");
         m_IsRunning = false;
       }
+      // m_IsRunning = m_RenderSystem->Shouldclose(); // uncomment after stop debug rendering
     }
   }
 
@@ -111,22 +114,19 @@ namespace CE
 
   void Application::Render()
   {
-    // Сбор данных для рендеринга
     m_RenderData.Clear();
 
-    // Получаем данные из текущего мира через GameInstance
     if (m_GameInstance && m_GameInstance->GetCurrentWorld())
     {
       m_GameInstance->GetCurrentWorld()->CollectRenderData(m_RenderData);
     }
 
-    // Рендеринг кадра
-    // if (m_Renderer) {
-    //     m_Renderer->DrawFrame(m_RenderData);
-    // }
+    if (m_RenderSystem)
+    {
+      m_RenderSystem->DrawFrame(m_RenderData);
+    }
 
-    // Временный вывод для отладки
-    if (m_FrameCount % 60 == 0)  // Каждую секунду при 60 FPS
+    if (m_FrameCount % 60 == 0)
     {
       CE_CORE_DEBUG("Rendering frame - Objects: ", m_RenderData.renderObjects.size());
     }
@@ -143,9 +143,10 @@ namespace CE
       m_GameInstance->Shutdown();
     }
 
-    // if (m_Renderer) {
-    //     m_Renderer->Shutdown();
-    // }
+    if (m_RenderSystem)
+    {
+      m_RenderSystem->Shutdown();
+    }
 
     CE_CORE_DISPLAY("=== Application Shutdown Complete ===");
   }

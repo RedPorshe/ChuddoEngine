@@ -1,4 +1,5 @@
 #include "Application/Application.h"
+#include "Core/AppInfo.h"
 #include "CoreMinimal.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(LogMyGame);
@@ -18,8 +19,10 @@ int main()
 
   CE_CORE_DISPLAY("=== ChuddoEngine Starting ===");
 
+  auto ApInfo = CE::AppInfo();
+
   // Вся логика теперь в Application
-  CE::Application app;
+  auto app = CE::Application(&ApInfo);
   app.Initialize();
   app.Run();
   app.Shutdown();

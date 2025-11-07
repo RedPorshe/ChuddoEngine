@@ -1,14 +1,16 @@
 #pragma once
+#include "Core/AppInfo.h"
 #include "CoreMinimal.h"
 #include "GameInstance/CEGameInstance.h"
 #include "Rendering/Data/RenderData.h"
+#include "Rendering/Vulkan/Integration/RenderSystem.h"
 
 namespace CE
 {
   class Application
   {
    public:
-    Application();
+    Application(AppInfo* info);
     ~Application();
 
     void Initialize();
@@ -33,9 +35,10 @@ namespace CE
 
    private:
     std::unique_ptr<CEGameInstance> m_GameInstance;
-
+    std::unique_ptr<RenderSystem> m_RenderSystem;
     CE::FrameRenderData m_RenderData;
-
+    // Application Info
+    AppInfo* m_info = nullptr;
     // Время и FPS
     float m_DeltaTime = 0.0f;
     float m_LastFrameTime = 0.0f;

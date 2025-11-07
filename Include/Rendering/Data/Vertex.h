@@ -1,6 +1,7 @@
 #pragma once
 #include <vulkan/vulkan.h>
 
+#include <array>
 #include <glm/glm.hpp>
 #include <vector>
 
@@ -10,16 +11,26 @@ namespace CE
   {
     glm::vec3 position;
     glm::vec3 normal;
+    glm::vec3 color;
     glm::vec2 texCoord;
-
+    Vertex()
+    {
+    }
     Vertex(const glm::vec3& pos, const glm::vec3& norm = glm::vec3(0.0f), const glm::vec2& uv = glm::vec2(0.0f))
         : position(pos), normal(norm), texCoord(uv)
     {
     }
 
-    // Для Vulkan нужно определить формат вершин
-    static std::vector<VkVertexInputBindingDescription> GetBindingDescriptions();
-    static std::vector<VkVertexInputAttributeDescription> GetAttributeDescriptions();
+    static VkVertexInputBindingDescription GetBindingDescription();
+
+    static std::array<VkVertexInputAttributeDescription, 4> GetAttributeDescriptions();
+    bool operator==(const Vertex& other) const
+    {
+      return position == other.position &&
+             normal == other.normal &&
+             color == other.color &&
+             texCoord == other.texCoord;
+    }
   };
 
   // Простой меш - массив вершин и индексов
