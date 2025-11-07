@@ -4,7 +4,7 @@ echo ================================
 echo    Checking Build Output
 echo ================================
 
-cd /d "D:\Projects\ChudEng\build\bin\Debug"
+cd /d "D:\Projects\ChuddoEngine\build\bin\Debug"
 
 echo Files in build\bin\Debug:
 dir

@@ -14,7 +14,6 @@ layout(binding = 0) uniform SceneUBO {
     mat4 view;
     mat4 proj;
     vec3 cameraPos;
-    float totalTime;
 } scene;
 
 layout(binding = 1) uniform ModelUBO {

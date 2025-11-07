@@ -4,7 +4,7 @@ echo ================================
 echo    Quick Rebuild
 echo ================================
 
-cd /d "D:\Projects\ChudEng"
+cd /d "D:\Projects\ChuddoEngine"
 
 :: Проверяем, запущен ли GameEngine.exe и завершаем его
 echo Checking for running GameEngine process...

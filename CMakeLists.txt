@@ -1,5 +1,32 @@
 cmake_minimum_required(VERSION 3.20)
+
+# Убираем сброс компиляторов - это вызывает предупреждения
+# Вместо этого используем find_program для надежного поиска
+
 project(GameEngine VERSION 1.0.0 LANGUAGES CXX)
+
+# Надежный поиск MinGW компиляторов
+if(WIN32)
+    find_program(MINGW_CXX_COMPILER 
+        NAMES g++ c++ x86_64-w64-mingw32-g++ 
+        PATHS "D:/mingw64/bin" "C:/mingw64/bin" 
+        NO_DEFAULT_PATH
+    )
+    find_program(MINGW_C_COMPILER 
+        NAMES gcc cc x86_64-w64-mingw32-gcc
+        PATHS "D:/mingw64/bin" "C:/mingw64/bin"
+        NO_DEFAULT_PATH
+    )
+    
+    if(MINGW_CXX_COMPILER AND MINGW_C_COMPILER)
+        set(CMAKE_CXX_COMPILER "${MINGW_CXX_COMPILER}" CACHE FILEPATH "C++ compiler" FORCE)
+        set(CMAKE_C_COMPILER "${MINGW_C_COMPILER}" CACHE FILEPATH "C compiler" FORCE)
+        message(STATUS "Using MinGW compilers: C=${MINGW_C_COMPILER}, CXX=${MINGW_CXX_COMPILER}")
+        set(MINGW TRUE CACHE BOOL "Using MinGW compiler")
+    else()
+        message(WARNING "MinGW compilers not found in standard paths")
+    endif()
+endif()
 
 # Добавьте это после project()
 if(NOT CMAKE_BUILD_TYPE)
@@ -7,6 +34,14 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
+message(STATUS "C++ compiler: ${CMAKE_CXX_COMPILER}")
+message(STATUS "C compiler: ${CMAKE_C_COMPILER}")
+
+# Определяем MINGW явно (альтернативный способ)
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND WIN32)
+    set(MINGW TRUE CACHE BOOL "Using MinGW compiler")
+    message(STATUS "MinGW compiler detected: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
+endif()
 
 # Определяем макросы в зависимости от типа сборки
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -39,6 +74,14 @@ set(EXTERNAL_DIR ${CMAKE_SOURCE_DIR}/thirdParty)
 
 # GLFW
 if(EXISTS ${EXTERNAL_DIR}/glfw/CMakeLists.txt)
+    # Исправляем пути для MinGW
+    if(MINGW)
+        set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Build the GLFW example programs")
+        set(GLFW_BUILD_TESTS OFF CACHE BOOL "Build the GLFW test programs")
+        set(GLFW_BUILD_DOCS OFF CACHE BOOL "Build the GLFW documentation")
+        set(GLFW_INSTALL OFF CACHE BOOL "Generate installation target")
+    endif()
+    
     add_subdirectory(${EXTERNAL_DIR}/glfw)
     set(GLFW_LIBRARY glfw)
     message(STATUS "Using bundled GLFW")
@@ -83,10 +126,10 @@ file(GLOB_RECURSE SOURCES
 add_executable(${ENGINE_NAME} ${SOURCES})
 
 # Отключаем консоль в Release версии (только для MinGW)
-if(CMAKE_BUILD_TYPE STREQUAL "Release")
+if(CMAKE_BUILD_TYPE STREQUAL "Release" AND MINGW)
     target_link_options(${ENGINE_NAME} PRIVATE -mwindows)
     message(STATUS "Console disabled for Release build (MinGW)")
-else()
+elseif(CMAKE_BUILD_TYPE STREQUAL "Debug" AND MINGW)
     message(STATUS "Console enabled for Debug build (MinGW)")
 endif()
 

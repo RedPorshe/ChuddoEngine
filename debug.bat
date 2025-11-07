@@ -4,7 +4,7 @@ echo ================================
 echo    Building DEBUG Version (MinGW)
 echo ================================
 
-cd /d "D:\Projects\ChudEng"
+cd /d "D:\Projects\ChuddoEngine"
 
 :: Проверяем, запущен ли GameEngine.exe и завершаем его
 tasklist /FI "IMAGENAME eq GameEngine.exe" 2>NUL | find /I /N "GameEngine.exe">NUL

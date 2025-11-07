@@ -4,7 +4,7 @@ echo ================================
 echo    Clean Extra Files (Both Versions)
 echo ================================
 
-cd /d "D:\Projects\ChudEng"
+cd /d "D:\Projects\ChuddoEngine"
 
 echo Cleaning Debug version...
 if exist "build\bin\Debug" (

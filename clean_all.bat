@@ -4,7 +4,7 @@ echo ================================
 echo    Complete Clean
 echo ================================
 
-cd /d "D:\Projects\ChudEng"
+cd /d "D:\Projects\ChuddoEngine"
 
 echo Removing all build files...
 if exist "build" (
