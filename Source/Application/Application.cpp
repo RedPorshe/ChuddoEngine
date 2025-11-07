@@ -1,10 +1,11 @@
 #include "Application/Application.h"
 
+#include <chrono>
+
 #include "test.h"  // Твой тестовый мир
 
 namespace CE
 {
-
   float CEGetCurrentTime()
   {
     static auto startTime = std::chrono::high_resolution_clock::now();
@@ -26,18 +27,29 @@ namespace CE
   {
     CE_CORE_DISPLAY("=== Initializing Application ===");
 
-    // Инициализация рендерера (пока заглушка)
-    // m_Renderer = std::make_unique<VulkanRenderer>();
-    // m_Renderer->Initialize();
+    // Создаем GameInstance
+    m_GameInstance = std::make_unique<CEGameInstance>();
+    m_GameInstance->Initialize();
 
-    // Создание мира
-    m_World = std::make_unique<GameWorld>();
+    // Создаем и настраиваем мир через GameInstance
+    m_GameInstance->CreateWorld("MainGameWorld");
+
+    // Настраиваем мир ДО загрузки
+    if (auto* world = m_GameInstance->GetWorld("MainGameWorld"))
+    {
+      auto testLevel = std::make_unique<TestWorld>();
+      world->AddLevel(std::move(testLevel));
+      world->SetCurrentLevel("TestWorld");
+    }
+
+    // ЗАГРУЖАЕМ мир после настройки
+    m_GameInstance->LoadWorld("MainGameWorld");
 
     // Настройка данных рендеринга
     m_RenderData.SetupDefaultLighting();
 
     // Запуск игрового процесса
-    m_World->BeginPlay();
+    m_GameInstance->BeginPlay();
 
     m_IsRunning = true;
     m_LastFrameTime = CEGetCurrentTime();
@@ -55,6 +67,7 @@ namespace CE
       ProcessInput();
       Update();
       Render();
+
       static int FRAMES = 0;
       // FPS счетчик
       m_FrameCount++;
@@ -89,15 +102,23 @@ namespace CE
 
   void Application::Update()
   {
-    // Обновление игровой логики
-    m_World->Tick(m_DeltaTime);
+    // Обновление игровой логики через GameInstance
+    if (m_GameInstance)
+    {
+      m_GameInstance->Tick(m_DeltaTime);
+    }
   }
 
   void Application::Render()
   {
     // Сбор данных для рендеринга
     m_RenderData.Clear();
-    m_World->CollectRenderData(m_RenderData);
+
+    // Получаем данные из текущего мира через GameInstance
+    if (m_GameInstance && m_GameInstance->GetCurrentWorld())
+    {
+      m_GameInstance->GetCurrentWorld()->CollectRenderData(m_RenderData);
+    }
 
     // Рендеринг кадра
     // if (m_Renderer) {
@@ -116,6 +137,11 @@ namespace CE
     CE_CORE_DISPLAY("=== Shutting Down Application ===");
 
     m_IsRunning = false;
+
+    if (m_GameInstance)
+    {
+      m_GameInstance->Shutdown();
+    }
 
     // if (m_Renderer) {
     //     m_Renderer->Shutdown();

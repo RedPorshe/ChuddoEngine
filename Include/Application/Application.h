@@ -1,8 +1,7 @@
 #pragma once
 #include "CoreMinimal.h"
-// #include "Renderer/VulkanRenderer.h"  // Будет позже
+#include "GameInstance/CEGameInstance.h"
 #include "Rendering/Data/RenderData.h"
-#include "World/CEWorld.h"
 
 namespace CE
 {
@@ -17,9 +16,9 @@ namespace CE
     void Shutdown();
 
     // Геттеры для доступа извне
-    CEWorld* GetWorld() const
+    CEGameInstance* GetGameInstance() const
     {
-      return m_World.get();
+      return m_GameInstance.get();
     }
     float GetDeltaTime() const
     {
@@ -33,8 +32,8 @@ namespace CE
     void Render();
 
    private:
-    std::unique_ptr<CEWorld> m_World;
-    // std::unique_ptr<VulkanRenderer> m_Renderer;
+    std::unique_ptr<CEGameInstance> m_GameInstance;
+
     CE::FrameRenderData m_RenderData;
 
     // Время и FPS
