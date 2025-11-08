@@ -35,7 +35,6 @@ void CE::VulkanContext::Initialize()
     return;
   }
 
-  // Создаем менеджеры через make_shared
   m_deviceManager = std::make_shared<DeviceManager>();
   if (!m_deviceManager->Initialize(m_instance, m_surface))
   {
@@ -44,7 +43,6 @@ void CE::VulkanContext::Initialize()
     return;
   }
 
-  // Create SwapchainManager
   m_swapchainManager = std::make_shared<SwapchainManager>(m_instance, m_surface, m_deviceManager);
   if (!m_swapchainManager->Initialize())
   {
@@ -69,11 +67,9 @@ void CE::VulkanContext::Initialize()
     return;
   }
 
-  // СНАЧАЛА СОЗДАЕМ UBO БУФЕРЫ
   m_bufferManager->CreateUniformBuffer(m_sceneUBOBufferName, sizeof(SceneUBO));
   m_bufferManager->CreateUniformBuffer(m_lightingUBOBufferName, sizeof(LightingUBO));
 
-  // ПОТОМ создаем DescriptorManager
   m_descriptorManager = std::make_shared<DescriptorManager>(m_deviceManager, m_bufferManager);
   if (!m_descriptorManager->Initialize())
   {
@@ -82,7 +78,6 @@ void CE::VulkanContext::Initialize()
     return;
   }
 
-  // Create descriptor sets
   VkDescriptorSetLayout pipelineLayout = m_pipelineManager->GetDescriptorSetLayout();
   if (!m_descriptorManager->CreateDescriptorSets(pipelineLayout, m_swapchainManager->GetImageCount()))
   {
@@ -129,17 +124,14 @@ void CE::VulkanContext::Shutdown()
     vkDeviceWaitIdle(m_deviceManager->GetDevice());
   }
 
-  // Очищаем объекты синхронизации
   CleanupSyncObjects();
 
-  // Очищаем все меши
   for (auto& [name, buffers] : m_meshBufferMap)
   {
     UnregisterMesh(name);
   }
   m_meshBufferMap.clear();
 
-  // Очищаем менеджеры
   if (m_descriptorManager)
   {
     m_descriptorManager->Shutdown();
@@ -218,10 +210,8 @@ void CE::VulkanContext::DrawFrame(const FrameRenderData& renderData)
 {
   VkDevice device = m_deviceManager->GetDevice();
 
-  // Ждем завершения предыдущего кадра
   vkWaitForFences(device, 1, &m_inFlightFences[m_currentFrame], VK_TRUE, UINT64_MAX);
 
-  // Получаем следующее изображение из свопчейна
   uint32_t imageIndex;
   VkResult result = vkAcquireNextImageKHR(device, m_swapchainManager->GetSwapchain(), UINT64_MAX,
                                           m_imageAvailableSemaphores[m_currentFrame], VK_NULL_HANDLE, &imageIndex);
@@ -238,23 +228,18 @@ void CE::VulkanContext::DrawFrame(const FrameRenderData& renderData)
     return;
   }
 
-  // Проверяем, не используется ли это изображение другим кадром
   if (m_imagesInFlight[imageIndex] != VK_NULL_HANDLE)
   {
     vkWaitForFences(device, 1, &m_imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
   }
   m_imagesInFlight[imageIndex] = m_inFlightFences[m_currentFrame];
 
-  // Сбрасываем fence
   vkResetFences(device, 1, &m_inFlightFences[m_currentFrame]);
 
-  // Обновляем UBO буферы
   UpdateUniformBuffers(renderData);
 
-  // Записываем командный буфер
   RecordCommandBuffer(imageIndex, renderData);
 
-  // Отправляем командный буфер
   VkSubmitInfo submitInfo{};
   submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
@@ -273,7 +258,6 @@ void CE::VulkanContext::DrawFrame(const FrameRenderData& renderData)
   result = vkQueueSubmit(m_deviceManager->GetGraphicsQueue(), 1, &submitInfo, m_inFlightFences[m_currentFrame]);
   VK_CHECK(result, "Failed to submit draw command buffer");
 
-  // Презентуем изображение
   VkPresentInfoKHR presentInfo{};
   presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
   presentInfo.waitSemaphoreCount = 1;
@@ -508,17 +492,13 @@ void CE::VulkanContext::RecordCommandBuffer(uint32_t imageIndex, const FrameRend
 
       std::string meshName = "mesh_" + std::to_string(reinterpret_cast<uintptr_t>(renderObject.mesh));
 
-      // Проверяем, зарегистрирован ли меш
       if (m_meshBufferMap.find(meshName) == m_meshBufferMap.end())
       {
-        // Регистрируем меш, если он еще не зарегистрирован
         RegisterMesh(meshName, *renderObject.mesh);
       }
 
-      // Получаем буферы для этого меша
       const auto& meshBuffers = m_meshBufferMap[meshName];
 
-      // ОБНОВЛЯЕМ ModelUBO для конкретного объекта (только данные, не дескрипторы!)
       ModelUBO modelUBO = renderData.GetModelUBO(renderObject.transform);
       m_bufferManager->UpdateUniformBuffer(meshBuffers.modelUBOName, &modelUBO, sizeof(ModelUBO));
 
@@ -527,7 +507,6 @@ void CE::VulkanContext::RecordCommandBuffer(uint32_t imageIndex, const FrameRend
 
       if (vertexBuffer != VK_NULL_HANDLE && indexBuffer != VK_NULL_HANDLE)
       {
-        // ПРИВЯЗЫВАЕМ ДЕСКРИПТОРНЫЙ НАБОР КОНКРЕТНОГО МЕША
         VkDescriptorSet descriptorSet = m_descriptorManager->GetMeshDescriptorSet(meshName);
         if (descriptorSet != VK_NULL_HANDLE)
         {
@@ -537,21 +516,13 @@ void CE::VulkanContext::RecordCommandBuffer(uint32_t imageIndex, const FrameRend
                                                      0, descriptorSets);
         }
 
-        // Привязываем vertex buffer
         std::vector<VkBuffer> vertexBuffers = {vertexBuffer};
         std::vector<VkDeviceSize> offsets = {0};
         m_commandBufferManager->BindVertexBuffers(imageIndex, 0, vertexBuffers, offsets);
-
-        // Привязываем index buffer
         m_commandBufferManager->BindIndexBuffer(imageIndex, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
-
-        // Рисуем индексированную геометрию
         m_commandBufferManager->DrawIndexed(imageIndex,
                                             static_cast<uint32_t>(renderObject.mesh->indices.size()),
                                             1, 0, 0, 0);
-
-        CE_RENDER_DEBUG("Drawn mesh: ", meshName,
-                        " with ", renderObject.mesh->indices.size(), " indices");
       }
     }
   }

@@ -2,6 +2,8 @@
 
 #include <stdexcept>
 
+#include "Rendering/Data/RenderData.h"
+
 namespace CE
 {
   DescriptorManager::DescriptorManager(std::shared_ptr<DeviceManager> deviceManager, std::shared_ptr<BufferManager> bufferManager)
@@ -21,7 +23,7 @@ namespace CE
     // Создаем пул дескрипторов
     std::array<VkDescriptorPoolSize, 3> poolSizes{};
     poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    poolSizes[0].descriptorCount = 100;  // Увеличиваем количество
+    poolSizes[0].descriptorCount = 100;
 
     poolSizes[1].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     poolSizes[1].descriptorCount = 100;
@@ -33,8 +35,7 @@ namespace CE
     poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
     poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
     poolInfo.pPoolSizes = poolSizes.data();
-    poolInfo.maxSets = 100;  // Увеличиваем максимальное количество наборов
-
+    poolInfo.maxSets = 100;
     VkResult result = vkCreateDescriptorPool(m_deviceManager->GetDevice(), &poolInfo, nullptr, &m_descriptorPool);
     VK_CHECK(result, "Failed to create descriptor pool");
 
@@ -110,7 +111,7 @@ namespace CE
     }
 
     m_meshDescriptorSets[meshName] = descriptorSet;
-    CE_RENDER_DEBUG("Created descriptor set for mesh '", meshName, "'");
+
     return true;
   }
 

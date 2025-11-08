@@ -2,6 +2,8 @@
 
 #include <stdexcept>
 
+#include "Rendering/Data/RenderData.h"
+
 namespace CE
 {
   BufferManager::BufferManager(std::shared_ptr<DeviceManager> deviceManager)

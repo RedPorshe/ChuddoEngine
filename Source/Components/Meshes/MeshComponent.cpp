@@ -80,7 +80,7 @@ namespace CE
 
     m_Mesh.vertices = vertices;
     m_Mesh.indices = indices;
-    m_Mesh.color = glm::vec3(1.0f, 0.5f, 0.2f);  // Оранжевый по умолчанию
+    m_Mesh.color = glm::vec3(.0f, 1.0f, 0.0f);  // Оранжевый по умолчанию
 
     CE_CORE_DEBUG("Created cube mesh for: ", GetName());
   }

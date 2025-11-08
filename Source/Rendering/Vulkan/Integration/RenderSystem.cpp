@@ -39,7 +39,6 @@ namespace CE
   {
     if (!m_initialized)
       return;
-
     m_vulkanContext->DrawFrame(renderData);
   }
 

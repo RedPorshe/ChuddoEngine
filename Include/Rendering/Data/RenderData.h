@@ -32,20 +32,20 @@ namespace CE
     glm::mat4 view;
     glm::mat4 proj;
     glm::vec3 cameraPos;
-    // Выравнивание до 256 байт
-    float padding[13];  // 16 floats * 4 bytes = 64 bytes (mat4=64, vec3=12, padding=52)
+
+    float padding[13];
   };
 
   struct ModelUBO
   {
     glm::mat4 model;
-    // Выравнивание
-    float padding[12];  // mat4=64 bytes
+
+    float padding[12];
   };
 
   struct LightingUBO
   {
-    glm::vec4 lightPositions[4];  // w=1 для позиций, w=0 для направлений
+    glm::vec4 lightPositions[4];
     glm::vec4 lightColors[4];
     float lightIntensities[4];
     glm::vec4 ambientColor;

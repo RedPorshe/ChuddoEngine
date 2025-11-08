@@ -87,7 +87,7 @@ namespace CE
         CE_CORE_DEBUG("Frames count reach 3 request exit");
         m_IsRunning = false;
       }
-      // m_IsRunning = !m_RenderSystem->ShouldClose();  // uncomment after stop debug rendering
+      m_IsRunning = !m_RenderSystem->ShouldClose();  // delete FRAMES and this after stop debug rendering
       m_RenderSystem->PollEvents();
     }
   }
@@ -102,7 +102,10 @@ namespace CE
   void Application::ProcessInput()
   {
     // Обработка ввода (позже)
-    // if (ShouldClose()) m_IsRunning = false;
+    if (m_RenderSystem->ShouldClose())
+    {
+      m_IsRunning = false;
+    }
   }
 
   void Application::Update()
@@ -126,11 +129,6 @@ namespace CE
     if (m_RenderSystem)
     {
       m_RenderSystem->DrawFrame(m_RenderData);
-    }
-
-    if (m_FrameCount % 60 == 0)
-    {
-      CE_CORE_DEBUG("Rendering frame - Objects: ", m_RenderData.renderObjects.size());
     }
   }
 

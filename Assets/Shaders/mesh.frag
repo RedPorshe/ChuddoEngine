@@ -28,21 +28,21 @@ layout(binding = 2) uniform LightingUBO {
 } lighting;
 
 void main() {
-    // Нормализуем нормаль и направление взгляда
+   
     vec3 normal = normalize(fragNormal);
     vec3 viewDir = normalize(scene.cameraPos - fragPos);
     
-    // Ambient компонент
+   
     vec3 ambient = lighting.ambientColor.rgb * lighting.ambientIntensity;
     
     vec3 result = vec3(0.0);
     
-    // Обрабатываем все источники света
+    
     for(int i = 0; i < lighting.lightCount; i++) {
-        // Вектор от поверхности к свету
-        vec3 lightDir = normalize(lighting.lightPositions[i].xyz - fragPos);
+       
+        vec3 lightDir = normalize(lighting.lightPositions[i].xyz - fragPos)*-1.0;
         
-        // Diffuse компонент (Lambert)
+       
         float diff = max(dot(normal, lightDir), 0.0);
         vec3 diffuse = diff * lighting.lightColors[i].rgb * lighting.lightIntensities[i];
         
@@ -51,5 +51,12 @@ void main() {
     
     // Финальный цвет = ambient + diffuse от всех источников
     vec3 finalColor = (ambient + result) * fragColor;
+    if(lighting.lightCount == 0)
+    {
+      outColor = vec4(fragColor , 1.0);
+
+    }
+    else {
     outColor = vec4(finalColor, 1.0);
+    }
 }

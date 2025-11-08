@@ -126,31 +126,26 @@ namespace CE
 
   bool PipelineManager::CreatePipelineLayout()
   {
-    // Описания связывания дескрипторов для UBO
     std::array<VkDescriptorSetLayoutBinding, 3> bindings{};
 
-    // SceneUBO (binding 0) - используется в vertex и fragment шейдерах
     bindings[0].binding = 0;
     bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     bindings[0].descriptorCount = 1;
     bindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
     bindings[0].pImmutableSamplers = nullptr;
 
-    // ModelUBO (binding 1) - используется только в vertex шейдере
     bindings[1].binding = 1;
     bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     bindings[1].descriptorCount = 1;
     bindings[1].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
     bindings[1].pImmutableSamplers = nullptr;
 
-    // LightingUBO (binding 2) - используется в vertex и fragment шейдерах
     bindings[2].binding = 2;
     bindings[2].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     bindings[2].descriptorCount = 1;
     bindings[2].stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
     bindings[2].pImmutableSamplers = nullptr;
 
-    // Создаем layout дескрипторного набора
     VkDescriptorSetLayoutCreateInfo layoutInfo{};
     layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
     layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
@@ -205,7 +200,6 @@ namespace CE
       const PipelineConfigInfo& configInfo,
       const std::vector<VkPipelineShaderStageCreateInfo>& shaderStages)
   {
-    // Вершинный input
     auto bindingDescription = Vertex::GetBindingDescription();
     auto attributeDescriptions = Vertex::GetAttributeDescriptions();
 
@@ -233,7 +227,6 @@ namespace CE
     viewportInfo.pViewports = &viewport;
     viewportInfo.pScissors = &scissor;
 
-    // Собираем информацию для создания пайплайна
     VkGraphicsPipelineCreateInfo pipelineInfo{};
     pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
     pipelineInfo.stageCount = static_cast<uint32_t>(shaderStages.size());
@@ -317,12 +310,12 @@ namespace CE
     // Depth Stencil
     configInfo.depthStencilInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
     configInfo.depthStencilInfo.depthTestEnable = VK_FALSE;
-    configInfo.depthStencilInfo.depthWriteEnable = VK_TRUE;
+    configInfo.depthStencilInfo.depthWriteEnable = VK_FALSE;
     configInfo.depthStencilInfo.depthCompareOp = VK_COMPARE_OP_LESS;
     configInfo.depthStencilInfo.depthBoundsTestEnable = VK_FALSE;
     configInfo.depthStencilInfo.minDepthBounds = 0.0f;
     configInfo.depthStencilInfo.maxDepthBounds = 1.0f;
-    configInfo.depthStencilInfo.stencilTestEnable = VK_TRUE;
+    configInfo.depthStencilInfo.stencilTestEnable = VK_FALSE;
 
     // Color Blending
     configInfo.colorBlendAttachment.colorWriteMask =
