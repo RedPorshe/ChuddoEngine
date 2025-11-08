@@ -27,8 +27,6 @@ namespace CE
     for (auto& [name, component] : m_Components)
     {
       component->Update(DeltaTime);
-      FString ownerName = m_Owner ? m_Owner->GetName() : "None";
-      CE_CORE_DEBUG("Updating: ", component->GetName(), " for ", ownerName, " DeltaTime: ", DeltaTime);
     }
   }
 

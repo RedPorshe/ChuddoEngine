@@ -187,9 +187,8 @@ namespace CE
       camData.viewMatrix = camera->GetViewMatrix();
       camData.projectionMatrix = camera->GetProjectionMatrix();
       camData.position = camera->GetWorldLocation();
-      auto loca = camera->GetWorldLocation();
+
       renderData.SetCameraData(camData);
-      CE_CORE_DEBUG("Camera found at location : x", loca.x, " , y", loca.y, " , z", loca.z);
     }
     else
     {
@@ -219,15 +218,22 @@ namespace CE
         renderObj.mesh = &meshComp->GetMeshData();
         renderObj.transform = meshComp->GetRenderTransform();
         renderObj.color = meshComp->GetColor();
-        auto LOCA = meshComp->GetWorldLocation();
+
         renderData.AddRenderObject(renderObj);
-        CE_CORE_DEBUG("Added mesh for actor: ", actor->GetName(),
-                      " at position: x", LOCA.x, " , y", LOCA.y, " , z", LOCA.z);
       }
     }
 
-    CE_CORE_DEBUG("Collected ", renderData.renderObjects.size(),
-                  " render objects and camera data");
+    renderData.lighting.ambientColor = glm::vec4(0.2f, 0.2f, 0.2f, 1.0f);  // Серый ambient
+    renderData.lighting.ambientIntensity = 0.3f;
+
+    // Добавляем источник света
+    renderData.lighting.lightCount = 1;
+    renderData.lighting.lightPositions[0] = glm::vec4(0.0f, 5.0f, 5.0f, 1.0f);  // Позиция света
+    renderData.lighting.lightColors[0] = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);     // Белый свет
+    renderData.lighting.lightIntensities[0] = 1.0f;                             // Интенсивность
+
+    // CE_CORE_DEBUG("Collected ", renderData.renderObjects.size(),
+    //               " render objects and camera data");
   }
 
 }  // namespace CE

@@ -20,6 +20,11 @@ namespace CE
         : position(pos), normal(norm), texCoord(uv)
     {
     }
+    Vertex(const glm::vec3& pos, const glm::vec3& norm = glm::vec3(0.0f),
+           const glm::vec3& col = glm::vec3(1.0f), const glm::vec2& uv = glm::vec2(0.0f))
+        : position(pos), normal(norm), color(col), texCoord(uv)
+    {
+    }
 
     static VkVertexInputBindingDescription GetBindingDescription();
 

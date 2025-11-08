@@ -1,6 +1,6 @@
 #pragma once
-
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 #include "CoreMinimal.h"
@@ -11,20 +11,42 @@
 
 namespace CE
 {
+  // Конфигурация пайплайна по умолчанию
+  struct PipelineConfigInfo
+  {
+    VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo{};
+    VkPipelineRasterizationStateCreateInfo rasterizationInfo{};
+    VkPipelineMultisampleStateCreateInfo multisampleInfo{};
+    VkPipelineDepthStencilStateCreateInfo depthStencilInfo{};
+    VkPipelineViewportStateCreateInfo viewportInfo{};
+    VkPipelineColorBlendStateCreateInfo colorBlendInfo{};
+    VkPipelineColorBlendAttachmentState colorBlendAttachment{};
+    std::vector<VkDynamicState> dynamicStateEnables;
+    VkPipelineDynamicStateCreateInfo dynamicStateInfo{};
+
+    VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
+    VkRenderPass renderPass = VK_NULL_HANDLE;
+    uint32_t subpass = 0;
+  };
+
   class PipelineManager
   {
    public:
-    PipelineManager(std::shared_ptr<DeviceManager> deviceManager, std::shared_ptr<SwapchainManager> swapchainManager);
+    PipelineManager(std::shared_ptr<DeviceManager> deviceManager);
     ~PipelineManager();
 
-    bool Initialize();
-    void Cleanup();
+    // Удаляем копирование
+    PipelineManager(const PipelineManager&) = delete;
+    PipelineManager& operator=(const PipelineManager&) = delete;
 
-    // Getters
-    VkPipeline GetGraphicsPipeline() const
-    {
-      return m_graphicsPipeline;
-    }
+    bool Initialize();
+    void Shutdown();
+
+    // Создание пайплайна для мешей
+    VkPipeline CreateMeshPipeline(const std::string& name, VkRenderPass renderPass);
+
+    // Получение пайплайна по имени
+    VkPipeline GetPipeline(const std::string& name) const;
     VkPipelineLayout GetPipelineLayout() const
     {
       return m_pipelineLayout;
@@ -33,19 +55,32 @@ namespace CE
     {
       return m_descriptorSetLayout;
     }
+    // Статические методы для конфигурации
+    static void DefaultPipelineConfigInfo(PipelineConfigInfo& configInfo);
+    static void EnableAlphaBlending(PipelineConfigInfo& configInfo);
 
    private:
-    void CreateDescriptorSetLayout();
-    void CreateGraphicsPipeline();
+    bool CreatePipelineLayout();
+    void DestroyPipelineLayout();
+
+    VkPipeline CreateGraphicsPipeline(
+        const PipelineConfigInfo& configInfo,
+        const std::vector<VkPipelineShaderStageCreateInfo>& shaderStages);
 
     VkShaderModule CreateShaderModule(const std::vector<char>& code);
+    std::vector<char> ReadShaderFile(const std::string& filename);
 
    private:
     std::shared_ptr<DeviceManager> m_deviceManager;
-    std::shared_ptr<SwapchainManager> m_swapchainManager;
 
-    VkPipeline m_graphicsPipeline = VK_NULL_HANDLE;
     VkPipelineLayout m_pipelineLayout = VK_NULL_HANDLE;
+    std::unordered_map<std::string, VkPipeline> m_pipelines;
+
+    // Дескрипторные наборы для UBO
     VkDescriptorSetLayout m_descriptorSetLayout = VK_NULL_HANDLE;
+
+    // Стандартные шейдеры для мешей
+    static constexpr const char* VERTEX_SHADER_PATH = "Assets/shaders/mesh_vert.spv";
+    static constexpr const char* FRAGMENT_SHADER_PATH = "Assets/shaders/mesh_frag.spv";
   };
 }  // namespace CE

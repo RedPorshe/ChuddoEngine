@@ -12,7 +12,6 @@ namespace CE
   RenderSystem::~RenderSystem()
   {
     Shutdown();
-    delete m_vulkanContext;
   }
 
   void RenderSystem::Initialize()
@@ -49,3 +48,8 @@ namespace CE
     return m_vulkanContext ? m_vulkanContext->ShouldClose() : true;
   }
 }  // namespace CE
+void CE::RenderSystem::PollEvents()
+{
+  m_vulkanContext->Pollevents();
+}
+// namespace CE

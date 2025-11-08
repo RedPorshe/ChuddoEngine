@@ -102,11 +102,11 @@ namespace CE
     void SetupDefaultLighting()
     {
       lighting.lightCount = 1;
-      lighting.lightPositions[0] = glm::vec4(2.0f, 5.0f, 2.0f, 1.0f);  // Точечный свет
+      lighting.lightPositions[0] = glm::vec4(0.0f, 5.0f, 5.0f, 1.0f);  // Точечный свет
       lighting.lightColors[0] = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);     // Белый свет
       lighting.lightIntensities[0] = 1.0f;
-      lighting.ambientColor = glm::vec4(0.1f, 0.1f, 0.1f, 1.0f);  // Слабый ambient
-      lighting.ambientIntensity = 0.1f;
+      lighting.ambientColor = glm::vec4(0.2f, 0.2f, 0.2f, 1.0f);  // Слабый ambient
+      lighting.ambientIntensity = 0.3f;
     }
   };
 }  // namespace CE

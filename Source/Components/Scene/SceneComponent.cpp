@@ -13,7 +13,6 @@ namespace CE
   {
     m_RelativeLocation = Position;
     UpdateTransformMatrix();
-    CE_CORE_DEBUG("Position set to: ", m_RelativeLocation.x, " , ", m_RelativeLocation.y, " , ", m_RelativeLocation.z);
   }
 
   void SceneComponent::SetPosition(float X, float Y, float Z)
@@ -25,7 +24,6 @@ namespace CE
   {
     m_RelativeRotation = Rotation;
     UpdateTransformMatrix();
-    CE_CORE_DEBUG("Rotation set to: ", m_RelativeRotation.x, " , ", m_RelativeRotation.y, " , ", m_RelativeRotation.z);
   }
 
   void SceneComponent::SetRotation(float Pitch, float Yaw, float Roll)
@@ -37,7 +35,6 @@ namespace CE
   {
     m_RelativeScale = Scale;
     UpdateTransformMatrix();
-    CE_CORE_DEBUG("Scale set to: ", m_RelativeScale.x, " , ", m_RelativeScale.y, " , ", m_RelativeScale.z);
   }
 
   void SceneComponent::SetScale(float X, float Y, float Z)
@@ -65,8 +62,6 @@ namespace CE
     m_Parent = Parent;
     if (m_Parent)
       m_Parent->AddChild(this);
-
-    CE_CORE_DEBUG("Component : ", GetName(), "  attached to  ", m_Parent ? m_Parent->GetName() : " null ");
   }
 
   void SceneComponent::DetachFromParent()
@@ -124,6 +119,5 @@ namespace CE
   void SceneComponent::Update(float DeltaTime)
   {
     CEComponent::Update(DeltaTime);
-    CE_CORE_DEBUG("SceneComponent updating: ", GetName(), " for ", m_Owner->GetName(), " World Pos: ", m_WorldLocation.x, " , ", m_WorldLocation.y, " , ", m_WorldLocation.z);
   }
 }  // namespace CE

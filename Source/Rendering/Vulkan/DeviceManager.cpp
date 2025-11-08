@@ -23,10 +23,6 @@ namespace CE
     }
   }
 
-  DeviceManager::DeviceManager()
-  {
-  }
-
   bool DeviceManager::Initialize(VkInstance instance, VkSurfaceKHR surface)
   {
     if (!PickPhysicalDevice(instance, surface))
@@ -79,15 +75,25 @@ namespace CE
 
       // Check for presentation support
       VkBool32 presentSupport = false;
-      vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
-      if (presentSupport)
+      if (surface != VK_NULL_HANDLE)
       {
-        indices.presentFamily = i;
+        vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
+        if (presentSupport)
+        {
+          indices.presentFamily = i;
+        }
+      }
+      else
+      {
+        // Если surface не предоставлен, используем ту же очередь что и для графики
+        indices.presentFamily = indices.graphicsFamily;
       }
 
-      // Early exit if we found all required queue families
-      if (indices.IsComplete())
+      if (indices.graphicsFamily != UINT32_MAX &&
+          (surface == VK_NULL_HANDLE || indices.presentFamily != UINT32_MAX))
       {
+        m_queueIndices.graphicsFamily = indices.graphicsFamily;
+        m_queueIndices.presentFamily = indices.presentFamily;
         break;
       }
     }

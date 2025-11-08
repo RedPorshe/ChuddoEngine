@@ -30,6 +30,7 @@ namespace CE
     {
       return m_info->Height;
     }
+    void PollEvents();
 
    private:
     AppInfo* m_info = nullptr;

@@ -1,19 +1,22 @@
 #version 450
 #extension GL_ARB_separate_shader_objects : enable
 
-// ВХОДНЫЕ ДАННЫЕ ИЗ ВЕРШИННОГО ШЕЙДЕРА
 layout(location = 0) in vec3 fragColor;
 layout(location = 1) in vec3 fragNormal;
 layout(location = 2) in vec3 fragPos;
 
 layout(location = 0) out vec4 outColor;
 
-// UNIFORM БУФЕРЫ
 layout(binding = 0) uniform SceneUBO {
     mat4 view;
     mat4 proj;
     vec3 cameraPos;
 } scene;
+
+// ModelUBO удален из fragment шейдера - он нужен только в vertex
+// layout(binding = 1) uniform ModelUBO {
+//     mat4 model;
+// } model;
 
 layout(binding = 2) uniform LightingUBO {
     vec4 lightPositions[4];

@@ -21,10 +21,12 @@ layout(binding = 1) uniform ModelUBO {
 } model;
 
 void main() {
-    vec4 worldPos = model.model * vec4(inPosition, 1.0);
-    gl_Position = scene.proj * scene.view * worldPos;
+     vec4 worldPosition = model.model * vec4(inPosition, 1.0);
+    gl_Position = scene.proj * scene.view * worldPosition;
     
     fragColor = inColor;
-    fragNormal = mat3(model.model) * inNormal;
-    fragPos = worldPos.xyz;
+    
+    // ПРАВИЛЬНОЕ преобразование нормалей
+    fragNormal = mat3(transpose(inverse(model.model))) * inNormal;
+    fragPos = worldPosition.xyz;
 }

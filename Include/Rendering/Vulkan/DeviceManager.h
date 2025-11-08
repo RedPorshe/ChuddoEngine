@@ -1,5 +1,6 @@
 #pragma once
 #include <map>
+#include <memory>
 #include <set>
 #include <vector>
 
@@ -23,8 +24,12 @@ namespace CE
   class DeviceManager
   {
    public:
-    DeviceManager();
+    DeviceManager() = default;
     ~DeviceManager() = default;
+
+    // Удаляем копирование
+    DeviceManager(const DeviceManager&) = delete;
+    DeviceManager& operator=(const DeviceManager&) = delete;
 
     bool Initialize(VkInstance instance, VkSurfaceKHR surface);
     void Shutdown();
@@ -46,8 +51,12 @@ namespace CE
     {
       return m_presentQueue;
     }
-
-    QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface);
+    QueueFamilyIndices& getIndices()
+    {
+      return m_queueIndices;
+    }
+    QueueFamilyIndices
+    FindQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface);
 
    private:
     bool PickPhysicalDevice(VkInstance instance, VkSurfaceKHR surface);
@@ -61,7 +70,7 @@ namespace CE
     VkDevice m_device = VK_NULL_HANDLE;
     VkQueue m_graphicsQueue = VK_NULL_HANDLE;
     VkQueue m_presentQueue = VK_NULL_HANDLE;
-
+    QueueFamilyIndices m_queueIndices;
     const std::vector<const char*> m_deviceExtensions = {
         VK_KHR_SWAPCHAIN_EXTENSION_NAME};
   };

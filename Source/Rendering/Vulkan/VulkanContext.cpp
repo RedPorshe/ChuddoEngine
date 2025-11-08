@@ -1,8 +1,6 @@
 #include "Rendering/Vulkan/VulkanContext.h"
 
-CE::VulkanContext::VulkanContext(AppInfo* info) : m_info{info}
-{
-}
+#include <GLFW/glfw3.h>
 
 CE::VulkanContext::VulkanContext(AppInfo* info) : m_info{info}
 {
@@ -29,6 +27,7 @@ void CE::VulkanContext::Initialize()
     Shutdown();
     return;
   }
+
   if (!CreateSurface())
   {
     CE_RENDER_ERROR("Failed to Create Surface");
@@ -36,7 +35,7 @@ void CE::VulkanContext::Initialize()
     return;
   }
 
-  // Используем make_shared вместо make_unique
+  // Создаем менеджеры через make_shared
   m_deviceManager = std::make_shared<DeviceManager>();
   if (!m_deviceManager->Initialize(m_instance, m_surface))
   {
@@ -54,14 +53,71 @@ void CE::VulkanContext::Initialize()
     return;
   }
 
-  // Create PipelineManager
-  m_pipelineManager = std::make_shared<PipelineManager>(m_deviceManager, m_swapchainManager);
+  m_pipelineManager = std::make_shared<PipelineManager>(m_deviceManager);
   if (!m_pipelineManager->Initialize())
   {
     CE_RENDER_ERROR("Failed to initialize PipelineManager");
     Shutdown();
     return;
   }
+
+  m_bufferManager = std::make_shared<BufferManager>(m_deviceManager);
+  if (!m_bufferManager->Initialize())
+  {
+    CE_RENDER_ERROR("Failed to initialize BufferManager");
+    Shutdown();
+    return;
+  }
+
+  // СНАЧАЛА СОЗДАЕМ UBO БУФЕРЫ
+  m_bufferManager->CreateUniformBuffer(m_sceneUBOBufferName, sizeof(SceneUBO));
+  m_bufferManager->CreateUniformBuffer(m_lightingUBOBufferName, sizeof(LightingUBO));
+
+  // ПОТОМ создаем DescriptorManager
+  m_descriptorManager = std::make_shared<DescriptorManager>(m_deviceManager, m_bufferManager);
+  if (!m_descriptorManager->Initialize())
+  {
+    CE_RENDER_ERROR("Failed to initialize DescriptorManager");
+    Shutdown();
+    return;
+  }
+
+  // Create descriptor sets
+  VkDescriptorSetLayout pipelineLayout = m_pipelineManager->GetDescriptorSetLayout();
+  if (!m_descriptorManager->CreateDescriptorSets(pipelineLayout, m_swapchainManager->GetImageCount()))
+  {
+    CE_RENDER_ERROR("Failed to create descriptor sets");
+    Shutdown();
+    return;
+  }
+
+  // Create CommandBufferManager
+  m_commandBufferManager = std::make_shared<CommandBufferManager>(m_deviceManager);
+  if (!m_commandBufferManager->Initialize())
+  {
+    CE_RENDER_ERROR("Failed to initialize CommandBufferManager");
+    Shutdown();
+    return;
+  }
+
+  // Create command buffers for swapchain images
+  if (!m_commandBufferManager->CreateCommandBuffers(m_swapchainManager->GetImageCount()))
+  {
+    CE_RENDER_ERROR("Failed to create command buffers");
+    Shutdown();
+    return;
+  }
+
+  // Create default mesh pipeline
+  if (!m_pipelineManager->CreateMeshPipeline("mesh", m_swapchainManager->GetRenderPass()))
+  {
+    CE_RENDER_ERROR("Failed to create mesh pipeline");
+    Shutdown();
+    return;
+  }
+
+  // Создаем объекты синхронизации
+  CreateSyncObjects();
 
   CE_RENDER_DEBUG("VulkanContext initialized successfully");
 }
@@ -73,9 +129,38 @@ void CE::VulkanContext::Shutdown()
     vkDeviceWaitIdle(m_deviceManager->GetDevice());
   }
 
+  // Очищаем объекты синхронизации
+  CleanupSyncObjects();
+
+  // Очищаем все меши
+  for (auto& [name, buffers] : m_meshBufferMap)
+  {
+    UnregisterMesh(name);
+  }
+  m_meshBufferMap.clear();
+
+  // Очищаем менеджеры
+  if (m_descriptorManager)
+  {
+    m_descriptorManager->Shutdown();
+    m_descriptorManager.reset();
+  }
+
+  if (m_commandBufferManager)
+  {
+    m_commandBufferManager->Shutdown();
+    m_commandBufferManager.reset();
+  }
+
+  if (m_bufferManager)
+  {
+    m_bufferManager->Shutdown();
+    m_bufferManager.reset();
+  }
+
   if (m_pipelineManager)
   {
-    m_pipelineManager->Cleanup();
+    m_pipelineManager->Shutdown();
     m_pipelineManager.reset();
   }
 
@@ -97,6 +182,7 @@ void CE::VulkanContext::Shutdown()
     CE_RENDER_DEBUG("Surface destroyed");
     m_surface = VK_NULL_HANDLE;
   }
+
   // Cleanup debug messenger
   if (bIsValidationEnabled && m_debugMessenger != VK_NULL_HANDLE)
   {
@@ -130,13 +216,363 @@ void CE::VulkanContext::Shutdown()
 
 void CE::VulkanContext::DrawFrame(const FrameRenderData& renderData)
 {
-  CE_RENDER_DEBUG("render in stub mode; render data object count : ", renderData.renderObjects.size());
-  CE_RENDER_DEBUG("Vulkan would render: ", renderData.renderObjects.size(),
-                  " objects with camera at (",
-                  renderData.camera.position.x, ", ",
-                  renderData.camera.position.y, ", ",
-                  renderData.camera.position.z, ")");
-  glfwPollEvents();
+  VkDevice device = m_deviceManager->GetDevice();
+
+  // Ждем завершения предыдущего кадра
+  vkWaitForFences(device, 1, &m_inFlightFences[m_currentFrame], VK_TRUE, UINT64_MAX);
+
+  // Получаем следующее изображение из свопчейна
+  uint32_t imageIndex;
+  VkResult result = vkAcquireNextImageKHR(device, m_swapchainManager->GetSwapchain(), UINT64_MAX,
+                                          m_imageAvailableSemaphores[m_currentFrame], VK_NULL_HANDLE, &imageIndex);
+
+  if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || m_frameBufferResized)
+  {
+    m_frameBufferResized = false;
+    m_swapchainManager->RecreateSwapchain();
+    return;
+  }
+  else if (result != VK_SUCCESS)
+  {
+    CE_RENDER_ERROR("Failed to acquire swap chain image");
+    return;
+  }
+
+  // Проверяем, не используется ли это изображение другим кадром
+  if (m_imagesInFlight[imageIndex] != VK_NULL_HANDLE)
+  {
+    vkWaitForFences(device, 1, &m_imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
+  }
+  m_imagesInFlight[imageIndex] = m_inFlightFences[m_currentFrame];
+
+  // Сбрасываем fence
+  vkResetFences(device, 1, &m_inFlightFences[m_currentFrame]);
+
+  // Обновляем UBO буферы
+  UpdateUniformBuffers(renderData);
+
+  // Записываем командный буфер
+  RecordCommandBuffer(imageIndex, renderData);
+
+  // Отправляем командный буфер
+  VkSubmitInfo submitInfo{};
+  submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+  VkSemaphore waitSemaphores[] = {m_imageAvailableSemaphores[m_currentFrame]};
+  VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+  submitInfo.waitSemaphoreCount = 1;
+  submitInfo.pWaitSemaphores = waitSemaphores;
+  submitInfo.pWaitDstStageMask = waitStages;
+  submitInfo.commandBufferCount = 1;
+  submitInfo.pCommandBuffers = &m_commandBufferManager->GetCommandBuffers()[imageIndex];
+
+  VkSemaphore signalSemaphores[] = {m_renderFinishedSemaphores[m_currentFrame]};
+  submitInfo.signalSemaphoreCount = 1;
+  submitInfo.pSignalSemaphores = signalSemaphores;
+
+  result = vkQueueSubmit(m_deviceManager->GetGraphicsQueue(), 1, &submitInfo, m_inFlightFences[m_currentFrame]);
+  VK_CHECK(result, "Failed to submit draw command buffer");
+
+  // Презентуем изображение
+  VkPresentInfoKHR presentInfo{};
+  presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+  presentInfo.waitSemaphoreCount = 1;
+  presentInfo.pWaitSemaphores = signalSemaphores;
+
+  VkSwapchainKHR swapChains[] = {m_swapchainManager->GetSwapchain()};
+  presentInfo.swapchainCount = 1;
+  presentInfo.pSwapchains = swapChains;
+  presentInfo.pImageIndices = &imageIndex;
+  presentInfo.pResults = nullptr;
+
+  result = vkQueuePresentKHR(m_deviceManager->GetPresentQueue(), &presentInfo);
+
+  if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || m_frameBufferResized)
+  {
+    m_frameBufferResized = false;
+    m_swapchainManager->RecreateSwapchain();
+  }
+  else if (result != VK_SUCCESS)
+  {
+    CE_RENDER_ERROR("Failed to present swap chain image");
+  }
+
+  m_currentFrame = (m_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+}
+
+void CE::VulkanContext::RegisterMesh(const std::string& name, const StaticMesh& mesh)
+{
+  // Создаем vertex buffer
+  std::string vertexBufferName = name + "_vertices";
+  if (!m_bufferManager->CreateVertexBuffer(vertexBufferName, mesh.vertices))
+  {
+    CE_RENDER_ERROR("Failed to create vertex buffer for mesh: ", name);
+    return;
+  }
+
+  // Создаем index buffer
+  std::string indexBufferName = name + "_indices";
+  if (!m_bufferManager->CreateIndexBuffer(indexBufferName, mesh.indices))
+  {
+    CE_RENDER_ERROR("Failed to create index buffer for mesh: ", name);
+    m_bufferManager->DestroyBuffer(vertexBufferName);
+    return;
+  }
+
+  // Создаем ModelUBO буфер для этого меша
+  std::string modelUBOName = name + "_model_ubo";
+  if (!m_bufferManager->CreateUniformBuffer(modelUBOName, sizeof(ModelUBO)))
+  {
+    CE_RENDER_ERROR("Failed to create model UBO for mesh: ", name);
+    m_bufferManager->DestroyBuffer(vertexBufferName);
+    m_bufferManager->DestroyBuffer(indexBufferName);
+    return;
+  }
+
+  VkDescriptorSetLayout pipelineLayout = m_pipelineManager->GetDescriptorSetLayout();
+  if (!m_descriptorManager->CreateMeshDescriptorSet(name, pipelineLayout))
+  {
+    CE_RENDER_ERROR("Failed to create descriptor set for mesh: ", name);
+    m_bufferManager->DestroyBuffer(vertexBufferName);
+    m_bufferManager->DestroyBuffer(indexBufferName);
+    m_bufferManager->DestroyBuffer(modelUBOName);
+    return;
+  }
+
+  // ОБНОВЛЯЕМ ДЕСКРИПТОРНЫЙ НАБОР С БУФЕРАМИ
+  if (!m_descriptorManager->UpdateMeshDescriptorSet(name,
+                                                    m_sceneUBOBufferName,
+                                                    modelUBOName,
+                                                    m_lightingUBOBufferName))
+  {
+    CE_RENDER_ERROR("Failed to update descriptor set for mesh: ", name);
+    m_bufferManager->DestroyBuffer(vertexBufferName);
+    m_bufferManager->DestroyBuffer(indexBufferName);
+    m_bufferManager->DestroyBuffer(modelUBOName);
+    return;
+  }
+
+  // Сохраняем mapping
+  MeshBuffers buffers;
+  buffers.vertexBufferName = vertexBufferName;
+  buffers.indexBufferName = indexBufferName;
+  buffers.modelUBOName = modelUBOName;
+  m_meshBufferMap[name] = buffers;
+
+  CE_RENDER_DEBUG("Registered mesh: ", name, " with ", mesh.vertices.size(), " vertices and ", mesh.indices.size(), " indices");
+}
+
+void CE::VulkanContext::UnregisterMesh(const std::string& name)
+{
+  auto it = m_meshBufferMap.find(name);
+  if (it != m_meshBufferMap.end())
+  {
+    const auto& buffers = it->second;
+    m_bufferManager->DestroyBuffer(buffers.vertexBufferName);
+    m_bufferManager->DestroyBuffer(buffers.indexBufferName);
+    m_bufferManager->DestroyBuffer(buffers.modelUBOName);
+    m_meshBufferMap.erase(name);
+  }
+
+  CE_RENDER_DEBUG("Unregistered mesh: ", name);
+}
+
+void CE::VulkanContext::CreateSyncObjects()
+{
+  // Создаем семафоры для каждого изображения свопчейна
+  uint32_t imageCount = m_swapchainManager->GetImageCount();
+
+  m_imageAvailableSemaphores.resize(imageCount);
+  m_renderFinishedSemaphores.resize(imageCount);
+  m_inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
+  m_imagesInFlight.resize(imageCount, VK_NULL_HANDLE);
+
+  VkSemaphoreCreateInfo semaphoreInfo{};
+  semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+  VkFenceCreateInfo fenceInfo{};
+  fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+  fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+  // Создаем семафоры для каждого изображения свопчейна
+  for (size_t i = 0; i < imageCount; i++)
+  {
+    VkResult result1 = vkCreateSemaphore(m_deviceManager->GetDevice(), &semaphoreInfo, nullptr, &m_imageAvailableSemaphores[i]);
+    VkResult result2 = vkCreateSemaphore(m_deviceManager->GetDevice(), &semaphoreInfo, nullptr, &m_renderFinishedSemaphores[i]);
+
+    if (result1 != VK_SUCCESS || result2 != VK_SUCCESS)
+    {
+      throw std::runtime_error("Failed to create synchronization objects for swapchain images!");
+    }
+  }
+
+  // Создаем fences для каждого кадра в полете
+  for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+  {
+    VkResult result = vkCreateFence(m_deviceManager->GetDevice(), &fenceInfo, nullptr, &m_inFlightFences[i]);
+    if (result != VK_SUCCESS)
+    {
+      throw std::runtime_error("Failed to create fence!");
+    }
+  }
+
+  CE_RENDER_DEBUG("Created synchronization objects for ", imageCount, " swapchain images and ", MAX_FRAMES_IN_FLIGHT, " frames in flight");
+}
+
+void CE::VulkanContext::CleanupSyncObjects()
+{
+  VkDevice device = m_deviceManager->GetDevice();
+
+  for (size_t i = 0; i < m_imageAvailableSemaphores.size(); i++)
+  {
+    if (m_imageAvailableSemaphores[i] != VK_NULL_HANDLE)
+    {
+      vkDestroySemaphore(device, m_imageAvailableSemaphores[i], nullptr);
+      m_imageAvailableSemaphores[i] = VK_NULL_HANDLE;
+    }
+  }
+
+  for (size_t i = 0; i < m_renderFinishedSemaphores.size(); i++)
+  {
+    if (m_renderFinishedSemaphores[i] != VK_NULL_HANDLE)
+    {
+      vkDestroySemaphore(device, m_renderFinishedSemaphores[i], nullptr);
+      m_renderFinishedSemaphores[i] = VK_NULL_HANDLE;
+    }
+  }
+
+  for (size_t i = 0; i < m_inFlightFences.size(); i++)
+  {
+    if (m_inFlightFences[i] != VK_NULL_HANDLE)
+    {
+      vkDestroyFence(device, m_inFlightFences[i], nullptr);
+      m_inFlightFences[i] = VK_NULL_HANDLE;
+    }
+  }
+
+  CE_RENDER_DEBUG("Destroyed synchronization objects");
+}
+
+void CE::VulkanContext::RecordCommandBuffer(uint32_t imageIndex, const FrameRenderData& renderData)
+{
+  // Начинаем запись команд
+  m_commandBufferManager->BeginRecording(imageIndex);
+
+  // Начинаем render pass
+  std::vector<VkClearValue> clearValues(2);
+  clearValues[0].color = {{0.1f, 0.1f, 0.1f, 1.0f}};  // Темно-серый цвет фона
+  clearValues[1].depthStencil = {1.0f, 0};
+
+  m_commandBufferManager->BeginRenderPass(imageIndex,
+                                          m_swapchainManager->GetRenderPass(),
+                                          m_swapchainManager->GetFramebuffers()[imageIndex],
+                                          m_swapchainManager->GetExtent(),
+                                          clearValues);
+
+  // Привязываем пайплайн
+  VkPipeline meshPipeline = m_pipelineManager->GetPipeline("mesh");
+  if (meshPipeline != VK_NULL_HANDLE)
+  {
+    m_commandBufferManager->BindPipeline(imageIndex, meshPipeline);
+
+    // Устанавливаем viewport и scissor
+    VkViewport viewport{};
+    viewport.x = 0.0f;
+    viewport.y = 0.0f;
+    viewport.width = static_cast<float>(m_swapchainManager->GetExtent().width);
+    viewport.height = static_cast<float>(m_swapchainManager->GetExtent().height);
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+    m_commandBufferManager->SetViewport(imageIndex, viewport);
+
+    VkRect2D scissor{};
+    scissor.offset = {0, 0};
+    scissor.extent = m_swapchainManager->GetExtent();
+    m_commandBufferManager->SetScissor(imageIndex, scissor);
+
+    // Привязываем дескрипторный набор (общий для всех объектов)
+    VkDescriptorSet descriptorSet = m_descriptorManager->GetDescriptorSet(imageIndex);
+    if (descriptorSet != VK_NULL_HANDLE)
+    {
+      std::vector<VkDescriptorSet> descriptorSets = {descriptorSet};
+      m_commandBufferManager->BindDescriptorSets(imageIndex,
+                                                 m_pipelineManager->GetPipelineLayout(),
+                                                 0, descriptorSets);
+    }
+
+    // Рендерим все объекты
+    for (const auto& renderObject : renderData.renderObjects)
+    {
+      if (!renderObject.mesh)
+        continue;
+
+      std::string meshName = "mesh_" + std::to_string(reinterpret_cast<uintptr_t>(renderObject.mesh));
+
+      // Проверяем, зарегистрирован ли меш
+      if (m_meshBufferMap.find(meshName) == m_meshBufferMap.end())
+      {
+        // Регистрируем меш, если он еще не зарегистрирован
+        RegisterMesh(meshName, *renderObject.mesh);
+      }
+
+      // Получаем буферы для этого меша
+      const auto& meshBuffers = m_meshBufferMap[meshName];
+
+      // ОБНОВЛЯЕМ ModelUBO для конкретного объекта (только данные, не дескрипторы!)
+      ModelUBO modelUBO = renderData.GetModelUBO(renderObject.transform);
+      m_bufferManager->UpdateUniformBuffer(meshBuffers.modelUBOName, &modelUBO, sizeof(ModelUBO));
+
+      VkBuffer vertexBuffer = m_bufferManager->GetBuffer(meshBuffers.vertexBufferName);
+      VkBuffer indexBuffer = m_bufferManager->GetBuffer(meshBuffers.indexBufferName);
+
+      if (vertexBuffer != VK_NULL_HANDLE && indexBuffer != VK_NULL_HANDLE)
+      {
+        // ПРИВЯЗЫВАЕМ ДЕСКРИПТОРНЫЙ НАБОР КОНКРЕТНОГО МЕША
+        VkDescriptorSet descriptorSet = m_descriptorManager->GetMeshDescriptorSet(meshName);
+        if (descriptorSet != VK_NULL_HANDLE)
+        {
+          std::vector<VkDescriptorSet> descriptorSets = {descriptorSet};
+          m_commandBufferManager->BindDescriptorSets(imageIndex,
+                                                     m_pipelineManager->GetPipelineLayout(),
+                                                     0, descriptorSets);
+        }
+
+        // Привязываем vertex buffer
+        std::vector<VkBuffer> vertexBuffers = {vertexBuffer};
+        std::vector<VkDeviceSize> offsets = {0};
+        m_commandBufferManager->BindVertexBuffers(imageIndex, 0, vertexBuffers, offsets);
+
+        // Привязываем index buffer
+        m_commandBufferManager->BindIndexBuffer(imageIndex, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+
+        // Рисуем индексированную геометрию
+        m_commandBufferManager->DrawIndexed(imageIndex,
+                                            static_cast<uint32_t>(renderObject.mesh->indices.size()),
+                                            1, 0, 0, 0);
+
+        CE_RENDER_DEBUG("Drawn mesh: ", meshName,
+                        " with ", renderObject.mesh->indices.size(), " indices");
+      }
+    }
+  }
+
+  // Заканчиваем render pass
+  m_commandBufferManager->EndRenderPass(imageIndex);
+
+  // Заканчиваем запись команд
+  m_commandBufferManager->EndRecording(imageIndex);
+}
+
+void CE::VulkanContext::UpdateUniformBuffers(const FrameRenderData& renderData)
+{
+  // Обновляем Scene UBO
+  SceneUBO sceneUBO = renderData.GetSceneUBO();
+  m_bufferManager->UpdateUniformBuffer(m_sceneUBOBufferName, &sceneUBO, sizeof(SceneUBO));
+
+  // Обновляем Lighting UBO
+  m_bufferManager->UpdateUniformBuffer(m_lightingUBOBufferName, &renderData.lighting, sizeof(LightingUBO));
+
+  // ModelUBO обновляется для каждого объекта в RecordCommandBuffer
 }
 
 bool CE::VulkanContext::ShouldClose() const
@@ -248,6 +684,7 @@ bool CE::VulkanContext::CreateSurface()
   VK_CHECK(result, "Failed to create window surface");
   return true;
 }
+
 VKAPI_ATTR VkBool32 VKAPI_CALL CE::VulkanContext::DebugCallback(
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
     VkDebugUtilsMessageTypeFlagsEXT messageType,

@@ -25,34 +25,58 @@ namespace CE
 
   void MeshComponent::CreateCubeMesh()
   {
-    // Вершины куба (позиция, нормаль, UV)
+    // Вершины куба (позиция, нормаль, цвет, UV)
     std::vector<Vertex> vertices = {
-        // Передняя грань
-        {glm::vec3(-0.5f, -0.5f, 0.5f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(0.0f, 0.0f)},
-        {glm::vec3(0.5f, -0.5f, 0.5f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(1.0f, 0.0f)},
-        {glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(1.0f, 1.0f)},
-        {glm::vec3(-0.5f, 0.5f, 0.5f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(0.0f, 1.0f)},
+        // Передняя грань (Z+)
+        {glm::vec3(-0.5f, -0.5f, 0.5f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(1.0f, 0.5f, 0.2f), glm::vec2(0.0f, 0.0f)},
+        {glm::vec3(0.5f, -0.5f, 0.5f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(1.0f, 0.5f, 0.2f), glm::vec2(1.0f, 0.0f)},
+        {glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(1.0f, 0.5f, 0.2f), glm::vec2(1.0f, 1.0f)},
+        {glm::vec3(-0.5f, 0.5f, 0.5f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(1.0f, 0.5f, 0.2f), glm::vec2(0.0f, 1.0f)},
 
-        // Задняя грань
-        {glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(1.0f, 0.0f)},
-        {glm::vec3(0.5f, -0.5f, -0.5f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(0.0f, 0.0f)},
-        {glm::vec3(0.5f, 0.5f, -0.5f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(0.0f, 1.0f)},
-        {glm::vec3(-0.5f, 0.5f, -0.5f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(1.0f, 1.0f)}};
+        // Задняя грань (Z-)
+        {glm::vec3(0.5f, -0.5f, -0.5f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(1.0f, 0.5f, 0.2f), glm::vec2(0.0f, 0.0f)},
+        {glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(1.0f, 0.5f, 0.2f), glm::vec2(1.0f, 0.0f)},
+        {glm::vec3(-0.5f, 0.5f, -0.5f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(1.0f, 0.5f, 0.2f), glm::vec2(1.0f, 1.0f)},
+        {glm::vec3(0.5f, 0.5f, -0.5f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(1.0f, 0.5f, 0.2f), glm::vec2(0.0f, 1.0f)},
 
-    // Индексы куба
+        // Верхняя грань (Y+)
+        {glm::vec3(-0.5f, 0.5f, 0.5f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 0.5f, 0.2f), glm::vec2(0.0f, 0.0f)},
+        {glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 0.5f, 0.2f), glm::vec2(1.0f, 0.0f)},
+        {glm::vec3(0.5f, 0.5f, -0.5f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 0.5f, 0.2f), glm::vec2(1.0f, 1.0f)},
+        {glm::vec3(-0.5f, 0.5f, -0.5f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 0.5f, 0.2f), glm::vec2(0.0f, 1.0f)},
+
+        // Нижняя грань (Y-)
+        {glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(1.0f, 0.5f, 0.2f), glm::vec2(0.0f, 0.0f)},
+        {glm::vec3(0.5f, -0.5f, -0.5f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(1.0f, 0.5f, 0.2f), glm::vec2(1.0f, 0.0f)},
+        {glm::vec3(0.5f, -0.5f, 0.5f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(1.0f, 0.5f, 0.2f), glm::vec2(1.0f, 1.0f)},
+        {glm::vec3(-0.5f, -0.5f, 0.5f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(1.0f, 0.5f, 0.2f), glm::vec2(0.0f, 1.0f)},
+
+        // Правая грань (X+)
+        {glm::vec3(0.5f, -0.5f, 0.5f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.5f, 0.2f), glm::vec2(0.0f, 0.0f)},
+        {glm::vec3(0.5f, -0.5f, -0.5f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.5f, 0.2f), glm::vec2(1.0f, 0.0f)},
+        {glm::vec3(0.5f, 0.5f, -0.5f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.5f, 0.2f), glm::vec2(1.0f, 1.0f)},
+        {glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.5f, 0.2f), glm::vec2(0.0f, 1.0f)},
+
+        // Левая грань (X-)
+        {glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.5f, 0.2f), glm::vec2(0.0f, 0.0f)},
+        {glm::vec3(-0.5f, -0.5f, 0.5f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.5f, 0.2f), glm::vec2(1.0f, 0.0f)},
+        {glm::vec3(-0.5f, 0.5f, 0.5f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.5f, 0.2f), glm::vec2(1.0f, 1.0f)},
+        {glm::vec3(-0.5f, 0.5f, -0.5f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.5f, 0.2f), glm::vec2(0.0f, 1.0f)}};
+
+    // Индексы куба (против часовой стрелки для лицевой стороны)
     std::vector<uint32_t> indices = {
         // Передняя грань
         0, 1, 2, 2, 3, 0,
         // Задняя грань
         4, 5, 6, 6, 7, 4,
         // Верхняя грань
-        3, 2, 6, 6, 7, 3,
+        8, 9, 10, 10, 11, 8,
         // Нижняя грань
-        0, 1, 5, 5, 4, 0,
+        12, 13, 14, 14, 15, 12,
         // Правая грань
-        1, 5, 6, 6, 2, 1,
+        16, 17, 18, 18, 19, 16,
         // Левая грань
-        0, 4, 7, 7, 3, 0};
+        20, 21, 22, 22, 23, 20};
 
     m_Mesh.vertices = vertices;
     m_Mesh.indices = indices;

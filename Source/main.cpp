@@ -20,9 +20,19 @@ int main()
   CE_CORE_DISPLAY("=== ChuddoEngine Starting ===");
 
   auto ApInfo = CE::AppInfo();
-
+  ApInfo.AppName = "Chuddo Engine tests";
+  ApInfo.AppVerion[0] = 0;
+  ApInfo.AppVerion[1] = 0;
+  ApInfo.AppVerion[2] = 1;
+  ApInfo.EngineName = "Chuddo Engine";
+  ApInfo.EngineVersion[0] = 0;
+  ApInfo.EngineVersion[1] = 0;
+  ApInfo.EngineVersion[2] = 1;
+  ApInfo.Width = 1024;
+  ApInfo.Height = 768;
   // Вся логика теперь в Application
   auto app = CE::Application(&ApInfo);
+
   app.Initialize();
   app.Run();
   app.Shutdown();

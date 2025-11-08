@@ -1,13 +1,12 @@
 #include "Rendering/Vulkan/SwapchainManager.h"
 
 #include <algorithm>
-#include <array>
 #include <stdexcept>
 
 namespace CE
 {
-  SwapchainManager::SwapchainManager(VkInstance instance, VkSurfaceKHR surface, std::unique_ptr<DeviceManager> deviceManager)
-      : m_instance(instance), m_surface(surface), m_deviceManager(deviceManager.get())
+  SwapchainManager::SwapchainManager(VkInstance instance, VkSurfaceKHR surface, std::shared_ptr<DeviceManager> deviceManager)
+      : m_instance(instance), m_surface(surface), m_deviceManager(deviceManager)
   {
   }
 

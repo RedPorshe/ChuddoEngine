@@ -70,23 +70,25 @@ namespace CE
       Update();
       Render();
 
-      static int FRAMES = 0;
       // FPS счетчик
       m_FrameCount++;
       m_FPSTimer += m_DeltaTime;
       if (m_FPSTimer >= 1.0f)
       {
-        CE_CORE_DEBUG("FPS: ", m_FrameCount, " DeltaTime: ", m_DeltaTime);
+        CE_CORE_DISPLAY("FPS: ", m_FrameCount, " DeltaTime: ", m_DeltaTime);
         m_FrameCount = 0;
         m_FPSTimer = 0.0f;
       }
+
+      static int FRAMES = 0;
       ++FRAMES;
-      if (FRAMES == 5)
+      if (FRAMES == 3)
       {
-        CE_CORE_DEBUG("Frames count reach 5 request exit");
+        CE_CORE_DEBUG("Frames count reach 3 request exit");
         m_IsRunning = false;
       }
-      // m_IsRunning = m_RenderSystem->Shouldclose(); // uncomment after stop debug rendering
+      // m_IsRunning = !m_RenderSystem->ShouldClose();  // uncomment after stop debug rendering
+      m_RenderSystem->PollEvents();
     }
   }
 

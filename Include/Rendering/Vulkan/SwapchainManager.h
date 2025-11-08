@@ -1,5 +1,4 @@
 #pragma once
-
 #include <memory>
 #include <vector>
 
@@ -13,8 +12,12 @@ namespace CE
   class SwapchainManager
   {
    public:
-    SwapchainManager(VkInstance instance, VkSurfaceKHR surface, std::unique_ptr<DeviceManager> deviceManager);
+    SwapchainManager(VkInstance instance, VkSurfaceKHR surface, std::shared_ptr<DeviceManager> deviceManager);
     ~SwapchainManager();
+
+    // Удаляем копирование
+    SwapchainManager(const SwapchainManager&) = delete;
+    SwapchainManager& operator=(const SwapchainManager&) = delete;
 
     bool Initialize();
     void Cleanup();

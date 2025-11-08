@@ -17,6 +17,7 @@
 #define CE_PLATFORM_UNKNOWN 1
 #endif
 
+constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 3;
 // Core type definitions
 namespace CE
 {
@@ -63,5 +64,5 @@ namespace CE
   class Component;
   class World;
 }  // namespace CE
-
+#include "Core/AppInfo.h"
 #include "Utils/Logger.h"
