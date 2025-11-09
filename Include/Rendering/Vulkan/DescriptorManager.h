@@ -34,10 +34,10 @@ namespace CE
                                  const std::string& lightingUBOName);
 
     // Обновление дескрипторов
-    bool UpdateDescriptorSets(uint32_t imageIndex,
-                              const std::string& sceneUBOName,
-                              const std::string& modelUBOName,
-                              const std::string& lightingUBOName);
+    // bool UpdateDescriptorSets(uint32_t imageIndex,
+    //                           const std::string& sceneUBOName,
+    //                           const std::string& modelUBOName,
+    //                           const std::string& lightingUBOName);
 
    private:
     std::shared_ptr<DeviceManager> m_deviceManager;

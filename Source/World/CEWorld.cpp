@@ -223,17 +223,14 @@ namespace CE
       }
     }
 
-    renderData.lighting.ambientColor = glm::vec4(0.2f, 0.2f, 0.2f, 1.0f);  // Серый ambient
-    renderData.lighting.ambientIntensity = 0.3f;
+    renderData.lighting.ambientColor = glm::vec4(1.f, 1.f, 1.f, 1.0f);
+    renderData.lighting.ambientIntensity = 1.f;
 
     // Добавляем источник света
     renderData.lighting.lightCount = 1;
-    renderData.lighting.lightPositions[0] = glm::vec4(0.0f, 5.0f, 5.0f, 1.0f);  // Позиция света
-    renderData.lighting.lightColors[0] = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);     // Белый свет
-    renderData.lighting.lightIntensities[0] = 1.0f;                             // Интенсивность
-
-    // CE_CORE_DEBUG("Collected ", renderData.renderObjects.size(),
-    //               " render objects and camera data");
+    renderData.lighting.lightPositions[0] = glm::vec4(-15.0f, -5.0f, -5.0f, 1.0f);  // Позиция света
+    renderData.lighting.lightColors[0] = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);         // Белый свет
+    renderData.lighting.lightIntensities[0] = 5.0f;                                 // Интенсивность
   }
 
 }  // namespace CE

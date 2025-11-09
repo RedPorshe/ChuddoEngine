@@ -56,51 +56,51 @@ TestWorld::TestWorld() : CE::CELevel(nullptr, "TestWorld")
 
   // Спавним меш-акторы
   auto* player = SpawnActor<CE::CEActor>(this, "Player");
-  // auto* enemy = SpawnActor<CE::CEActor>(this, "Enemy");
+  auto* enemy = SpawnActor<CE::CEActor>(this, "Enemy");
 
   player->SetRootComponent(player->AddDefaultSubObject<CE::MeshComponent>("PlayerMesh", player, "PlayerMesh"));
-  // enemy->SetRootComponent(enemy->AddDefaultSubObject<CE::MeshComponent>("EnemyMesh", enemy, "EnemyMesh"));
+  enemy->SetRootComponent(enemy->AddDefaultSubObject<CE::MeshComponent>("EnemyMesh", enemy, "EnemyMesh"));
 
   // РАЗНЫЕ позиции для мешей
   player->SetActorLocation(glm::vec3(-2.0f, 0.0f, 0.0f));  // Слева на уровне земли
-  // enemy->SetActorLocation(glm::vec3(2.0f, 1.5f, 0.0f));
+  enemy->SetActorLocation(glm::vec3(2.0f, 1.5f, 0.0f));
 
   player->SetActorLocation(glm::vec3(-3.0f, 0.0f, 0.0f));
-  // enemy->SetActorLocation(glm::vec3(3.0f, 0.0f, 0.0f));
+  enemy->SetActorLocation(glm::vec3(3.0f, 0.0f, 0.0f));
 
   // Если есть метод SetActorScale
   player->SetActorScale(glm::vec3(1.0f, 1.0f, 1.0f));  // Нормальный размер
-                                                       // enemy->SetActorScale(glm::vec3(1.5f, 1.5f, 1.5f));
+  enemy->SetActorScale(glm::vec3(1.5f, 1.5f, 1.5f));
 
   // Создаем несколько кубов в разных позициях
-  // std::vector<glm::vec3> positions = {
-  //     glm::vec3(-3.0f, 0.0f, 0.0f),  // Левый
-  //     glm::vec3(0.0f, 0.0f, 0.0f),   // Центральный
-  //     glm::vec3(3.0f, 0.0f, 0.0f),   // Правый
-  //     glm::vec3(-1.5f, 2.0f, 0.0f),  // Верхний левый
-  //     glm::vec3(1.5f, 2.0f, 0.0f)    // Верхний правый
-  // };
+  std::vector<glm::vec3> positions = {
+      glm::vec3(-3.0f, 0.0f, 0.0f),  // Левый
+      glm::vec3(0.0f, 0.0f, 0.0f),   // Центральный
+      glm::vec3(3.0f, 0.0f, 0.0f),   // Правый
+      glm::vec3(-1.5f, 2.0f, 0.0f),  // Верхний левый
+      glm::vec3(1.5f, 2.0f, 0.0f)    // Верхний правый
+  };
 
-  // std::vector<glm::vec3> colors = {
-  //     glm::vec3(1.0f, 0.0f, 0.0f),  // Красный
-  //     glm::vec3(0.0f, 1.0f, 0.0f),  // Зеленый
-  //     glm::vec3(0.0f, 0.0f, 1.0f),  // Синий
-  //     glm::vec3(1.0f, 1.0f, 0.0f),  // Желтый
-  //     glm::vec3(1.0f, 0.0f, 1.0f)   // Пурпурный
-  // };
+  std::vector<glm::vec3> colors = {
+      glm::vec3(1.0f, 0.0f, 0.0f),  // Красный
+      glm::vec3(0.0f, 1.0f, 0.0f),  // Зеленый
+      glm::vec3(0.0f, 0.0f, 1.0f),  // Синий
+      glm::vec3(1.0f, 1.0f, 0.0f),  // Желтый
+      glm::vec3(1.0f, 0.0f, 1.0f)   // Пурпурный
+  };
 
-  // for (int i = 0; i < (int)positions.size(); i++)
-  // {
-  //   auto* actor = SpawnActor<CE::CEActor>(this, "Cube_" + std::to_string(i));
-  //   actor->SetRootComponent(actor->AddDefaultSubObject<CE::MeshComponent>("Mesh", actor, "Mesh"));
-  //   actor->SetActorLocation(positions[i]);
+  for (int i = 0; i < (int)positions.size(); i++)
+  {
+    auto* actor = SpawnActor<CE::CEActor>(this, "Cube_" + std::to_string(i));
+    actor->SetRootComponent(actor->AddDefaultSubObject<CE::MeshComponent>("Mesh", actor, "Mesh"));
+    actor->SetActorLocation(positions[i]);
 
-  //    auto* mesh = dynamic_cast<CE::MeshComponent*>(actor->GetRootComponent());
-  //    if (mesh)
-  //    {
-  //      mesh->SetColor(colors[i]);
-  //    }
-  //  }
+    auto* mesh = dynamic_cast<CE::MeshComponent*>(actor->GetRootComponent());
+    if (mesh)
+    {
+      mesh->SetColor(colors[i]);
+    }
+  }
 
   auto* playerMesh = dynamic_cast<CE::MeshComponent*>(player->GetRootComponent());
   //  auto* enemyMesh = dynamic_cast<CE::MeshComponent*>(enemy->GetRootComponent());

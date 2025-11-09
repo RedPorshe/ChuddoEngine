@@ -67,8 +67,29 @@ void CE::VulkanContext::Initialize()
     return;
   }
 
-  m_bufferManager->CreateUniformBuffer(m_sceneUBOBufferName, sizeof(SceneUBO));
-  m_bufferManager->CreateUniformBuffer(m_lightingUBOBufferName, sizeof(LightingUBO));
+  // Создаем UBO буферы и проверяем их создание
+  if (!m_bufferManager->CreateUniformBuffer(m_sceneUBOBufferName, sizeof(SceneUBO)))
+  {
+    CE_RENDER_ERROR("Failed to create scene UBO buffer");
+    Shutdown();
+    return;
+  }
+
+  if (!m_bufferManager->CreateUniformBuffer(m_lightingUBOBufferName, sizeof(LightingUBO)))
+  {
+    CE_RENDER_ERROR("Failed to create lighting UBO buffer");
+    Shutdown();
+    return;
+  }
+
+  // Проверяем что буферы созданы
+  if (m_bufferManager->GetBuffer(m_sceneUBOBufferName) == VK_NULL_HANDLE ||
+      m_bufferManager->GetBuffer(m_lightingUBOBufferName) == VK_NULL_HANDLE)
+  {
+    CE_RENDER_ERROR("UBO buffers are null after creation");
+    Shutdown();
+    return;
+  }
 
   m_descriptorManager = std::make_shared<DescriptorManager>(m_deviceManager, m_bufferManager);
   if (!m_descriptorManager->Initialize())
@@ -78,15 +99,7 @@ void CE::VulkanContext::Initialize()
     return;
   }
 
-  VkDescriptorSetLayout pipelineLayout = m_pipelineManager->GetDescriptorSetLayout();
-  if (!m_descriptorManager->CreateDescriptorSets(pipelineLayout, m_swapchainManager->GetImageCount()))
-  {
-    CE_RENDER_ERROR("Failed to create descriptor sets");
-    Shutdown();
-    return;
-  }
-
-  // Create CommandBufferManager
+  // Создаем CommandBufferManager
   m_commandBufferManager = std::make_shared<CommandBufferManager>(m_deviceManager);
   if (!m_commandBufferManager->Initialize())
   {
@@ -444,7 +457,7 @@ void CE::VulkanContext::RecordCommandBuffer(uint32_t imageIndex, const FrameRend
 
   // Начинаем render pass
   std::vector<VkClearValue> clearValues(2);
-  clearValues[0].color = {{0.1f, 0.1f, 0.1f, 1.0f}};  // Темно-серый цвет фона
+  clearValues[0].color = {{0.01f, 0.01f, 0.01f, 1.0f}};  // Темно-серый цвет фона
   clearValues[1].depthStencil = {1.0f, 0};
 
   m_commandBufferManager->BeginRenderPass(imageIndex,
@@ -474,16 +487,6 @@ void CE::VulkanContext::RecordCommandBuffer(uint32_t imageIndex, const FrameRend
     scissor.extent = m_swapchainManager->GetExtent();
     m_commandBufferManager->SetScissor(imageIndex, scissor);
 
-    // Привязываем дескрипторный набор (общий для всех объектов)
-    VkDescriptorSet descriptorSet = m_descriptorManager->GetDescriptorSet(imageIndex);
-    if (descriptorSet != VK_NULL_HANDLE)
-    {
-      std::vector<VkDescriptorSet> descriptorSets = {descriptorSet};
-      m_commandBufferManager->BindDescriptorSets(imageIndex,
-                                                 m_pipelineManager->GetPipelineLayout(),
-                                                 0, descriptorSets);
-    }
-
     // Рендерим все объекты
     for (const auto& renderObject : renderData.renderObjects)
     {
@@ -499,6 +502,7 @@ void CE::VulkanContext::RecordCommandBuffer(uint32_t imageIndex, const FrameRend
 
       const auto& meshBuffers = m_meshBufferMap[meshName];
 
+      // Обновляем ModelUBO для этого меша
       ModelUBO modelUBO = renderData.GetModelUBO(renderObject.transform);
       m_bufferManager->UpdateUniformBuffer(meshBuffers.modelUBOName, &modelUBO, sizeof(ModelUBO));
 
@@ -507,10 +511,11 @@ void CE::VulkanContext::RecordCommandBuffer(uint32_t imageIndex, const FrameRend
 
       if (vertexBuffer != VK_NULL_HANDLE && indexBuffer != VK_NULL_HANDLE)
       {
-        VkDescriptorSet descriptorSet = m_descriptorManager->GetMeshDescriptorSet(meshName);
-        if (descriptorSet != VK_NULL_HANDLE)
+        // ПРИВЯЗЫВАЕМ ДЕСКРИПТОРНЫЙ НАБОР ДЛЯ КОНКРЕТНОГО МЕША
+        VkDescriptorSet meshDescriptorSet = m_descriptorManager->GetMeshDescriptorSet(meshName);
+        if (meshDescriptorSet != VK_NULL_HANDLE)
         {
-          std::vector<VkDescriptorSet> descriptorSets = {descriptorSet};
+          std::vector<VkDescriptorSet> descriptorSets = {meshDescriptorSet};
           m_commandBufferManager->BindDescriptorSets(imageIndex,
                                                      m_pipelineManager->GetPipelineLayout(),
                                                      0, descriptorSets);
@@ -536,12 +541,16 @@ void CE::VulkanContext::RecordCommandBuffer(uint32_t imageIndex, const FrameRend
 
 void CE::VulkanContext::UpdateUniformBuffers(const FrameRenderData& renderData)
 {
+  // Обновляем Lighting UBO
+  LightingUBO lightingUBO = renderData.lighting;
+  lightingUBO.ambientColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+  lightingUBO.ambientIntensity = 1.0f;
+  lightingUBO.lightCount = 1;
+
+  m_bufferManager->UpdateUniformBuffer(m_lightingUBOBufferName, &lightingUBO, sizeof(LightingUBO));
   // Обновляем Scene UBO
   SceneUBO sceneUBO = renderData.GetSceneUBO();
   m_bufferManager->UpdateUniformBuffer(m_sceneUBOBufferName, &sceneUBO, sizeof(SceneUBO));
-
-  // Обновляем Lighting UBO
-  m_bufferManager->UpdateUniformBuffer(m_lightingUBOBufferName, &renderData.lighting, sizeof(LightingUBO));
 
   // ModelUBO обновляется для каждого объекта в RecordCommandBuffer
 }
