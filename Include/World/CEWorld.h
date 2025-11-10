@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "Core/CEObject.h"
+#include "Rendering/Data/RenderData.h"
 #include "World/Levels/CELevel.h"
 
 namespace CE
@@ -15,6 +16,14 @@ namespace CE
    public:
     CEWorld(CEObject* Owner = nullptr, FString WorldName = "World");
     virtual ~CEWorld() = default;
+
+    // Allow world to provide a default lighting setup that will be used when
+    // a level doesn't populate lighting in CollectRenderData.
+    void SetDefaultLighting(const LightingUBO& lighting);
+    const LightingUBO& GetDefaultLighting() const
+    {
+      return m_defaultLighting;
+    }
 
     void CollectRenderData(class FrameRenderData& renderData);
     CameraComponent* FindActiveCamera();
@@ -51,5 +60,8 @@ namespace CE
     std::vector<std::unique_ptr<CELevel>> m_Levels;
     CELevel* m_CurrentLevel = nullptr;
     CELevel* m_PendingLevel = nullptr;  // Для плавных переходов
+    // Optional world-level lighting that can be applied into FrameRenderData
+    // when a level doesn't explicitly set lighting.
+    LightingUBO m_defaultLighting;
   };
 }  // namespace CE

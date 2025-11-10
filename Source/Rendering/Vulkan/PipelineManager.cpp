@@ -1,5 +1,6 @@
 #include "Rendering/Vulkan/PipelineManager.h"
 
+#include <filesystem>
 #include <fstream>
 #include <stdexcept>
 
@@ -214,14 +215,17 @@ namespace CE
     VkViewport viewport{};
     viewport.x = 0.0f;
     viewport.y = 0.0f;
-    viewport.width = static_cast<float>(configInfo.viewportInfo.viewportCount > 0 ? 800 : 0);  // Временное значение
-    viewport.height = static_cast<float>(configInfo.viewportInfo.viewportCount > 0 ? 600 : 0);
+    // Viewport/scissor are dynamic for this project; leave zero-sized placeholders
+    // here to avoid hardcoding values like 800x600. The actual viewport is set
+    // at command recording time using the swapchain extent.
+    viewport.width = 0.0f;
+    viewport.height = 0.0f;
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
 
     VkRect2D scissor{};
     scissor.offset = {0, 0};
-    scissor.extent = {static_cast<uint32_t>(viewport.width), static_cast<uint32_t>(viewport.height)};
+    scissor.extent = {0, 0};
 
     VkPipelineViewportStateCreateInfo viewportInfo = configInfo.viewportInfo;
     viewportInfo.pViewports = &viewport;
@@ -261,11 +265,37 @@ namespace CE
 
   std::vector<char> PipelineManager::ReadShaderFile(const std::string& filename)
   {
-    std::ifstream file(filename, std::ios::ate | std::ios::binary);
+    // Try a few likely locations so running the exe from project root or from
+    // the build output directory both work.
+    std::vector<std::string> candidates;
+    candidates.push_back(filename);                                    // as given
+    candidates.push_back(std::string("build/bin/Debug/") + filename);  // common build output
+    candidates.push_back(std::string("build/bin/Release/") + filename);
+
+    std::ifstream file;
+    std::string foundPath;
+    for (const auto& p : candidates)
+    {
+      if (std::filesystem::exists(p))
+      {
+        file.open(p, std::ios::ate | std::ios::binary);
+        if (file.is_open())
+        {
+          foundPath = p;
+          break;
+        }
+      }
+    }
 
     if (!file.is_open())
     {
-      throw std::runtime_error("Failed to open shader file: " + filename);
+      // Last attempt: try the filename directly (will throw with clearer message)
+      file.open(filename, std::ios::ate | std::ios::binary);
+      if (!file.is_open())
+      {
+        throw std::runtime_error("Failed to open shader file. Tried: " + filename + ", build/bin/Debug/" + filename + ", build/bin/Release/" + filename);
+      }
+      foundPath = filename;
     }
 
     size_t fileSize = static_cast<size_t>(file.tellg());

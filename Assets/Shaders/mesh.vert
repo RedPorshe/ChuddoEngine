@@ -18,15 +18,21 @@ layout(binding = 0) uniform SceneUBO {
 
 layout(binding = 1) uniform ModelUBO {
     mat4 model;
+    vec4 color;
 } model;
 
 void main() {
-     vec4 worldPosition = model.model * vec4(inPosition, 1.0);
+    // Преобразование позиции в мировые координаты
+    vec4 worldPosition = model.model * vec4(inPosition, 1.0);
     gl_Position = scene.proj * scene.view * worldPosition;
     
-    fragColor = inColor;
+    // Передаем цвет меша из ModelUBO (устанавливается в коде при отрисовке)
+    fragColor = model.color.rgb;
     
-    // ПРАВИЛЬНОЕ преобразование нормалей
-    fragNormal = mat3(transpose(inverse(model.model))) * inNormal;
+    // Преобразование нормалей в мировое пространство
+    mat3 normalMatrix = mat3(transpose(inverse(model.model)));
+    fragNormal = normalize(normalMatrix * inNormal);
+    
+    // Позиция в мировых координатах для расчета освещения
     fragPos = worldPosition.xyz;
 }

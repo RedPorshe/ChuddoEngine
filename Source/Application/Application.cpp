@@ -44,11 +44,43 @@ namespace CE
       world->SetCurrentLevel("TestWorld");
     }
 
+    if (auto* world = m_GameInstance->GetWorld("MainGameWorld"))
+    {
+      // Create a few lights with different positions/colors/intensities for testing
+      CE::LightingUBO worldLighting{};
+      worldLighting.lightCount = 3;
+
+      // Key light (warm)
+      worldLighting.lightPositions[0] = glm::vec4(5.0f, 5.0f, 5.0f, 1.0f);
+      worldLighting.lightColors[0] = glm::vec4(1.0f, 0.95f, 0.9f, 2.0f);  // rgb + w = intensity
+
+      // Fill light (cool)
+      worldLighting.lightPositions[1] = glm::vec4(-4.0f, 3.0f, 2.0f, 1.0f);
+      worldLighting.lightColors[1] = glm::vec4(0.4f, 0.6f, 1.0f, 1.2f);
+
+      // Rim/back light (magenta-ish)
+      worldLighting.lightPositions[2] = glm::vec4(0.0f, 4.0f, -6.0f, 1.0f);
+      worldLighting.lightColors[2] = glm::vec4(1.0f, 0.4f, 0.6f, 1.0f);
+
+      // Low ambient stored in ambientColor.w
+      worldLighting.ambientColor = glm::vec4(0.05f, 0.05f, 0.06f, 0.25f);
+
+      world->SetDefaultLighting(worldLighting);
+      CE_CORE_DEBUG("Application set world default lighting with ", worldLighting.lightCount, " lights");
+    }
+
     // ЗАГРУЖАЕМ мир после настройки
     m_GameInstance->LoadWorld("MainGameWorld");
 
-    // Настройка данных рендеринга
+    // Настройка данных рендеринга (will be overwritten by world default below)
     m_RenderData.SetupDefaultLighting();
+
+    // If the world provided default lighting, copy it so RenderData reflects it immediately
+    if (auto* world = m_GameInstance->GetWorld("MainGameWorld"))
+    {
+      m_RenderData.lighting = world->GetDefaultLighting();
+      CE_CORE_DEBUG("RenderData lighting initialized from world default (lights=", m_RenderData.lighting.lightCount, ")");
+    }
 
     // Запуск игрового процесса
     m_GameInstance->BeginPlay();

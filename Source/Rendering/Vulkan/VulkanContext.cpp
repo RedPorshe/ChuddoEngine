@@ -43,7 +43,7 @@ void CE::VulkanContext::Initialize()
     return;
   }
 
-  m_swapchainManager = std::make_shared<SwapchainManager>(m_instance, m_surface, m_deviceManager);
+  m_swapchainManager = std::make_shared<SwapchainManager>(m_instance, m_surface, m_deviceManager, m_window);
   if (!m_swapchainManager->Initialize())
   {
     CE_RENDER_ERROR("Failed to initialize SwapchainManager");
@@ -502,8 +502,9 @@ void CE::VulkanContext::RecordCommandBuffer(uint32_t imageIndex, const FrameRend
 
       const auto& meshBuffers = m_meshBufferMap[meshName];
 
-      // Обновляем ModelUBO для этого меша
-      ModelUBO modelUBO = renderData.GetModelUBO(renderObject.transform);
+      // Обновляем ModelUBO для этого меша (передаём цвет меша)
+      ModelUBO modelUBO = renderData.GetModelUBO(renderObject.transform, renderObject.color);
+      CE_RENDER_DEBUG("ModelUBO color:", modelUBO.color.r, ",", modelUBO.color.g, ",", modelUBO.color.b);
       m_bufferManager->UpdateUniformBuffer(meshBuffers.modelUBOName, &modelUBO, sizeof(ModelUBO));
 
       VkBuffer vertexBuffer = m_bufferManager->GetBuffer(meshBuffers.vertexBufferName);
@@ -543,9 +544,12 @@ void CE::VulkanContext::UpdateUniformBuffers(const FrameRenderData& renderData)
 {
   // Обновляем Lighting UBO
   LightingUBO lightingUBO = renderData.lighting;
-  lightingUBO.ambientColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
-  lightingUBO.ambientIntensity = 1.0f;
-  lightingUBO.lightCount = 1;
+  // Do not override lighting values here - use values provided in renderData
+  // Add a debug log to confirm what will be uploaded
+  CE_RENDER_DEBUG("Uploading LightingUBO - ambient:", lightingUBO.ambientColor.r, ",",
+                  lightingUBO.ambientColor.g, ",", lightingUBO.ambientColor.b,
+
+                  " lightCount:", lightingUBO.lightCount);
 
   m_bufferManager->UpdateUniformBuffer(m_lightingUBOBufferName, &lightingUBO, sizeof(LightingUBO));
   // Обновляем Scene UBO
@@ -565,7 +569,8 @@ bool CE::VulkanContext::InitWindow()
   if (!glfwInit())
     return false;
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-  glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+  // Allow window to be resizable so swapchain can adapt to user size changes
+  glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
   CE_CHECK((m_window = glfwCreateWindow(m_info->Width, m_info->Height, m_info->AppName.c_str(), nullptr, nullptr)) != nullptr);
   if (!m_window)
   {
@@ -573,6 +578,16 @@ bool CE::VulkanContext::InitWindow()
     glfwTerminate();
     return false;
   }
+  // Store pointer to this context so callbacks can notify it
+  glfwSetWindowUserPointer(m_window, this);
+  // Framebuffer size callback will mark the framebuffer as resized
+  glfwSetFramebufferSizeCallback(m_window, [](GLFWwindow* window, int width, int height)
+                                 {
+                                   (void)width;
+                                   (void)height;
+                                   auto ctx = reinterpret_cast<CE::VulkanContext*>(glfwGetWindowUserPointer(window));
+                                   if (ctx)
+                                     ctx->OnFramebufferResized(); });
   CE_RENDER_DEBUG("Window Created : ", m_window);
   return true;
 }

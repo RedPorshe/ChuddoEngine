@@ -7,12 +7,15 @@
 #include "Rendering/Vulkan/VulkanUtils.h"
 #include "vulkan/vulkan.h"
 
+// Forward declare GLFW type (we include GLFW in VulkanContext.cpp)
+struct GLFWwindow;
+
 namespace CE
 {
   class SwapchainManager
   {
    public:
-    SwapchainManager(VkInstance instance, VkSurfaceKHR surface, std::shared_ptr<DeviceManager> deviceManager);
+    SwapchainManager(VkInstance instance, VkSurfaceKHR surface, std::shared_ptr<DeviceManager> deviceManager, GLFWwindow* window);
     ~SwapchainManager();
 
     // Удаляем копирование
@@ -100,5 +103,7 @@ namespace CE
     VkImageView m_depthImageView = VK_NULL_HANDLE;
 
     VkRenderPass m_renderPass = VK_NULL_HANDLE;
+    // Window pointer used to query actual framebuffer size when needed
+    GLFWwindow* m_window = nullptr;
   };
 }  // namespace CE

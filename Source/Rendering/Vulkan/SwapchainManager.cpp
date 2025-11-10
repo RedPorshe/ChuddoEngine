@@ -5,8 +5,8 @@
 
 namespace CE
 {
-  SwapchainManager::SwapchainManager(VkInstance instance, VkSurfaceKHR surface, std::shared_ptr<DeviceManager> deviceManager)
-      : m_instance(instance), m_surface(surface), m_deviceManager(deviceManager)
+  SwapchainManager::SwapchainManager(VkInstance instance, VkSurfaceKHR surface, std::shared_ptr<DeviceManager> deviceManager, GLFWwindow* window)
+      : m_instance(instance), m_surface(surface), m_deviceManager(deviceManager), m_window(window)
   {
   }
 
@@ -397,6 +397,15 @@ namespace CE
       // For now, return a fixed extent since we don't have window info
       // In practice, you'd get this from your window system
       VkExtent2D actualExtent = {800, 600};
+
+      // If we have a GLFW window pointer, query its framebuffer size instead
+      if (m_window)
+      {
+        int width = 0, height = 0;
+        glfwGetFramebufferSize(m_window, &width, &height);
+        actualExtent.width = static_cast<uint32_t>(width);
+        actualExtent.height = static_cast<uint32_t>(height);
+      }
 
       actualExtent.width = std::clamp(actualExtent.width,
                                       capabilities.minImageExtent.width, capabilities.maxImageExtent.width);

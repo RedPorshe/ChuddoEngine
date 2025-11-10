@@ -13,73 +13,65 @@ layout(binding = 0) uniform SceneUBO {
     vec3 cameraPos;
 } scene;
 
-// ModelUBO удален из fragment шейдера - он нужен только в vertex
-// layout(binding = 1) uniform ModelUBO {
-//     mat4 model;
-// } model;
-
 layout(binding = 2) uniform LightingUBO {
     vec4 lightPositions[4];
-    vec4 lightColors[4];
-    float lightIntensities[4];
-    vec4 ambientColor;
-    float ambientIntensity;
+    vec4 lightColors[4];  
+    vec4 ambientColor;    
     int lightCount;
 } lighting;
 
-void main() {
+float calculateAttenuation(float distance) {
+    return 1.0 / (1.0 + 0.022 * distance + 0.0019 * distance * distance);
+}
+vec3 calculateDiffuse(vec3 normal, vec3 lightDir, vec3 lightColor, float lightIntensity, float distance) {
+    float diff = max(dot(normal, lightDir), 0.0);
+    float attenuation = calculateAttenuation(distance);
+    return lightColor * diff * lightIntensity * attenuation;
+}
 
-   
-    vec3 zerocolor = vec3(0.0);
+
+void main() {
+     vec3 albedo = fragColor;
     vec3 normal = normalize(fragNormal);
-    vec3 viewDir = normalize(scene.cameraPos - fragPos);
-   
-   
-   if (lighting.ambientColor.rgb != zerocolor)
-   {
-    vec3 ambient = lighting.ambientColor.rgb * lighting.ambientIntensity;
     
-    vec3 result = vec3(0.0);
+    // Ambient освещение
+    vec3 ambient = lighting.ambientColor.rgb * lighting.ambientColor.w;
     
-    if (lighting.lightCount > 1)
-    {
-    for(int i = 0; i < lighting.lightCount; i++) 
-        {
-       
-        vec3 lightDir = normalize(lighting.lightPositions[i].xyz - fragPos);
+    // Fallback ambient если все нули
+    if (lighting.lightCount == 0 && length(ambient) < 0.01) {
+        ambient = vec3(0.1); // Минимальный ambient
+    }
+
+    vec3 result = ambient;
+    
+    // Обработка всех источников света
+    for(int i = 0; i < lighting.lightCount && i < 4; i++) {
+        vec3 lightVec = lighting.lightPositions[i].xyz - fragPos;
+        float distance = length(lightVec);
+        vec3 lightDir = normalize(lightVec);
         
-       
-        float diff = max(dot(normal, lightDir), 0.0);
-        vec3 diffuse = diff * lighting.lightColors[i].rgb * lighting.lightIntensities[i];
-        
+        vec3 diffuse = calculateDiffuse(normal, lightDir, 
+                                      lighting.lightColors[i].rgb, 
+                                      lighting.lightColors[i].w, 
+                                      distance);
         result += diffuse;
-       }
-    }
-    else
-    if (lighting.lightCount == 1)
-    {
-        vec3 lightaDir = normalize(lighting.lightPositions[0].xyz - fragPos);
-         float difff = max(dot(normal,lightaDir), 0.0);
-         vec3 diffuses = difff * lighting.lightColors[0].rgb * lighting.lightIntensities[0];
-         result += diffuses;
     }
     
-    // Финальный цвет = ambient + diffuse от всех источников
-    vec3 finalColor = (ambient + result) * fragColor;
-   
-   if (finalColor == zerocolor) 
-   {
-    outColor = vec4(1.0,1.0,1.0, 1.0);
-   }
-   else
-   {
+    // Rim lighting (подсветка краев)
+    vec3 viewDir = normalize(scene.cameraPos - fragPos);
+    float rim = pow(1.0 - max(dot(viewDir, normal), 0.0), 2.0);
+    vec3 rimLight = vec3(0.3) * rim;
+    result += rimLight;
+
+    // Финальный цвет
+    vec3 finalColor = result * albedo;
+    
+    // Добавляем базовый цвет для видимости даже при слабом освещении
+    finalColor += 0.15 * albedo;
+    
+    // Тоновая компрессия и гамма коррекция
+    finalColor = finalColor / (finalColor + vec3(1.0));
+    finalColor = pow(finalColor, vec3(0.4545));
+    
     outColor = vec4(finalColor, 1.0);
-   }
-   }
-   else
-   {
-outColor = vec4(1.0,0.0,0.0, 1.0); //red if abientcolor == zerocolor
-   }
-    
-    
 }

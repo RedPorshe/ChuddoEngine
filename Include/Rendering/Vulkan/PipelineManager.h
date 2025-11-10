@@ -80,7 +80,8 @@ namespace CE
     VkDescriptorSetLayout m_descriptorSetLayout = VK_NULL_HANDLE;
 
     // Стандартные шейдеры для мешей
-    static constexpr const char* VERTEX_SHADER_PATH = "Assets/shaders/mesh_vert.spv";
-    static constexpr const char* FRAGMENT_SHADER_PATH = "Assets/shaders/mesh_frag.spv";
+    // Use the same casing the build copies shaders to (Assets/Shaders)
+    static constexpr const char* VERTEX_SHADER_PATH = "Assets/Shaders/mesh_vert.spv";
+    static constexpr const char* FRAGMENT_SHADER_PATH = "Assets/Shaders/mesh_frag.spv";
   };
 }  // namespace CE

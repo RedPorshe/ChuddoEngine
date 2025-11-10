@@ -40,32 +40,36 @@ namespace CE
   {
     glm::mat4 model;
 
-    float padding[12];
+    // Добавляем цвет меша в UBO, чтобы передавать его в шейдер (выравнивание под std140)
+    glm::vec4 color;
+
+    float padding[8];
   };
 
   struct LightingUBO
   {
     glm::vec4 lightPositions[4];
     glm::vec4 lightColors[4];
-    float lightIntensities[4];
-    glm::vec4 ambientColor;
-    float ambientIntensity;
+    // We store intensity in the 'w' component of lightColors and ambientColor
+    // to keep the layout compact and avoid a separate array. This matches
+    // the shader convention where lightColors[i].w is the intensity and
+    // ambientColor.w is the ambient intensity.
+    glm::vec4 ambientColor;  // ambientColor.w == ambient intensity
     int lightCount;
-    float padding[2];
+    float padding[3];  // pad to 16 byte (std140-friendly)
 
-        LightingUBO()
+    LightingUBO()
     {
       lightCount = 0;
-      ambientIntensity = 0.0f;
       ambientColor = glm::vec4(0.0f);
       for (int i = 0; i < 4; i++)
       {
         lightPositions[i] = glm::vec4(0.0f);
         lightColors[i] = glm::vec4(0.0f);
-        lightIntensities[i] = 0.0f;
       }
       padding[0] = 0.0f;
       padding[1] = 0.0f;
+      padding[2] = 0.0f;
     }
   };
 
@@ -78,13 +82,15 @@ namespace CE
     LightingUBO lighting;
 
     // Статическая проверка размера и выравнивания
-    static_assert(sizeof(LightingUBO) == 176, "LightingUBO size should be 176 bytes");
+    // Updated size/offsets to match std140-like layout when intensities are
+    // stored in the w component of vec4 colors. Layout is:
+    // lightPositions[4] (0..63), lightColors[4] (64..127), ambientColor (128..143),
+    // lightCount (144) + padding -> total size 160.
+    static_assert(sizeof(LightingUBO) == 160, "LightingUBO size should be 160 bytes");
     static_assert(offsetof(LightingUBO, lightPositions) == 0, "lightPositions offset mismatch");
     static_assert(offsetof(LightingUBO, lightColors) == 64, "lightColors offset mismatch");
-    static_assert(offsetof(LightingUBO, lightIntensities) == 128, "lightIntensities offset mismatch");
-    static_assert(offsetof(LightingUBO, ambientColor) == 144, "ambientColor offset mismatch");
-    static_assert(offsetof(LightingUBO, ambientIntensity) == 160, "ambientIntensity offset mismatch");
-    static_assert(offsetof(LightingUBO, lightCount) == 164, "lightCount offset mismatch");
+    static_assert(offsetof(LightingUBO, ambientColor) == 128, "ambientColor offset mismatch");
+    static_assert(offsetof(LightingUBO, lightCount) == 144, "lightCount offset mismatch");
 
     void Clear()
     {
@@ -113,10 +119,11 @@ namespace CE
       return ubo;
     }
 
-    ModelUBO GetModelUBO(const glm::mat4& modelMatrix) const
+    ModelUBO GetModelUBO(const glm::mat4& modelMatrix, const glm::vec3& meshColor) const
     {
       ModelUBO ubo{};
       ubo.model = modelMatrix;
+      ubo.color = glm::vec4(meshColor, 1.0f);
       return ubo;
     }
 
@@ -126,9 +133,8 @@ namespace CE
       lighting.lightCount = 1;
       lighting.lightPositions[0] = glm::vec4(0.0f, 5.0f, 5.0f, 1.0f);  // Точечный свет
       lighting.lightColors[0] = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);     // Белый свет
-      lighting.lightIntensities[0] = 1.0f;
-      lighting.ambientColor = glm::vec4(0.2f, 0.2f, 0.2f, 1.0f);  // Слабый ambient
-      lighting.ambientIntensity = 0.3f;
+
+      lighting.ambientColor = glm::vec4(0.2f, 0.2f, 0.2f, .3f);  // Слабый ambient
     }
   };
 }  // namespace CE

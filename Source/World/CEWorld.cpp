@@ -31,6 +31,10 @@ namespace CE
     }
 
     m_Levels.push_back(std::move(Level));
+    // Ensure the level knows its owning world so actors can find the world
+    // via their level->GetOwner(). This allows actors to update world-level
+    // state like default lighting.
+    m_Levels.back()->SetOwner(this);
     CE_CORE_DEBUG("Added level to world: ", m_Levels.back()->GetName());
   }
 
@@ -223,14 +227,39 @@ namespace CE
       }
     }
 
-    renderData.lighting.ambientColor = glm::vec4(1.f, 1.f, 1.f, 1.0f);
-    renderData.lighting.ambientIntensity = 1.f;
+    // Получаем настройки освещения из уровня
+    auto& lighting = renderData.lighting;
 
-    // Добавляем источник света
-    renderData.lighting.lightCount = 1;
-    renderData.lighting.lightPositions[0] = glm::vec4(-15.0f, -5.0f, -5.0f, 1.0f);  // Позиция света
-    renderData.lighting.lightColors[0] = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);         // Белый свет
-    renderData.lighting.lightIntensities[0] = 5.0f;                                 // Интенсивность
+    // Если уровень не заполнил данные освещения, используем мировую настройку
+    if (lighting.lightCount == 0 && m_defaultLighting.lightCount > 0)
+    {
+      CE_CORE_DEBUG("Level didn't provide lighting - applying world default lighting");
+      lighting = m_defaultLighting;
+    }
+
+    // Проверяем и выводим текущие настройки освещения (для отладки)
+    CE_CORE_DEBUG("Light Count: ", lighting.lightCount);
+    CE_CORE_DEBUG("Light Position: ", lighting.lightPositions[0].x, ", ",
+                  lighting.lightPositions[0].y, ", ",
+                  lighting.lightPositions[0].z);
+    CE_CORE_DEBUG("Light Intensity: ", lighting.lightColors[0].w);
+    CE_CORE_DEBUG("Ambient Intensity: ", lighting.ambientColor.w);
+
+    // Если освещение не настроено нигде, устанавливаем значения по умолчанию
+    if (lighting.lightCount == 0)
+    {
+      CE_CORE_DEBUG("Setting up default lighting...");
+      lighting.lightCount = 1;
+      lighting.lightPositions[0] = glm::vec4(5.0f, 5.0f, 5.0f, 1.0f);
+      lighting.lightColors[0] = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+      lighting.lightColors[0].w = 2.0f;
+      lighting.ambientColor = glm::vec4(0.2f, 0.2f, 0.2f, .2f);
+    }
+  }
+
+  void CEWorld::SetDefaultLighting(const LightingUBO& lighting)
+  {
+    m_defaultLighting = lighting;
   }
 
 }  // namespace CE

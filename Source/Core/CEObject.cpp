@@ -18,6 +18,11 @@ namespace CE
     return m_Owner;
   }
 
+  void CEObject::SetOwner(CEObject* Owner)
+  {
+    m_Owner = Owner;
+  }
+
   void CEObject::BeginPlay()
   {
   }

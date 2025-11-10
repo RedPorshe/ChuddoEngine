@@ -38,6 +38,12 @@ namespace CE
     {
       glfwPollEvents();
     }
+    // Called by the GLFW framebuffer-size callback when the window changes
+    // size so the rendering code can recreate the swapchain on next frame.
+    void OnFramebufferResized()
+    {
+      m_frameBufferResized = true;
+    }
     void RegisterMesh(const std::string& name, const StaticMesh& mesh);
     void UnregisterMesh(const std::string& name);
 

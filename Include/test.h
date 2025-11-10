@@ -3,6 +3,8 @@
 #include "Components/Meshes/MeshComponent.h"
 #include "World/CEWorld.h"
 #include "World/Levels/CELevel.h"
+// Sun actor
+#include "Actors/SunActor.h"
 
 class TestWorld : public CE::CELevel
 {
@@ -10,6 +12,7 @@ class TestWorld : public CE::CELevel
   TestWorld();
   virtual void Update(float DeltaTime) override;
   CE::CEActor* cameraActor;
+  CE::CEActor* playerActor;
 };
 
 void TestWorld::Update(float DeltaTime)
@@ -20,21 +23,37 @@ void TestWorld::Update(float DeltaTime)
   totalTime += DeltaTime;
 
   // Вращение вокруг оси Y (вертикальной) на 45 градусов в секунду
-  float rotationSpeed = 45.0f;  // градусов в секунду
-  float currentRotation = totalTime * rotationSpeed;
+  float rotationSpeed = 180.0f;  // градусов в секунду
+  float currentRotation = totalTime * (rotationSpeed / 20.f);
 
-  // Постепенное отдаление камеры
-  float initialDistance = 10.0f;  // начальная дистанция
-  float moveSpeed = 2.0f;         // скорость отдаления (единиц в секунду)
-  float currentDistance = initialDistance + (totalTime * moveSpeed);
-
-  // Устанавливаем позицию камеры (вращение + отдаление)
-  float x = 0.0f;
-  float y = 0.0f;
-  float z = currentDistance;
-
-  cameraActor->SetActorLocation(glm::vec3(x, y, z));
   cameraActor->SetActorRotation(glm::vec3(0.f, 0.f, currentRotation));
+
+  // Rotate all other actors differently so lighting can be visually tested.
+  // We iterate through actors owned by this level and apply a per-actor
+  // rotation that depends on the actor index so each one rotates uniquely.
+  int idx = 0;
+  for (const auto& actorPtr : GetActors())
+  {
+    CE::CEActor* actor = actorPtr.get();
+    if (!actor)
+      continue;
+    // Skip the camera actor
+    if (actor == cameraActor)
+    {
+      ++idx;
+      continue;
+    }
+
+    // Derive a unique speed/axis for this actor using its index
+    float speed = rotationSpeed + (idx * 7.5f);
+    // Make rotations vary per-axis for visual variety
+    glm::vec3 rot = glm::vec3(totalTime * glm::radians(speed * 1.5f),
+                              totalTime * glm::radians(speed),
+                              totalTime * glm::radians(speed * 1.3f));
+
+    actor->SetActorRotation(rot);
+    ++idx;
+  }
 }
 class GameWorld : public CE::CEWorld
 {
@@ -55,22 +74,19 @@ TestWorld::TestWorld() : CE::CELevel(nullptr, "TestWorld")
   cameraActor->SetActorRotation(glm::vec3(0.0f, 0.0f, 0.0f));
 
   // Спавним меш-акторы
-  auto* player = SpawnActor<CE::CEActor>(this, "Player");
+  playerActor = SpawnActor<CE::CEActor>(this, "Player");
   auto* enemy = SpawnActor<CE::CEActor>(this, "Enemy");
 
-  player->SetRootComponent(player->AddDefaultSubObject<CE::MeshComponent>("PlayerMesh", player, "PlayerMesh"));
+  playerActor->SetRootComponent(playerActor->AddDefaultSubObject<CE::MeshComponent>("PlayerMesh", playerActor, "PlayerMesh"));
   enemy->SetRootComponent(enemy->AddDefaultSubObject<CE::MeshComponent>("EnemyMesh", enemy, "EnemyMesh"));
 
   // РАЗНЫЕ позиции для мешей
-  player->SetActorLocation(glm::vec3(-2.0f, 0.0f, 0.0f));  // Слева на уровне земли
-  enemy->SetActorLocation(glm::vec3(2.0f, 1.5f, 0.0f));
-
-  player->SetActorLocation(glm::vec3(-3.0f, 0.0f, 0.0f));
-  enemy->SetActorLocation(glm::vec3(3.0f, 0.0f, 0.0f));
+  playerActor->SetActorLocation(glm::vec3(-2.0f, -2.0f, 0.0f));  // Слева на уровне земли
+  enemy->SetActorLocation(glm::vec3(7.0f, 1.5f, 0.0f));
 
   // Если есть метод SetActorScale
-  player->SetActorScale(glm::vec3(1.0f, 1.0f, 1.0f));  // Нормальный размер
-  enemy->SetActorScale(glm::vec3(1.5f, 1.5f, 1.5f));
+  playerActor->SetActorScale(glm::vec3(2.0f, 2.0f, 2.0f));  // Нормальный размер
+  enemy->SetActorScale(glm::vec3(1.f, 1.f, 1.f));
 
   // Создаем несколько кубов в разных позициях
   std::vector<glm::vec3> positions = {
@@ -102,13 +118,22 @@ TestWorld::TestWorld() : CE::CELevel(nullptr, "TestWorld")
     }
   }
 
-  auto* playerMesh = dynamic_cast<CE::MeshComponent*>(player->GetRootComponent());
-  //  auto* enemyMesh = dynamic_cast<CE::MeshComponent*>(enemy->GetRootComponent());
+  auto* playerMesh = dynamic_cast<CE::MeshComponent*>(playerActor->GetRootComponent());
+  auto* enemyMesh = dynamic_cast<CE::MeshComponent*>(enemy->GetRootComponent());
 
   if (playerMesh)
-    playerMesh->SetColor(glm::vec3(0.2f, 0.8f, 0.2f));  // Зеленый
-                                                        // if (enemyMesh)
-                                                        //   enemyMesh->SetColor(glm::vec3(0.8f, 0.2f, 0.2f));  // Красный
+    playerMesh->SetColor(glm::vec3(0.f, 0.8f, 0.f));  // Зеленый
+  if (enemyMesh)
+    enemyMesh->SetColor(glm::vec3(0.8f, 0.2f, 0.2f));  // Красный
+  // Spawn a SunActor to control world's directional/positional "sun" light
+  auto* sun = SpawnActor<CE::SunActor>(this, "SunActor");
+  if (sun)
+  {
+    sun->SetColor(glm::vec3(1.0f, 0.95f, 0.85f));
+    sun->SetIntensity(2.0f);
+    sun->SetRadius(15.0f);
+    sun->SetAngularSpeed(0.25f);
+  }
 
   CE_CORE_DEBUG("TestWorld created with camera and mesh actors");
 }
@@ -117,4 +142,18 @@ GameWorld::GameWorld() : CE::CEWorld(nullptr, "MainGameWorld")
 {
   AddLevel(std::make_unique<TestWorld>());
   SetCurrentLevel("TestWorld");
+
+  // Инициализируем базовое освещение при создании мира
+  // Устанавливаем мировое (по-умолчанию) освещение, чтобы уровни могли его
+  // унаследовать, если не заполняют свои собственные данные освещения.
+  CE::LightingUBO worldLighting;
+  worldLighting.lightCount = 1;
+  worldLighting.lightPositions[0] = glm::vec4(5.0f, 5.0f, 5.0f, 1.0f);
+  worldLighting.lightColors[0] = glm::vec4(1.0f, 0.0f, 0.0f, 1.2f);
+
+  worldLighting.ambientColor = glm::vec4(0.2f, 0.2f, 0.2f, 0.8f);
+
+  SetDefaultLighting(worldLighting);
+
+  // (SunActor is spawned per-level inside TestWorld::TestWorld)
 }
