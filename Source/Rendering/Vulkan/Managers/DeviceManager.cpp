@@ -1,6 +1,6 @@
-#include "Rendering/Vulkan/DeviceManager.h"
+#include "Rendering/Vulkan/Managers/DeviceManager.h"
 
-#include "Rendering/Vulkan/VulkanUtils.h"
+#include "Rendering/Vulkan/Utils/VulkanUtils.h"
 
 namespace CE
 {
@@ -50,7 +50,6 @@ namespace CE
       CE_RENDER_DEBUG("Logical device destroyed");
     }
 
-    // Physical device doesn't need destruction
     m_physicalDevice = VK_NULL_HANDLE;
   }
 
@@ -64,16 +63,13 @@ namespace CE
     std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
     vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
 
-    // Find graphics queue family
     for (uint32_t i = 0; i < queueFamilyCount; i++)
     {
-      // Check for graphics support
       if (queueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT)
       {
         indices.graphicsFamily = i;
       }
 
-      // Check for presentation support
       VkBool32 presentSupport = false;
       if (surface != VK_NULL_HANDLE)
       {
@@ -85,7 +81,6 @@ namespace CE
       }
       else
       {
-        // Если surface не предоставлен, используем ту же очередь что и для графики
         indices.presentFamily = indices.graphicsFamily;
       }
 
@@ -117,7 +112,6 @@ namespace CE
 
     CE_RENDER_DEBUG("Found ", deviceCount, " physical device(s)");
 
-    // Use an ordered map to automatically sort candidates by increasing score
     std::multimap<int, VkPhysicalDevice> candidates;
 
     for (const auto& device : devices)
@@ -126,7 +120,6 @@ namespace CE
       candidates.insert(std::make_pair(score, device));
     }
 
-    // Check if the best candidate is suitable at all
     if (candidates.rbegin()->first > 0)
     {
       m_physicalDevice = candidates.rbegin()->second;
@@ -167,22 +160,18 @@ namespace CE
       queueCreateInfos.push_back(queueCreateInfo);
     }
 
-    // Specify used device features
     VkPhysicalDeviceFeatures deviceFeatures{};
-    deviceFeatures.samplerAnisotropy = VK_TRUE;  // Request anisotropy if available
+    deviceFeatures.samplerAnisotropy = VK_TRUE;
 
-    // Create the logical device
     VkDeviceCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
     createInfo.pQueueCreateInfos = queueCreateInfos.data();
     createInfo.pEnabledFeatures = &deviceFeatures;
 
-    // Enable device extensions
     createInfo.enabledExtensionCount = static_cast<uint32_t>(m_deviceExtensions.size());
     createInfo.ppEnabledExtensionNames = m_deviceExtensions.data();
 
-// Validation layers (deprecated for modern Vulkan, but kept for compatibility)
 #ifdef _DEBUG
     const std::vector<const char*> validationLayers = {
         "VK_LAYER_KHRONOS_validation"};
@@ -212,11 +201,9 @@ namespace CE
 
     bool extensionsSupported = CheckDeviceExtensionSupport(device);
 
-    // For now, we also require swap chain support
     bool swapChainAdequate = false;
     if (extensionsSupported)
     {
-      // We'll check swap chain details later, for now just assume it's adequate
       swapChainAdequate = true;
     }
 
@@ -240,16 +227,13 @@ namespace CE
 
     int score = 0;
 
-    // Discrete GPUs have a significant performance advantage
     if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
     {
       score += 1000;
     }
 
-    // Maximum possible size of textures affects graphics quality
     score += deviceProperties.limits.maxImageDimension2D;
 
-    // Prefer devices with higher VRAM
     VkPhysicalDeviceMemoryProperties memoryProperties;
     vkGetPhysicalDeviceMemoryProperties(device, &memoryProperties);
 

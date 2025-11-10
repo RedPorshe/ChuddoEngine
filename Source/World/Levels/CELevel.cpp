@@ -54,8 +54,7 @@ namespace CE
   {
     CEObject::Update(DeltaTime);
 
-    // Обновляем все акторы на уровне
-    for (auto& actor : m_Actors)
+        for (auto& actor : m_Actors)
     {
       actor->Update(DeltaTime);
     }

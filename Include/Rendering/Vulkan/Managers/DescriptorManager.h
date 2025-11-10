@@ -3,8 +3,8 @@
 #include <vector>
 
 #include "CoreMinimal.h"
-#include "Rendering/Vulkan/BufferManager.h"
-#include "Rendering/Vulkan/DeviceManager.h"
+#include "Rendering/Vulkan/Managers/BufferManager.h"
+#include "Rendering/Vulkan/Managers/DeviceManager.h"
 #include "vulkan/vulkan.h"
 
 namespace CE

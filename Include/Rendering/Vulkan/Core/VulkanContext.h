@@ -4,13 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "Rendering/Data/RenderData.h"
-#include "Rendering/Vulkan/BufferManager.h"
-#include "Rendering/Vulkan/CommandBufferManager.h"
-#include "Rendering/Vulkan/DescriptorManager.h"
-#include "Rendering/Vulkan/DeviceManager.h"
-#include "Rendering/Vulkan/PipelineManager.h"
-#include "Rendering/Vulkan/SwapchainManager.h"
-#include "Rendering/Vulkan/VulkanUtils.h"
+#include "Rendering/Vulkan/Managers/BufferManager.h"
+#include "Rendering/Vulkan/Managers/CommandBufferManager.h"
+#include "Rendering/Vulkan/Managers/DescriptorManager.h"
+#include "Rendering/Vulkan/Managers/DeviceManager.h"
+#include "Rendering/Vulkan/Managers/PipelineManager.h"
+#include "Rendering/Vulkan/Managers/SwapchainManager.h"
+#include "Rendering/Vulkan/Utils/VulkanUtils.h"
 #include "vulkan/vulkan.h"
 
 struct GLFWwindow;

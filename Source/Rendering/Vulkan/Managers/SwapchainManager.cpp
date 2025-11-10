@@ -1,4 +1,4 @@
-#include "Rendering/Vulkan/SwapchainManager.h"
+#include "Rendering/Vulkan/Managers/SwapchainManager.h"
 
 #include <algorithm>
 #include <stdexcept>
@@ -394,11 +394,8 @@ namespace CE
     }
     else
     {
-      // For now, return a fixed extent since we don't have window info
-      // In practice, you'd get this from your window system
       VkExtent2D actualExtent = {800, 600};
 
-      // If we have a GLFW window pointer, query its framebuffer size instead
       if (m_window)
       {
         int width = 0, height = 0;

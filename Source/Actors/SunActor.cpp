@@ -24,17 +24,14 @@ namespace CE
   {
     CEActor::Update(DeltaTime);
 
-    // Advance orbit angle
     m_Angle += m_AngularSpeed * DeltaTime;
 
-    // Compute sun position in world space (simple elliptical orbit)
     float x = std::cos(m_Angle) * m_Radius;
-    float y = std::sin(m_Angle) * (m_Radius * 0.5f) + (m_Radius * 0.2f);  // tilt/height
+    float y = std::sin(m_Angle) * (m_Radius * 0.5f) + (m_Radius * 0.2f);
     float z = std::sin(m_Angle * 0.5f) * (m_Radius * 0.3f);
 
     glm::vec3 sunPos = glm::vec3(x, y, z);
 
-    // Locate world via owner chain (actor -> level -> world)
     CELevel* level = GetLevel();
     if (!level)
       return;
@@ -47,7 +44,6 @@ namespace CE
     if (!world)
       return;
 
-    // Update world's default lighting to move the sun
     LightingUBO lighting = world->GetDefaultLighting();
     lighting.lightCount = 1;
     lighting.lightPositions[0] = glm::vec4(sunPos, 1.0f);

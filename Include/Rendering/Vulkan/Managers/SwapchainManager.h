@@ -3,8 +3,8 @@
 #include <vector>
 
 #include "CoreMinimal.h"
-#include "Rendering/Vulkan/DeviceManager.h"
-#include "Rendering/Vulkan/VulkanUtils.h"
+#include "Rendering/Vulkan/Managers/DeviceManager.h"
+#include "Rendering/Vulkan/Utils/VulkanUtils.h"
 #include "vulkan/vulkan.h"
 
 // Forward declare GLFW type (we include GLFW in VulkanContext.cpp)

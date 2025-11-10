@@ -1,4 +1,4 @@
-#include "Rendering/Vulkan/BufferManager.h"
+#include "Rendering/Vulkan/Managers/BufferManager.h"
 
 #include <stdexcept>
 
@@ -72,7 +72,6 @@ namespace CE
 
     VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
 
-    // Создаем staging buffer для загрузки данных
     VkBuffer stagingBuffer;
     VkDeviceMemory stagingBufferMemory;
     if (!CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
@@ -83,13 +82,11 @@ namespace CE
       return false;
     }
 
-    // Копируем данные в staging buffer
     void* data;
     vkMapMemory(m_deviceManager->GetDevice(), stagingBufferMemory, 0, bufferSize, 0, &data);
     memcpy(data, vertices.data(), (size_t)bufferSize);
     vkUnmapMemory(m_deviceManager->GetDevice(), stagingBufferMemory);
 
-    // Создаем vertex buffer в device local memory
     VkBuffer vertexBuffer;
     VkDeviceMemory vertexBufferMemory;
     if (!CreateBuffer(bufferSize,
@@ -103,10 +100,8 @@ namespace CE
       return false;
     }
 
-    // Копируем данные из staging buffer в vertex buffer
     CopyBuffer(stagingBuffer, vertexBuffer, bufferSize);
 
-    // Сохраняем буфер
     BufferInfo bufferInfo;
     bufferInfo.buffer = vertexBuffer;
     bufferInfo.memory = vertexBufferMemory;
@@ -114,11 +109,9 @@ namespace CE
     bufferInfo.type = BufferType::VERTEX;
     m_buffers[name] = bufferInfo;
 
-    // Очищаем staging buffer
     vkDestroyBuffer(m_deviceManager->GetDevice(), stagingBuffer, nullptr);
     vkFreeMemory(m_deviceManager->GetDevice(), stagingBufferMemory, nullptr);
 
-    CE_RENDER_DEBUG("Created vertex buffer '", name, "' with ", vertices.size(), " vertices");
     return true;
   }
 
@@ -132,7 +125,6 @@ namespace CE
 
     VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
 
-    // Создаем staging buffer
     VkBuffer stagingBuffer;
     VkDeviceMemory stagingBufferMemory;
     if (!CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
@@ -143,13 +135,11 @@ namespace CE
       return false;
     }
 
-    // Копируем данные
     void* data;
     vkMapMemory(m_deviceManager->GetDevice(), stagingBufferMemory, 0, bufferSize, 0, &data);
     memcpy(data, indices.data(), (size_t)bufferSize);
     vkUnmapMemory(m_deviceManager->GetDevice(), stagingBufferMemory);
 
-    // Создаем index buffer
     VkBuffer indexBuffer;
     VkDeviceMemory indexBufferMemory;
     if (!CreateBuffer(bufferSize,
@@ -163,10 +153,8 @@ namespace CE
       return false;
     }
 
-    // Копируем данные
     CopyBuffer(stagingBuffer, indexBuffer, bufferSize);
 
-    // Сохраняем буфер
     BufferInfo bufferInfo;
     bufferInfo.buffer = indexBuffer;
     bufferInfo.memory = indexBufferMemory;
@@ -174,11 +162,9 @@ namespace CE
     bufferInfo.type = BufferType::INDEX;
     m_buffers[name] = bufferInfo;
 
-    // Очищаем staging buffer
     vkDestroyBuffer(m_deviceManager->GetDevice(), stagingBuffer, nullptr);
     vkFreeMemory(m_deviceManager->GetDevice(), stagingBufferMemory, nullptr);
 
-    CE_RENDER_DEBUG("Created index buffer '", name, "' with ", indices.size(), " indices");
     return true;
   }
 
@@ -189,8 +175,6 @@ namespace CE
       CE_RENDER_WARN("Uniform buffer '", name, "' already exists");
       return true;
     }
-
-    CE_RENDER_DEBUG("Creating uniform buffer '", name, "' with size ", size);
 
     VkBuffer uniformBuffer;
     VkDeviceMemory uniformBufferMemory;
@@ -210,7 +194,6 @@ namespace CE
     bufferInfo.type = BufferType::UNIFORM;
     m_buffers[name] = bufferInfo;
 
-    CE_RENDER_DEBUG("Successfully created uniform buffer '", name, "' with handle: ", static_cast<void*>(uniformBuffer));
     return true;
   }
 
@@ -339,8 +322,6 @@ namespace CE
     vkMapMemory(m_deviceManager->GetDevice(), it->second.memory, 0, size, 0, &mappedData);
     memcpy(mappedData, data, (size_t)size);
     vkUnmapMemory(m_deviceManager->GetDevice(), it->second.memory);
-
-    CE_RENDER_DEBUG("Updated uniform buffer '", name, "' with ", size, " bytes");
     return true;
   }
 

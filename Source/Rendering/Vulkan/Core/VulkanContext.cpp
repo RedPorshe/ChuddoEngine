@@ -1,4 +1,4 @@
-#include "Rendering/Vulkan/VulkanContext.h"
+#include "Rendering/Vulkan/Core/VulkanContext.h"
 
 #include <GLFW/glfw3.h>
 
@@ -10,6 +10,7 @@ void CE::VulkanContext::Initialize()
 {
   if (!InitWindow())
   {
+    CE_RENDER_ERROR("Failed to create Window");
     Shutdown();
     return;
   }
@@ -124,7 +125,6 @@ void CE::VulkanContext::Initialize()
     return;
   }
 
-  // Создаем объекты синхронизации
   CreateSyncObjects();
 
   CE_RENDER_DEBUG("VulkanContext initialized successfully");
@@ -299,7 +299,6 @@ void CE::VulkanContext::DrawFrame(const FrameRenderData& renderData)
 
 void CE::VulkanContext::RegisterMesh(const std::string& name, const StaticMesh& mesh)
 {
-  // Создаем vertex buffer
   std::string vertexBufferName = name + "_vertices";
   if (!m_bufferManager->CreateVertexBuffer(vertexBufferName, mesh.vertices))
   {
@@ -307,7 +306,6 @@ void CE::VulkanContext::RegisterMesh(const std::string& name, const StaticMesh& 
     return;
   }
 
-  // Создаем index buffer
   std::string indexBufferName = name + "_indices";
   if (!m_bufferManager->CreateIndexBuffer(indexBufferName, mesh.indices))
   {
@@ -316,7 +314,6 @@ void CE::VulkanContext::RegisterMesh(const std::string& name, const StaticMesh& 
     return;
   }
 
-  // Создаем ModelUBO буфер для этого меша
   std::string modelUBOName = name + "_model_ubo";
   if (!m_bufferManager->CreateUniformBuffer(modelUBOName, sizeof(ModelUBO)))
   {
@@ -336,7 +333,6 @@ void CE::VulkanContext::RegisterMesh(const std::string& name, const StaticMesh& 
     return;
   }
 
-  // ОБНОВЛЯЕМ ДЕСКРИПТОРНЫЙ НАБОР С БУФЕРАМИ
   if (!m_descriptorManager->UpdateMeshDescriptorSet(name,
                                                     m_sceneUBOBufferName,
                                                     modelUBOName,
@@ -349,14 +345,11 @@ void CE::VulkanContext::RegisterMesh(const std::string& name, const StaticMesh& 
     return;
   }
 
-  // Сохраняем mapping
   MeshBuffers buffers;
   buffers.vertexBufferName = vertexBufferName;
   buffers.indexBufferName = indexBufferName;
   buffers.modelUBOName = modelUBOName;
   m_meshBufferMap[name] = buffers;
-
-  CE_RENDER_DEBUG("Registered mesh: ", name, " with ", mesh.vertices.size(), " vertices and ", mesh.indices.size(), " indices");
 }
 
 void CE::VulkanContext::UnregisterMesh(const std::string& name)
@@ -376,7 +369,6 @@ void CE::VulkanContext::UnregisterMesh(const std::string& name)
 
 void CE::VulkanContext::CreateSyncObjects()
 {
-  // Создаем семафоры для каждого изображения свопчейна
   uint32_t imageCount = m_swapchainManager->GetImageCount();
 
   m_imageAvailableSemaphores.resize(imageCount);
@@ -391,7 +383,6 @@ void CE::VulkanContext::CreateSyncObjects()
   fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
   fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-  // Создаем семафоры для каждого изображения свопчейна
   for (size_t i = 0; i < imageCount; i++)
   {
     VkResult result1 = vkCreateSemaphore(m_deviceManager->GetDevice(), &semaphoreInfo, nullptr, &m_imageAvailableSemaphores[i]);
@@ -403,7 +394,6 @@ void CE::VulkanContext::CreateSyncObjects()
     }
   }
 
-  // Создаем fences для каждого кадра в полете
   for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
   {
     VkResult result = vkCreateFence(m_deviceManager->GetDevice(), &fenceInfo, nullptr, &m_inFlightFences[i]);
@@ -447,17 +437,15 @@ void CE::VulkanContext::CleanupSyncObjects()
     }
   }
 
-  CE_RENDER_DEBUG("Destroyed synchronization objects");
+  CE_RENDER_DEBUG("Synchronization objects destroyed");
 }
 
 void CE::VulkanContext::RecordCommandBuffer(uint32_t imageIndex, const FrameRenderData& renderData)
 {
-  // Начинаем запись команд
   m_commandBufferManager->BeginRecording(imageIndex);
 
-  // Начинаем render pass
   std::vector<VkClearValue> clearValues(2);
-  clearValues[0].color = {{0.01f, 0.01f, 0.01f, 1.0f}};  // Темно-серый цвет фона
+  clearValues[0].color = {{0.0f, 0.0f, 0.0f, 1.0f}};
   clearValues[1].depthStencil = {1.0f, 0};
 
   m_commandBufferManager->BeginRenderPass(imageIndex,
@@ -466,13 +454,11 @@ void CE::VulkanContext::RecordCommandBuffer(uint32_t imageIndex, const FrameRend
                                           m_swapchainManager->GetExtent(),
                                           clearValues);
 
-  // Привязываем пайплайн
   VkPipeline meshPipeline = m_pipelineManager->GetPipeline("mesh");
   if (meshPipeline != VK_NULL_HANDLE)
   {
     m_commandBufferManager->BindPipeline(imageIndex, meshPipeline);
 
-    // Устанавливаем viewport и scissor
     VkViewport viewport{};
     viewport.x = 0.0f;
     viewport.y = 0.0f;
@@ -487,7 +473,6 @@ void CE::VulkanContext::RecordCommandBuffer(uint32_t imageIndex, const FrameRend
     scissor.extent = m_swapchainManager->GetExtent();
     m_commandBufferManager->SetScissor(imageIndex, scissor);
 
-    // Рендерим все объекты
     for (const auto& renderObject : renderData.renderObjects)
     {
       if (!renderObject.mesh)
@@ -502,9 +487,8 @@ void CE::VulkanContext::RecordCommandBuffer(uint32_t imageIndex, const FrameRend
 
       const auto& meshBuffers = m_meshBufferMap[meshName];
 
-      // Обновляем ModelUBO для этого меша (передаём цвет меша)
       ModelUBO modelUBO = renderData.GetModelUBO(renderObject.transform, renderObject.color);
-      CE_RENDER_DEBUG("ModelUBO color:", modelUBO.color.r, ",", modelUBO.color.g, ",", modelUBO.color.b);
+
       m_bufferManager->UpdateUniformBuffer(meshBuffers.modelUBOName, &modelUBO, sizeof(ModelUBO));
 
       VkBuffer vertexBuffer = m_bufferManager->GetBuffer(meshBuffers.vertexBufferName);
@@ -512,7 +496,6 @@ void CE::VulkanContext::RecordCommandBuffer(uint32_t imageIndex, const FrameRend
 
       if (vertexBuffer != VK_NULL_HANDLE && indexBuffer != VK_NULL_HANDLE)
       {
-        // ПРИВЯЗЫВАЕМ ДЕСКРИПТОРНЫЙ НАБОР ДЛЯ КОНКРЕТНОГО МЕША
         VkDescriptorSet meshDescriptorSet = m_descriptorManager->GetMeshDescriptorSet(meshName);
         if (meshDescriptorSet != VK_NULL_HANDLE)
         {
@@ -533,30 +516,19 @@ void CE::VulkanContext::RecordCommandBuffer(uint32_t imageIndex, const FrameRend
     }
   }
 
-  // Заканчиваем render pass
   m_commandBufferManager->EndRenderPass(imageIndex);
 
-  // Заканчиваем запись команд
   m_commandBufferManager->EndRecording(imageIndex);
 }
 
 void CE::VulkanContext::UpdateUniformBuffers(const FrameRenderData& renderData)
 {
-  // Обновляем Lighting UBO
   LightingUBO lightingUBO = renderData.lighting;
-  // Do not override lighting values here - use values provided in renderData
-  // Add a debug log to confirm what will be uploaded
-  CE_RENDER_DEBUG("Uploading LightingUBO - ambient:", lightingUBO.ambientColor.r, ",",
-                  lightingUBO.ambientColor.g, ",", lightingUBO.ambientColor.b,
-
-                  " lightCount:", lightingUBO.lightCount);
 
   m_bufferManager->UpdateUniformBuffer(m_lightingUBOBufferName, &lightingUBO, sizeof(LightingUBO));
-  // Обновляем Scene UBO
+
   SceneUBO sceneUBO = renderData.GetSceneUBO();
   m_bufferManager->UpdateUniformBuffer(m_sceneUBOBufferName, &sceneUBO, sizeof(SceneUBO));
-
-  // ModelUBO обновляется для каждого объекта в RecordCommandBuffer
 }
 
 bool CE::VulkanContext::ShouldClose() const
@@ -569,7 +541,6 @@ bool CE::VulkanContext::InitWindow()
   if (!glfwInit())
     return false;
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-  // Allow window to be resizable so swapchain can adapt to user size changes
   glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
   CE_CHECK((m_window = glfwCreateWindow(m_info->Width, m_info->Height, m_info->AppName.c_str(), nullptr, nullptr)) != nullptr);
   if (!m_window)
@@ -578,9 +549,9 @@ bool CE::VulkanContext::InitWindow()
     glfwTerminate();
     return false;
   }
-  // Store pointer to this context so callbacks can notify it
+
   glfwSetWindowUserPointer(m_window, this);
-  // Framebuffer size callback will mark the framebuffer as resized
+
   glfwSetFramebufferSizeCallback(m_window, [](GLFWwindow* window, int width, int height)
                                  {
                                    (void)width;
@@ -624,7 +595,6 @@ bool CE::VulkanContext::CreateInstance()
   CreateInfo.enabledExtensionCount = static_cast<uint32_t>(Extensions.size());
   CreateInfo.ppEnabledExtensionNames = Extensions.data();
 
-  // Set validation layers
   if (bIsValidationEnabled)
   {
     CreateInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
@@ -688,7 +658,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL CE::VulkanContext::DebugCallback(
 {
   (void)messageType;
   (void)pUserData;
-  // Log Vulkan validation messages
+
   if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
   {
     CE_RENDER_ERROR("Vulkan Validation Error: ", pCallbackData->pMessage);

@@ -1,6 +1,6 @@
 #include "Rendering/Vulkan/Integration/RenderSystem.h"
 
-#include "Rendering/Vulkan/VulkanContext.h"
+#include "Rendering/Vulkan/Core/VulkanContext.h"
 
 namespace CE
 {

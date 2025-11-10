@@ -5,8 +5,8 @@
 
 #include "CoreMinimal.h"
 #include "Rendering/Data/Vertex.h"
-#include "Rendering/Vulkan/DeviceManager.h"
-#include "Rendering/Vulkan/SwapchainManager.h"
+#include "Rendering/Vulkan/Managers/DeviceManager.h"
+#include "Rendering/Vulkan/Managers/SwapchainManager.h"
 #include "vulkan/vulkan.h"
 
 namespace CE

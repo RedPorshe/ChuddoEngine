@@ -1,4 +1,4 @@
-#include "Rendering/Vulkan/PipelineManager.h"
+#include "Rendering/Vulkan/Managers/PipelineManager.h"
 
 #include <filesystem>
 #include <fstream>
@@ -50,7 +50,6 @@ namespace CE
 
   VkPipeline PipelineManager::CreateMeshPipeline(const std::string& name, VkRenderPass renderPass)
   {
-    // Проверяем, не создан ли уже такой пайплайн
     auto it = m_pipelines.find(name);
     if (it != m_pipelines.end())
     {
@@ -62,14 +61,12 @@ namespace CE
 
     try
     {
-      // Загружаем шейдеры
       auto vertShaderCode = ReadShaderFile(VERTEX_SHADER_PATH);
       auto fragShaderCode = ReadShaderFile(FRAGMENT_SHADER_PATH);
 
       VkShaderModule vertShaderModule = CreateShaderModule(vertShaderCode);
       VkShaderModule fragShaderModule = CreateShaderModule(fragShaderCode);
 
-      // Создаем информацию о стадиях шейдеров
       std::vector<VkPipelineShaderStageCreateInfo> shaderStages = {
           {VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
            nullptr,
@@ -86,7 +83,6 @@ namespace CE
            "main",
            nullptr}};
 
-      // Конфигурируем пайплайн
       PipelineConfigInfo configInfo{};
       DefaultPipelineConfigInfo(configInfo);
       configInfo.renderPass = renderPass;
@@ -95,14 +91,11 @@ namespace CE
       configInfo.depthStencilInfo.depthWriteEnable = VK_TRUE;
       configInfo.depthStencilInfo.depthCompareOp = VK_COMPARE_OP_LESS;
 
-      // Создаем графический пайплайн
       VkPipeline pipeline = CreateGraphicsPipeline(configInfo, shaderStages);
 
-      // Очищаем шейдерные модули
       vkDestroyShaderModule(m_deviceManager->GetDevice(), vertShaderModule, nullptr);
       vkDestroyShaderModule(m_deviceManager->GetDevice(), fragShaderModule, nullptr);
 
-      // Сохраняем пайплайн
       m_pipelines[name] = pipeline;
 
       CE_RENDER_DEBUG("Mesh pipeline '", name, "' created successfully");
@@ -161,7 +154,6 @@ namespace CE
       return false;
     }
 
-    // Создаем layout пайплайна
     VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipelineLayoutInfo.setLayoutCount = 1;
@@ -211,13 +203,10 @@ namespace CE
     vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
     vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
 
-    // Viewport и scissor
     VkViewport viewport{};
     viewport.x = 0.0f;
     viewport.y = 0.0f;
-    // Viewport/scissor are dynamic for this project; leave zero-sized placeholders
-    // here to avoid hardcoding values like 800x600. The actual viewport is set
-    // at command recording time using the swapchain extent.
+
     viewport.width = 0.0f;
     viewport.height = 0.0f;
     viewport.minDepth = 0.0f;
@@ -265,11 +254,9 @@ namespace CE
 
   std::vector<char> PipelineManager::ReadShaderFile(const std::string& filename)
   {
-    // Try a few likely locations so running the exe from project root or from
-    // the build output directory both work.
     std::vector<std::string> candidates;
-    candidates.push_back(filename);                                    // as given
-    candidates.push_back(std::string("build/bin/Debug/") + filename);  // common build output
+    candidates.push_back(filename);
+    candidates.push_back(std::string("build/bin/Debug/") + filename);
     candidates.push_back(std::string("build/bin/Release/") + filename);
 
     std::ifstream file;
@@ -289,7 +276,6 @@ namespace CE
 
     if (!file.is_open())
     {
-      // Last attempt: try the filename directly (will throw with clearer message)
       file.open(filename, std::ios::ate | std::ios::binary);
       if (!file.is_open())
       {

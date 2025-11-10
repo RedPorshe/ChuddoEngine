@@ -184,7 +184,6 @@ namespace CE
     if (!m_CurrentLevel)
       return;
 
-    // Собираем данные камеры
     if (auto* camera = FindActiveCamera())
     {
       CameraData camData;
@@ -196,13 +195,11 @@ namespace CE
     }
     else
     {
-      // Камера по умолчанию, если не найдена
       CameraData defaultCam;
       defaultCam.viewMatrix = glm::lookAt(
-          glm::vec3(0.0f, 0.0f, 10.0f),  // Позиция камеры
-          glm::vec3(0.0f, 0.0f, 0.0f),   // Смотрит в центр
-          glm::vec3(0.0f, 1.0f, 0.0f)    // Вверх
-      );
+          glm::vec3(0.0f, 0.0f, 10.0f),
+          glm::vec3(0.0f, 0.0f, 0.0f),
+          glm::vec3(0.0f, 1.0f, 0.0f));
       defaultCam.projectionMatrix = glm::perspective(
           glm::radians(45.0f), 16.0f / 9.0f, 0.1f, 1000.0f);
       defaultCam.position = glm::vec3(0.0f, 0.0f, 10.0f);
@@ -211,7 +208,6 @@ namespace CE
       CE_CORE_DEBUG("Using default camera");
     }
 
-    // Собираем рендер-объекты используя GetComponents<T>()
     for (const auto& actor : m_CurrentLevel->GetActors())
     {
       auto meshComponents = actor->GetComponents<MeshComponent>();
@@ -227,25 +223,14 @@ namespace CE
       }
     }
 
-    // Получаем настройки освещения из уровня
     auto& lighting = renderData.lighting;
 
-    // Если уровень не заполнил данные освещения, используем мировую настройку
     if (lighting.lightCount == 0 && m_defaultLighting.lightCount > 0)
     {
-      CE_CORE_DEBUG("Level didn't provide lighting - applying world default lighting");
+      // CE_CORE_DEBUG("Level didn't provide lighting - applying world default lighting");
       lighting = m_defaultLighting;
     }
 
-    // Проверяем и выводим текущие настройки освещения (для отладки)
-    CE_CORE_DEBUG("Light Count: ", lighting.lightCount);
-    CE_CORE_DEBUG("Light Position: ", lighting.lightPositions[0].x, ", ",
-                  lighting.lightPositions[0].y, ", ",
-                  lighting.lightPositions[0].z);
-    CE_CORE_DEBUG("Light Intensity: ", lighting.lightColors[0].w);
-    CE_CORE_DEBUG("Ambient Intensity: ", lighting.ambientColor.w);
-
-    // Если освещение не настроено нигде, устанавливаем значения по умолчанию
     if (lighting.lightCount == 0)
     {
       CE_CORE_DEBUG("Setting up default lighting...");

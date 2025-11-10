@@ -1,4 +1,4 @@
-#include "Rendering/Vulkan/VulkanUtils.h"
+#include "Rendering/Vulkan/Utils/VulkanUtils.h"
 
 #include <fstream>
 #include <stdexcept>

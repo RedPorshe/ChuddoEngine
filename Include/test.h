@@ -13,6 +13,7 @@ class TestWorld : public CE::CELevel
   virtual void Update(float DeltaTime) override;
   CE::CEActor* cameraActor;
   CE::CEActor* playerActor;
+  CE::SunActor* DirectLighter;
 };
 
 void TestWorld::Update(float DeltaTime)
@@ -28,9 +29,6 @@ void TestWorld::Update(float DeltaTime)
 
   cameraActor->SetActorRotation(glm::vec3(0.f, 0.f, currentRotation));
 
-  // Rotate all other actors differently so lighting can be visually tested.
-  // We iterate through actors owned by this level and apply a per-actor
-  // rotation that depends on the actor index so each one rotates uniquely.
   int idx = 0;
   for (const auto& actorPtr : GetActors())
   {
@@ -48,13 +46,14 @@ void TestWorld::Update(float DeltaTime)
     float speed = rotationSpeed + (idx * 7.5f);
     // Make rotations vary per-axis for visual variety
     glm::vec3 rot = glm::vec3(totalTime * glm::radians(speed * 1.5f),
-                              totalTime * glm::radians(speed),
+                              totalTime * glm::radians(speed * 1.5f),
                               totalTime * glm::radians(speed * 1.3f));
 
     actor->SetActorRotation(rot);
     ++idx;
   }
 }
+
 class GameWorld : public CE::CEWorld
 {
  public:
@@ -70,9 +69,13 @@ TestWorld::TestWorld() : CE::CELevel(nullptr, "TestWorld")
   auto* cameraComp = cameraActor->AddDefaultSubObject<CE::CameraComponent>("Camera", cameraActor, "MainCamera");
   cameraActor->SetRootComponent(cameraComp);
   // Позиционируем камеру
-  cameraActor->SetActorLocation(glm::vec3(0.0f, 0.0f, 10.0f));
+  cameraActor->SetActorLocation(glm::vec3(0.0f, 0.0f, 50.0f));
   cameraActor->SetActorRotation(glm::vec3(0.0f, 0.0f, 0.0f));
 
+  DirectLighter = SpawnActor<CE::SunActor>(this, "DirectLight");
+  DirectLighter->SetIntensity(10.f);
+  DirectLighter->SetColor(glm::vec3(0.0f, 1.0f, 0.0f));
+  DirectLighter->SetActorLocation(glm::vec3(0.0f, 0.0f, 0.0f));
   // Спавним меш-акторы
   playerActor = SpawnActor<CE::CEActor>(this, "Player");
   auto* enemy = SpawnActor<CE::CEActor>(this, "Enemy");

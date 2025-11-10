@@ -112,14 +112,14 @@ namespace CE
         m_FPSTimer = 0.0f;
       }
 
-      static int FRAMES = 0;
-      ++FRAMES;
-      if (FRAMES == 3)
-      {
-        CE_CORE_DEBUG("Frames count reach 3 request exit");
-        m_IsRunning = false;
-      }
-      m_IsRunning = !m_RenderSystem->ShouldClose();  // delete FRAMES and this after stop debug rendering
+      // static int FRAMES = 0;
+      // ++FRAMES;
+      // if (FRAMES == 3)
+      // {
+      //   CE_CORE_DEBUG("Frames count reach 3 request exit");
+      //   m_IsRunning = false;
+      // }
+      // m_IsRunning = !m_RenderSystem->ShouldClose();  // delete FRAMES and this after stop debug rendering
       m_RenderSystem->PollEvents();
     }
   }

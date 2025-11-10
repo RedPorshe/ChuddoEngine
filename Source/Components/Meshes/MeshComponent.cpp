@@ -5,7 +5,6 @@ namespace CE
   MeshComponent::MeshComponent(CEObject* Owner, FString NewName)
       : SceneComponent(Owner, NewName)
   {
-    // Создаем тестовый куб по умолчанию
     CreateCubeMesh();
   }
 
@@ -20,7 +19,6 @@ namespace CE
   void MeshComponent::SetMaterial(const std::string& MaterialPath)
   {
     m_MaterialPath = MaterialPath;
-    // TODO: Загрузка материала
   }
 
   void MeshComponent::CreateCubeMesh()
@@ -101,7 +99,6 @@ namespace CE
   {
     SceneComponent::Update(DeltaTime);
 
-    // Обновляем трансформацию меша для рендеринга
     UpdateMeshTransform();
   }
 }  // namespace CE

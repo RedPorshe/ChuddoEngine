@@ -1,4 +1,4 @@
-#include "Rendering/Vulkan/DescriptorManager.h"
+#include "Rendering/Vulkan/Managers/DescriptorManager.h"
 
 #include <stdexcept>
 
@@ -135,7 +135,6 @@ namespace CE
 
     std::vector<VkWriteDescriptorSet> descriptorWrites;
 
-    // SceneUBO (binding 0)
     VkBuffer sceneBuffer = m_bufferManager->GetBuffer(sceneUBOName);
     VkDeviceSize sceneBufferSize = m_bufferManager->GetBufferSize(sceneUBOName);
     if (sceneBuffer == VK_NULL_HANDLE)
@@ -156,7 +155,6 @@ namespace CE
     sceneWrite.pBufferInfo = &sceneBufferInfo;
     descriptorWrites.push_back(sceneWrite);
 
-    // ModelUBO (binding 1)
     VkBuffer modelBuffer = m_bufferManager->GetBuffer(modelUBOName);
     VkDeviceSize modelBufferSize = m_bufferManager->GetBufferSize(modelUBOName);
     if (modelBuffer == VK_NULL_HANDLE)
@@ -177,7 +175,6 @@ namespace CE
     modelWrite.pBufferInfo = &modelBufferInfo;
     descriptorWrites.push_back(modelWrite);
 
-    // LightingUBO (binding 2)
     VkBuffer lightingBuffer = m_bufferManager->GetBuffer(lightingUBOName);
     VkDeviceSize lightingBufferSize = m_bufferManager->GetBufferSize(lightingUBOName);
     if (lightingBuffer == VK_NULL_HANDLE)
@@ -202,101 +199,6 @@ namespace CE
                            static_cast<uint32_t>(descriptorWrites.size()),
                            descriptorWrites.data(), 0, nullptr);
 
-    CE_RENDER_DEBUG("Updated descriptor set for mesh '", meshName, "'");
     return true;
   }
-
-  // bool DescriptorManager::UpdateDescriptorSets(uint32_t imageIndex,
-  //                                              const std::string& sceneUBOName,
-  //                                              const std::string& modelUBOName,
-  //                                              const std::string& lightingUBOName)
-  // {
-  //   if (imageIndex >= m_descriptorSets.size())
-  //   {
-  //     CE_RENDER_ERROR("Image index out of range: ", imageIndex, " >= ", m_descriptorSets.size());
-  //     return false;
-  //   }
-
-  //   std::vector<VkWriteDescriptorSet> descriptorWrites;
-
-  //   // SceneUBO (binding 0)
-  //   VkBuffer sceneBuffer = m_bufferManager->GetBuffer(sceneUBOName);
-  //   VkDeviceSize sceneBufferSize = m_bufferManager->GetBufferSize(sceneUBOName);
-  //   if (sceneBuffer == VK_NULL_HANDLE)
-  //   {
-  //     CE_RENDER_ERROR("Scene buffer '", sceneUBOName, "' is null!");
-  //     return false;
-  //   }
-
-  //   VkDescriptorBufferInfo sceneBufferInfo{};
-  //   sceneBufferInfo.buffer = sceneBuffer;
-  //   sceneBufferInfo.offset = 0;
-  //   sceneBufferInfo.range = sceneBufferSize;
-
-  //   VkWriteDescriptorSet sceneWrite{};
-  //   sceneWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-  //   sceneWrite.dstSet = m_descriptorSets[imageIndex];
-  //   sceneWrite.dstBinding = 0;
-  //   sceneWrite.dstArrayElement = 0;
-  //   sceneWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-  //   sceneWrite.descriptorCount = 1;
-  //   sceneWrite.pBufferInfo = &sceneBufferInfo;
-  //   descriptorWrites.push_back(sceneWrite);
-
-  //   // ModelUBO (binding 1)
-  //   VkBuffer modelBuffer = m_bufferManager->GetBuffer(modelUBOName);
-  //   VkDeviceSize modelBufferSize = m_bufferManager->GetBufferSize(modelUBOName);
-  //   if (modelBuffer == VK_NULL_HANDLE)
-  //   {
-  //     CE_RENDER_ERROR("Model buffer '", modelUBOName, "' is null!");
-  //     return false;
-  //   }
-
-  //   VkDescriptorBufferInfo modelBufferInfo{};
-  //   modelBufferInfo.buffer = modelBuffer;
-  //   modelBufferInfo.offset = 0;
-  //   modelBufferInfo.range = modelBufferSize;
-
-  //   VkWriteDescriptorSet modelWrite{};
-  //   modelWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-  //   modelWrite.dstSet = m_descriptorSets[imageIndex];
-  //   modelWrite.dstBinding = 1;
-  //   modelWrite.dstArrayElement = 0;
-  //   modelWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-  //   modelWrite.descriptorCount = 1;
-  //   modelWrite.pBufferInfo = &modelBufferInfo;
-  //   descriptorWrites.push_back(modelWrite);
-
-  //   // LightingUBO (binding 2)
-  //   VkBuffer lightingBuffer = m_bufferManager->GetBuffer(lightingUBOName);
-  //   VkDeviceSize lightingBufferSize = m_bufferManager->GetBufferSize(lightingUBOName);
-  //   if (lightingBuffer == VK_NULL_HANDLE)
-  //   {
-  //     CE_RENDER_ERROR("Lighting buffer '", lightingUBOName, "' is null!");
-  //     return false;
-  //   }
-
-  //   VkDescriptorBufferInfo lightingBufferInfo{};
-  //   lightingBufferInfo.buffer = lightingBuffer;
-  //   lightingBufferInfo.offset = 0;
-  //   lightingBufferInfo.range = lightingBufferSize;
-
-  //   VkWriteDescriptorSet lightingWrite{};
-  //   lightingWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-  //   lightingWrite.dstSet = m_descriptorSets[imageIndex];
-  //   lightingWrite.dstBinding = 2;
-  //   lightingWrite.dstArrayElement = 0;
-  //   lightingWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-  //   lightingWrite.descriptorCount = 1;
-  //   lightingWrite.pBufferInfo = &lightingBufferInfo;
-  //   descriptorWrites.push_back(lightingWrite);
-
-  //   vkUpdateDescriptorSets(m_deviceManager->GetDevice(),
-  //                          static_cast<uint32_t>(descriptorWrites.size()),
-  //                          descriptorWrites.data(), 0, nullptr);
-
-  //   CE_RENDER_DEBUG("Updated descriptor set for image index: ", imageIndex);
-  //   return true;
-  // }
-
 }  // namespace CE

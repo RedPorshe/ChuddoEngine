@@ -6,7 +6,7 @@
 namespace CE
 {
 
-    class CEActor : public CEObject
+  class CEActor : public CEObject
   {
    public:
     CEActor(CEObject* Owner = nullptr, FString NewName = "Actor");
@@ -65,7 +65,7 @@ namespace CE
   {
     auto* component = AddSubObject<T>(Name, std::forward<Args>(args)...);
 
-    // Авто-аттач
+    // Авто-аттач только для SceneComponent
     if (m_RootComponent && component != m_RootComponent)
     {
       if (auto* sceneComp = dynamic_cast<SceneComponent*>(component))

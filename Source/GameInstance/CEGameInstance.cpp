@@ -49,7 +49,7 @@ namespace CE
     if (m_CurrentWorld)
     {
       m_CurrentWorld->UnloadCurrentLevel();
-      m_CurrentWorld = nullptr;  // ← Просто обнуляем указатель
+      m_CurrentWorld = nullptr;
       CE_CORE_DEBUG("Unloaded current world");
     }
   }

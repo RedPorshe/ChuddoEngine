@@ -13,11 +13,10 @@ namespace CE
   glm::mat4 CameraComponent::GetViewMatrix() const
   {
     glm::vec3 worldPos = GetWorldLocation();
-    glm::vec3 forward = glm::vec3(0.0f, 0.0f, -1.0f);  // Вперед по -Z
-    glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);        // Вверх по Y
+    glm::vec3 forward = glm::vec3(0.0f, 0.0f, -1.0f);  // Forward on -Z
+    glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);        // Up on Y
 
-    // Поворот камеры на основе rotation компонента
-    glm::mat4 rotationMatrix = glm::mat4(1.0f);
+        glm::mat4 rotationMatrix = glm::mat4(1.0f);
     rotationMatrix = glm::rotate(rotationMatrix, glm::radians(GetRotation().x), glm::vec3(1.0f, 0.0f, 0.0f));
     rotationMatrix = glm::rotate(rotationMatrix, glm::radians(GetRotation().y), glm::vec3(0.0f, 1.0f, 0.0f));
     rotationMatrix = glm::rotate(rotationMatrix, glm::radians(GetRotation().z), glm::vec3(0.0f, 0.0f, 1.0f));
