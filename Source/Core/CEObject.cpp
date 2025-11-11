@@ -1,6 +1,6 @@
 #include "Core/CEObject.h"
 
-#include "Components/Base/Component.h"
+#include "GamePlay/Components/Base/Component.h"
 
 namespace CE
 {

@@ -1,13 +1,13 @@
-#include "Application/Application.h"
-#include "Core/AppInfo.h"
+#include "Core/GuardedMain.h"
 #include "CoreMinimal.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(LogMyGame);
 DEFINE_LOG_CATEGORY(LogMyGame)
 
-int main()
+int main(int argc, char* argv[])
 {
-  CE::Logger::Initialize(true, false);
+  // Инициализация логгера ДО всего
+  CE::Logger::Initialize(false, true);
 
 #ifdef _DEBUG
   CE::Logger::SetGlobalLogLevel(CE::LogLevel::Verbose);
@@ -17,26 +17,25 @@ int main()
   CE_CORE_DISPLAY("=== RELEASE BUILD ===");
 #endif
 
-  CE_CORE_DISPLAY("=== ChuddoEngine Starting ===");
+  int result = 0;
 
-  auto ApInfo = CE::AppInfo();
-  ApInfo.AppName = "Chuddo Engine tests";
-  ApInfo.AppVerion[0] = 0;
-  ApInfo.AppVerion[1] = 0;
-  ApInfo.AppVerion[2] = 1;
-  ApInfo.EngineName = "Chuddo Engine";
-  ApInfo.EngineVersion[0] = 0;
-  ApInfo.EngineVersion[1] = 0;
-  ApInfo.EngineVersion[2] = 1;
-  ApInfo.Width = 1024;
-  ApInfo.Height = 768;
+  try
+  {
+    result = CE::GuardedMain(argc, argv);
+  }
+  catch (const std::exception& e)
+  {
+    CE_CORE_FATAL("Unhandled exception: ", e.what());
+    result = -1;
+  }
+  catch (...)
+  {
+    CE_CORE_FATAL("Unknown exception occurred");
+    result = -1;
+  }
 
-  auto app = CE::Application(&ApInfo);
-
-  app.Initialize();
-  app.Run();
-  app.Shutdown();
-
+  // Завершение логгера ПОСЛЕ всего
   CE::Logger::Shutdown();
-  return 0;
+
+  return result;
 }

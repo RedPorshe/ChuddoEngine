@@ -1,17 +1,17 @@
 #pragma once
-#include "Components/Camera/CameraComponent.h"
-#include "Components/Meshes/MeshComponent.h"
-#include "World/CEWorld.h"
-#include "World/Levels/CELevel.h"
-// Sun actor
-#include "Actors/SunActor.h"
-#include "Controllers/PlayerController.h"
-#include "Pawns/Pawn.h"
+#include "GamePlay/Actors/SunActor.h"
+#include "GamePlay/Components/Camera/CameraComponent.h"
+#include "GamePlay/Components/Meshes/MeshComponent.h"
+#include "GamePlay/Controllers/PlayerController.h"
+#include "GamePlay/GameInstance/CEGameInstance.h"
+#include "GamePlay/Pawns/Pawn.h"
+#include "GamePlay/World/CEWorld.h"
+#include "GamePlay/World/Levels/CELevel.h"
 
-class TestWorld : public CE::CELevel
+class TestLevel : public CE::CELevel
 {
  public:
-  TestWorld();
+  TestLevel();
   virtual void Update(float DeltaTime) override;
 
   CE::SunActor* DirectLighter;
@@ -19,50 +19,17 @@ class TestWorld : public CE::CELevel
   CE::CEPawn* playerPawn;
 };
 
-void TestWorld::Update(float DeltaTime)
-{
-  CE::CELevel::Update(DeltaTime);
-
-  static float totalTime = 0.0f;
-  totalTime += DeltaTime;
-
-  // Вращение вокруг оси Y (вертикальной) на 45 градусов в секунду
-  float rotationSpeed = 180.0f;
-
-  int idx = 0;
-  for (const auto& actorPtr : GetActors())
-  {
-    CE::CEActor* actor = actorPtr.get();
-    if (!actor)
-      continue;
-
-    // Пропускаем управляемые объекты
-    if (actor == playerController || actor == playerPawn)
-    {
-      ++idx;
-      continue;
-    }
-
-    // Derive a unique speed/axis for this actor using its index
-    float speed = rotationSpeed + (idx * 7.5f);
-    glm::vec3 rot = glm::vec3(totalTime * glm::radians(speed * 1.5f),
-                              totalTime * glm::radians(speed * 1.5f),
-                              totalTime * glm::radians(speed * 1.3f));
-
-    actor->SetActorRotation(rot);
-    ++idx;
-  }
-}
-
-class GameWorld : public CE::CEWorld
+class TestGameInstance : public CE::CEGameInstance
 {
  public:
-  GameWorld();
+  TestGameInstance();
+
+ protected:
+  virtual void SetupWorlds() override;
 };
 
-// Реализация
-
-TestWorld::TestWorld() : CE::CELevel(nullptr, "TestWorld")
+// Реализация TestLevel
+TestLevel::TestLevel() : CE::CELevel(nullptr, "TestWorld")
 {
   // === СОЗДАЕМ УПРАВЛЯЕМОГО ИГРОКА ===
 
@@ -79,21 +46,15 @@ TestWorld::TestWorld() : CE::CELevel(nullptr, "TestWorld")
 
   // === СТАРЫЙ КОД ДЛЯ ОБРАТНОЙ СОВМЕСТИМОСТИ ===
 
-  // Спавним камеру (для обратной совместимости)
-
   DirectLighter = SpawnActor<CE::SunActor>(this, "DirectLight");
   DirectLighter->SetIntensity(10.f);
   DirectLighter->SetColor(glm::vec3(0.0f, 1.0f, 0.0f));
   DirectLighter->SetActorLocation(glm::vec3(0.0f, 0.0f, 0.0f));
 
   // Спавним меш-акторы
-
   auto* enemy = SpawnActor<CE::CEActor>(this, "Enemy");
-
   enemy->SetRootComponent(enemy->AddSubObject<CE::MeshComponent>("EnemyMesh", enemy, "EnemyMesh"));
-
   enemy->SetActorLocation(glm::vec3(7.0f, 1.5f, 0.0f));
-
   enemy->SetActorScale(glm::vec3(1.f, 1.f, 1.f));
 
   // Создаем несколько кубов в разных позициях
@@ -125,7 +86,6 @@ TestWorld::TestWorld() : CE::CELevel(nullptr, "TestWorld")
   }
 
   auto* enemyMesh = dynamic_cast<CE::MeshComponent*>(enemy->GetRootComponent());
-
   if (enemyMesh)
     enemyMesh->SetColor(glm::vec3(0.8f, 0.2f, 0.2f));
 
@@ -142,22 +102,74 @@ TestWorld::TestWorld() : CE::CELevel(nullptr, "TestWorld")
   CE_CORE_DEBUG("TestWorld created with player controller and pawn");
 }
 
-GameWorld::GameWorld() : CE::CEWorld(nullptr, "MainGameWorld")
+void TestLevel::Update(float DeltaTime)
 {
-  AddLevel(std::make_unique<TestWorld>());
-  SetCurrentLevel("TestWorld");
+  CE::CELevel::Update(DeltaTime);
 
-  // Инициализируем базовое освещение при создании мира
-  // Устанавливаем мировое (по-умолчанию) освещение, чтобы уровни могли его
-  // унаследовать, если не заполняют свои собственные данные освещения.
-  CE::LightingUBO worldLighting;
-  worldLighting.lightCount = 1;
+  static float totalTime = 0.0f;
+  totalTime += DeltaTime;
+
+  float rotationSpeed = 180.0f;
+
+  int idx = 0;
+  for (const auto& actorPtr : GetActors())
+  {
+    CE::CEActor* actor = actorPtr.get();
+    if (!actor)
+      continue;
+
+    // Пропускаем управляемые объекты
+    if (actor == playerController || actor == playerPawn)
+    {
+      ++idx;
+      continue;
+    }
+
+    // Derive a unique speed/axis for this actor using its index
+    float speed = rotationSpeed + (idx * 7.5f);
+    glm::vec3 rot = glm::vec3(totalTime * glm::radians(speed * 1.5f),
+                              totalTime * glm::radians(speed * 1.5f),
+                              totalTime * glm::radians(speed * 1.3f));
+
+    actor->SetActorRotation(rot);
+    ++idx;
+  }
+}
+
+// Реализация TestGameInstance
+TestGameInstance::TestGameInstance()
+    : CEGameInstance()
+{
+}
+
+void TestGameInstance::SetupWorlds()
+{
+  // Создаем основной мир
+  auto* mainWorld = CreateWorld("MainGameWorld");
+
+  // Настраиваем мир
+  auto testLevel = std::make_unique<TestLevel>();
+  mainWorld->AddLevel(std::move(testLevel));
+  mainWorld->SetCurrentLevel("TestWorld");
+
+  // Настраиваем освещение мира
+  CE::LightingUBO worldLighting{};
+  worldLighting.lightCount = 3;
+
+  // Key light (warm)
   worldLighting.lightPositions[0] = glm::vec4(5.0f, 5.0f, 5.0f, 1.0f);
-  worldLighting.lightColors[0] = glm::vec4(1.0f, 0.0f, 0.0f, 1.2f);
+  worldLighting.lightColors[0] = glm::vec4(1.0f, 0.95f, 0.9f, 2.0f);
 
-  worldLighting.ambientColor = glm::vec4(0.2f, 0.2f, 0.2f, 0.8f);
+  // Fill light (cool)
+  worldLighting.lightPositions[1] = glm::vec4(-4.0f, 3.0f, 2.0f, 1.0f);
+  worldLighting.lightColors[1] = glm::vec4(0.4f, 0.6f, 1.0f, 1.2f);
 
-  SetDefaultLighting(worldLighting);
+  // Rim/back light (magenta-ish)
+  worldLighting.lightPositions[2] = glm::vec4(0.0f, 4.0f, -6.0f, 1.0f);
+  worldLighting.lightColors[2] = glm::vec4(1.0f, 0.4f, 0.6f, 1.0f);
 
-  // (SunActor is spawned per-level inside TestWorld::TestWorld)
+  worldLighting.ambientColor = glm::vec4(0.05f, 0.05f, 0.06f, 0.25f);
+
+  mainWorld->SetDefaultLighting(worldLighting);
+  CE_CORE_DEBUG("TestGameInstance set world default lighting with ", worldLighting.lightCount, " lights");
 }

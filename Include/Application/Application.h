@@ -1,9 +1,9 @@
 #pragma once
 #include "Core/AppInfo.h"
+#include "Core/Rendering/Data/RenderData.h"
+#include "Core/Rendering/Vulkan/Integration/RenderSystem.h"
 #include "CoreMinimal.h"
-#include "GameInstance/CEGameInstance.h"
-#include "Rendering/Data/RenderData.h"
-#include "Rendering/Vulkan/Integration/RenderSystem.h"
+#include "GamePlay/GameInstance/CEGameInstance.h"
 
 namespace CE
 {

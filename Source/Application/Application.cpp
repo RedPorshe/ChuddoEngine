@@ -2,7 +2,7 @@
 
 #include <chrono>
 
-#include "Input/InputSystem.h"
+#include "GamePlay/Input/InputSystem.h"
 #include "test.h"  // Твой тестовый мир
 
 namespace CE
@@ -28,9 +28,11 @@ namespace CE
   {
     CE_CORE_DISPLAY("=== Initializing Application ===");
 
+    // 1. Инициализация рендер-системы
     m_RenderSystem = std::make_unique<RenderSystem>(m_info);
     m_RenderSystem->Initialize();
 
+    // 2. Инициализация системы ввода
     GLFWwindow* window = m_RenderSystem->GetWindow();
     if (window)
     {
@@ -42,59 +44,15 @@ namespace CE
       CE_CORE_ERROR("Failed to get GLFW window for input system");
     }
 
-    m_GameInstance = std::make_unique<CEGameInstance>();
+    // 3. СОЗДАЕМ КОНКРЕТНЫЙ GameInstance (TestGameInstance)
+    m_GameInstance = std::make_unique<TestGameInstance>();
     m_GameInstance->Initialize();
 
-    m_GameInstance->CreateWorld("MainGameWorld");
+    // 4. Настройка данных рендеринга из текущего мира
+    m_RenderData.SetupDefaultLighting();  // Оставляем вызов для безопасности
 
-    // Настраиваем мир ДО загрузки
-    if (auto* world = m_GameInstance->GetWorld("MainGameWorld"))
-    {
-      auto testLevel = std::make_unique<TestWorld>();
-      world->AddLevel(std::move(testLevel));
-      world->SetCurrentLevel("TestWorld");
-    }
+    // Пока НЕ вызываем BeginPlay() - он будет вызван перед основным циклом
 
-    if (auto* world = m_GameInstance->GetWorld("MainGameWorld"))
-    {
-      // Create a few lights with different positions/colors/intensities for testing
-      CE::LightingUBO worldLighting{};
-      worldLighting.lightCount = 3;
-
-      // Key light (warm)
-      worldLighting.lightPositions[0] = glm::vec4(5.0f, 5.0f, 5.0f, 1.0f);
-      worldLighting.lightColors[0] = glm::vec4(1.0f, 0.95f, 0.9f, 2.0f);
-
-      // Fill light (cool)
-      worldLighting.lightPositions[1] = glm::vec4(-4.0f, 3.0f, 2.0f, 1.0f);
-      worldLighting.lightColors[1] = glm::vec4(0.4f, 0.6f, 1.0f, 1.2f);
-
-      // Rim/back light (magenta-ish)
-      worldLighting.lightPositions[2] = glm::vec4(0.0f, 4.0f, -6.0f, 1.0f);
-      worldLighting.lightColors[2] = glm::vec4(1.0f, 0.4f, 0.6f, 1.0f);
-
-      worldLighting.ambientColor = glm::vec4(0.05f, 0.05f, 0.06f, 0.25f);
-
-      world->SetDefaultLighting(worldLighting);
-      CE_CORE_DEBUG("Application set world default lighting with ", worldLighting.lightCount, " lights");
-    }
-
-    // ЗАГРУЖАЕМ мир после настройки
-    m_GameInstance->LoadWorld("MainGameWorld");
-
-    // Настройка данных рендеринга
-    m_RenderData.SetupDefaultLighting();
-
-    if (auto* world = m_GameInstance->GetWorld("MainGameWorld"))
-    {
-      m_RenderData.lighting = world->GetDefaultLighting();
-      CE_CORE_DEBUG("RenderData lighting initialized from world default (lights=", m_RenderData.lighting.lightCount, ")");
-    }
-
-    // Запуск игрового процесса
-    m_GameInstance->BeginPlay();
-
-    m_IsRunning = true;
     m_LastFrameTime = CEGetCurrentTime();
 
     CE_CORE_DISPLAY("=== Application Initialized ===");
@@ -103,6 +61,20 @@ namespace CE
   void Application::Run()
   {
     CE_CORE_DEBUG("Starting main loop");
+
+    // ВЫЗЫВАЕМ BeginPlay ПЕРЕД ОСНОВНЫМ ЦИКЛОМ
+    if (m_GameInstance)
+    {
+      m_GameInstance->BeginPlay();
+
+      // Настраиваем освещение после того как мир загружен в BeginPlay
+      if (auto* world = m_GameInstance->GetCurrentWorld())
+      {
+        m_RenderData.lighting = world->GetDefaultLighting();
+        CE_CORE_DEBUG("RenderData lighting initialized from world default (lights=", m_RenderData.lighting.lightCount, ")");
+      }
+    }
+    m_IsRunning = true;
 
     while (m_IsRunning)
     {
@@ -121,14 +93,12 @@ namespace CE
         m_FPSTimer = 0.0f;
       }
 
-      // static int FRAMES = 0;
-      // ++FRAMES;
-      // if (FRAMES == 3)
-      // {
-      //   CE_CORE_DEBUG("Frames count reach 3 request exit");
-      //   m_IsRunning = false;
-      // }
-      // m_IsRunning = !m_RenderSystem->ShouldClose();  // delete FRAMES and this after stop debug rendering
+      // Проверка закрытия окна
+      if (m_RenderSystem->ShouldClose())
+      {
+        m_IsRunning = false;
+      }
+
       m_RenderSystem->PollEvents();
     }
   }
@@ -142,12 +112,7 @@ namespace CE
 
   void Application::ProcessInput()
   {
-    glfwPollEvents();
-
-    if (m_RenderSystem->ShouldClose())
-    {
-      m_IsRunning = false;
-    }
+    // Обработка ввода через GLFW
     if (glfwGetKey(m_RenderSystem->GetWindow(), GLFW_KEY_ESCAPE) == GLFW_PRESS)
     {
       m_IsRunning = false;
@@ -156,8 +121,10 @@ namespace CE
 
   void Application::Update()
   {
+    // Обновление системы ввода
     InputSystem::Get().Update(m_DeltaTime);
 
+    // Обновление игровой логики
     if (m_GameInstance)
     {
       m_GameInstance->Tick(m_DeltaTime);
@@ -166,13 +133,16 @@ namespace CE
 
   void Application::Render()
   {
+    // Очистка данных рендеринга
     m_RenderData.Clear();
 
+    // Сбор данных рендеринга из текущего мира
     if (m_GameInstance && m_GameInstance->GetCurrentWorld())
     {
       m_GameInstance->GetCurrentWorld()->CollectRenderData(m_RenderData);
     }
 
+    // Отрисовка кадра
     if (m_RenderSystem)
     {
       m_RenderSystem->DrawFrame(m_RenderData);
@@ -185,18 +155,24 @@ namespace CE
 
     m_IsRunning = false;
 
+    // Завершение системы ввода
     InputSystem::Get().Shutdown();
 
+    // Завершение игрового инстанса
     if (m_GameInstance)
     {
       m_GameInstance->Shutdown();
+      m_GameInstance.reset();
     }
 
+    // Завершение рендер-системы
     if (m_RenderSystem)
     {
       m_RenderSystem->Shutdown();
+      m_RenderSystem.reset();
     }
 
     CE_CORE_DISPLAY("=== Application Shutdown Complete ===");
   }
+
 }  // namespace CE
