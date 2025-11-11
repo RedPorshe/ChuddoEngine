@@ -1,6 +1,7 @@
 #pragma once
 #include "Core/AppInfo.h"
 #include "Rendering/Data/RenderData.h"
+#include "Rendering/Vulkan/Core/VulkanContext.h"
 
 namespace CE
 {
@@ -17,6 +18,10 @@ namespace CE
     void DrawFrame(const FrameRenderData& renderData);
     bool ShouldClose() const;
 
+    GLFWwindow* GetWindow() const
+    {
+      return m_vulkanContext->GetWindow();
+    }
     // Геттеры состояния
     bool IsInitialized() const
     {
@@ -35,6 +40,6 @@ namespace CE
    private:
     AppInfo* m_info = nullptr;
     bool m_initialized = false;
-    class VulkanContext* m_vulkanContext = nullptr;
+    VulkanContext* m_vulkanContext = nullptr;
   };
 }  // namespace CE

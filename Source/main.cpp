@@ -30,7 +30,7 @@ int main()
   ApInfo.EngineVersion[2] = 1;
   ApInfo.Width = 1024;
   ApInfo.Height = 768;
-  // Вся логика теперь в Application
+
   auto app = CE::Application(&ApInfo);
 
   app.Initialize();

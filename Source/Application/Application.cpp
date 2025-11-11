@@ -2,6 +2,7 @@
 
 #include <chrono>
 
+#include "Input/InputSystem.h"
 #include "test.h"  // Твой тестовый мир
 
 namespace CE
@@ -29,11 +30,21 @@ namespace CE
 
     m_RenderSystem = std::make_unique<RenderSystem>(m_info);
     m_RenderSystem->Initialize();
-    // Создаем GameInstance
+
+    GLFWwindow* window = m_RenderSystem->GetWindow();
+    if (window)
+    {
+      InputSystem::Get().Initialize(window);
+      CE_CORE_DEBUG("Input system initialized with GLFW window");
+    }
+    else
+    {
+      CE_CORE_ERROR("Failed to get GLFW window for input system");
+    }
+
     m_GameInstance = std::make_unique<CEGameInstance>();
     m_GameInstance->Initialize();
 
-    // Создаем и настраиваем мир через GameInstance
     m_GameInstance->CreateWorld("MainGameWorld");
 
     // Настраиваем мир ДО загрузки
@@ -52,7 +63,7 @@ namespace CE
 
       // Key light (warm)
       worldLighting.lightPositions[0] = glm::vec4(5.0f, 5.0f, 5.0f, 1.0f);
-      worldLighting.lightColors[0] = glm::vec4(1.0f, 0.95f, 0.9f, 2.0f);  // rgb + w = intensity
+      worldLighting.lightColors[0] = glm::vec4(1.0f, 0.95f, 0.9f, 2.0f);
 
       // Fill light (cool)
       worldLighting.lightPositions[1] = glm::vec4(-4.0f, 3.0f, 2.0f, 1.0f);
@@ -62,7 +73,6 @@ namespace CE
       worldLighting.lightPositions[2] = glm::vec4(0.0f, 4.0f, -6.0f, 1.0f);
       worldLighting.lightColors[2] = glm::vec4(1.0f, 0.4f, 0.6f, 1.0f);
 
-      // Low ambient stored in ambientColor.w
       worldLighting.ambientColor = glm::vec4(0.05f, 0.05f, 0.06f, 0.25f);
 
       world->SetDefaultLighting(worldLighting);
@@ -72,10 +82,9 @@ namespace CE
     // ЗАГРУЖАЕМ мир после настройки
     m_GameInstance->LoadWorld("MainGameWorld");
 
-    // Настройка данных рендеринга (will be overwritten by world default below)
+    // Настройка данных рендеринга
     m_RenderData.SetupDefaultLighting();
 
-    // If the world provided default lighting, copy it so RenderData reflects it immediately
     if (auto* world = m_GameInstance->GetWorld("MainGameWorld"))
     {
       m_RenderData.lighting = world->GetDefaultLighting();
@@ -133,8 +142,13 @@ namespace CE
 
   void Application::ProcessInput()
   {
-    // Обработка ввода (позже)
+    glfwPollEvents();
+
     if (m_RenderSystem->ShouldClose())
+    {
+      m_IsRunning = false;
+    }
+    if (glfwGetKey(m_RenderSystem->GetWindow(), GLFW_KEY_ESCAPE) == GLFW_PRESS)
     {
       m_IsRunning = false;
     }
@@ -142,7 +156,8 @@ namespace CE
 
   void Application::Update()
   {
-    // Обновление игровой логики через GameInstance
+    InputSystem::Get().Update(m_DeltaTime);
+
     if (m_GameInstance)
     {
       m_GameInstance->Tick(m_DeltaTime);
@@ -169,6 +184,8 @@ namespace CE
     CE_CORE_DISPLAY("=== Shutting Down Application ===");
 
     m_IsRunning = false;
+
+    InputSystem::Get().Shutdown();
 
     if (m_GameInstance)
     {

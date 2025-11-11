@@ -31,9 +31,7 @@ namespace CE
     }
 
     m_Levels.push_back(std::move(Level));
-    // Ensure the level knows its owning world so actors can find the world
-    // via their level->GetOwner(). This allows actors to update world-level
-    // state like default lighting.
+
     m_Levels.back()->SetOwner(this);
     CE_CORE_DEBUG("Added level to world: ", m_Levels.back()->GetName());
   }
@@ -90,7 +88,6 @@ namespace CE
                               [Level](const auto& ptr)
                               { return ptr.get() == Level; }) != m_Levels.end())
     {
-      // Вызываем EndPlay для старого уровня (если был)
       if (m_CurrentLevel)
       {
         // Здесь можно добавить логику очистки старого уровня
@@ -114,7 +111,6 @@ namespace CE
     CELevel* level = FindLevel(LevelName);
     if (level)
     {
-      // Асинхронная загрузка уровня (базовая реализация)
       CE_CORE_DEBUG("Loading level: ", LevelName);
       SetCurrentLevel(level);
     }
@@ -136,9 +132,7 @@ namespace CE
   void CEWorld::BeginPlay()
   {
     CEObject::BeginPlay();
-    CE_CORE_DEBUG("World BeginPlay: ", GetName());
 
-    // Если есть уровни, устанавливаем первый как текущий
     if (!m_Levels.empty() && !m_CurrentLevel)
     {
       SetCurrentLevel(m_Levels[0].get());
@@ -227,7 +221,6 @@ namespace CE
 
     if (lighting.lightCount == 0 && m_defaultLighting.lightCount > 0)
     {
-      // CE_CORE_DEBUG("Level didn't provide lighting - applying world default lighting");
       lighting = m_defaultLighting;
     }
 

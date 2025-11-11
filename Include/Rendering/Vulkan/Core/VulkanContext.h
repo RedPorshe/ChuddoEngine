@@ -30,6 +30,10 @@ namespace CE
     VulkanContext(AppInfo* info);
     ~VulkanContext() {};
 
+    GLFWwindow* GetWindow() const
+    {
+      return m_window;
+    }
     void Initialize();
     void Shutdown();
     void DrawFrame(const FrameRenderData& renderData);

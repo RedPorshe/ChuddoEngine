@@ -1,12 +1,8 @@
 #include "Input/InputSystem.h"
 
-#include "Components/Input/InputComponent.h"
-
-// Если GLFW еще не включен, добавим базовые определения
-#ifndef GLFW_RELEASE
-#define GLFW_RELEASE 0
-#endif
 #include <GLFW/glfw3.h>
+
+#include "Components/Input/InputComponent.h"
 
 namespace CE
 {
@@ -25,15 +21,26 @@ namespace CE
 
     if (m_Window)
     {
-      // Устанавливаем колбэки
+      glfwSetWindowUserPointer(m_Window, this);
+
       glfwSetKeyCallback(m_Window, KeyCallback);
       glfwSetCursorPosCallback(m_Window, MouseCallback);
       glfwSetScrollCallback(m_Window, ScrollCallback);
+      glfwSetMouseButtonCallback(m_Window, MouseButtonCallback);
+      if (bIsFPS)
+      {
+        glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+      }
+      else
+      {
+        glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+      }
+      double xpos, ypos;
+      glfwGetCursorPos(m_Window, &xpos, &ypos);
+      m_LastMousePosition = glm::vec2(xpos, ypos);
+      m_MousePosition = glm::vec2(xpos, ypos);
 
-      // Захватываем курсор для FPS-контроля
-      glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-      CE_CORE_DEBUG("InputSystem initialized");
+      CE_CORE_DEBUG("InputSystem initialized with GLFW window");
     }
     else
     {
@@ -48,12 +55,28 @@ namespace CE
     CE_CORE_DEBUG("InputSystem shutdown");
   }
 
+  void InputSystem::ProcessMouseButton(int button, int action, int mods)
+  {
+    (void)mods;
+
+    m_KeyStates[button] = (action != GLFW_RELEASE);
+  }
+
+  void InputSystem::MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
+  {
+    InputSystem* inputSystem = static_cast<InputSystem*>(glfwGetWindowUserPointer(window));
+    if (inputSystem)
+    {
+      inputSystem->ProcessMouseButton(button, action, mods);
+    }
+  }
+
   void InputSystem::RegisterInputComponent(InputComponent* Component)
   {
     if (Component && std::find(m_InputComponents.begin(), m_InputComponents.end(), Component) == m_InputComponents.end())
     {
       m_InputComponents.push_back(Component);
-      CE_CORE_DEBUG("InputComponent registered");
+      CE_CORE_DEBUG("InputComponent registered to InputSystem");
     }
   }
 
@@ -63,16 +86,23 @@ namespace CE
     if (it != m_InputComponents.end())
     {
       m_InputComponents.erase(it);
-      CE_CORE_DEBUG("InputComponent unregistered");
+      CE_CORE_DEBUG("InputComponent unregistered from InputSystem");
     }
   }
 
+  void InputSystem::setFPSInputMode(bool mode)
+  {
+    if (mode)
+    {
+      glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    }
+    else
+    {
+      glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    }
+  }
   void InputSystem::Update(float DeltaTime)
   {
-    // Сбрасываем дельту мыши для следующего кадра
-    m_MouseDelta = glm::vec2(0.0f, 0.0f);
-
-    // Обновляем все зарегистрированные компоненты ввода
     for (auto* component : m_InputComponents)
     {
       if (component)
@@ -80,56 +110,61 @@ namespace CE
         component->Update(DeltaTime);
       }
     }
+
+    m_MouseDelta = glm::vec2(0.0f, 0.0f);
   }
 
-  void InputSystem::ProcessKeyInput(int key, int action, float deltaTime)
+  void InputSystem::ProcessKeyInput(int key, int scancode, int action, int mods)
   {
-    // Обновляем состояние клавиши
+    (void)scancode;
+    (void)mods;
     m_KeyStates[key] = (action != GLFW_RELEASE);
 
-    // Передаем событие всем зарегистрированным компонентам
     for (auto* component : m_InputComponents)
     {
       if (component)
       {
-        component->ProcessKey(key, action, deltaTime);
+        component->ProcessKey(key, action, 0.016f);
       }
     }
   }
 
-  void InputSystem::ProcessMouseMovement(float xpos, float ypos, float deltaTime)
+  void InputSystem::ProcessMouseMovement(double xpos, double ypos)
   {
+    float x = static_cast<float>(xpos);
+    float y = static_cast<float>(ypos);
+
     if (m_FirstMouse)
     {
-      m_LastMousePosition = glm::vec2(xpos, ypos);
+      m_LastMousePosition = glm::vec2(x, y);
       m_FirstMouse = false;
+      return;
     }
 
-    float xOffset = xpos - m_LastMousePosition.x;
-    float yOffset = m_LastMousePosition.y - ypos;  // Обратный знак для инвертированного управления
+    float xOffset = x - m_LastMousePosition.x;
+    float yOffset = m_LastMousePosition.y - y;
 
-    m_LastMousePosition = glm::vec2(xpos, ypos);
-    m_MousePosition = glm::vec2(xpos, ypos);
+    m_LastMousePosition = glm::vec2(x, y);
+    m_MousePosition = glm::vec2(x, y);
     m_MouseDelta = glm::vec2(xOffset, yOffset);
 
-    // Передаем событие всем зарегистрированным компонентам
     for (auto* component : m_InputComponents)
     {
       if (component)
       {
-        component->ProcessMouseMovement(xOffset, yOffset, deltaTime);
+        component->ProcessMouseMovement(xOffset, yOffset, 0.016f);
       }
     }
   }
 
-  void InputSystem::ProcessMouseScroll(float xoffset, float yoffset)
+  void InputSystem::ProcessMouseScroll(double xoffset, double yoffset)
   {
-    // Передаем событие всем зарегистрированным компонентам
+    (void)xoffset;
     for (auto* component : m_InputComponents)
     {
       if (component)
       {
-        component->ProcessMouseScroll(yoffset);
+        component->ProcessMouseScroll(static_cast<float>(yoffset));
       }
     }
   }
@@ -137,31 +172,34 @@ namespace CE
   bool InputSystem::IsKeyPressed(int key) const
   {
     auto it = m_KeyStates.find(key);
-    return it != m_KeyStates.end() && it->second;
+    bool pressed = it != m_KeyStates.end() && it->second;
+    return pressed;
   }
 
-  // GLFW колбэки
   void InputSystem::KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
   {
-    if (s_Instance)
+    InputSystem* inputSystem = static_cast<InputSystem*>(glfwGetWindowUserPointer(window));
+    if (inputSystem)
     {
-      s_Instance->ProcessKeyInput(key, action, 0.016f);  // Примерная дельта времени
+      inputSystem->ProcessKeyInput(key, scancode, action, mods);
     }
   }
 
   void InputSystem::MouseCallback(GLFWwindow* window, double xpos, double ypos)
   {
-    if (s_Instance)
+    InputSystem* inputSystem = static_cast<InputSystem*>(glfwGetWindowUserPointer(window));
+    if (inputSystem)
     {
-      s_Instance->ProcessMouseMovement(static_cast<float>(xpos), static_cast<float>(ypos), 0.016f);
+      inputSystem->ProcessMouseMovement(xpos, ypos);
     }
   }
 
   void InputSystem::ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
   {
-    if (s_Instance)
+    InputSystem* inputSystem = static_cast<InputSystem*>(glfwGetWindowUserPointer(window));
+    if (inputSystem)
     {
-      s_Instance->ProcessMouseScroll(static_cast<float>(xoffset), static_cast<float>(yoffset));
+      inputSystem->ProcessMouseScroll(xoffset, yoffset);
     }
   }
 }  // namespace CE

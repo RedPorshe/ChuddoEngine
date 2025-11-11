@@ -78,20 +78,16 @@ namespace CE
 
     m_Mesh.vertices = vertices;
     m_Mesh.indices = indices;
-    m_Mesh.color = glm::vec3(1.0f);  // Белый по умолчанию
-
-    CE_CORE_DEBUG("Created cube mesh for: ", GetName());
+    m_Mesh.color = glm::vec3(1.0f);
   }
 
   glm::mat4 MeshComponent::GetRenderTransform() const
   {
-    // Возвращаем мировую трансформацию для рендеринга
     return GetWorldTransform();
   }
 
   void MeshComponent::UpdateMeshTransform()
   {
-    // Обновляем трансформацию в меше для рендеринга
     m_Mesh.transform = GetWorldTransform();
   }
 

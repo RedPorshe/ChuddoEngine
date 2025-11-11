@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "glm/glm.hpp"
 
-// Forward declaration для GLFW
 typedef struct GLFWwindow GLFWwindow;
 
 namespace CE
@@ -15,23 +14,20 @@ namespace CE
    public:
     static InputSystem& Get();
 
-    // Инициализация
     void Initialize(GLFWwindow* Window);
     void Shutdown();
 
-    // Регистрация компонентов ввода
     void RegisterInputComponent(class InputComponent* Component);
     void UnregisterInputComponent(class InputComponent* Component);
+    void setFPSInputMode(bool mode);
 
-    // Обновление состояний
     void Update(float DeltaTime);
 
-    // Колбэки для GLFW
     static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
     static void MouseCallback(GLFWwindow* window, double xpos, double ypos);
     static void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
+    static void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 
-    // Состояние ввода
     bool IsKeyPressed(int key) const;
     glm::vec2 GetMousePosition() const
     {
@@ -46,22 +42,21 @@ namespace CE
     InputSystem() = default;
     ~InputSystem() = default;
 
-    void ProcessKeyInput(int key, int action, float deltaTime);
-    void ProcessMouseMovement(float xpos, float ypos, float deltaTime);
-    void ProcessMouseScroll(float xoffset, float yoffset);
+    void ProcessKeyInput(int key, int scancode, int action, int mods);
+    void ProcessMouseMovement(double xpos, double ypos);
+    void ProcessMouseButton(int button, int action, int mods);
+    void ProcessMouseScroll(double xoffset, double yoffset);
 
     GLFWwindow* m_Window = nullptr;
     std::vector<class InputComponent*> m_InputComponents;
 
-    // Состояние клавиш
     std::unordered_map<int, bool> m_KeyStates;
 
-    // Состояние мыши
     glm::vec2 m_MousePosition{0.0f, 0.0f};
     glm::vec2 m_LastMousePosition{0.0f, 0.0f};
     glm::vec2 m_MouseDelta{0.0f, 0.0f};
     bool m_FirstMouse = true;
-
+    bool bIsFPS{true};
     static InputSystem* s_Instance;
   };
 }  // namespace CE

@@ -69,7 +69,6 @@ namespace CE
   void CEActor::BeginPlay()
   {
     CEObject::BeginPlay();
-    CE_CORE_DEBUG("CEActor BeginPlay: ", GetName());
   }
 
   void CEActor::Update(float DeltaTime)

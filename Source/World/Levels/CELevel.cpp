@@ -41,9 +41,7 @@ namespace CE
   void CELevel::BeginPlay()
   {
     CEObject::BeginPlay();
-    CE_CORE_DEBUG("Level BeginPlay: ", GetName());
 
-    // Вызываем BeginPlay для всех акторов
     for (auto& actor : m_Actors)
     {
       actor->BeginPlay();
@@ -54,7 +52,7 @@ namespace CE
   {
     CEObject::Update(DeltaTime);
 
-        for (auto& actor : m_Actors)
+    for (auto& actor : m_Actors)
     {
       actor->Update(DeltaTime);
     }

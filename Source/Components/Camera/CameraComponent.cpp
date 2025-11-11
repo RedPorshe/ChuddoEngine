@@ -7,7 +7,6 @@ namespace CE
   CameraComponent::CameraComponent(CEObject* Owner, FString NewName)
       : SceneComponent(Owner, NewName)
   {
-    CE_CORE_DEBUG("CameraComponent created: ", NewName);
   }
 
   glm::mat4 CameraComponent::GetViewMatrix() const
@@ -16,7 +15,7 @@ namespace CE
     glm::vec3 forward = glm::vec3(0.0f, 0.0f, -1.0f);  // Forward on -Z
     glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);        // Up on Y
 
-        glm::mat4 rotationMatrix = glm::mat4(1.0f);
+    glm::mat4 rotationMatrix = glm::mat4(1.0f);
     rotationMatrix = glm::rotate(rotationMatrix, glm::radians(GetRotation().x), glm::vec3(1.0f, 0.0f, 0.0f));
     rotationMatrix = glm::rotate(rotationMatrix, glm::radians(GetRotation().y), glm::vec3(0.0f, 1.0f, 0.0f));
     rotationMatrix = glm::rotate(rotationMatrix, glm::radians(GetRotation().z), glm::vec3(0.0f, 0.0f, 1.0f));

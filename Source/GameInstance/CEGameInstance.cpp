@@ -63,7 +63,6 @@ namespace CE
   void CEGameInstance::BeginPlay()
   {
     CEObject::BeginPlay();
-    CE_CORE_DEBUG("GameInstance BeginPlay");
   }
 
   void CEGameInstance::Update(float DeltaTime)

@@ -11,7 +11,10 @@ namespace CE
    public:
     CEPawn(CEObject* Owner = nullptr, FString NewName = "Pawn");
     virtual ~CEPawn() = default;
-
+    void SetMouseInverted(bool val)
+    {
+      bIsInvertMouseLook = val;
+    }
     virtual void BeginPlay() override;
     virtual void Update(float DeltaTime) override;
 
@@ -39,8 +42,9 @@ namespace CE
     CameraComponent* m_CameraComponent = nullptr;
 
     // Настройки управления
-    float m_MoveSpeed = 5.0f;
-    float m_LookSensitivity = 0.1f;
+    float m_MoveSpeed = .30f;
+    float m_LookSensitivity = 0.5f;
     glm::vec2 m_CurrentRotation{0.0f};
+    bool bIsInvertMouseLook{false};
   };
 }  // namespace CE

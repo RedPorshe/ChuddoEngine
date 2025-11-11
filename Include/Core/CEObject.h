@@ -29,8 +29,7 @@ namespace CE
     T* AddSubObject(const std::string& Name, Args&&... args);
 
     CEObject* GetOwner() const;
-    // Allow setting owner for cases where ownership is established after
-    // construction (e.g. when a world adds a level).
+
     void SetOwner(CEObject* Owner);
     const FString& GetName() const
     {
@@ -61,7 +60,6 @@ namespace CE
     FString m_Name{};
   };
 
-  // Реализации шаблонов
   template <typename T, typename... Args>
   T* CEObject::AddSubObject(const std::string& Name, Args&&... args)
   {

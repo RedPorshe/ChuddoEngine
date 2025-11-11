@@ -31,7 +31,9 @@ namespace CE
   void PlayerController::Possess(CEPawn* Pawn)
   {
     if (m_PossessedPawn == Pawn)
+    {
       return;
+    }
 
     if (m_PossessedPawn)
     {
@@ -63,10 +65,6 @@ namespace CE
 
   void PlayerController::SetupInputComponent()
   {
-    // Базовые биндинги контроллера
-    // Можно добавить биндинги, которые работают на уровне контроллера
-    // а не на уровне pawn (например, пауза игры, консоль и т.д.)
-
     if (m_InputComponent)
     {
       // Пример: биндинг для переключения режима ввода
@@ -74,7 +72,6 @@ namespace CE
                                    [this]()
                                    {
                                      CE_CORE_DEBUG("Toggle input mode pressed");
-                                     // Здесь можно переключать режим ввода (игровой/UI)
                                    });
     }
   }

@@ -21,25 +21,18 @@ namespace CE
   {
     CEActor::BeginPlay();
 
-    // Вызываем настройку ввода - аналог UE's SetupPlayerInputComponent
     SetupPlayerInputComponent();
-
-    CE_CORE_DEBUG("CEPawn BeginPlay: ", GetName());
   }
 
   void CEPawn::Update(float DeltaTime)
   {
     CEActor::Update(DeltaTime);
-
-    // Здесь можно добавить логику обновления, если нужно
   }
 
   void CEPawn::SetupPlayerInputComponent()
   {
-    // Базовые биндинги - могут быть переопределены в дочерних классах
     if (m_InputComponent)
     {
-      // Axis биндинги для непрерывного ввода
       m_InputComponent->BindAxis("MoveForward",
                                  [this](float Value)
                                  { MoveForward(Value); });
@@ -60,14 +53,15 @@ namespace CE
     if (Value == 0.0f || !m_CameraComponent)
       return;
 
-    // Вычисляем направление вперед на основе текущего поворота
-    glm::vec3 forward = glm::vec3(0.0f, 0.0f, -1.0f);  // Forward по -Z
+    glm::vec3 forward = glm::vec3(0.0f, 0.0f, -1.0f);
     glm::mat4 rotationMatrix = glm::mat4(1.0f);
     rotationMatrix = glm::rotate(rotationMatrix, glm::radians(m_CurrentRotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
     forward = glm::vec3(rotationMatrix * glm::vec4(forward, 0.0f));
 
     glm::vec3 movement = forward * Value * m_MoveSpeed;
-    SetActorLocation(GetActorLocation() + movement);
+    glm::vec3 newLocation = GetActorLocation() + movement;
+
+    SetActorLocation(newLocation);
   }
 
   void CEPawn::MoveRight(float Value)
@@ -75,14 +69,15 @@ namespace CE
     if (Value == 0.0f || !m_CameraComponent)
       return;
 
-    // Вычисляем направление вправо на основе текущего поворота
-    glm::vec3 right = glm::vec3(1.0f, 0.0f, 0.0f);  // Right по X
+    glm::vec3 right = glm::vec3(1.0f, 0.0f, 0.0f);
     glm::mat4 rotationMatrix = glm::mat4(1.0f);
     rotationMatrix = glm::rotate(rotationMatrix, glm::radians(m_CurrentRotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
     right = glm::vec3(rotationMatrix * glm::vec4(right, 0.0f));
 
-    glm::vec3 movement = right * Value * m_MoveSpeed;
-    SetActorLocation(GetActorLocation() + movement);
+    glm::vec3 movement = (right * Value * m_MoveSpeed);
+    glm::vec3 newLocation = GetActorLocation() + movement;
+
+    SetActorLocation(newLocation);
   }
 
   void CEPawn::LookHorizontal(float Value)
@@ -90,9 +85,8 @@ namespace CE
     if (Value == 0.0f)
       return;
 
-    m_CurrentRotation.y += Value * m_LookSensitivity;
+    m_CurrentRotation.y -= Value * m_LookSensitivity;  // именно отнимать, если сделать += то будет инвертированное управление лево\право
 
-    // Нормализуем угол
     if (m_CurrentRotation.y > 180.0f)
       m_CurrentRotation.y -= 360.0f;
     if (m_CurrentRotation.y < -180.0f)
@@ -109,9 +103,15 @@ namespace CE
     if (Value == 0.0f)
       return;
 
-    m_CurrentRotation.x += Value * m_LookSensitivity;
+    if (!bIsInvertMouseLook)
+    {
+      m_CurrentRotation.x -= Value * m_LookSensitivity;
+    }
+    else
+    {
+      m_CurrentRotation.x += Value * m_LookSensitivity;
+    }
 
-    // Ограничиваем угол обзора по вертикали
     m_CurrentRotation.x = glm::clamp(m_CurrentRotation.x, -89.0f, 89.0f);
 
     if (m_CameraComponent)
