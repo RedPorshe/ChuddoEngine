@@ -1,8 +1,12 @@
 #pragma once
+#include "Engine/GamePlay/Actors/Character.h"
 #include "Engine/GamePlay/Actors/Pawn.h"
 #include "Engine/GamePlay/Actors/SunActor.h"
-#include "Engine/GamePlay/Components/Camera/CameraComponent.h"
-#include "Engine/GamePlay/Components/Meshes/MeshComponent.h"
+#include "Engine/GamePlay/Components/BoxComponent.h"
+#include "Engine/GamePlay/Components/CameraComponent.h"
+#include "Engine/GamePlay/Components/MeshComponent.h"
+#include "Engine/GamePlay/Components/PlaneComponent.h"
+#include "Engine/GamePlay/Components/SphereComponent.h"
 #include "Engine/GamePlay/Controllers/PlayerController.h"
 #include "Engine/GamePlay/GameInstance/CEGameInstance.h"
 #include "Engine/GamePlay/World/CEWorld.h"
@@ -16,7 +20,11 @@ class TestLevel : public CE::CELevel
 
   CE::SunActor* DirectLighter;
   CE::PlayerController* playerController;
-  CE::CEPawn* playerPawn;
+  CE::CECharacter* playerCharacter;
+
+  // Добавляем компоненты коллизий для тестирования
+  CE::CEActor* collisionTestBox;
+  CE::CEActor* collisionTestSphere;
 };
 
 class TestGameInstance : public CE::CEGameInstance
@@ -31,18 +39,29 @@ class TestGameInstance : public CE::CEGameInstance
 // Реализация TestLevel
 TestLevel::TestLevel() : CE::CELevel(nullptr, "TestWorld")
 {
-  // === СОЗДАЕМ УПРАВЛЯЕМОГО ИГРОКА ===
+  // === СОЗДАЕМ ЗЕМЛЮ ПЕРВОЙ ===
+  auto* ground = SpawnActor<CE::CEActor>(this, "GroundActor");
+  auto* planeComponent = ground->AddDefaultSubObject<CE::PlaneComponent>("Ground", ground, "Ground");
+  ground->SetRootComponent(planeComponent);
+  ground->SetActorLocation(glm::vec3(0.0f, -2.0f, 0.0f));  // Земля на нулевой высоте
 
+  // Настраиваем плоскость
+  planeComponent->SetSize(50.0f, 50.0f);  // 50x50 метров
+  planeComponent->SetSubdivisions(10);    // Подразделения для красивого вида
+  planeComponent->SetCollisionEnabled(true);
+  planeComponent->SetGenerateOverlapEvents(true);
+
+  // === СОЗДАЕМ УПРАВЛЯЕМОГО ИГРОКА ===
   // 1. Создаем PlayerController
   playerController = SpawnActor<CE::PlayerController>(this, "PlayerController");
 
   // 2. Создаем Pawn (игрока с камерой)
-  playerPawn = SpawnActor<CE::CEPawn>(this, "PlayerPawn");
-  playerPawn->SetActorLocation(glm::vec3(0.0f, 0.0f, 5.0f));
-  playerPawn->SetActorRotation(glm::vec3(0.0f, 0.0f, 0.0f));
+  playerCharacter = SpawnActor<CE::CECharacter>(this, "PlayerPawn");
+  playerCharacter->SetActorLocation(glm::vec3(0.0f, 3.5f, -5.0f));  // Опустили до 0.5м над землей
+  playerCharacter->SetActorRotation(glm::vec3(0.0f, 0.0f, 0.5f));
 
   // 3. Запассесть Pawn контроллером
-  playerController->Possess(playerPawn);
+  playerController->Possess(playerCharacter);
 
   // === СТАРЫЙ КОД ДЛЯ ОБРАТНОЙ СОВМЕСТИМОСТИ ===
 
@@ -59,9 +78,9 @@ TestLevel::TestLevel() : CE::CELevel(nullptr, "TestWorld")
 
   // Создаем несколько кубов в разных позициях
   std::vector<glm::vec3> positions = {
-      glm::vec3(-3.0f, 0.0f, 0.0f),
-      glm::vec3(0.0f, 0.0f, 0.0f),
-      glm::vec3(3.0f, 0.0f, 0.0f),
+      glm::vec3(-3.0f, 0.5f, 0.0f),  // Над землей
+      glm::vec3(0.0f, 0.5f, 0.0f),   // Над землей
+      glm::vec3(3.0f, 0.5f, 0.0f),   // Над землей
       glm::vec3(-1.5f, 2.0f, 0.0f),
       glm::vec3(1.5f, 2.0f, 0.0f)};
 
@@ -99,7 +118,43 @@ TestLevel::TestLevel() : CE::CELevel(nullptr, "TestWorld")
     sun->SetAngularSpeed(0.25f);
   }
 
-  CE_CORE_DEBUG("TestWorld created with player controller and pawn");
+  // === ТЕСТОВЫЕ ОБЪЕКТЫ ДЛЯ КОЛЛИЗИЙ ===
+
+  // 1. Бокс для коллизий
+  collisionTestBox = SpawnActor<CE::CEActor>(this, "CollisionBox");
+  auto* boxCollision = collisionTestBox->AddDefaultSubObject<CE::CEBoxComponent>("BoxCollision", collisionTestBox, "BoxCollision");
+  collisionTestBox->SetRootComponent(boxCollision);
+  collisionTestBox->SetActorLocation(glm::vec3(8.0f, 1.0f, 8.0f));  // Над землей
+  boxCollision->SetExtents(0.5f, 0.5f, 0.5f);
+  boxCollision->SetCollisionEnabled(true);
+  boxCollision->SetGenerateOverlapEvents(true);
+
+  // 2. Сфера для коллизий
+  collisionTestSphere = SpawnActor<CE::CEActor>(this, "CollisionSphere");
+  auto* sphereCollision = collisionTestSphere->AddDefaultSubObject<CE::SphereComponent>("SphereCollision", collisionTestSphere, "SphereCollision");
+  collisionTestSphere->SetRootComponent(sphereCollision);
+  collisionTestSphere->SetActorLocation(glm::vec3(-8.0f, 1.5f, 8.0f));  // Над землей
+  sphereCollision->SetRadius(0.75f);
+  sphereCollision->SetCollisionEnabled(true);
+  sphereCollision->SetGenerateOverlapEvents(true);
+
+  // 3. Добавляем коллизии к существующим кубам
+  int cubeIndex = 0;
+  for (const auto& actorPtr : GetActors())
+  {
+    CE::CEActor* actor = actorPtr.get();
+    if (!actor || actor->GetName().find("Cube_") == std::string::npos)
+      continue;
+
+    // Добавляем BoxComponent к кубам
+    auto* cubeCollision = actor->AddDefaultSubObject<CE::CEBoxComponent>("CubeCollision", actor, "CubeCollision_" + std::to_string(cubeIndex));
+    cubeCollision->SetExtents(0.25f, 0.25f, 0.25f);  // Кубы 0.5x0.5x0.5 метра
+    cubeCollision->SetCollisionEnabled(true);
+    cubeCollision->SetGenerateOverlapEvents(true);
+    cubeIndex++;
+  }
+
+  CE_CORE_DEBUG("TestWorld created with improved collision setup");
 }
 
 void TestLevel::Update(float DeltaTime)
@@ -109,8 +164,8 @@ void TestLevel::Update(float DeltaTime)
   static float totalTime = 0.0f;
   totalTime += DeltaTime;
 
+  // Вращение кубов (как было)
   float rotationSpeed = 180.0f;
-
   int idx = 0;
   for (const auto& actorPtr : GetActors())
   {
@@ -118,14 +173,12 @@ void TestLevel::Update(float DeltaTime)
     if (!actor)
       continue;
 
-    // Пропускаем управляемые объекты
-    if (actor == playerController || actor == playerPawn)
+    if (actor == playerController || actor == playerCharacter)
     {
       ++idx;
       continue;
     }
 
-    // Derive a unique speed/axis for this actor using its index
     float speed = rotationSpeed + (idx * 7.5f);
     glm::vec3 rot = glm::vec3(totalTime * glm::radians(speed * 1.5f),
                               totalTime * glm::radians(speed * 1.5f),

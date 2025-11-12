@@ -1,6 +1,6 @@
 #pragma once
 #include "Engine/Core/Rendering/Data/Vertex.h"
-#include "Engine/GamePlay/Components/Scene/SceneComponent.h"
+#include "Engine/GamePlay/Components/SceneComponent.h"
 
 namespace CE
 {

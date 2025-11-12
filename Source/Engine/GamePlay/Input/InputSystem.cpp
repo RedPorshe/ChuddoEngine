@@ -2,7 +2,7 @@
 
 #include <GLFW/glfw3.h>
 
-#include "Engine/GamePlay/Components/Input/InputComponent.h"
+#include "Engine/GamePlay/Components/InputComponent.h"
 
 namespace CE
 {

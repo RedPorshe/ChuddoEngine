@@ -2,6 +2,7 @@
 
 #include <chrono>
 
+#include "Engine/Core/CollisionSystem.h"
 #include "Engine/GamePlay/Input/InputSystem.h"
 #include "test.h"  // Твой тестовый мир
 
@@ -43,6 +44,9 @@ namespace CE
     {
       CE_CORE_ERROR("Failed to get GLFW window for input system");
     }
+
+    CollisionSystem::Get();  // Просто создаем инстанс
+    CE_CORE_DEBUG("Collision system initialized");
 
     // 3. СОЗДАЕМ КОНКРЕТНЫЙ GameInstance (TestGameInstance)
     m_GameInstance = std::make_unique<TestGameInstance>();
@@ -124,6 +128,7 @@ namespace CE
     // Обновление системы ввода
     InputSystem::Get().Update(m_DeltaTime);
 
+    CollisionSystem::Get().Update(m_DeltaTime);
     // Обновление игровой логики
     if (m_GameInstance)
     {

@@ -1,5 +1,5 @@
 #pragma once
-#include "Engine/GamePlay/Components/Scene/SceneComponent.h"
+#include "Engine/GamePlay/Components/SceneComponent.h"
 
 namespace CE
 {

@@ -1,4 +1,4 @@
-#include "Engine/GamePlay/Components/Input/InputComponent.h"
+#include "Engine/GamePlay/Components/InputComponent.h"
 
 #include "Engine/GamePlay/Input/InputSystem.h"
 

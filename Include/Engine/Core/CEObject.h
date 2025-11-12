@@ -1,5 +1,7 @@
+// CEObject.h
 #pragma once
 
+#include <functional>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -48,6 +50,28 @@ namespace CE
         }
       }
       return result;
+    }
+
+    // НОВАЯ ФУНКЦИЯ: Итерация по всем компонентам определенного типа
+    template <typename T>
+    void ForEachComponent(std::function<void(T*)> callback) const
+    {
+      for (const auto& [name, component] : m_Components)
+      {
+        if (auto* casted = dynamic_cast<T*>(component.get()))
+        {
+          callback(casted);
+        }
+      }
+    }
+
+    // НОВАЯ ФУНКЦИЯ: Итерация по всем компонентам (без типа)
+    void ForEachComponent(std::function<void(CEComponent*)> callback) const
+    {
+      for (const auto& [name, component] : m_Components)
+      {
+        callback(component.get());
+      }
     }
 
    private:

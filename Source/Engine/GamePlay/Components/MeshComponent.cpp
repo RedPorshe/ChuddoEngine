@@ -1,4 +1,4 @@
-#include "Engine/GamePlay/Components/Meshes/MeshComponent.h"
+#include "Engine/GamePlay/Components/MeshComponent.h"
 
 namespace CE
 {

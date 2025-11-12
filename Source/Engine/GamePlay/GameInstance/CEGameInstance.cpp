@@ -93,5 +93,6 @@ namespace CE
   void CEGameInstance::Tick(float DeltaTime)
   {
     Update(DeltaTime);
+    m_CurrentWorld->Tick(DeltaTime);
   }
 }  // namespace CE

@@ -61,5 +61,9 @@ namespace CE
   void CELevel::Tick(float DeltaTime)
   {
     Update(DeltaTime);
+    for (auto& actor : m_Actors)
+    {
+      actor->Tick(DeltaTime);
+    }
   }
 }  // namespace CE

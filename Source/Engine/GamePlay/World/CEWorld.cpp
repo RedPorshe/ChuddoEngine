@@ -2,8 +2,8 @@
 
 #include "Engine/Core/Rendering/Data/RenderData.h"
 #include "Engine/GamePlay/Actors/Actor.h"
-#include "Engine/GamePlay/Components/Camera/CameraComponent.h"
-#include "Engine/GamePlay/Components/Meshes/MeshComponent.h"
+#include "Engine/GamePlay/Components/CameraComponent.h"
+#include "Engine/GamePlay/Components/MeshComponent.h"
 #include "Engine/GamePlay/World/Levels/CELevel.h"
 #include "glm/glm.hpp"
 
@@ -143,7 +143,6 @@ namespace CE
   {
     CEObject::Update(DeltaTime);
 
-    // Обновляем только текущий уровень
     if (m_CurrentLevel)
     {
       m_CurrentLevel->Update(DeltaTime);
@@ -153,6 +152,7 @@ namespace CE
   void CEWorld::Tick(float DeltaTime)
   {
     Update(DeltaTime);
+    m_CurrentLevel->Tick(DeltaTime);
   }
 
   CameraComponent* CEWorld::FindActiveCamera()
@@ -160,7 +160,6 @@ namespace CE
     if (!m_CurrentLevel)
       return nullptr;
 
-    // Ищем первую камеру в уровне используя GetComponents<T>()
     for (const auto& actor : m_CurrentLevel->GetActors())
     {
       auto cameraComponents = actor->GetComponents<CameraComponent>();
@@ -199,7 +198,6 @@ namespace CE
       defaultCam.position = glm::vec3(0.0f, 0.0f, 10.0f);
 
       renderData.SetCameraData(defaultCam);
-      CE_CORE_DEBUG("Using default camera");
     }
 
     for (const auto& actor : m_CurrentLevel->GetActors())

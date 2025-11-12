@@ -1,7 +1,8 @@
 #pragma once
 
 #include "Engine/Core/CEObject.h"
-#include "Engine/GamePlay/Components/Scene/SceneComponent.h"
+#include "Engine/GamePlay/Components/CollisionComponent.h"
+#include "Engine/GamePlay/Components/SceneComponent.h"
 #include "Engine/GamePlay/World/Levels/CELevel.h"
 
 namespace CE
@@ -45,9 +46,17 @@ namespace CE
     virtual void BeginPlay() override;
     virtual void Update(float DeltaTime) override;
     virtual void Tick(float DeltaTime) override;
+    void SetUsePhysics(bool value)
+    {
+      bIsUsePhysics = value;
+    }
 
    protected:
     SceneComponent* m_RootComponent = nullptr;
+
+    bool bIsUsePhysics{false};
+    virtual void OnComponentOverlap(class CollisionComponent* Component,
+                                    const std::vector<struct CollisionHitResult>& Hits);
   };
 
   template <typename T, typename... Args>
