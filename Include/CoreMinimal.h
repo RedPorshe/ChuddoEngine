@@ -64,5 +64,5 @@ namespace CE
   class Component;
   class World;
 }  // namespace CE
-#include "Core/AppInfo.h"
-#include "Utils/Logger.h"
+#include "Engine/Core/AppInfo.h"
+#include "Engine/Utils/Logger.h"

@@ -1,12 +1,12 @@
 #pragma once
-#include "GamePlay/Actors/SunActor.h"
-#include "GamePlay/Components/Camera/CameraComponent.h"
-#include "GamePlay/Components/Meshes/MeshComponent.h"
-#include "GamePlay/Controllers/PlayerController.h"
-#include "GamePlay/GameInstance/CEGameInstance.h"
-#include "GamePlay/Pawns/Pawn.h"
-#include "GamePlay/World/CEWorld.h"
-#include "GamePlay/World/Levels/CELevel.h"
+#include "Engine/GamePlay/Actors/Pawn.h"
+#include "Engine/GamePlay/Actors/SunActor.h"
+#include "Engine/GamePlay/Components/Camera/CameraComponent.h"
+#include "Engine/GamePlay/Components/Meshes/MeshComponent.h"
+#include "Engine/GamePlay/Controllers/PlayerController.h"
+#include "Engine/GamePlay/GameInstance/CEGameInstance.h"
+#include "Engine/GamePlay/World/CEWorld.h"
+#include "Engine/GamePlay/World/Levels/CELevel.h"
 
 class TestLevel : public CE::CELevel
 {

@@ -1,5 +1,5 @@
-#include "Core/GuardedMain.h"
 #include "CoreMinimal.h"
+#include "Engine/Core/GuardedMain.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(LogMyGame);
 DEFINE_LOG_CATEGORY(LogMyGame)
