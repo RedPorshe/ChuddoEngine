@@ -28,6 +28,11 @@ namespace CE
     return nullptr;
   }
 
+  void CEActor::SetActorLocation(const float x, const float y, const float z)
+  {
+    SetActorLocation(glm::vec3(x, y, z));
+  }
+
   void CEActor::SetActorLocation(const glm::vec3& NewLocation)
   {
     if (m_RootComponent)

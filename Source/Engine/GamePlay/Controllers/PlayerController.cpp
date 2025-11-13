@@ -49,7 +49,7 @@ namespace CE
       // Перенаправляем ввод с контроллера на pawn
       if (m_InputComponent && m_PossessedPawn->GetInputComponent())
       {
-        // Можно настроить делегирование ввода здесь
+        m_PossessedPawn->OnPossess();
       }
     }
   }

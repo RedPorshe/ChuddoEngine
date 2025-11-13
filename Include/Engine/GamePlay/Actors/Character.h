@@ -1,9 +1,7 @@
 #pragma once
 #include "Engine/GamePlay/Actors/Pawn.h"
-#include "Engine/GamePlay/Components/CameraComponent.h"
 #include "Engine/GamePlay/Components/CapsuleComponent.h"
 #include "Engine/GamePlay/Components/MeshComponent.h"
-#include "Engine/GamePlay/Components/SpringArmComponent.h"
 
 namespace CE
 {
@@ -24,26 +22,15 @@ namespace CE
     {
       return m_MeshComponent;
     }
-    SpringArmComponent* GetSpringArmComponent() const
-    {
-      return m_SpringArm;
-    }
-    CameraComponent* GetCameraComponent() const
-    {
-      return m_Camera;
-    }
 
    protected:
     virtual void SetupPlayerInputComponent() override;
-    void SetupCharacterComponents();
-    // Компоненты персонажа
+
     CECapsuleComponent* m_CapsuleComponent = nullptr;
     MeshComponent* m_MeshComponent = nullptr;
-    SpringArmComponent* m_SpringArm = nullptr;
-    CameraComponent* m_Camera = nullptr;
-
-   private:
     float m_VerticalVelocity = 0.0f;
     bool m_IsOnGround = false;
+
+   private:
   };
 }  // namespace CE

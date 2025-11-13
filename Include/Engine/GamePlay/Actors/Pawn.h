@@ -13,14 +13,14 @@ namespace CE
 
     virtual void BeginPlay() override;
     virtual void Tick(float DeltaTime) override;
-
+    void OnPossess();
     // Система ввода - аналог UE
     virtual void SetupPlayerInputComponent();
 
     // Компоненты
     InputComponent* GetInputComponent() const
     {
-      return m_InputComponent;
+      return this->m_InputComponent;
     }
 
    protected:

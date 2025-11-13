@@ -6,7 +6,7 @@
 
 namespace CE
 {
-  // Forward declaration вместо включения (разрываем цикл)
+
   class CEActor;
 
   class CELevel : public CEObject
@@ -15,14 +15,12 @@ namespace CE
     CELevel(CEObject* Owner = nullptr, FString LevelName = "Level");
     virtual ~CELevel();
 
-    // Управление акторами
     template <typename T, typename... Args>
     T* SpawnActor(Args&&... args);
 
     void DestroyActor(CEActor* Actor);
     CEActor* FindActorByName(const FString& Name);
 
-    // ✅ Возвращаем правильный тип
     const std::vector<std::unique_ptr<CEActor>>& GetActors() const
     {
       return m_Actors;
@@ -36,11 +34,7 @@ namespace CE
     std::vector<std::unique_ptr<CEActor>> m_Actors;
   };
 
-  // Реализацию шаблона выносим в .inl файл или оставляем здесь
-  // но тогда нужно включить Actors/Actor.h
 }  // namespace CE
-
-// Включаем ПОСЛЕ объявления класса
 
 #include "Engine/GamePlay/Actors/Actor.h"
 

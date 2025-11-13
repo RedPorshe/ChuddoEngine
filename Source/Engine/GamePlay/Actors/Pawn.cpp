@@ -9,15 +9,13 @@ namespace CE
   {
     // Создаем компонент ввода
     m_InputComponent = AddSubObject<InputComponent>("Input", this, "InputComponent");
-
-    CE_CORE_DEBUG("CEPawn created: ", NewName);
+    SetupPlayerInputComponent();
+    CE_CORE_DEBUG(this->GetName(), " created: ", NewName);
   }
 
   void CEPawn::BeginPlay()
   {
     CEActor::BeginPlay();
-
-    SetupPlayerInputComponent();
   }
 
   void CEPawn::Tick(float DeltaTime)
@@ -25,6 +23,10 @@ namespace CE
     CEActor::Tick(DeltaTime);
   }
 
+  void CEPawn::OnPossess()
+  {
+    SetupPlayerInputComponent();
+  }
   void CEPawn::SetupPlayerInputComponent()
   {
     if (m_InputComponent)

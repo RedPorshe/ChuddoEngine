@@ -1,10 +1,10 @@
 #include "Engine/Core/GuardedMain.h"
 
 #include "CoreMinimal.h"
-#include "Engine/Application/Application.h"
 #include "Engine/Core/AppInfo.h"
 #include "Engine/Core/CommandLine.h"
 #include "Engine/Core/Config.h"
+#include "Game/Application/GameApplication.h"
 
 namespace CE
 {
@@ -38,8 +38,8 @@ namespace CE
     auto ApInfo = CreateAppInfoFromConfig();
 
     // Создание и запуск приложения
-    auto app = Application(&ApInfo);
-
+    // auto app = Application(&ApInfo);
+    auto app = GameApp(&ApInfo);
     app.Initialize();
     app.Run();
     app.Shutdown();

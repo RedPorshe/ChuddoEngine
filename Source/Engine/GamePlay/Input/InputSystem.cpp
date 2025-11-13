@@ -182,6 +182,7 @@ namespace CE
     if (inputSystem)
     {
       inputSystem->ProcessKeyInput(key, scancode, action, mods);
+      CE_INPUT_DEBUG("Key", key, " pressed");
     }
   }
 

@@ -33,6 +33,7 @@ namespace CE
 
     // World transform
     void SetActorLocation(const glm::vec3& NewLocation);
+    void SetActorLocation(const float x, const float y, const float z);
     void SetActorRotation(const glm::vec3& NewRotation);
     void SetActorScale(const glm::vec3& NewScale);
 
@@ -81,7 +82,7 @@ namespace CE
       if (auto* sceneComp = dynamic_cast<SceneComponent*>(component))
       {
         sceneComp->AttachToComponent(m_RootComponent);
-        CE_CORE_DEBUG("Auto-attached ", Name, " to root component");
+        CE_CORE_DEBUG("Auto-attached ", Name, " to ", m_RootComponent->GetName());
       }
     }
 

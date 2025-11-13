@@ -20,7 +20,7 @@ namespace CE
     void SetRotation(float Pitch, float Yaw, float Roll);
     void SetScale(const glm::vec3& Scale);
     void SetScale(float X, float Y, float Z);
-
+    void SetScale(float value);
     const glm::vec3& GetPosition() const
     {
       return m_RelativeLocation;

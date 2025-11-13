@@ -8,59 +8,23 @@ namespace CE
   CECharacter::CECharacter(CEObject* Owner, FString NewName)
       : CEPawn(Owner, NewName), m_VerticalVelocity(0.0f), m_IsOnGround(false)
   {
-    SetupCharacterComponents();
-    m_IsOnGround = false;
-  }
-
-  void CECharacter::SetupCharacterComponents()
-  {
-    // Создаем капсульную коллизию как корневой компонент
     m_CapsuleComponent = AddDefaultSubObject<CECapsuleComponent>("Collision", this, "CapsuleComponent");
     m_CapsuleComponent->SetCollisionEnabled(true);
     m_CapsuleComponent->SetGenerateOverlapEvents(true);
-    // Устанавливаем капсулу как корневой компонент
     SetRootComponent(m_CapsuleComponent);
+    m_CapsuleComponent->SetSize(0.35f, 1.8f);  // radius 35sm height 1.8m
 
-    // Настраиваем размеры капсулы (в метрах)
-    m_CapsuleComponent->SetRadius(0.35f);  // 35 см радиус
-    m_CapsuleComponent->SetHeight(1.8f);   // 1.8 м высота
-
-    // Создаем меш компонент и аттачим к капсуле
-    m_MeshComponent = AddDefaultSubObject<MeshComponent>("Mesh", this, "MeshComponent");
+    m_MeshComponent = AddDefaultSubObject<MeshComponent>("mesh", this);
     m_MeshComponent->AttachToComponent(m_CapsuleComponent);
-    m_MeshComponent->SetPosition(0.0f, 0.0f, 0.0f);  // Центр капсулы
-    m_MeshComponent->SetScale(0.7f, 1.8f, 0.7f);     // Масштабируем под размер капсулы
+    m_MeshComponent->SetPosition(0.f, 0.f, 0.f);
+    m_MeshComponent->SetScale(1.f);
 
-    // Создаем SpringArm компонент
-    m_SpringArm = AddDefaultSubObject<SpringArmComponent>("SpringArm", this, "SpringArmComponent");
-    m_SpringArm->SetTargetOffset(glm::vec3(0.0f, 0.9f, 0.0f));  // Смещение к "голове" (90 см ВВЕРХ)
-    m_SpringArm->SetArmLength(5.0f);                            // 5 метров от персонажа
-    m_SpringArm->SetCameraLag(0.05f);                           // Небольшая задержка для плавности
-    m_SpringArm->AttachToComponent(m_CapsuleComponent);
-
-    // Создаем камеру и аттачим к SpringArm
-    m_Camera = AddDefaultSubObject<CameraComponent>("Camera", this, "CameraComponent");
-    m_Camera->AttachToComponent(m_SpringArm);
-
-    // Настраиваем камеру
-    m_Camera->SetPosition(0.0f, 0.0f, 0.0f);  // Позиция относительно SpringArm
-    m_Camera->SetFieldOfView(60.0f);
-    m_Camera->SetAspectRatio(16.0f / 9.0f);
-    m_Camera->SetNearPlane(0.1f);   // 10 см
-    m_Camera->SetFarPlane(100.0f);  // 100 метров
-
-    CE_CORE_DEBUG("Character components setup complete for: ", GetName());
+    m_IsOnGround = false;
   }
 
   void CECharacter::BeginPlay()
   {
     CEPawn::BeginPlay();
-
-    // Дополнительная настройка при начале игры
-    if (m_MeshComponent)
-    {
-      m_MeshComponent->SetColor(glm::vec3(0.2f, 0.6f, 1.0f));  // Синий цвет для персонажа
-    }
   }
 
   void CECharacter::Tick(float DeltaTime)
@@ -85,21 +49,18 @@ namespace CE
         }
       }
 
-      // Применяем гравитацию только если не на земле
       if (!m_IsOnGround)
       {
         m_VerticalVelocity += gravity * DeltaTime;
       }
       else
       {
-        // На земле - обнуляем скорость падения
         if (m_VerticalVelocity < 0.0f)
         {
           m_VerticalVelocity = 0.0f;
         }
       }
 
-      // Двигаем по вертикали
       if (abs(m_VerticalVelocity) > 0.01f)
       {
         glm::vec3 movement(0.0f, m_VerticalVelocity * DeltaTime, 0.0f);

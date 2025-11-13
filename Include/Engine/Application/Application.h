@@ -13,7 +13,7 @@ namespace CE
     Application(AppInfo* info);
     ~Application();
 
-    void Initialize();
+    virtual void Initialize();
     void Run();
     void Shutdown();
 
@@ -33,7 +33,7 @@ namespace CE
     void Update();
     void Render();
 
-   private:
+   protected:
     std::unique_ptr<CEGameInstance> m_GameInstance;
     std::unique_ptr<RenderSystem> m_RenderSystem;
     CE::FrameRenderData m_RenderData;

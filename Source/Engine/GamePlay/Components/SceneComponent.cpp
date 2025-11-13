@@ -37,6 +37,11 @@ namespace CE
     UpdateTransformMatrix();
   }
 
+  void SceneComponent::SetScale(float value)
+  {
+    SetScale(value, value, value);
+  }
+
   void SceneComponent::SetScale(float X, float Y, float Z)
   {
     SetScale(glm::vec3(X, Y, Z));

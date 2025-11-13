@@ -4,7 +4,6 @@
 
 #include "Engine/Core/CollisionSystem.h"
 #include "Engine/GamePlay/Input/InputSystem.h"
-#include "test.h"  // Твой тестовый мир
 
 namespace CE
 {
@@ -45,12 +44,8 @@ namespace CE
       CE_CORE_ERROR("Failed to get GLFW window for input system");
     }
 
-    CollisionSystem::Get();  // Просто создаем инстанс
+    CollisionSystem::Get();
     CE_CORE_DEBUG("Collision system initialized");
-
-    // 3. СОЗДАЕМ КОНКРЕТНЫЙ GameInstance (TestGameInstance)
-    m_GameInstance = std::make_unique<TestGameInstance>();
-    m_GameInstance->Initialize();
 
     // 4. Настройка данных рендеринга из текущего мира
     m_RenderData.SetupDefaultLighting();  // Оставляем вызов для безопасности
