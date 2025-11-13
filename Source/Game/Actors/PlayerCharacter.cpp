@@ -20,6 +20,7 @@ PlayerCharacter::PlayerCharacter(CE::CEObject* Owner, CE::FString NewName) : CE:
   m_Camera->SetAspectRatio(16.0f / 9.0f);
   m_Camera->SetNearPlane(0.1f);   // 10 см
   m_Camera->SetFarPlane(100.0f);  // 100 метров
+  m_MeshComponent->CreateCubeMesh();
 }
 
 void PlayerCharacter::BeginPlay()

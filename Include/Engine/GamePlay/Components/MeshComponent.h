@@ -10,8 +10,8 @@ namespace CE
     MeshComponent(CEObject* Owner = nullptr, FString NewName = "MeshComponent");
     virtual ~MeshComponent() = default;
 
-    void SetMesh(const std::string& MeshPath);
-    void SetMaterial(const std::string& MaterialPath);
+    virtual void SetMesh(const std::string& MeshPath);
+    virtual void SetMaterial(const std::string& MaterialPath);
 
     // Для ручного создания меша (пока заглушка для куба)
     void CreateCubeMesh();
@@ -35,7 +35,7 @@ namespace CE
 
     virtual void Update(float DeltaTime) override;
 
-   private:
+   protected:
     std::string m_MeshPath;
     std::string m_MaterialPath;
     StaticMesh m_Mesh;

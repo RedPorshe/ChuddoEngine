@@ -5,15 +5,27 @@ namespace CE
   MeshComponent::MeshComponent(CEObject* Owner, FString NewName)
       : SceneComponent(Owner, NewName)
   {
-    CreateCubeMesh();
+    m_Mesh.vertices.clear();
+    m_Mesh.indices.clear();
   }
 
   void MeshComponent::SetMesh(const std::string& MeshPath)
   {
     m_MeshPath = MeshPath;
-    // TODO: Загрузка меша из файла
-    // Пока используем тестовый куб
-    CreateCubeMesh();
+    // По умолчанию не создаем куб, только если путь не пустой
+    if (!MeshPath.empty())
+    {
+      CE_WARN("MeshPath is  not empty");
+      // TODO: Базовая загрузка меша
+      // Пока используем тестовый куб только если путь не пустой
+      CreateCubeMesh();
+    }
+    else
+    {
+      // Если путь пустой - очищаем меш
+      m_Mesh.vertices.clear();
+      m_Mesh.indices.clear();
+    }
   }
 
   void MeshComponent::SetMaterial(const std::string& MaterialPath)

@@ -64,108 +64,116 @@ namespace CE
 
   bool BufferManager::CreateVertexBuffer(const std::string& name, const std::vector<Vertex>& vertices)
   {
-    if (m_buffers.find(name) != m_buffers.end())
+    if (!vertices.empty())
     {
-      CE_RENDER_WARN("Vertex buffer '", name, "' already exists");
-      return true;
-    }
+      if (m_buffers.find(name) != m_buffers.end())
+      {
+        CE_RENDER_WARN("Vertex buffer '", name, "' already exists");
+        return true;
+      }
 
-    VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
+      VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
 
-    VkBuffer stagingBuffer;
-    VkDeviceMemory stagingBufferMemory;
-    if (!CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                      stagingBuffer, stagingBufferMemory))
-    {
-      CE_RENDER_ERROR("Failed to create staging buffer for vertex buffer '", name, "'");
-      return false;
-    }
+      VkBuffer stagingBuffer;
+      VkDeviceMemory stagingBufferMemory;
+      if (!CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                        stagingBuffer, stagingBufferMemory))
+      {
+        CE_RENDER_ERROR("Failed to create staging buffer for vertex buffer '", name, "'");
+        return false;
+      }
 
-    void* data;
-    vkMapMemory(m_deviceManager->GetDevice(), stagingBufferMemory, 0, bufferSize, 0, &data);
-    memcpy(data, vertices.data(), (size_t)bufferSize);
-    vkUnmapMemory(m_deviceManager->GetDevice(), stagingBufferMemory);
+      void* data;
+      vkMapMemory(m_deviceManager->GetDevice(), stagingBufferMemory, 0, bufferSize, 0, &data);
+      memcpy(data, vertices.data(), (size_t)bufferSize);
+      vkUnmapMemory(m_deviceManager->GetDevice(), stagingBufferMemory);
 
-    VkBuffer vertexBuffer;
-    VkDeviceMemory vertexBufferMemory;
-    if (!CreateBuffer(bufferSize,
-                      VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-                      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-                      vertexBuffer, vertexBufferMemory))
-    {
-      CE_RENDER_ERROR("Failed to create vertex buffer '", name, "'");
+      VkBuffer vertexBuffer;
+      VkDeviceMemory vertexBufferMemory;
+      if (!CreateBuffer(bufferSize,
+                        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                        vertexBuffer, vertexBufferMemory))
+      {
+        CE_RENDER_ERROR("Failed to create vertex buffer '", name, "'");
+        vkDestroyBuffer(m_deviceManager->GetDevice(), stagingBuffer, nullptr);
+        vkFreeMemory(m_deviceManager->GetDevice(), stagingBufferMemory, nullptr);
+        return false;
+      }
+
+      CopyBuffer(stagingBuffer, vertexBuffer, bufferSize);
+
+      BufferInfo bufferInfo;
+      bufferInfo.buffer = vertexBuffer;
+      bufferInfo.memory = vertexBufferMemory;
+      bufferInfo.size = bufferSize;
+      bufferInfo.type = BufferType::VERTEX;
+      m_buffers[name] = bufferInfo;
+
       vkDestroyBuffer(m_deviceManager->GetDevice(), stagingBuffer, nullptr);
       vkFreeMemory(m_deviceManager->GetDevice(), stagingBufferMemory, nullptr);
-      return false;
+
+      return true;
     }
-
-    CopyBuffer(stagingBuffer, vertexBuffer, bufferSize);
-
-    BufferInfo bufferInfo;
-    bufferInfo.buffer = vertexBuffer;
-    bufferInfo.memory = vertexBufferMemory;
-    bufferInfo.size = bufferSize;
-    bufferInfo.type = BufferType::VERTEX;
-    m_buffers[name] = bufferInfo;
-
-    vkDestroyBuffer(m_deviceManager->GetDevice(), stagingBuffer, nullptr);
-    vkFreeMemory(m_deviceManager->GetDevice(), stagingBufferMemory, nullptr);
-
-    return true;
+    return false;
   }
 
   bool BufferManager::CreateIndexBuffer(const std::string& name, const std::vector<uint32_t>& indices)
   {
-    if (m_buffers.find(name) != m_buffers.end())
+    if (!indices.empty())
     {
-      CE_RENDER_WARN("Index buffer '", name, "' already exists");
-      return true;
-    }
+      if (m_buffers.find(name) != m_buffers.end())
+      {
+        CE_RENDER_WARN("Index buffer '", name, "' already exists");
+        return true;
+      }
 
-    VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
+      VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
 
-    VkBuffer stagingBuffer;
-    VkDeviceMemory stagingBufferMemory;
-    if (!CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                      stagingBuffer, stagingBufferMemory))
-    {
-      CE_RENDER_ERROR("Failed to create staging buffer for index buffer '", name, "'");
-      return false;
-    }
+      VkBuffer stagingBuffer;
+      VkDeviceMemory stagingBufferMemory;
+      if (!CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                        stagingBuffer, stagingBufferMemory))
+      {
+        CE_RENDER_ERROR("Failed to create staging buffer for index buffer '", name, "'");
+        return false;
+      }
 
-    void* data;
-    vkMapMemory(m_deviceManager->GetDevice(), stagingBufferMemory, 0, bufferSize, 0, &data);
-    memcpy(data, indices.data(), (size_t)bufferSize);
-    vkUnmapMemory(m_deviceManager->GetDevice(), stagingBufferMemory);
+      void* data;
+      vkMapMemory(m_deviceManager->GetDevice(), stagingBufferMemory, 0, bufferSize, 0, &data);
+      memcpy(data, indices.data(), (size_t)bufferSize);
+      vkUnmapMemory(m_deviceManager->GetDevice(), stagingBufferMemory);
 
-    VkBuffer indexBuffer;
-    VkDeviceMemory indexBufferMemory;
-    if (!CreateBuffer(bufferSize,
-                      VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-                      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-                      indexBuffer, indexBufferMemory))
-    {
-      CE_RENDER_ERROR("Failed to create index buffer '", name, "'");
+      VkBuffer indexBuffer;
+      VkDeviceMemory indexBufferMemory;
+      if (!CreateBuffer(bufferSize,
+                        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+                        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                        indexBuffer, indexBufferMemory))
+      {
+        CE_RENDER_ERROR("Failed to create index buffer '", name, "'");
+        vkDestroyBuffer(m_deviceManager->GetDevice(), stagingBuffer, nullptr);
+        vkFreeMemory(m_deviceManager->GetDevice(), stagingBufferMemory, nullptr);
+        return false;
+      }
+
+      CopyBuffer(stagingBuffer, indexBuffer, bufferSize);
+
+      BufferInfo bufferInfo;
+      bufferInfo.buffer = indexBuffer;
+      bufferInfo.memory = indexBufferMemory;
+      bufferInfo.size = bufferSize;
+      bufferInfo.type = BufferType::INDEX;
+      m_buffers[name] = bufferInfo;
+
       vkDestroyBuffer(m_deviceManager->GetDevice(), stagingBuffer, nullptr);
       vkFreeMemory(m_deviceManager->GetDevice(), stagingBufferMemory, nullptr);
-      return false;
+
+      return true;
     }
-
-    CopyBuffer(stagingBuffer, indexBuffer, bufferSize);
-
-    BufferInfo bufferInfo;
-    bufferInfo.buffer = indexBuffer;
-    bufferInfo.memory = indexBufferMemory;
-    bufferInfo.size = bufferSize;
-    bufferInfo.type = BufferType::INDEX;
-    m_buffers[name] = bufferInfo;
-
-    vkDestroyBuffer(m_deviceManager->GetDevice(), stagingBuffer, nullptr);
-    vkFreeMemory(m_deviceManager->GetDevice(), stagingBufferMemory, nullptr);
-
-    return true;
+    return false;
   }
 
   bool BufferManager::CreateUniformBuffer(const std::string& name, VkDeviceSize size)

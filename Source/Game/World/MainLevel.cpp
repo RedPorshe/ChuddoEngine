@@ -2,6 +2,7 @@
 
 #include "Engine/GamePlay/Actors/SunActor.h"
 #include "Engine/GamePlay/Components/BoxComponent.h"
+#include "Engine/GamePlay/Components/CEStaticMeshComponent.h"
 #include "Engine/GamePlay/Components/PlaneComponent.h"
 #include "Engine/GamePlay/Components/SphereComponent.h"
 #include "Game/Actors/PlayerCharacter.h"
@@ -35,7 +36,7 @@ MainLevel::MainLevel(CE::CEObject* Owner,
 
   // Спавним меш-акторы
   auto* enemy = SpawnActor<CE::CEActor>(this, "Enemy");
-  enemy->SetRootComponent(enemy->AddSubObject<CE::MeshComponent>("EnemyMesh", enemy, "EnemyMesh"));
+  enemy->SetRootComponent(enemy->AddSubObject<CE::CEStaticMeshComponent>("EnemyMesh", enemy, "EnemyMesh"));
   enemy->SetActorLocation(glm::vec3(7.0f, 1.5f, 0.0f));
   enemy->SetActorScale(glm::vec3(1.f, 1.f, 1.f));
 
@@ -56,20 +57,24 @@ MainLevel::MainLevel(CE::CEObject* Owner,
 
   for (int i = 0; i < (int)positions.size(); i++)
   {
-    auto* actor = SpawnActor<CE::CEActor>(this, "Cube_" + std::to_string(i));
-    actor->SetRootComponent(actor->AddSubObject<CE::MeshComponent>("Mesh", actor, "Mesh"));
+    auto* actor = SpawnActor<CE::CEActor>(this, "Sphere_" + std::to_string(i));
+    actor->SetRootComponent(actor->AddSubObject<CE::CEStaticMeshComponent>("Mesh", actor, "Mesh"));
     actor->SetActorLocation(positions[i]);
 
-    auto* mesh = dynamic_cast<CE::MeshComponent*>(actor->GetRootComponent());
+    auto* mesh = dynamic_cast<CE::CEStaticMeshComponent*>(actor->GetRootComponent());
     if (mesh)
     {
       mesh->SetColor(colors[i]);
+      mesh->SetMesh("Assets/Meshes/Sphere.obj");
     }
   }
 
-  auto* enemyMesh = dynamic_cast<CE::MeshComponent*>(enemy->GetRootComponent());
+  auto* enemyMesh = dynamic_cast<CE::CEStaticMeshComponent*>(enemy->GetRootComponent());
   if (enemyMesh)
+  {
+    enemyMesh->SetMesh("Assets/Meshes/Sphere.obj");
     enemyMesh->SetColor(glm::vec3(0.8f, 0.2f, 0.2f));
+  }
 
   // Spawn a SunActor to control world's directional/positional "sun" light
   auto* sun = SpawnActor<CE::SunActor>(this, "SunActor");

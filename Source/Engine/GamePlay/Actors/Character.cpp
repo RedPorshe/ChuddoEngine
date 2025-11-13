@@ -1,6 +1,7 @@
 #include "Engine/GamePlay/Actors/Character.h"
 
 #include "Engine/Core/CollisionSystem.h"
+#include "Engine/GamePlay/Components/CEStaticMeshComponent.h"
 #include "Engine/GamePlay/Components/PlaneComponent.h"
 
 namespace CE
@@ -14,7 +15,8 @@ namespace CE
     SetRootComponent(m_CapsuleComponent);
     m_CapsuleComponent->SetSize(0.35f, 1.8f);  // radius 35sm height 1.8m
 
-    m_MeshComponent = AddDefaultSubObject<MeshComponent>("mesh", this);
+    m_MeshComponent = AddDefaultSubObject<CEStaticMeshComponent>("mesh", this);
+    m_MeshComponent->SetMesh("Assets/meshes/Icosahedron.obj");
     m_MeshComponent->AttachToComponent(m_CapsuleComponent);
     m_MeshComponent->SetPosition(0.f, 0.f, 0.f);
     m_MeshComponent->SetScale(1.f);
