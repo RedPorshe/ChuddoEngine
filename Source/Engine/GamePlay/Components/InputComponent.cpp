@@ -78,7 +78,6 @@ namespace CE
   {
     float scaledX = (xOffset * 10.1f) * deltaTime;
     float scaledY = (yOffset * 10.1f) * deltaTime;
-
     auto lookHorizontalIt = m_AxisBindings.find("LookHorizontal");
     if (lookHorizontalIt != m_AxisBindings.end())
     {

@@ -37,8 +37,9 @@ MainLevel::MainLevel(CE::CEObject* Owner,
   // Спавним меш-акторы
   auto* enemy = SpawnActor<CE::CEActor>(this, "Enemy");
   enemy->SetRootComponent(enemy->AddSubObject<CE::CEStaticMeshComponent>("EnemyMesh", enemy, "EnemyMesh"));
-  enemy->SetActorLocation(glm::vec3(7.0f, 1.5f, 0.0f));
-  enemy->SetActorScale(glm::vec3(1.f, 1.f, 1.f));
+  enemy->SetActorLocation(glm::vec3(3.0f, 0.f, 5.0f));
+  enemy->SetActorScale(5.f);
+  enemy->SetActorRotation(glm::vec3(90.0f, 180.0f, -90.0f));
 
   // Создаем несколько кубов в разных позициях
   std::vector<glm::vec3> positions = {
@@ -72,7 +73,7 @@ MainLevel::MainLevel(CE::CEObject* Owner,
   auto* enemyMesh = dynamic_cast<CE::CEStaticMeshComponent*>(enemy->GetRootComponent());
   if (enemyMesh)
   {
-    enemyMesh->SetMesh("Assets/Meshes/Sphere.obj");
+    enemyMesh->SetMesh("Assets/Meshes/VikingRoom.obj");
     enemyMesh->SetColor(glm::vec3(0.8f, 0.2f, 0.2f));
   }
 
@@ -146,7 +147,7 @@ void MainLevel::Update(float DeltaTime)
     if (!actor)
       continue;
 
-    if (actor == playerController || actor == playerCharacter)
+    if (actor == playerController || actor == playerCharacter || actor->GetName() == "GroundActor" || actor->GetName() == "Enemy" || actor->GetName() == "SunActor")
     {
       ++idx;
       continue;

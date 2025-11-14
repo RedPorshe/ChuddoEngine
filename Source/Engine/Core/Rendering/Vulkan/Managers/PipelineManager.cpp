@@ -85,11 +85,21 @@ namespace CE
 
       PipelineConfigInfo configInfo{};
       DefaultPipelineConfigInfo(configInfo);
+
+      // СПЕЦИФИЧНЫЕ НАСТРОЙКИ ДЛЯ MESH PIPELINE
       configInfo.renderPass = renderPass;
       configInfo.pipelineLayout = m_pipelineLayout;
+
+      // ВКЛЮЧАЕМ ТЕСТ ГЛУБИНЫ
       configInfo.depthStencilInfo.depthTestEnable = VK_TRUE;
       configInfo.depthStencilInfo.depthWriteEnable = VK_TRUE;
       configInfo.depthStencilInfo.depthCompareOp = VK_COMPARE_OP_LESS;
+
+      // ИСПРАВЛЯЕМ НАПРАВЛЕНИЕ ОБХОДА ГРАНЕЙ
+      configInfo.rasterizationInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
+
+      // ВЫКЛЮЧАЕМ BIAS ГЛУБИНЫ ДЛЯ ГЛАДКИХ ПОВЕРХНОСТЕЙ
+      configInfo.rasterizationInfo.depthBiasEnable = VK_FALSE;
 
       VkPipeline pipeline = CreateGraphicsPipeline(configInfo, shaderStages);
 

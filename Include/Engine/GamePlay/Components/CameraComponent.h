@@ -31,7 +31,11 @@ namespace CE
     glm::mat4 GetViewMatrix() const;
     glm::mat4 GetProjectionMatrix() const;
 
-    virtual void Update(float DeltaTime) override;
+    glm::vec3 GetCameraForwardVector() const;
+    glm::vec3 GetCameraRightVector() const;
+    glm::vec3 GetCameraUpVector() const;
+
+       virtual void Update(float DeltaTime) override;
 
    private:
     float m_FieldOfView = 45.0f;

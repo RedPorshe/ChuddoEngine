@@ -35,7 +35,7 @@ namespace CE
 
   void CEActor::SetActorLocation(const glm::vec3& NewLocation)
   {
-    if (m_RootComponent)
+    if (m_RootComponent && !m_RootComponent->GetParent())
     {
       m_RootComponent->SetPosition(NewLocation);
     }
@@ -43,15 +43,20 @@ namespace CE
 
   void CEActor::SetActorRotation(const glm::vec3& NewRotation)
   {
-    if (m_RootComponent)
+    if (m_RootComponent && !m_RootComponent->GetParent())
     {
       m_RootComponent->SetRotation(NewRotation);
     }
   }
 
+  void CEActor::SetActorScale(const float& NewScale)
+  {
+    SetActorScale(glm::vec3(NewScale, NewScale, NewScale));
+  }
+
   void CEActor::SetActorScale(const glm::vec3& NewScale)
   {
-    if (m_RootComponent)
+    if (m_RootComponent && !m_RootComponent->GetParent())
     {
       m_RootComponent->SetScale(NewScale);
     }

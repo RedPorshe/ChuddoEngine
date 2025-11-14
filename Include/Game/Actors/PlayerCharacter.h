@@ -13,9 +13,13 @@ class PlayerCharacter : public CE::CECharacter
 
  private:
   virtual void SetupPlayerInputComponent() override;
+
   CE::SpringArmComponent* m_SpringArm = nullptr;
   CE::CameraComponent* m_Camera = nullptr;
 
   void MoveForward(float Value);
   void MoveRight(float Value);
+  void LookHorizontal(float Value);
+  void LookVertical(float Value);
+  float m_MouseSensitivity = 0.5f;
 };

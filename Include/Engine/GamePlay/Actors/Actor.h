@@ -35,6 +35,7 @@ namespace CE
     void SetActorLocation(const glm::vec3& NewLocation);
     void SetActorLocation(const float x, const float y, const float z);
     void SetActorRotation(const glm::vec3& NewRotation);
+    void SetActorScale(const float& NewScale);
     void SetActorScale(const glm::vec3& NewScale);
 
     glm::vec3 GetActorLocation() const;

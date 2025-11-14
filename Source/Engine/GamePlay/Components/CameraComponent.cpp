@@ -11,31 +11,36 @@ namespace CE
   {
   }
 
+  glm::vec3 CameraComponent::GetCameraForwardVector() const
+  {
+    return -GetForwardVector();
+  }
+
+  glm::vec3 CameraComponent::GetCameraRightVector() const
+  {
+    return -GetRightVector();
+  }
+
+  glm::vec3 CameraComponent::GetCameraUpVector() const
+  {
+    return GetUpVector();
+  }
+
   glm::mat4 CameraComponent::GetViewMatrix() const
   {
-    // Если есть родительский SpringArm, используем его позицию камеры
     if (auto* springArm = dynamic_cast<SpringArmComponent*>(GetParent()))
     {
       glm::vec3 worldPos = springArm->GetCameraWorldLocation();
       glm::vec3 targetPos = springArm->GetWorldLocation() + springArm->GetTargetOffset();
 
-      glm::vec3 up = glm::vec3(0.0f, -1.0f, 0.0f);
+      glm::vec3 up = springArm->GetUpVector();
       return glm::lookAt(worldPos, targetPos, up);
     }
     else
     {
-      // Старая логика для камеры без SpringArm
       glm::vec3 worldPos = GetWorldLocation();
-      glm::vec3 forward = glm::vec3(0.0f, 0.0f, -1.0f);
-      glm::vec3 up = glm::vec3(0.0f, -1.0f, 0.0f);
-
-      glm::mat4 rotationMatrix = glm::mat4(1.0f);
-      rotationMatrix = glm::rotate(rotationMatrix, glm::radians(GetRotation().x), glm::vec3(1.0f, 0.0f, 0.0f));
-      rotationMatrix = glm::rotate(rotationMatrix, glm::radians(GetRotation().y), glm::vec3(0.0f, 1.0f, 0.0f));
-      rotationMatrix = glm::rotate(rotationMatrix, glm::radians(GetRotation().z), glm::vec3(0.0f, 0.0f, 1.0f));
-
-      forward = glm::vec3(rotationMatrix * glm::vec4(forward, 0.0f));
-      up = glm::vec3(rotationMatrix * glm::vec4(up, 0.0f));
+      glm::vec3 forward = GetCameraForwardVector();
+      glm::vec3 up = GetCameraUpVector();
 
       return glm::lookAt(worldPos, worldPos + forward, up);
     }
