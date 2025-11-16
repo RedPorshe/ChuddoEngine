@@ -13,16 +13,32 @@ namespace CE
 
   glm::vec3 CameraComponent::GetCameraForwardVector() const
   {
-    return -GetForwardVector();
+    if (GetParent())
+    {
+      auto forward = GetParent()->GetForwardVector();
+
+      return forward;
+    }
+    auto forward = GetForwardVector();
+
+    return forward;
   }
 
   glm::vec3 CameraComponent::GetCameraRightVector() const
   {
-    return -GetRightVector();
+    if (GetParent())
+    {
+      return GetParent()->GetRightVector();
+    }
+    return GetRightVector();
   }
 
   glm::vec3 CameraComponent::GetCameraUpVector() const
   {
+    if (GetParent())
+    {
+      return GetParent()->GetUpVector();
+    }
     return GetUpVector();
   }
 
@@ -32,8 +48,8 @@ namespace CE
     {
       glm::vec3 worldPos = springArm->GetCameraWorldLocation();
       glm::vec3 targetPos = springArm->GetWorldLocation() + springArm->GetTargetOffset();
-
       glm::vec3 up = springArm->GetUpVector();
+
       return glm::lookAt(worldPos, targetPos, up);
     }
     else
@@ -48,11 +64,15 @@ namespace CE
 
   glm::mat4 CameraComponent::GetProjectionMatrix() const
   {
-    return glm::perspective(
+    glm::mat4 projection = glm::perspective(
         glm::radians(m_FieldOfView),
         m_AspectRatio,
         m_NearPlane,
         m_FarPlane);
+
+    projection = glm::scale(projection, glm::vec3(1.0f, -1.0f, 1.0f));
+
+    return projection;
   }
 
   void CameraComponent::Update(float DeltaTime)

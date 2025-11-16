@@ -83,33 +83,6 @@ namespace CE
 
     if (GetInputComponent())
     {
-      // Биндинги управления для персонажа
-      GetInputComponent()->BindAxis("MoveForward", [this](float Value)
-                                    {
-        if (m_CapsuleComponent && abs(Value) > 0.1f)
-        {
-          glm::vec3 movement = glm::vec3(0.0f, 0.0f, Value * .020f); // Движение вперед/назад
-          m_CapsuleComponent->Move(movement);
-        } });
-
-      GetInputComponent()->BindAxis("MoveRight", [this](float Value)
-                                    {
-        if (m_CapsuleComponent && abs(Value) > 0.1f)
-        {
-          glm::vec3 movement = glm::vec3(Value * .020f, 0.0f, 0.0f); // Движение вправо/влево
-          m_CapsuleComponent->Move(movement);
-        } });
-
-      GetInputComponent()->BindAction("Jump", EInputEvent::Pressed, [this]()
-                                      {
-        if (m_IsOnGround)
-        {
-          // Прыжок вверх (положительное значение Y)
-          m_VerticalVelocity = 4.0f; // Импульс вверх
-          CE_CORE_DEBUG("JUMP! Vertical velocity: ", m_VerticalVelocity);
-        } });
-
-      CE_CORE_DEBUG("Character input bindings setup complete");
-    }
+        }
   }
 }  // namespace CE

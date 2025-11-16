@@ -66,7 +66,7 @@ MainLevel::MainLevel(CE::CEObject* Owner,
     if (mesh)
     {
       mesh->SetColor(colors[i]);
-      mesh->SetMesh("Assets/Meshes/Sphere.obj");
+      mesh->CreateCubeMesh();
     }
   }
 
@@ -154,9 +154,8 @@ void MainLevel::Update(float DeltaTime)
     }
 
     float speed = rotationSpeed + (idx * 7.5f);
-    glm::vec3 rot = glm::vec3(totalTime * glm::radians(speed * 1.5f),
-                              totalTime * glm::radians(speed * 1.5f),
-                              totalTime * glm::radians(speed * 1.3f));
+    glm::vec3 rot = glm::vec3(
+        0.f, totalTime * glm::radians(speed * 1.5f), 0.f);
 
     actor->SetActorRotation(rot);
     ++idx;

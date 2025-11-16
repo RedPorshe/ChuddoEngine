@@ -96,7 +96,7 @@ namespace CE
       configInfo.depthStencilInfo.depthCompareOp = VK_COMPARE_OP_LESS;
 
       // ИСПРАВЛЯЕМ НАПРАВЛЕНИЕ ОБХОДА ГРАНЕЙ
-      configInfo.rasterizationInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
+      configInfo.rasterizationInfo.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 
       // ВЫКЛЮЧАЕМ BIAS ГЛУБИНЫ ДЛЯ ГЛАДКИХ ПОВЕРХНОСТЕЙ
       configInfo.rasterizationInfo.depthBiasEnable = VK_FALSE;

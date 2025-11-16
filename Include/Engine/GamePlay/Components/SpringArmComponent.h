@@ -23,6 +23,10 @@ namespace CE
     {
       m_CameraLag = Lag;
     }
+    void SetUsePawnControlRotation(bool bUse)
+    {
+      m_bUsePawnControlRotation = bUse;
+    }
 
     const glm::vec3& GetTargetOffset() const
     {
@@ -36,6 +40,10 @@ namespace CE
     {
       return m_CameraLag;
     }
+    bool GetUsePawnControlRotation() const
+    {
+      return m_bUsePawnControlRotation;
+    }
 
     // Получение конечной позиции камеры
     glm::vec3 GetCameraWorldLocation() const;
@@ -43,9 +51,10 @@ namespace CE
     virtual void Update(float DeltaTime) override;
 
    private:
-    glm::vec3 m_TargetOffset{0.0f, 0.0f, 0.0f};  // Смещение от цели
-    float m_ArmLength = 300.0f;                  // Длина "руки" камеры
-    float m_CameraLag = 0.1f;                    // Задержка движения камеры
+    glm::vec3 m_TargetOffset{0.0f, 0.7f, 0.0f};  // Смещение от цели (Vulkan: Y+ вверх)
+    float m_ArmLength = 5.0f;                    // Длина "руки" камеры
+    float m_CameraLag = 0.05f;                   // Задержка движения камеры
+    bool m_bUsePawnControlRotation = true;       // Использовать вращение от Pawn
 
     glm::vec3 m_CurrentCameraPosition{0.0f, 0.0f, 0.0f};
   };

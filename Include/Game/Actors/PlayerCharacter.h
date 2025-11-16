@@ -11,15 +11,27 @@ class PlayerCharacter : public CE::CECharacter
   virtual void BeginPlay() override;
   virtual void Tick(float DeltaTime) override;
 
+  CE::SpringArmComponent* GetSpringArm() const
+  {
+    return m_SpringArm;
+  }
+  CE::CameraComponent* GetCamera() const
+  {
+    return m_Camera;
+  }
+
  private:
   virtual void SetupPlayerInputComponent() override;
-
-  CE::SpringArmComponent* m_SpringArm = nullptr;
-  CE::CameraComponent* m_Camera = nullptr;
 
   void MoveForward(float Value);
   void MoveRight(float Value);
   void LookHorizontal(float Value);
   void LookVertical(float Value);
-  float m_MouseSensitivity = 0.5f;
+  void Jump();
+
+  CE::SpringArmComponent* m_SpringArm = nullptr;
+  CE::CameraComponent* m_Camera = nullptr;
+
+  float m_MouseSensitivity = 1.0f;
+  float m_MoveSpeed = 0.05f;
 };

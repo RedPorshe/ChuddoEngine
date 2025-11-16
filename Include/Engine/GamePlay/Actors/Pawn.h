@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Engine/GamePlay/Actors/Actor.h"
+#include "Engine/GamePlay/Components/CameraComponent.h"
 #include "Engine/GamePlay/Components/InputComponent.h"
 
 namespace CE
@@ -14,6 +15,7 @@ namespace CE
     virtual void BeginPlay() override;
     virtual void Tick(float DeltaTime) override;
     void OnPossess();
+
     // Система ввода - аналог UE
     virtual void SetupPlayerInputComponent();
 
@@ -23,7 +25,49 @@ namespace CE
       return this->m_InputComponent;
     }
 
-   protected:
+    // Аналог AddMovementInput из UE
+    void AddMovementInput(const glm::vec3& WorldDirection, float ScaleValue = 1.0f, bool bForce = false);
+    void AddControllerYawInput(float Value);
+    void AddControllerPitchInput(float Value);
+
+    // Управление вращением
+    void SetControlRotation(const glm::vec3& NewRotation);
+    const glm::vec3& GetControlRotation() const
+    {
+      return m_ControlRotation;
+    }
+
+    // Получение векторов движения (аналогично камере)
+    glm::vec3 GetPawnViewLocation() const;
+    glm::vec3 GetViewForwardVector() const;
+    glm::vec3 GetViewRightVector() const;
+    glm::vec3 GetViewUpVector() const;
+
+    // Получение векторов движения
+    glm::vec3 GetMovementDirection() const
+    {
+      return m_MovementInput;
+    }
+    void ConsumeMovementInput();
+
+    // Флаги управления
+    void SetUseControllerRotation(bool bUse)
+    {
+      m_bUseControllerRotation = bUse;
+    }
+    bool GetUseControllerRotation() const
+    {
+      return m_bUseControllerRotation;
+    }
+
+      protected:
     InputComponent* m_InputComponent = nullptr;
+    glm::vec3 m_MovementInput{0.0f, 0.0f, 0.0f};
+    glm::vec3 m_ControlRotation{0.0f, 0.0f, 0.0f};  // Pitch, Yaw, Roll
+    bool m_bMovementInputConsumed = false;
+    bool m_bUseControllerRotation = false;
+
+   private:
+    CameraComponent* FindCameraComponent() const;
   };
 }  // namespace CE

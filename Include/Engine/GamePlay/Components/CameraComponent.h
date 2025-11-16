@@ -35,7 +35,7 @@ namespace CE
     glm::vec3 GetCameraRightVector() const;
     glm::vec3 GetCameraUpVector() const;
 
-       virtual void Update(float DeltaTime) override;
+    virtual void Update(float DeltaTime) override;
 
    private:
     float m_FieldOfView = 45.0f;

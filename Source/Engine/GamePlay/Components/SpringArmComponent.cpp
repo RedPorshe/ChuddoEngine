@@ -12,10 +12,21 @@ namespace CE
 
   glm::vec3 SpringArmComponent::GetCameraWorldLocation() const
   {
+    // Получаем мировую позицию цели (точка, куда смотрит камера)
     glm::vec3 targetPosition = GetWorldLocation() + m_TargetOffset;
-    glm::vec3 cameraPosition = targetPosition - glm::vec3(0.0f, 0.0f, m_ArmLength);
 
-    return cameraPosition;
+    // Используем кватернион для правильного вращения
+    glm::quat rotationQuat = GetRotationQuat();
+
+    // Смещение камеры назад от цели (в локальном пространстве SpringArm)
+    // Vulkan: Z+ вперед, Y+ вверх, X+ вправо
+    glm::vec3 cameraOffset = glm::vec3(0.0f, 0.0f, m_ArmLength);  // Z+ для Vulkan
+
+    // Применяем вращение к смещению камеры
+    glm::vec3 rotatedOffset = rotationQuat * cameraOffset;
+
+    // Позиция камеры = позиция цели + повернутое смещение
+    return targetPosition + rotatedOffset;
   }
 
   void SpringArmComponent::Update(float DeltaTime)

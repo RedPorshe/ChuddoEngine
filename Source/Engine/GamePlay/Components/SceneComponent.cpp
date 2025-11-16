@@ -4,6 +4,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 namespace CE
 {
@@ -12,6 +13,16 @@ namespace CE
   {
     UpdateTransformMatrix();
     CE_CORE_DEBUG("SceneComponent created: ", NewName);
+  }
+
+  void SceneComponent::SetPitchLimits(float MinPitch, float MaxPitch)
+  {
+    m_MinPitch = MinPitch;
+    m_MaxPitch = MaxPitch;
+    m_UsePitchLimits = true;
+
+    // Применяем ограничения к текущему вращению
+    ClampPitchRotation();
   }
 
   void SceneComponent::SetPosition(const glm::vec3& Position)
@@ -49,6 +60,10 @@ namespace CE
       return;
     }
     m_RelativeRotation = Rotation;
+
+    // Update quaternion from euler angles
+    m_RotationQuat = glm::quat(glm::radians(Rotation));
+
     UpdateTransformMatrix();
   }
 
@@ -60,6 +75,10 @@ namespace CE
   void SceneComponent::SetRelativeRotation(const glm::vec3& Rotation)
   {
     m_RelativeRotation = Rotation;
+
+    // Update quaternion from euler angles
+    m_RotationQuat = glm::quat(glm::radians(Rotation));
+
     UpdateTransformMatrix();
   }
 
@@ -142,33 +161,69 @@ namespace CE
 
   glm::vec3 SceneComponent::GetForwardVector() const
   {
-    glm::mat4 rotationMatrix = glm::mat4(1.0f);
-    // Тот же порядок: Yaw (Y), Pitch (X), Roll (Z)
-    rotationMatrix = glm::rotate(rotationMatrix, glm::radians(m_WorldRotation.y), glm::vec3(0.0f, 1.0f, 0.0f));  // Yaw first
-    rotationMatrix = glm::rotate(rotationMatrix, glm::radians(m_WorldRotation.x), glm::vec3(1.0f, 0.0f, 0.0f));  // Pitch second
-    rotationMatrix = glm::rotate(rotationMatrix, glm::radians(m_WorldRotation.z), glm::vec3(0.0f, 0.0f, 1.0f));  // Roll last
-
-    glm::vec3 forward = glm::vec3(0.0f, 0.0f, -1.0f);
-    return glm::normalize(glm::vec3(rotationMatrix * glm::vec4(forward, 0.0f)));
+    return glm::normalize(m_RotationQuat * glm::vec3(0.0f, 0.0f, -1.0f));
   }
 
   glm::vec3 SceneComponent::GetUpVector() const
   {
-    glm::mat4 rotationMatrix = glm::mat4(1.0f);
-    // Тот же порядок: Yaw (Y), Pitch (X), Roll (Z)
-    rotationMatrix = glm::rotate(rotationMatrix, glm::radians(m_WorldRotation.y), glm::vec3(0.0f, 1.0f, 0.0f));  // Yaw first
-    rotationMatrix = glm::rotate(rotationMatrix, glm::radians(m_WorldRotation.x), glm::vec3(1.0f, 0.0f, 0.0f));  // Pitch second
-    rotationMatrix = glm::rotate(rotationMatrix, glm::radians(m_WorldRotation.z), glm::vec3(0.0f, 0.0f, 1.0f));  // Roll last
-
-    glm::vec3 up = glm::vec3(0.0f, -1.0f, 0.0f);
-    return glm::normalize(glm::vec3(rotationMatrix * glm::vec4(up, 0.0f)));
+    return glm::normalize(m_RotationQuat * glm::vec3(0.0f, 1.0f, 0.0f));
   }
 
   glm::vec3 SceneComponent::GetRightVector() const
   {
-    glm::vec3 forward = GetForwardVector();
-    glm::vec3 up = GetUpVector();
-    return glm::normalize(glm::cross(forward, up));
+    return glm::normalize(m_RotationQuat * glm::vec3(1.0f, 0.0f, 0.0f));
+  }
+
+  void SceneComponent::AddYawInput(float Value)
+  {
+    // Rotate around global Y axis (horizontal) - CORRECTED
+    glm::quat yawRot = glm::angleAxis(glm::radians(Value), glm::vec3(0.0f, 1.0f, 0.0f));
+    m_RotationQuat = yawRot * m_RotationQuat;
+
+    UpdateRotationFromQuat();
+  }
+
+  void SceneComponent::AddPitchInput(float Value)
+  {
+    // Rotate around LOCAL X axis (vertical) - use current right vector - CORRECTED
+    glm::vec3 localRight = GetRightVector();
+    glm::quat pitchRot = glm::angleAxis(glm::radians(Value), localRight);
+    m_RotationQuat = m_RotationQuat * pitchRot;  // Local rotation
+
+    UpdateRotationFromQuat();
+
+    // Apply pitch limits after rotation
+    if (m_UsePitchLimits)
+    {
+      ClampPitchRotation();
+    }
+  }
+
+  void SceneComponent::ClampPitchRotation()
+  {
+    // Получаем текущее относительное вращение
+    glm::vec3 currentRotation = GetRelativeRotation();
+
+    // Ограничиваем угол pitch (X-ось)
+    float clampedPitch = glm::clamp(currentRotation.x, m_MinPitch, m_MaxPitch);
+
+    // Если угол выходит за пределы, устанавливаем ограниченное значение
+    if (currentRotation.x != clampedPitch)
+    {
+      SetRelativeRotation(clampedPitch, currentRotation.y, currentRotation.z);
+    }
+  }
+
+  void SceneComponent::UpdateRotationFromQuat()
+  {
+    // Convert quaternion back to euler angles for compatibility
+    glm::vec3 euler = glm::degrees(glm::eulerAngles(m_RotationQuat));
+
+    // Update relative rotation
+    m_RelativeRotation = euler;
+
+    // Update transform
+    UpdateTransformMatrix();
   }
 
   void SceneComponent::Move(const glm::vec3& Delta)
@@ -180,6 +235,7 @@ namespace CE
   void SceneComponent::Rotate(const glm::vec3& Delta)
   {
     m_RelativeRotation += Delta;
+    m_RotationQuat = glm::quat(glm::radians(m_RelativeRotation));
     UpdateTransformMatrix();
   }
 
@@ -234,18 +290,18 @@ namespace CE
 
   void SceneComponent::UpdateTransformMatrix()
   {
-    // Строим локальную матрицу трансформации из относительных координат
+    // Build local transform matrix using quaternion for rotation
     glm::mat4 localTransform = glm::mat4(1.0f);
     localTransform = glm::translate(localTransform, m_RelativeLocation);
 
-    // ИЗМЕНИТЕ ПОРЯДОК ВРАЩЕНИЙ: Yaw (Y), Pitch (X), Roll (Z)
-    localTransform = glm::rotate(localTransform, glm::radians(m_RelativeRotation.y), glm::vec3(0.0f, 1.0f, 0.0f));  // Yaw first
-    localTransform = glm::rotate(localTransform, glm::radians(m_RelativeRotation.x), glm::vec3(1.0f, 0.0f, 0.0f));  // Pitch second
-    localTransform = glm::rotate(localTransform, glm::radians(m_RelativeRotation.z), glm::vec3(0.0f, 0.0f, 1.0f));  // Roll last
+    // Use quaternion for rotation (avoids gimbal lock)
+    // CORRECT: Apply rotation matrix from quaternion
+    glm::mat4 rotationMatrix = glm::mat4_cast(m_RotationQuat);
+    localTransform = localTransform * rotationMatrix;
 
     localTransform = glm::scale(localTransform, m_RelativeScale);
 
-    // Вычисляем мировую матрицу
+    // Calculate world matrix
     if (m_Parent)
     {
       m_TransformMatrix = m_Parent->GetWorldTransform() * localTransform;
@@ -255,32 +311,16 @@ namespace CE
       m_TransformMatrix = localTransform;
     }
 
-    // Извлекаем мировые координаты из матрицы с помощью glm::decompose
-    glm::vec3 scale;
-    glm::quat rotation;
-    glm::vec3 translation;
-    glm::vec3 skew;
-    glm::vec4 perspective;
+    // Extract world coordinates from matrix
+    // SIMPLIFIED: Just extract position from matrix directly
+    m_WorldLocation = glm::vec3(m_TransformMatrix[3]);
 
-    if (glm::decompose(m_TransformMatrix, scale, rotation, translation, skew, perspective))
-    {
-      m_WorldLocation = translation;
-      m_WorldScale = scale;
+    // For rotation and scale, use the relative values (simplified)
+    // In a full implementation, you'd decompose the matrix
+    m_WorldRotation = m_RelativeRotation;
+    m_WorldScale = m_RelativeScale;
 
-      // Конвертируем кватернион в углы Эйлера
-      glm::vec3 euler = glm::degrees(glm::eulerAngles(rotation));
-      m_WorldRotation = euler;
-    }
-    else
-    {
-      // Fallback если decompose не сработал
-      m_WorldLocation = glm::vec3(m_TransformMatrix[3]);
-      m_WorldScale = glm::vec3(1.0f);
-      m_WorldRotation = glm::vec3(0.0f);
-      CE_CORE_WARN("Failed to decompose matrix for component: ", GetName());
-    }
-
-    // Обновляем всех детей
+    // Update all children
     for (auto* child : m_Children)
     {
       child->UpdateTransformMatrix();

@@ -33,13 +33,7 @@ namespace CE
                                  const std::string& modelUBOName,
                                  const std::string& lightingUBOName);
 
-    // Обновление дескрипторов
-    // bool UpdateDescriptorSets(uint32_t imageIndex,
-    //                           const std::string& sceneUBOName,
-    //                           const std::string& modelUBOName,
-    //                           const std::string& lightingUBOName);
-
-   private:
+     private:
     std::shared_ptr<DeviceManager> m_deviceManager;
     std::shared_ptr<BufferManager> m_bufferManager;
     std::unordered_map<std::string, VkDescriptorSet> m_meshDescriptorSets;
