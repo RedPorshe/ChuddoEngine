@@ -42,15 +42,42 @@ namespace CE
     glm::vec3 GetActorRotation() const;
     glm::vec3 GetActorScale() const;
 
+    glm::vec3 GetActorForwardVector() const;
+    glm::vec3 GetActorRightVector() const;
+    glm::vec3 GetActorUpVector() const;
     // Получение уровня
     CELevel* GetLevel() const;
 
     virtual void BeginPlay() override;
     virtual void Update(float DeltaTime) override;
     virtual void Tick(float DeltaTime) override;
+    float GetVerticalVelocity() const
+    {
+      return m_verticalVelocity;
+    }
+    void SetUseGravity(bool value)
+    {
+      bIsGravityEnabled = value;
+    }
+    void SetSimulatePhysics(bool value)
+    {
+      bIsSimulatingPhysics = value;
+    }
+    void SetKinematic(bool value)
+    {
+      bIsKinematic = value;
+    }
     void SetUsePhysics(bool value)
     {
       bIsUsePhysics = value;
+    }
+    void SetIsStatic(bool value)
+    {
+      bIsStatic = value;
+    }
+    void SetWeight(float InWeight)
+    {
+      Weight = InWeight;
     }
 
    protected:
@@ -59,6 +86,12 @@ namespace CE
     bool bIsUsePhysics{false};
     virtual void OnComponentOverlap(class CollisionComponent* Component,
                                     const std::vector<struct CollisionHitResult>& Hits);
+    float Weight = 1.0f;
+    bool bIsStatic{false};
+    bool bIsKinematic{false};
+    bool bIsSimulatingPhysics{false};
+    bool bIsGravityEnabled{false};
+    float m_verticalVelocity{0.0f};
   };
 
   template <typename T, typename... Args>

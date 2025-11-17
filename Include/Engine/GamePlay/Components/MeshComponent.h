@@ -2,6 +2,12 @@
 #include "Engine/Core/Rendering/Data/Vertex.h"
 #include "Engine/GamePlay/Components/SceneComponent.h"
 
+// Forward declaration для ObjLoader
+namespace CE
+{
+  class ObjLoader;
+}
+
 namespace CE
 {
   class MeshComponent : public SceneComponent
@@ -16,6 +22,12 @@ namespace CE
     // Для ручного создания меша (пока заглушка для куба)
     void CreateCubeMesh();
 
+    // Установка статического меша напрямую
+    void SetStaticMesh(const StaticMesh& Mesh)
+    {
+      m_Mesh = Mesh;
+    }
+
     // Получение данных для рендеринга
     const StaticMesh& GetMeshData() const
     {
@@ -27,6 +39,10 @@ namespace CE
     void SetColor(const glm::vec3& color)
     {
       m_Mesh.color = color;
+    }
+    void SetColor(const glm::vec4& color)
+    {
+      m_Mesh.color = glm::vec3(color);
     }
     const glm::vec3& GetColor() const
     {

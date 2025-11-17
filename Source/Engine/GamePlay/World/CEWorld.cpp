@@ -189,13 +189,17 @@ namespace CE
     else
     {
       CameraData defaultCam;
+      glm::vec3 defaultCamPosition = glm::vec3(5.0f, 1.0f, 10.0f);
+      glm::vec3 defaultCameraUp = glm::vec3(0.0f, -1.0f, 0.0f);
+      glm::vec3 defaultCameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
+
       defaultCam.viewMatrix = glm::lookAt(
-          glm::vec3(0.0f, 0.0f, 10.0f),
-          glm::vec3(0.0f, 0.0f, 0.0f),
-          glm::vec3(0.0f, 1.0f, 0.0f));
+          defaultCamPosition,
+          defaultCameraTarget,
+          defaultCameraUp);
       defaultCam.projectionMatrix = glm::perspective(
           glm::radians(45.0f), 16.0f / 9.0f, 0.1f, 1000.0f);
-      defaultCam.position = glm::vec3(0.0f, 0.0f, 10.0f);
+      defaultCam.position = defaultCamPosition;
 
       renderData.SetCameraData(defaultCam);
     }

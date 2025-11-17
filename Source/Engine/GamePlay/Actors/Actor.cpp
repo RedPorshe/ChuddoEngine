@@ -28,6 +28,20 @@ namespace CE
     return nullptr;
   }
 
+  glm::vec3 CEActor::GetActorForwardVector() const
+  {
+    return m_RootComponent ? m_RootComponent->GetForwardVector() : glm::vec3(0.0f, 0.0f, 1.0f);
+  }
+  glm::vec3 CEActor::GetActorRightVector() const
+  {
+    return m_RootComponent ? m_RootComponent->GetRightVector() : glm::vec3(1.0f, 0.0f, 0.0f);
+  }
+
+  glm::vec3 CEActor::GetActorUpVector() const
+  {
+    return m_RootComponent ? m_RootComponent->GetUpVector() : glm::vec3(0.0f, 1.0f, 0.0f);
+  }
+
   void CEActor::SetActorLocation(const float x, const float y, const float z)
   {
     SetActorLocation(glm::vec3(x, y, z));
@@ -115,13 +129,58 @@ namespace CE
       CE_CORE_TRACE("Actor ", GetName(), " component ", Component->GetName(),
                     " overlapped with ", hit.HitComponent->GetName());
 
-      // Здесь можно добавить логику реакции на столкновение
-      // Например, урон, подбор предметов и т.д.
+      // Здесь можно добавить пользовательскую логику обработки столкновения
     }
   }
 
   void CEActor::Tick(float DeltaTime)
   {
     Update(DeltaTime);
+    if (GetActorLocation().y <= -1000.f)
+    {
+      this->SetActorLocation(GetActorLocation().x, 1000.f, GetActorLocation().z);  // this is stub for destoy actor
+      // need add function to destroy actor...
+      m_verticalVelocity = 0.f;
+    }
+
+    if (bIsGravityEnabled)
+    {
+      // Применяем гравитацию
+      auto world = dynamic_cast<CELevel*>(GetOwner());
+      if (world)
+      {
+        auto* level = static_cast<CELevel*>(world);
+        const glm::vec3 gravity = level->GetGravity();
+        if (m_RootComponent->GetParent() == nullptr)
+        {
+          m_verticalVelocity += gravity.y * DeltaTime * Weight;
+          glm::vec3 currentLocation = m_RootComponent->GetWorldLocation();
+          currentLocation += gravity * DeltaTime;
+          m_RootComponent->SetPosition(currentLocation);
+          // if have collision, stop falling
+          ForEachComponent<CollisionComponent>([this](CollisionComponent* comp)
+                                               {
+                if (comp->IsCollisionEnabled())
+                {
+                    auto collisions = CollisionSystem::Get().CheckCollisions(comp);
+                    if (!collisions.empty())
+                    {
+                        m_verticalVelocity = 0.0f;
+                    }
+                } });
+        }
+      }
+    }
+
+    if (!bIsStatic)
+    {
+      if (bIsUsePhysics)
+      {
+        if (bIsSimulatingPhysics)
+        {
+        }
+      }
+    }
   }
+
 }  // namespace CE

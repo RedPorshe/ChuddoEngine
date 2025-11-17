@@ -64,7 +64,6 @@ namespace CE
     std::vector<uint32_t> indices;
 
     std::unordered_map<std::string, uint32_t> vertexMap;
-    uint32_t currentIndex = 0;
 
     std::string line;
     while (std::getline(file, line))
@@ -149,7 +148,7 @@ namespace CE
       if (!posStr.empty())
       {
         int posIndex = std::stoi(posStr) - 1;  // OBJ индексы начинаются с 1
-        if (posIndex >= 0 && posIndex < positions.size())
+        if (posIndex >= 0 && posIndex < static_cast<int>(positions.size()))
         {
           vertex.position = positions[posIndex];
         }
@@ -159,7 +158,7 @@ namespace CE
       if (!texStr.empty())
       {
         int texIndex = std::stoi(texStr) - 1;
-        if (texIndex >= 0 && texIndex < texCoords.size())
+        if (texIndex >= 0 && texIndex < static_cast<int>(texCoords.size()))
         {
           vertex.texCoord = texCoords[texIndex];
         }
@@ -169,7 +168,7 @@ namespace CE
       if (!normStr.empty())
       {
         int normIndex = std::stoi(normStr) - 1;
-        if (normIndex >= 0 && normIndex < normals.size())
+        if (normIndex >= 0 && normIndex < static_cast<int>(normals.size()))
         {
           vertex.normal = normals[normIndex];
         }

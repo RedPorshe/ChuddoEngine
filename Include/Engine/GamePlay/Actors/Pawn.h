@@ -60,7 +60,7 @@ namespace CE
       return m_bUseControllerRotation;
     }
 
-      protected:
+   protected:
     InputComponent* m_InputComponent = nullptr;
     glm::vec3 m_MovementInput{0.0f, 0.0f, 0.0f};
     glm::vec3 m_ControlRotation{0.0f, 0.0f, 0.0f};  // Pitch, Yaw, Roll
@@ -69,5 +69,14 @@ namespace CE
 
    private:
     CameraComponent* FindCameraComponent() const;
+    bool m_bIsJumping = false;
+    void ApplyRotationToActor();
+    void ApplyMovementInputToActor();
+
+    void MoveForward(float Value);
+    void MoveRight(float Value);
+    void lookUp(float Value);
+    void turn(float Value);
+    void jump();
   };
 }  // namespace CE

@@ -6,6 +6,8 @@
 
 namespace CE
 {
+  class MeshComponent;
+
   class SunActor : public CEActor
   {
    public:
@@ -35,8 +37,11 @@ namespace CE
    private:
     glm::vec3 m_Color = glm::vec3(1.0f);
     float m_Intensity = 1.0f;
-    float m_AngularSpeed = 0.5f;  // radians per second
+    float m_AngularSpeed = 0.00f;  // radians per second
     float m_Angle = 0.0f;
     float m_Radius = 10.0f;  // orbit radius (large = more directional)
+
+    // Visual marker mesh
+    MeshComponent* m_SunMarkerMesh = nullptr;
   };
 }  // namespace CE

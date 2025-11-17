@@ -2,6 +2,7 @@
 #include "Engine/GamePlay/Actors/Character.h"
 #include "Engine/GamePlay/Actors/Pawn.h"
 #include "Engine/GamePlay/Actors/SunActor.h"
+#include "Engine/GamePlay/Actors/TerrainActor.h"
 #include "Engine/GamePlay/Components/BoxComponent.h"
 #include "Engine/GamePlay/Components/CameraComponent.h"
 #include "Engine/GamePlay/Components/MeshComponent.h"
@@ -39,6 +40,13 @@ class TestGameInstance : public CE::CEGameInstance
 // Реализация TestLevel
 TestLevel::TestLevel() : CE::CELevel(nullptr, "TestWorld")
 {
+  // === СОЗДАЕМ ЛАНДШАФТ ===
+  auto* terrain = SpawnActor<CE::TerrainActor>(this, "Terrain");
+  if (terrain)
+  {
+    terrain->SetActorLocation(glm::vec3(0.0f, -2.0f, 0.0f));
+  }
+
   // === СОЗДАЕМ ЗЕМЛЮ ПЕРВОЙ ===
   auto* ground = SpawnActor<CE::CEActor>(this, "GroundActor");
   auto* planeComponent = ground->AddDefaultSubObject<CE::PlaneComponent>("Ground", ground, "Ground");

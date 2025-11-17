@@ -1,4 +1,5 @@
 #pragma once
+#include <glm/vec3.hpp>
 #include <memory>
 #include <vector>
 
@@ -20,7 +21,14 @@ namespace CE
 
     void DestroyActor(CEActor* Actor);
     CEActor* FindActorByName(const FString& Name);
-
+    glm::vec3 GetGravity() const
+    {
+      return m_gravity;
+    }
+    void SetGravity(const glm::vec3& gravity)
+    {
+      m_gravity = gravity;
+    }
     const std::vector<std::unique_ptr<CEActor>>& GetActors() const
     {
       return m_Actors;
@@ -32,6 +40,7 @@ namespace CE
 
    protected:
     std::vector<std::unique_ptr<CEActor>> m_Actors;
+    glm::vec3 m_gravity{0.0f, -9.81f, 0.0f};
   };
 
 }  // namespace CE

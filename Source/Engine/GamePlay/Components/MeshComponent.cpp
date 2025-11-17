@@ -1,5 +1,7 @@
 #include "Engine/GamePlay/Components/MeshComponent.h"
 
+#include "Engine/Core/Utilities/ObjLoader.h"
+
 namespace CE
 {
   MeshComponent::MeshComponent(CEObject* Owner, FString NewName)
@@ -15,10 +17,20 @@ namespace CE
     // По умолчанию не создаем куб, только если путь не пустой
     if (!MeshPath.empty())
     {
-      CE_WARN("MeshPath is  not empty");
-      // TODO: Базовая загрузка меша
-      // Пока используем тестовый куб только если путь не пустой
-      CreateCubeMesh();
+      // Пытаемся загрузить OBJ файл
+      StaticMesh loadedMesh = ObjLoader::LoadOBJ(MeshPath);
+
+      // Если загрузка успешна (есть вершины), используем загруженный меш
+      if (!loadedMesh.vertices.empty() && !loadedMesh.indices.empty())
+      {
+        m_Mesh = loadedMesh;
+      }
+      else
+      {
+        // Если загрузка не удалась, используем куб как fallback
+        CE_WARN("Failed to load mesh from ", MeshPath, ", using default cube");
+        CreateCubeMesh();
+      }
     }
     else
     {

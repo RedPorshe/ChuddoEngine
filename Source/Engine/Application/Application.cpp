@@ -82,15 +82,15 @@ namespace CE
       Update();
       Render();
 
-      // FPS счетчик
-      m_FrameCount++;
-      m_FPSTimer += m_DeltaTime;
-      if (m_FPSTimer >= 1.0f)
-      {
-        CE_CORE_DISPLAY("FPS: ", m_FrameCount, " DeltaTime: ", m_DeltaTime);
-        m_FrameCount = 0;
-        m_FPSTimer = 0.0f;
-      }
+      // // FPS счетчик
+      // m_FrameCount++;
+      // m_FPSTimer += m_DeltaTime;
+      // if (m_FPSTimer >= 1.0f)
+      // {
+      //   CE_CORE_DISPLAY("FPS: ", m_FrameCount, " DeltaTime: ", m_DeltaTime);
+      //   m_FrameCount = 0;
+      //   m_FPSTimer = 0.0f;
+      // }
 
       // Проверка закрытия окна
       if (m_RenderSystem->ShouldClose())

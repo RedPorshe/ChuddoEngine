@@ -2,14 +2,31 @@
 
 #include "Engine/GamePlay/Components/CameraComponent.h"
 #include "Engine/GamePlay/Components/InputComponent.h"
+#include "Engine/GamePlay/Components/MeshComponent.h"
 #include "Engine/GamePlay/Components/SpringArmComponent.h"
+#include "Engine/GamePlay/Input/InputSystem.h"
 
 namespace CE
 {
   CEPawn::CEPawn(CEObject* Owner, FString NewName)
       : CEActor(Owner, NewName)
   {
+    auto* mesh = AddDefaultSubObject<MeshComponent>("Mesh", this, "MeshComponent");
+    SetRootComponent(mesh);
+    mesh->SetMesh("Assets/Meshes/test_cube.obj");
     m_InputComponent = AddSubObject<InputComponent>("Input", this, "InputComponent");
+    auto* m_cameraComponent = AddSubObject<CameraComponent>("Camera", this, "CameraComponent");
+    auto* m_springArmComponent = AddSubObject<SpringArmComponent>("SpringArm", this, "SpringArmComponent");
+    m_springArmComponent->AttachToComponent(m_RootComponent);
+    m_springArmComponent->SetRelativePosition(glm::vec3(0.0f, 1.0f, 0.0f));
+    m_springArmComponent->SetRelativeRotation(glm::vec3(-10.0f, 0.0f, 0.0f));
+    m_springArmComponent->SetArmLength(5.0f);
+
+    m_cameraComponent->AttachToComponent(m_springArmComponent);
+
+    m_cameraComponent->SetFieldOfView(60.0f);
+    m_cameraComponent->SetRelativeRotation(glm::vec3(0.0f, 0.0f, 0.0f));
+
     SetupPlayerInputComponent();
     CE_CORE_DEBUG("CEPawn created: {}", NewName.c_str());
   }
@@ -18,42 +35,48 @@ namespace CE
   {
     CEActor::BeginPlay();
   }
-
-  void CEPawn::Tick(float DeltaTime)
+  void CEPawn::ApplyRotationToActor()
   {
-    CEActor::Tick(DeltaTime);
-
-    // Применяем управляющее вращение к корневому компоненту
-    if (m_RootComponent && m_bUseControllerRotation)
+    if (m_bUseControllerRotation)
     {
-      // Применяем только Yaw для поворота персонажа
-      glm::vec3 currentRotation = m_RootComponent->GetRelativeRotation();
-      m_RootComponent->SetRelativeRotation(glm::vec3(currentRotation.x, m_ControlRotation.y, currentRotation.z));
-
-      CE_CORE_DEBUG("Applied controller rotation to root: Yaw={}", m_ControlRotation.y);
+      auto currentRotation = this->GetActorRotation();
+      float newYaw = m_ControlRotation.y;
+      this->SetActorRotation(glm::vec3(currentRotation.x, newYaw, currentRotation.z));
+      float newPitch = m_ControlRotation.x;
+      this->SetActorRotation(glm::vec3(newPitch, currentRotation.y, currentRotation.z));
     }
-
-    // Обработка накопленного ввода движения
-    if (m_RootComponent && glm::length(m_MovementInput) > 0.01f)
+    else
     {
+      // Если не использовать вращение контроллера, можно реализовать другую логику
+    }
+  }
+  void CEPawn::ApplyMovementInputToActor()
+  {
+    if (glm::length(m_MovementInput) > 0.01f)
+    {
+      // Логика перемещения уже реализована в Tick, здесь можно оставить пустым
       glm::vec3 finalMovement = m_MovementInput;
-
+      finalMovement.y *= -1.0f;
       if (m_bUseControllerRotation)
       {
-        // First Person: движение в локальных координатах персонажа
-        // Персонаж уже повернут, поэтому движение должно быть в его локальных координатах
-        finalMovement = m_MovementInput;  // Оставляем как есть - это локальное движение
+        finalMovement = m_MovementInput;
+        finalMovement.y *= -1.0f;
+        glm::vec3 forward = this->GetActorForwardVector();
+        glm::vec3 right = this->GetActorRightVector();
+        forward.y = 0.0f;
+        right.y = 0.0f;
 
-        CE_CORE_DEBUG("First Person movement - Local Input: ({}, {}, {})",
-                      finalMovement.x, finalMovement.y, finalMovement.z);
+        if (glm::length(forward) > 0.01f)
+          forward = glm::normalize(forward);
+        if (glm::length(right) > 0.01f)
+          right = glm::normalize(right);
+        finalMovement = forward * m_MovementInput.z + right * m_MovementInput.x;
       }
       else
       {
-        // Third Person: движение относительно камеры
         glm::vec3 forward = GetViewForwardVector();
         glm::vec3 right = GetViewRightVector();
 
-        // Игнорируем вертикальную составляющую для движения по плоскости
         forward.y = 0.0f;
         right.y = 0.0f;
 
@@ -62,22 +85,30 @@ namespace CE
         if (glm::length(right) > 0.01f)
           right = glm::normalize(right);
 
-        // Преобразуем в мировые координаты относительно камеры
         finalMovement = forward * m_MovementInput.z + right * m_MovementInput.x;
-
-        CE_CORE_DEBUG("Third Person movement - Camera Relative: ({}, {}, {})",
-                      finalMovement.x, finalMovement.y, finalMovement.z);
       }
 
-      // Применяем движение к корневому компоненту
       m_RootComponent->Move(finalMovement);
-
-      CE_CORE_DEBUG("Final movement applied: ({}, {}, {})",
-                    finalMovement.x, finalMovement.y, finalMovement.z);
     }
+  }
 
-    // Сбрасываем ввод движения после обработки
+  void CEPawn::Tick(float DeltaTime)
+  {
+    CEActor::Tick(DeltaTime);
+
+    ApplyRotationToActor();
+    ApplyMovementInputToActor();
     ConsumeMovementInput();
+    if (m_bIsJumping)
+    {
+      if (m_RootComponent)
+      {
+        glm::vec3 currentLocation = GetRootComponent()->GetWorldLocation();
+        currentLocation.y += 0.5f;  // Высота прыжка
+        GetRootComponent()->SetPosition(currentLocation);
+      }
+      m_bIsJumping = false;
+    }
   }
 
   CameraComponent* CEPawn::FindCameraComponent() const
@@ -108,7 +139,7 @@ namespace CE
       return pos;
     }
 
-    glm::vec3 pos = GetActorLocation() + glm::vec3(0.0f, 0.7f, 0.0f);
+    glm::vec3 pos = GetActorLocation() + glm::vec3(0.0f, -0.1f, 0.0f);
     return pos;
   }
 
@@ -120,15 +151,7 @@ namespace CE
       return forward;
     }
 
-    if (m_bUseControllerRotation)
-    {
-      glm::quat rotation = glm::quat(glm::radians(m_ControlRotation));
-      glm::vec3 forward = rotation * m_RootComponent->GetForwardVector();
-      return forward;
-    }
-
-    glm::vec3 forward = m_RootComponent ? m_RootComponent->GetForwardVector() : glm::vec3(0.0f, 0.0f, 1.0f);
-    return forward;
+    return glm::vec3(0.0f, 0.0f, -1.0f);
   }
 
   glm::vec3 CEPawn::GetViewRightVector() const
@@ -138,16 +161,70 @@ namespace CE
       glm::vec3 right = camera->GetCameraRightVector();
       return right;
     }
+    return glm::vec3(1.0f, 0.0f, 0.0f);
+  }
 
-    if (m_bUseControllerRotation)
+  void CEPawn::MoveForward(float Value)
+  {
+    if (Value != 0.0f)
     {
-      glm::quat rotation = glm::quat(glm::radians(m_ControlRotation));
-      glm::vec3 right = rotation * glm::vec3(1.0f, 0.0f, 0.0f);
-      return right;
+      Value *= .20f;
+      if (m_bUseControllerRotation)
+      {
+        glm::vec3 forward = this->GetActorForwardVector();
+        forward.y = 0.0f;
+        if (glm::length(forward) > 0.01f)
+          forward = glm::normalize(forward);
+        AddMovementInput(forward, Value);
+      }
+      else
+      {
+        glm::vec3 forward = GetViewForwardVector();
+        forward.y = 0.0f;
+        if (glm::length(forward) > 0.01f)
+          forward = glm::normalize(forward);
+        AddMovementInput(forward, Value);
+      }
     }
-    glm::vec3 right = m_RootComponent ? m_RootComponent->GetRightVector() : glm::vec3(1.0f, 0.0f, 0.0f);
+  }
+  void CEPawn::lookUp(float Value)
+  {
+    AddControllerPitchInput(Value);
+  }
+  void CEPawn::turn(float Value)
+  {
+    AddControllerYawInput(Value);
+  }
+  void CEPawn::jump()
+  {
+    if (!m_bIsJumping)
+      m_bIsJumping = true;
+  }
+  void CEPawn::MoveRight(float Value)
+  {
+    if (Value != 0.0f)
+    {
+      Value *= .20f;
+      if (m_bUseControllerRotation)
+      {
+        glm::vec3 right = this->GetActorRightVector();
+        right.y = 0.0f;
+        right.x *= -1.0f;
+        if (glm::length(right) > 0.01f)
+          right = glm::normalize(right);
+        AddMovementInput(right, Value);
+      }
+      else
+      {
+        glm::vec3 right = GetViewRightVector();
+        right.y = 0.0f;
+        right.x *= -1.0f;
+        if (glm::length(right) > 0.01f)
+          right = glm::normalize(right);
 
-    return right;
+        AddMovementInput(right, Value);
+      }
+    }
   }
 
   glm::vec3 CEPawn::GetViewUpVector() const
@@ -157,13 +234,7 @@ namespace CE
       return camera->GetCameraUpVector();
     }
 
-    if (m_bUseControllerRotation)
-    {
-      glm::quat rotation = glm::quat(glm::radians(m_ControlRotation));
-      return rotation * glm::vec3(0.0f, 1.0f, 0.0f);
-    }
-
-    return m_RootComponent ? m_RootComponent->GetUpVector() : glm::vec3(0.0f, 1.0f, 0.0f);
+    return glm::vec3(0.0f, 1.0f, 0.0f);
   }
 
   void CEPawn::OnPossess()
@@ -175,6 +246,16 @@ namespace CE
   {
     if (m_InputComponent)
     {
+      m_InputComponent->BindAxis("MoveForward", [this](float Value)
+                                 { MoveForward(Value); });
+      m_InputComponent->BindAxis("MoveRight", [this](float value)
+                                 { MoveRight(value); });
+      m_InputComponent->BindAxis("LookHorizontal", [this](float value)
+                                 { turn(value); });
+      m_InputComponent->BindAxis("LookVertical", [this](float value)
+                                 { lookUp(value); });
+      m_InputComponent->BindAction("Jump", EInputEvent::Pressed, [this]()
+                                   { jump(); });
     }
   }
 

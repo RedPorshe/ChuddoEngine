@@ -1,6 +1,13 @@
+#pragma once
+
 #include "Engine/GamePlay/Actors/Character.h"
+#include "Engine/GamePlay/Actors/Pawn.h"
 #include "Engine/GamePlay/Controllers/PlayerController.h"
 #include "Engine/GamePlay/World/Levels/CELevel.h"
+namespace CE
+{
+  class TerrainActor;
+}
 
 class MainLevel : public CE::CELevel
 {
@@ -14,5 +21,7 @@ class MainLevel : public CE::CELevel
 
  protected:
   CE::PlayerController* playerController;
-  CE::CECharacter* playerCharacter;
+  CE::CEPawn* playerCharacter;
+  CE::TerrainActor* terrain = nullptr;
+  CE::CEActor* enemy = nullptr;
 };

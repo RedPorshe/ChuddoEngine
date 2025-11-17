@@ -49,14 +49,18 @@ namespace CE
       glm::vec3 worldPos = springArm->GetCameraWorldLocation();
       glm::vec3 targetPos = springArm->GetWorldLocation() + springArm->GetTargetOffset();
       glm::vec3 up = springArm->GetUpVector();
+      up.y *= -1.0f;  // Invert Y for view matrix
 
       return glm::lookAt(worldPos, targetPos, up);
     }
     else
     {
       glm::vec3 worldPos = GetWorldLocation();
+      // worldPos.y *= -1.0f;  // Invert Y for view matrix
       glm::vec3 forward = GetCameraForwardVector();
+      // forward.y *= -1.0f;  // Invert Y for view matrix
       glm::vec3 up = GetCameraUpVector();
+      // up.y *= -1.0f;  // Invert Y for view matrix
 
       return glm::lookAt(worldPos, worldPos + forward, up);
     }
@@ -64,15 +68,30 @@ namespace CE
 
   glm::mat4 CameraComponent::GetProjectionMatrix() const
   {
-    glm::mat4 projection = glm::perspective(
-        glm::radians(m_FieldOfView),
-        m_AspectRatio,
-        m_NearPlane,
-        m_FarPlane);
+    if (auto* springArm = dynamic_cast<SpringArmComponent*>(GetParent()))
+    {
+      glm::mat4 projection = glm::perspective(
+          glm::radians(m_FieldOfView),
+          m_AspectRatio,
+          m_NearPlane,
+          m_FarPlane);
+      (void)springArm;
+      projection = glm::scale(projection, glm::vec3(1.0f, 1.0f, 1.0f));
 
-    projection = glm::scale(projection, glm::vec3(1.0f, -1.0f, 1.0f));
+      return projection;
+    }
+    else
+    {
+      glm::mat4 projection = glm::perspective(
+          glm::radians(m_FieldOfView),
+          m_AspectRatio,
+          m_NearPlane,
+          m_FarPlane);
+      CE_DISPLAY("without spring arm");
+      projection = glm::scale(projection, glm::vec3(1.0f, -1.0f, 1.0f));
 
-    return projection;
+      return projection;
+    }
   }
 
   void CameraComponent::Update(float DeltaTime)

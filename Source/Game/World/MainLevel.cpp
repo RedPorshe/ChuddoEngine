@@ -1,21 +1,28 @@
 #include "Game/World/MainLevel.h"
 
 #include "Engine/GamePlay/Actors/SunActor.h"
+#include "Engine/GamePlay/Actors/TerrainActor.h"
 #include "Engine/GamePlay/Components/BoxComponent.h"
 #include "Engine/GamePlay/Components/CEStaticMeshComponent.h"
 #include "Engine/GamePlay/Components/PlaneComponent.h"
 #include "Engine/GamePlay/Components/SphereComponent.h"
-#include "Game/Actors/PlayerCharacter.h"
 
 MainLevel::MainLevel(CE::CEObject* Owner,
                      CE::FString NewName) : CE::CELevel(Owner, NewName)
 {
   CE_GAMEPLAY_DEBUG(this->GetName(), " Created ");
   playerController = SpawnActor<CE::PlayerController>(this, "Player Controller");
-  playerCharacter = SpawnActor<PlayerCharacter>(this, "Player Character");
+  playerCharacter = SpawnActor<CE::CEPawn>(this, "Player Character");
   playerController->Possess(playerCharacter);
 
   playerCharacter->SetActorLocation(1.f, 1.f, 1.f);
+
+  // === СОЗДАЕМ ЛАНДШАФТ ===
+  terrain = SpawnActor<CE::TerrainActor>(this, "Terrain");
+  if (terrain)
+  {
+    terrain->SetActorLocation(glm::vec3(0.0f, -2.0f, 0.0f));
+  }
 
   // === СОЗДАЕМ ЗЕМЛЮ ПЕРВОЙ ===
   auto* ground = SpawnActor<CE::CEActor>(this, "GroundActor");
@@ -23,23 +30,18 @@ MainLevel::MainLevel(CE::CEObject* Owner,
   ground->SetRootComponent(planeComponent);
   ground->SetActorLocation(glm::vec3(0.0f, -2.0f, 0.0f));  // Земля на нулевой высоте
 
-  // Настраиваем плоскость
+  // // Настраиваем плоскость
   planeComponent->SetSize(50.0f, 50.0f);  // 50x50 метров
   planeComponent->SetSubdivisions(10);    // Подразделения для красивого вида
   planeComponent->SetCollisionEnabled(true);
   planeComponent->SetGenerateOverlapEvents(true);
 
-  auto* DirectLighter = SpawnActor<CE::SunActor>(this, "DirectLight");
-  DirectLighter->SetIntensity(10.f);
-  DirectLighter->SetColor(glm::vec3(0.0f, 1.0f, 0.0f));
-  DirectLighter->SetActorLocation(glm::vec3(0.0f, 0.0f, 0.0f));
-
   // Спавним меш-акторы
-  auto* enemy = SpawnActor<CE::CEActor>(this, "Enemy");
+  enemy = SpawnActor<CE::CEActor>(this, "Enemy");
   enemy->SetRootComponent(enemy->AddSubObject<CE::CEStaticMeshComponent>("EnemyMesh", enemy, "EnemyMesh"));
-  enemy->SetActorLocation(glm::vec3(3.0f, 0.f, 5.0f));
+  enemy->SetActorLocation(glm::vec3(.0f, 0.f, -5.0f));
   enemy->SetActorScale(5.f);
-  enemy->SetActorRotation(glm::vec3(90.0f, 180.0f, -90.0f));
+  enemy->SetActorRotation(glm::vec3(-90.0f, -90.0f, 0.0f));
 
   // Создаем несколько кубов в разных позициях
   std::vector<glm::vec3> positions = {
@@ -68,6 +70,8 @@ MainLevel::MainLevel(CE::CEObject* Owner,
       mesh->SetColor(colors[i]);
       mesh->CreateCubeMesh();
     }
+    // actor->SetIsStatic(false);
+    actor->SetUseGravity(true);
   }
 
   auto* enemyMesh = dynamic_cast<CE::CEStaticMeshComponent*>(enemy->GetRootComponent());
@@ -81,10 +85,11 @@ MainLevel::MainLevel(CE::CEObject* Owner,
   auto* sun = SpawnActor<CE::SunActor>(this, "SunActor");
   if (sun)
   {
-    sun->SetColor(glm::vec3(1.0f, 0.95f, 0.85f));
+    sun->SetColor(glm::vec3(1.0f, 1.f, 1.f));
     sun->SetIntensity(2.0f);
-    sun->SetRadius(15.0f);
-    sun->SetAngularSpeed(0.25f);
+    sun->SetRadius(100.0f);
+    sun->SetAngularSpeed(0.025f);
+    sun->SetActorLocation(glm::vec3(0.0f, 1000.0f, 0.0f));
   }
 
   // === ТЕСТОВЫЕ ОБЪЕКТЫ ДЛЯ КОЛЛИЗИЙ ===
@@ -135,10 +140,12 @@ void MainLevel::Tick(float DeltaTime)
 void MainLevel::Update(float DeltaTime)
 {
   CE::CELevel::Update(DeltaTime);
+
   static float totalTime = 0.0f;
+  static float random = 1.0f;
   totalTime += DeltaTime;
 
-  // Вращение кубов (как было)
+  // // Вращение кубов (как было)
   float rotationSpeed = 180.0f;
   int idx = 0;
   for (const auto& actorPtr : GetActors())
@@ -147,15 +154,15 @@ void MainLevel::Update(float DeltaTime)
     if (!actor)
       continue;
 
-    if (actor == playerController || actor == playerCharacter || actor->GetName() == "GroundActor" || actor->GetName() == "Enemy" || actor->GetName() == "SunActor")
+    if (actor == playerController || actor == playerCharacter || actor->GetName() == "Terrain" || actor->GetName() == "Enemy" || actor->GetName() == "SunActor")
     {
       ++idx;
       continue;
     }
-
+    random *= -1.f;
     float speed = rotationSpeed + (idx * 7.5f);
     glm::vec3 rot = glm::vec3(
-        0.f, totalTime * glm::radians(speed * 1.5f), 0.f);
+        totalTime * glm::radians(speed * 1.5f) * random, totalTime * glm::radians(speed * 1.5f) * random, totalTime * glm::radians(speed * 1.5f) * random);
 
     actor->SetActorRotation(rot);
     ++idx;

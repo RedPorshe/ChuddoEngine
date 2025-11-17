@@ -83,6 +83,6 @@ namespace CE
 
     if (GetInputComponent())
     {
-        }
+    }
   }
 }  // namespace CE
