@@ -5,6 +5,10 @@
 
 namespace CE
 {
+  class CEBoxComponent;
+  class SphereComponent;
+  class MeshCollisionComponent;
+
   class CECapsuleComponent : public CollisionComponent
   {
    public:
@@ -29,7 +33,10 @@ namespace CE
     {
       return ECollisionShape::Capsule;
     }
-    virtual bool CheckCollision(const CollisionComponent* Other) const override;
+    virtual bool CheckCollisionWithBox(const CEBoxComponent* Other) const override;
+    virtual bool CheckCollisionWithSphere(const SphereComponent* Other) const override;
+    virtual bool CheckCollisionWithCapsule(const CECapsuleComponent* Other) const override;
+    virtual bool CheckCollisionWithMesh(const MeshCollisionComponent* Other) const override;
     virtual glm::vec3 GetBoundingBoxMin() const override;
     virtual glm::vec3 GetBoundingBoxMax() const override;
 
@@ -38,10 +45,7 @@ namespace CE
     glm::vec3 GetBottomSphereCenter() const;
     float GetCylinderHeight() const;
 
-    virtual void Update(float DeltaTime) override;
-
-   private:
-    // Вспомогательные методы для проверки коллизий
+    // Методы для использования другими компонентами
     bool CheckCapsuleBoxCollision(const glm::vec3& capsuleBottom,
                                   const glm::vec3& capsuleTop,
                                   float capsuleRadius,
@@ -51,6 +55,12 @@ namespace CE
     glm::vec3 ClosestPointOnSegment(const glm::vec3& a,
                                     const glm::vec3& b,
                                     const glm::vec3& point) const;
+
+    virtual void Update(float DeltaTime) override;
+
+   private:
+    // Вспомогательные методы для проверки коллизий
+    bool CheckCapsuleCapsuleCollision(const CECapsuleComponent* Other) const;
 
     float DistanceBetweenSegments(const glm::vec3& a1,
                                   const glm::vec3& a2,

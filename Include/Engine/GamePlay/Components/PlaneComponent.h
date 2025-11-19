@@ -5,6 +5,11 @@
 
 namespace CE
 {
+  class CEBoxComponent;
+  class SphereComponent;
+  class CECapsuleComponent;
+  class MeshCollisionComponent;
+
   class PlaneComponent : public CollisionComponent
   {
    public:
@@ -16,6 +21,10 @@ namespace CE
     {
       return ECollisionShape::Mesh;
     }
+    virtual bool CheckCollisionWithBox(const CEBoxComponent* Other) const override;
+    virtual bool CheckCollisionWithSphere(const SphereComponent* Other) const override;
+    virtual bool CheckCollisionWithCapsule(const CECapsuleComponent* Other) const override;
+    virtual bool CheckCollisionWithMesh(const MeshCollisionComponent* Other) const override;
     virtual bool CheckCollision(const CollisionComponent* Other) const override;
     virtual glm::vec3 GetBoundingBoxMin() const override;
     virtual glm::vec3 GetBoundingBoxMax() const override;

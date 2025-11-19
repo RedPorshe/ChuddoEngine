@@ -1,8 +1,13 @@
 #include "Engine/Core/CollisionSystem.h"
 
 #include <algorithm>
+#include <limits>
 
+#include "Engine/GamePlay/Components/BoxComponent.h"
+#include "Engine/GamePlay/Components/CapsuleComponent.h"
 #include "Engine/GamePlay/Components/CollisionComponent.h"
+#include "Engine/GamePlay/Components/MeshCollisionComponent.h"
+#include "Engine/GamePlay/Components/SphereComponent.h"
 
 namespace CE
 {
@@ -103,6 +108,10 @@ namespace CE
           }
         }
       }
+
+      CE_CORE_DEBUG("Collision check: ", Component->GetName(),
+                    " AABB checks: ", aabbCount,
+                    " Precise collisions: ", preciseCount);
     }
     catch (const std::exception& e)
     {
@@ -136,9 +145,10 @@ namespace CE
       if (!component->IsCollisionEnabled())
         continue;
 
-            glm::vec3 boxMin = component->GetBoundingBoxMin();
+      glm::vec3 boxMin = component->GetBoundingBoxMin();
       glm::vec3 boxMax = component->GetBoundingBoxMax();
 
+      // Алгоритм пересечения луча с AABB (Slab Method)
       float tmin = (boxMin.x - Start.x) / direction.x;
       float tmax = (boxMax.x - Start.x) / direction.x;
 
@@ -173,17 +183,48 @@ namespace CE
       if (tzmax < tmax)
         tmax = tzmax;
 
-      if (tmin < maxDistance && tmin < closestHit.Distance && tmin >= 0.0f)
+      // Находим ближайшее пересечение
+      float hitDistance = tmin;
+      if (tmin < 0.0f)
+      {
+        hitDistance = tmax;
+        if (tmax < 0.0f)
+          continue;
+      }
+
+      if (hitDistance < maxDistance && hitDistance < closestHit.Distance && hitDistance >= 0.0f)
       {
         closestHit.HitComponent = component;
-        closestHit.ImpactPoint = Start + direction * tmin;
-        closestHit.Distance = tmin;
+        closestHit.ImpactPoint = Start + direction * hitDistance;
+        closestHit.Distance = hitDistance;
         closestHit.bBlockingHit = true;
 
-        // Упрощенный расчет нормали
+        // Расчет нормали пересечения
         glm::vec3 hitPoint = closestHit.ImpactPoint;
         glm::vec3 boxCenter = (boxMin + boxMax) * 0.5f;
-        closestHit.ImpactNormal = glm::normalize(hitPoint - boxCenter);
+
+        // Находим ближайшую грань бокса для определения нормали
+        glm::vec3 localHit = hitPoint - boxCenter;
+        glm::vec3 halfExtents = (boxMax - boxMin) * 0.5f;
+
+        // Находим минимальное расстояние до грани
+        glm::vec3 absLocalHit = glm::abs(localHit);
+        glm::vec3 distanceToFace = halfExtents - absLocalHit;
+
+        float minDistance = std::min({distanceToFace.x, distanceToFace.y, distanceToFace.z});
+
+        if (minDistance == distanceToFace.x)
+        {
+          closestHit.ImpactNormal = glm::vec3((localHit.x > 0) ? 1.0f : -1.0f, 0.0f, 0.0f);
+        }
+        else if (minDistance == distanceToFace.y)
+        {
+          closestHit.ImpactNormal = glm::vec3(0.0f, (localHit.y > 0) ? 1.0f : -1.0f, 0.0f);
+        }
+        else
+        {
+          closestHit.ImpactNormal = glm::vec3(0.0f, 0.0f, (localHit.z > 0) ? 1.0f : -1.0f);
+        }
 
         foundHit = true;
       }
@@ -258,19 +299,79 @@ namespace CE
       if (tzmax < tmax)
         tmax = tzmax;
 
-      if (tmin < maxDistance && tmin < closestHit.Distance && tmin >= 0.0f)
+      // Находим ближайшее пересечение
+      float hitDistance = tmin;
+      if (tmin < 0.0f)
       {
-        closestHit.HitComponent = component;
-        closestHit.ImpactPoint = Start + direction * tmin;
-        closestHit.Distance = tmin;
-        closestHit.bBlockingHit = true;
+        hitDistance = tmax;
+        if (tmax < 0.0f)
+          continue;
+      }
 
-        // Упрощенный расчет нормали
-        glm::vec3 hitPoint = closestHit.ImpactPoint;
-        glm::vec3 boxCenter = (boxMin + boxMax) * 0.5f;
-        closestHit.ImpactNormal = glm::normalize(hitPoint - boxCenter);
+      if (hitDistance < maxDistance && hitDistance < closestHit.Distance && hitDistance >= 0.0f)
+      {
+        // Проверяем точное пересечение сферы с компонентом
+        glm::vec3 spherePosAtHit = Start + direction * hitDistance;
 
-        foundHit = true;
+        // Для разных типов коллизий используем разные проверки
+        bool preciseHit = false;
+
+        switch (component->GetCollisionShape())
+        {
+          case ECollisionShape::Box:
+          {
+            auto* boxComponent = static_cast<CEBoxComponent*>(component);
+            preciseHit = boxComponent->CheckPointCollision(spherePosAtHit);
+            break;
+          }
+          case ECollisionShape::Sphere:
+          {
+            auto* sphereComponent = static_cast<SphereComponent*>(component);
+            float distance = glm::distance(spherePosAtHit, sphereComponent->GetWorldLocation());
+            preciseHit = distance <= (Radius + sphereComponent->GetRadius());
+            break;
+          }
+          case ECollisionShape::Capsule:
+          {
+            // Упрощенная проверка для капсулы
+            auto* capsuleComponent = static_cast<CECapsuleComponent*>(component);
+            glm::vec3 closestPoint = capsuleComponent->ClosestPointOnSegment(
+                capsuleComponent->GetBottomSphereCenter(),
+                capsuleComponent->GetTopSphereCenter(),
+                spherePosAtHit);
+            float distance = glm::distance(spherePosAtHit, closestPoint);
+            preciseHit = distance <= (Radius + capsuleComponent->GetRadius());
+            break;
+          }
+          case ECollisionShape::Mesh:
+          {
+            // Для меша используем упрощенную проверку с bounding box
+            glm::vec3 closestPoint;
+            closestPoint.x = glm::clamp(spherePosAtHit.x, boxMin.x, boxMax.x);
+            closestPoint.y = glm::clamp(spherePosAtHit.y, boxMin.y, boxMax.y);
+            closestPoint.z = glm::clamp(spherePosAtHit.z, boxMin.z, boxMax.z);
+            float distance = glm::distance(spherePosAtHit, closestPoint);
+            preciseHit = distance <= Radius;
+            break;
+          }
+          default:
+            preciseHit = false;
+        }
+
+        if (preciseHit)
+        {
+          closestHit.HitComponent = component;
+          closestHit.ImpactPoint = spherePosAtHit;
+          closestHit.Distance = hitDistance;
+          closestHit.bBlockingHit = true;
+
+          // Расчет нормали
+          glm::vec3 hitPoint = closestHit.ImpactPoint;
+          glm::vec3 boxCenter = (boxMin + boxMax) * 0.5f;
+          closestHit.ImpactNormal = glm::normalize(hitPoint - boxCenter);
+
+          foundHit = true;
+        }
       }
     }
 
@@ -284,6 +385,30 @@ namespace CE
 
   void CollisionSystem::Update(float DeltaTime)
   {
-    (void)DeltaTime;  // Пока не используем
+    // Используем параметр, чтобы убрать предупреждение
+    (void)DeltaTime;
+
+    // Проверяем коллизии для всех компонентов
+    for (auto* component : m_CollisionComponents)
+    {
+      if (!component->IsCollisionEnabled() || !component->GetGenerateOverlapEvents())
+        continue;
+
+      auto collisions = CheckCollisions(component);
+
+      // Здесь можно обработать события коллизий
+      if (!collisions.empty())
+      {
+        CE_CORE_DEBUG("Component ", component->GetName(),
+                      " has ", collisions.size(), " collisions");
+
+        // TODO: Вызвать события overlap/коллизий
+        // Убираем неиспользуемую переменную
+        for ([[maybe_unused]] const auto& collision : collisions)
+        {
+          // Можно вызвать OnOverlapBegin, OnCollision и т.д.
+        }
+      }
+    }
   }
 }  // namespace CE

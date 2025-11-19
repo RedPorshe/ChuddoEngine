@@ -107,6 +107,34 @@ namespace CE
   {
     CEObject::Update(DeltaTime);
 
+    if (bIsGravityEnabled)
+    {
+      // Применяем гравитацию
+      auto world = dynamic_cast<CELevel*>(GetOwner());
+      if (world)
+      {
+        auto* level = static_cast<CELevel*>(world);
+        const glm::vec3 gravity = level->GetGravity();
+        if (m_RootComponent->GetParent() == nullptr)
+        {
+          m_verticalVelocity += gravity.y * DeltaTime * Weight;
+          glm::vec3 currentLocation = m_RootComponent->GetWorldLocation();
+          currentLocation += gravity * DeltaTime;
+          m_RootComponent->SetPosition(currentLocation);
+          // if have collision, stop falling
+          ForEachComponent<CollisionComponent>([this](CollisionComponent* comp)
+                                               {
+                if (comp->IsCollisionEnabled())
+                {
+                    auto collisions = CollisionSystem::Get().CheckCollisions(comp);
+                    if (!collisions.empty())
+                    {
+                        m_verticalVelocity = 0.0f;
+                    }
+                } });
+        }
+      }
+    }
     // Автоматическая проверка коллизий для всех компонентов актора
     ForEachComponent<CollisionComponent>([this](CollisionComponent* comp)
                                          {
@@ -143,36 +171,7 @@ namespace CE
       m_verticalVelocity = 0.f;
     }
 
-    if (bIsGravityEnabled)
-    {
-      // Применяем гравитацию
-      auto world = dynamic_cast<CELevel*>(GetOwner());
-      if (world)
-      {
-        auto* level = static_cast<CELevel*>(world);
-        const glm::vec3 gravity = level->GetGravity();
-        if (m_RootComponent->GetParent() == nullptr)
-        {
-          m_verticalVelocity += gravity.y * DeltaTime * Weight;
-          glm::vec3 currentLocation = m_RootComponent->GetWorldLocation();
-          currentLocation += gravity * DeltaTime;
-          m_RootComponent->SetPosition(currentLocation);
-          // if have collision, stop falling
-          ForEachComponent<CollisionComponent>([this](CollisionComponent* comp)
-                                               {
-                if (comp->IsCollisionEnabled())
-                {
-                    auto collisions = CollisionSystem::Get().CheckCollisions(comp);
-                    if (!collisions.empty())
-                    {
-                        m_verticalVelocity = 0.0f;
-                    }
-                } });
-        }
-      }
-    }
-
-    if (!bIsStatic)
+        if (!bIsStatic)
     {
       if (bIsUsePhysics)
       {

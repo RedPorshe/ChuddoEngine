@@ -1,9 +1,11 @@
 // CapsuleComponent.cpp
 #include "Engine/GamePlay/Components/CapsuleComponent.h"
 
+#include <algorithm>
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "Engine/GamePlay/Components/BoxComponent.h"
+#include "Engine/GamePlay/Components/MeshCollisionComponent.h"
 #include "Engine/GamePlay/Components/SphereComponent.h"
 
 namespace CE
@@ -30,20 +32,37 @@ namespace CE
     SetHeight(Height);
   }
 
-  bool CECapsuleComponent::CheckCollision(const CollisionComponent* Other) const
+  bool CECapsuleComponent::CheckCollisionWithBox(const CEBoxComponent* Other) const
   {
-    if (!Other || !m_CollisionEnabled || !Other->IsCollisionEnabled())
-      return false;
+    return CheckCapsuleBoxCollision(GetBottomSphereCenter(), GetTopSphereCenter(),
+                                    GetRadius(), Other->GetBoundingBoxMin(), Other->GetBoundingBoxMax());
+  }
 
-    // УПРОЩЕННАЯ СИММЕТРИЧНАЯ ПРОВЕРКА
-    glm::vec3 thisMin = GetBoundingBoxMin();
-    glm::vec3 thisMax = GetBoundingBoxMax();
-    glm::vec3 otherMin = Other->GetBoundingBoxMin();
-    glm::vec3 otherMax = Other->GetBoundingBoxMax();
+  bool CECapsuleComponent::CheckCollisionWithSphere(const SphereComponent* Other) const
+  {
+    return Other->CheckSphereCapsuleCollision(this);
+  }
 
-    return (thisMin.x <= otherMax.x && thisMax.x >= otherMin.x) &&
-           (thisMin.y <= otherMax.y && thisMax.y >= otherMin.y) &&
-           (thisMin.z <= otherMax.z && thisMax.z >= otherMin.z);
+  bool CECapsuleComponent::CheckCollisionWithCapsule(const CECapsuleComponent* Other) const
+  {
+    return CheckCapsuleCapsuleCollision(Other);
+  }
+
+  bool CECapsuleComponent::CheckCollisionWithMesh(const MeshCollisionComponent* Other) const
+  {
+    // Упрощенная проверка капсулы с bounding box меша
+    glm::vec3 capsulePos = GetWorldLocation();
+    float capsuleRadius = GetRadius();
+    glm::vec3 boxMin = Other->GetBoundingBoxMin();
+    glm::vec3 boxMax = Other->GetBoundingBoxMax();
+
+    glm::vec3 closestPoint;
+    closestPoint.x = glm::clamp(capsulePos.x, boxMin.x, boxMax.x);
+    closestPoint.y = glm::clamp(capsulePos.y, boxMin.y, boxMax.y);
+    closestPoint.z = glm::clamp(capsulePos.z, boxMin.z, boxMax.z);
+
+    float distance = glm::distance(capsulePos, closestPoint);
+    return distance <= capsuleRadius;
   }
 
   bool CECapsuleComponent::CheckCapsuleBoxCollision(const glm::vec3& capsuleBottom,
@@ -66,6 +85,21 @@ namespace CE
     return distance <= capsuleRadius;
   }
 
+  bool CECapsuleComponent::CheckCapsuleCapsuleCollision(const CECapsuleComponent* Other) const
+  {
+    glm::vec3 thisBottom = GetBottomSphereCenter();
+    glm::vec3 thisTop = GetTopSphereCenter();
+    float thisRadius = GetRadius();
+
+    glm::vec3 otherBottom = Other->GetBottomSphereCenter();
+    glm::vec3 otherTop = Other->GetTopSphereCenter();
+    float otherRadius = Other->GetRadius();
+
+    // Находим минимальное расстояние между сегментами капсул
+    float distance = DistanceBetweenSegments(thisBottom, thisTop, otherBottom, otherTop);
+    return distance <= (thisRadius + otherRadius);
+  }
+
   glm::vec3 CECapsuleComponent::ClosestPointOnSegment(const glm::vec3& a, const glm::vec3& b,
                                                       const glm::vec3& point) const
   {
@@ -78,7 +112,6 @@ namespace CE
   float CECapsuleComponent::DistanceBetweenSegments(const glm::vec3& a1, const glm::vec3& a2,
                                                     const glm::vec3& b1, const glm::vec3& b2) const
   {
-    // Упрощенный алгоритм для расстояния между сегментами
     glm::vec3 u = a2 - a1;
     glm::vec3 v = b2 - b1;
     glm::vec3 w = a1 - b1;
@@ -145,8 +178,8 @@ namespace CE
       }
     }
 
-    sc = (abs(sN) < 0.0001f ? 0.0f : sN / sD);
-    tc = (abs(tN) < 0.0001f ? 0.0f : tN / tD);
+    sc = (std::abs(sN) < 0.0001f ? 0.0f : sN / sD);
+    tc = (std::abs(tN) < 0.0001f ? 0.0f : tN / tD);
 
     glm::vec3 dP = w + (sc * u) - (tc * v);
     return glm::length(dP);

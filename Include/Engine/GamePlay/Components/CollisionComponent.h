@@ -5,6 +5,12 @@
 
 namespace CE
 {
+  // Предварительные объявления
+  class CEBoxComponent;
+  class SphereComponent;
+  class CECapsuleComponent;
+  class MeshCollisionComponent;
+
   enum class ECollisionShape
   {
     Box,
@@ -20,7 +26,16 @@ namespace CE
     virtual ~CollisionComponent() = default;
 
     virtual ECollisionShape GetCollisionShape() const = 0;
-    virtual bool CheckCollision(const CollisionComponent* Other) const = 0;
+
+    // Основной метод проверки коллизий
+    virtual bool CheckCollision(const CollisionComponent* Other) const;
+
+    // Точные методы проверки для каждой пары форм
+    virtual bool CheckCollisionWithBox(const CEBoxComponent* Other) const = 0;
+    virtual bool CheckCollisionWithSphere(const SphereComponent* Other) const = 0;
+    virtual bool CheckCollisionWithCapsule(const CECapsuleComponent* Other) const = 0;
+    virtual bool CheckCollisionWithMesh(const MeshCollisionComponent* Other) const = 0;
+
     virtual glm::vec3 GetBoundingBoxMin() const = 0;
     virtual glm::vec3 GetBoundingBoxMax() const = 0;
 

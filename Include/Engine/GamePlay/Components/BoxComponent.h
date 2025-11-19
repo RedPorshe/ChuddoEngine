@@ -5,8 +5,9 @@
 
 namespace CE
 {
-  class CECapsuleComponent;
   class SphereComponent;
+  class CECapsuleComponent;
+  class MeshCollisionComponent;
 
   class CEBoxComponent : public CollisionComponent
   {
@@ -32,7 +33,10 @@ namespace CE
     {
       return ECollisionShape::Box;
     }
-    virtual bool CheckCollision(const CollisionComponent* Other) const override;
+    virtual bool CheckCollisionWithBox(const CEBoxComponent* Other) const override;
+    virtual bool CheckCollisionWithSphere(const SphereComponent* Other) const override;
+    virtual bool CheckCollisionWithCapsule(const CECapsuleComponent* Other) const override;
+    virtual bool CheckCollisionWithMesh(const MeshCollisionComponent* Other) const override;
     virtual glm::vec3 GetBoundingBoxMin() const override;
     virtual glm::vec3 GetBoundingBoxMax() const override;
 
@@ -42,6 +46,15 @@ namespace CE
     virtual void Update(float DeltaTime) override;
 
    private:
+    // Вспомогательные методы для точных проверок
+    bool CheckBoxBoxCollision(const CEBoxComponent* Other) const;
+    bool CheckBoxSphereCollision(const SphereComponent* Other) const;
+    bool CheckBoxCapsuleCollision(const CECapsuleComponent* Other) const;
+
     glm::vec3 m_Extents = glm::vec3(50.0f, 50.0f, 50.0f);
-  };
+
+    friend class SphereComponent;
+    friend class CECapsuleComponent;
+    friend class MeshCollisionComponent;
+    };
 }  // namespace CE

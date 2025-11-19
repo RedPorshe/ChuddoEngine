@@ -2,6 +2,7 @@
 
 #include "Engine/GamePlay/Components/BoxComponent.h"
 #include "Engine/GamePlay/Components/CapsuleComponent.h"
+#include "Engine/GamePlay/Components/MeshCollisionComponent.h"
 #include "Engine/GamePlay/Components/SphereComponent.h"
 
 namespace CE
@@ -84,12 +85,12 @@ namespace CE
     return GetWorldTransform();
   }
 
-  bool PlaneComponent::CheckCollision(const CollisionComponent* Other) const
+  bool PlaneComponent::CheckCollisionWithBox(const CEBoxComponent* Other) const
   {
     if (!Other || !m_CollisionEnabled || !Other->IsCollisionEnabled())
       return false;
 
-    // УПРОЩЕННАЯ СИММЕТРИЧНАЯ ПРОВЕРКА
+    // Упрощенная проверка плоскости с боксом
     glm::vec3 thisMin = GetBoundingBoxMin();
     glm::vec3 thisMax = GetBoundingBoxMax();
     glm::vec3 otherMin = Other->GetBoundingBoxMin();
@@ -98,6 +99,65 @@ namespace CE
     return (thisMin.x <= otherMax.x && thisMax.x >= otherMin.x) &&
            (thisMin.y <= otherMax.y && thisMax.y >= otherMin.y) &&
            (thisMin.z <= otherMax.z && thisMax.z >= otherMin.z);
+  }
+
+  bool PlaneComponent::CheckCollisionWithSphere(const SphereComponent* Other) const
+  {
+    if (!Other || !m_CollisionEnabled || !Other->IsCollisionEnabled())
+      return false;
+
+    // Упрощенная проверка плоскости со сферой
+    glm::vec3 spherePos = Other->GetWorldLocation();
+    float sphereRadius = Other->GetRadius();
+    glm::vec3 planePos = GetWorldLocation();
+
+    // Плоскость ориентирована по Y, проверяем расстояние по Y
+    float distance = std::abs(spherePos.y - planePos.y);
+    return distance <= sphereRadius;
+  }
+
+  bool PlaneComponent::CheckCollisionWithCapsule(const CECapsuleComponent* Other) const
+  {
+    if (!Other || !m_CollisionEnabled || !Other->IsCollisionEnabled())
+      return false;
+
+    // Упрощенная проверка плоскости с капсулой
+    glm::vec3 capsuleBottom = Other->GetBottomSphereCenter();
+    glm::vec3 capsuleTop = Other->GetTopSphereCenter();
+    float capsuleRadius = Other->GetRadius();
+    glm::vec3 planePos = GetWorldLocation();
+
+    // Проверяем расстояние от сегмента капсулы до плоскости
+    float bottomDistance = std::abs(capsuleBottom.y - planePos.y);
+    float topDistance = std::abs(capsuleTop.y - planePos.y);
+
+    float minDistance = std::min(bottomDistance, topDistance);
+    return minDistance <= capsuleRadius;
+  }
+
+  bool PlaneComponent::CheckCollisionWithMesh(const MeshCollisionComponent* Other) const
+  {
+    if (!Other || !m_CollisionEnabled || !Other->IsCollisionEnabled())
+      return false;
+
+    // Упрощенная проверка плоскости с мешем
+    glm::vec3 thisMin = GetBoundingBoxMin();
+    glm::vec3 thisMax = GetBoundingBoxMax();
+    glm::vec3 otherMin = Other->GetBoundingBoxMin();
+    glm::vec3 otherMax = Other->GetBoundingBoxMax();
+
+    return (thisMin.x <= otherMax.x && thisMax.x >= otherMin.x) &&
+           (thisMin.y <= otherMax.y && thisMax.y >= otherMin.y) &&
+           (thisMin.z <= otherMax.z && thisMax.z >= otherMin.z);
+  }
+
+  bool PlaneComponent::CheckCollision(const CollisionComponent* Other) const
+  {
+    if (!Other || !m_CollisionEnabled || !Other->IsCollisionEnabled())
+      return false;
+
+    // Используем базовую реализацию из CollisionComponent
+    return CollisionComponent::CheckCollision(Other);
   }
 
   glm::vec3 PlaneComponent::GetBoundingBoxMin() const
