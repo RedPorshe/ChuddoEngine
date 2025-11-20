@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Engine/Core/CEObject.h"
-#include "Engine/GamePlay/Components/CollisionComponent.h"
 #include "Engine/GamePlay/Components/SceneComponent.h"
 #include "Engine/GamePlay/World/Levels/CELevel.h"
 
@@ -84,8 +83,7 @@ namespace CE
     SceneComponent* m_RootComponent = nullptr;
 
     bool bIsUsePhysics{false};
-    virtual void OnComponentOverlap(class CollisionComponent* Component,
-                                    const std::vector<struct CollisionHitResult>& Hits);
+    
     float Weight = 1.0f;
     bool bIsStatic{false};
     bool bIsKinematic{false};

@@ -2,7 +2,7 @@
 
 #include <chrono>
 
-#include "Engine/Core/CollisionSystem.h"
+
 #include "Engine/GamePlay/Input/InputSystem.h"
 
 namespace CE
@@ -44,8 +44,7 @@ namespace CE
       CE_CORE_ERROR("Failed to get GLFW window for input system");
     }
 
-    CollisionSystem::Get();
-    CE_CORE_DEBUG("Collision system initialized");
+    
 
     // 4. Настройка данных рендеринга из текущего мира
     m_RenderData.SetupDefaultLighting();  // Оставляем вызов для безопасности
@@ -123,8 +122,7 @@ namespace CE
     // Обновление системы ввода
     InputSystem::Get().Update(m_DeltaTime);
 
-    CollisionSystem::Get().Update(m_DeltaTime);
-    // Обновление игровой логики
+   
     if (m_GameInstance)
     {
       m_GameInstance->Tick(m_DeltaTime);

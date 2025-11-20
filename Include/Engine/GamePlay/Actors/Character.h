@@ -1,6 +1,5 @@
 #pragma once
 #include "Engine/GamePlay/Actors/Pawn.h"
-#include "Engine/GamePlay/Components/CapsuleComponent.h"
 #include "Engine/GamePlay/Components/MeshComponent.h"
 
 namespace CE
@@ -13,11 +12,7 @@ namespace CE
     virtual void BeginPlay() override;
     virtual void Tick(float DeltaTime) override;
 
-    // Компоненты персонажа
-    CECapsuleComponent* GetCapsuleComponent() const
-    {
-      return m_CapsuleComponent;
-    }
+    
     MeshComponent* GetMeshComponent() const
     {
       return m_MeshComponent;
@@ -26,7 +21,7 @@ namespace CE
    protected:
     virtual void SetupPlayerInputComponent() override;
 
-    CECapsuleComponent* m_CapsuleComponent = nullptr;
+   
     MeshComponent* m_MeshComponent = nullptr;
     float m_VerticalVelocity = 0.0f;
     bool m_IsOnGround = false;

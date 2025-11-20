@@ -1,8 +1,6 @@
 #include "Engine/GamePlay/Actors/Actor.h"
 
-#include "Engine/Core/CollisionSystem.h"
-#include "Engine/GamePlay/Components/CollisionComponent.h"
-// #include "World/Levels/CELevel.h"
+
 
 namespace CE
 {
@@ -95,12 +93,7 @@ namespace CE
   {
     CEObject::BeginPlay();
 
-    ForEachComponent<CollisionComponent>([this](CollisionComponent* comp)
-                                         {
-        if (comp->IsCollisionEnabled())
-        {
-            CollisionSystem::Get().RegisterCollisionComponent(comp);
-        } });
+   
   }
 
   void CEActor::Update(float DeltaTime)
@@ -121,45 +114,14 @@ namespace CE
           glm::vec3 currentLocation = m_RootComponent->GetWorldLocation();
           currentLocation += gravity * DeltaTime;
           m_RootComponent->SetPosition(currentLocation);
-          // if have collision, stop falling
-          ForEachComponent<CollisionComponent>([this](CollisionComponent* comp)
-                                               {
-                if (comp->IsCollisionEnabled())
-                {
-                    auto collisions = CollisionSystem::Get().CheckCollisions(comp);
-                    if (!collisions.empty())
-                    {
-                        m_verticalVelocity = 0.0f;
-                    }
-                } });
+          
         }
       }
     }
-    // Автоматическая проверка коллизий для всех компонентов актора
-    ForEachComponent<CollisionComponent>([this](CollisionComponent* comp)
-                                         {
-        if (comp->GetGenerateOverlapEvents())
-        {
-            auto collisions = CollisionSystem::Get().CheckCollisions(comp);
-            if (!collisions.empty())
-            {
-                // Вызываем событие столкновения
-                OnComponentOverlap(comp, collisions);
-            }
-        } });
+   
   }
 
-  // Нужно добавить метод для обработки overlap событий
-  void CEActor::OnComponentOverlap(CollisionComponent* Component, const std::vector<CollisionHitResult>& Hits)
-  {
-    for (const auto& hit : Hits)
-    {
-      CE_CORE_TRACE("Actor ", GetName(), " component ", Component->GetName(),
-                    " overlapped with ", hit.HitComponent->GetName());
-
-      // Здесь можно добавить пользовательскую логику обработки столкновения
-    }
-  }
+ 
 
   void CEActor::Tick(float DeltaTime)
   {

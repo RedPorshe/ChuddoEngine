@@ -2,10 +2,9 @@
 
 #include "Engine/GamePlay/Actors/SunActor.h"
 #include "Engine/GamePlay/Actors/TerrainActor.h"
-#include "Engine/GamePlay/Components/BoxComponent.h"
+
 #include "Engine/GamePlay/Components/CEStaticMeshComponent.h"
-#include "Engine/GamePlay/Components/PlaneComponent.h"
-#include "Engine/GamePlay/Components/SphereComponent.h"
+
 
 MainLevel::MainLevel(CE::CEObject* Owner,
                      CE::FString NewName) : CE::CELevel(Owner, NewName)
@@ -24,17 +23,7 @@ MainLevel::MainLevel(CE::CEObject* Owner,
     terrain->SetActorLocation(glm::vec3(0.0f, -2.0f, 0.0f));
   }
 
-  // === СОЗДАЕМ ЗЕМЛЮ ПЕРВОЙ ===
-  auto* ground = SpawnActor<CE::CEActor>(this, "GroundActor");
-  auto* planeComponent = ground->AddDefaultSubObject<CE::PlaneComponent>("Ground", ground, "Ground");
-  ground->SetRootComponent(planeComponent);
-  ground->SetActorLocation(glm::vec3(0.0f, -2.0f, 0.0f));  // Земля на нулевой высоте
-
-  // // Настраиваем плоскость
-  planeComponent->SetSize(50.0f, 50.0f);  // 50x50 метров
-  planeComponent->SetSubdivisions(10);    // Подразделения для красивого вида
-  planeComponent->SetCollisionEnabled(true);
-  planeComponent->SetGenerateOverlapEvents(true);
+ 
 
   // Спавним меш-акторы
   enemy = SpawnActor<CE::CEActor>(this, "Enemy");
@@ -92,41 +81,8 @@ MainLevel::MainLevel(CE::CEObject* Owner,
     sun->SetActorLocation(glm::vec3(0.0f, 1000.0f, 0.0f));
   }
 
-  // === ТЕСТОВЫЕ ОБЪЕКТЫ ДЛЯ КОЛЛИЗИЙ ===
-
-  // 1. Бокс для коллизий
-  auto* collisionTestBox = SpawnActor<CE::CEActor>(this, "CollisionBox");
-  auto* boxCollision = collisionTestBox->AddDefaultSubObject<CE::CEBoxComponent>("BoxCollision", collisionTestBox, "BoxCollision");
-  collisionTestBox->SetRootComponent(boxCollision);
-  collisionTestBox->SetActorLocation(glm::vec3(8.0f, 1.0f, 8.0f));  // Над землей
-  boxCollision->SetExtents(0.5f, 0.5f, 0.5f);
-  boxCollision->SetCollisionEnabled(true);
-  boxCollision->SetGenerateOverlapEvents(true);
-
-  // 2. Сфера для коллизий
-  auto* collisionTestSphere = SpawnActor<CE::CEActor>(this, "CollisionSphere");
-  auto* sphereCollision = collisionTestSphere->AddDefaultSubObject<CE::SphereComponent>("SphereCollision", collisionTestSphere, "SphereCollision");
-  collisionTestSphere->SetRootComponent(sphereCollision);
-  collisionTestSphere->SetActorLocation(glm::vec3(-8.0f, 1.5f, 8.0f));  // Над землей
-  sphereCollision->SetRadius(0.75f);
-  sphereCollision->SetCollisionEnabled(true);
-  sphereCollision->SetGenerateOverlapEvents(true);
-
-  // 3. Добавляем коллизии к существующим кубам
-  int cubeIndex = 0;
-  for (const auto& actorPtr : GetActors())
-  {
-    CE::CEActor* actor = actorPtr.get();
-    if (!actor || actor->GetName().find("Cube_") == std::string::npos)
-      continue;
-
-    // Добавляем BoxComponent к кубам
-    auto* cubeCollision = actor->AddDefaultSubObject<CE::CEBoxComponent>("CubeCollision", actor, "CubeCollision_" + std::to_string(cubeIndex));
-    cubeCollision->SetExtents(0.25f, 0.25f, 0.25f);  // Кубы 0.5x0.5x0.5 метра
-    cubeCollision->SetCollisionEnabled(true);
-    cubeCollision->SetGenerateOverlapEvents(true);
-    cubeIndex++;
-  }
+ 
+ 
 }
 void MainLevel::BeginPlay()
 {
