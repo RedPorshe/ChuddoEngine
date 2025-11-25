@@ -3,10 +3,10 @@
 #include "Engine/GamePlay/Actors/SunActor.h"
 #include "Engine/GamePlay/Actors/TerrainActor.h"
 
-#include "Engine/GamePlay/Components/CEStaticMeshComponent.h"
+#include "Engine/GamePlay/Components/StaticMeshComponent.h"
 
 
-MainLevel::MainLevel(CE::CEObject* Owner,
+MainLevel::MainLevel(CE::CObject* Owner,
                      CE::FString NewName) : CE::CELevel(Owner, NewName)
 {
   CE_GAMEPLAY_DEBUG(this->GetName(), " Created ");

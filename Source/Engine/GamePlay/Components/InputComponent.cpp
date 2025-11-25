@@ -18,7 +18,7 @@
 
 namespace CE
 {
-  InputComponent::InputComponent(CEObject* Owner, FString NewName)
+  InputComponent::InputComponent(CObject* Owner, FString NewName)
       : CEComponent(Owner, NewName)
   {
     SetupDefaultKeyMappings();

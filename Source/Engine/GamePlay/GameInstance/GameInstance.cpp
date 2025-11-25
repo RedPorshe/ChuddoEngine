@@ -1,9 +1,9 @@
-#include "Engine/GamePlay/GameInstance/CEGameInstance.h"
+#include "Engine/GamePlay/GameInstance/GameInstance.h"
 
 namespace CE
 {
   CEGameInstance::CEGameInstance()
-      : CEObject(nullptr, "GameInstance")
+      : CObject(nullptr, "GameInstance")
   {
     CE_CORE_DEBUG("GameInstance created");
   }
@@ -71,7 +71,7 @@ namespace CE
 
   void CEGameInstance::BeginPlay()
   {
-    CEObject::BeginPlay();
+    CObject::BeginPlay();
 
     // Автоматически загружаем первый созданный мир
     if (!m_Worlds.empty())
@@ -82,7 +82,7 @@ namespace CE
 
   void CEGameInstance::Update(float DeltaTime)
   {
-    CEObject::Update(DeltaTime);
+    CObject::Update(DeltaTime);
 
     if (m_CurrentWorld)
     {

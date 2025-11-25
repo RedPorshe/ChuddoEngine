@@ -10,10 +10,10 @@ namespace CE
 
 namespace CE
 {
-  class MeshComponent : public SceneComponent
+  class MeshComponent : public CSceneComponent
   {
    public:
-    MeshComponent(CEObject* Owner = nullptr, FString NewName = "MeshComponent");
+    MeshComponent(CObject* Owner = nullptr, FString NewName = "MeshComponent");
     virtual ~MeshComponent() = default;
 
     virtual void SetMesh(const std::string& MeshPath);

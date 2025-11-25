@@ -14,7 +14,7 @@ namespace CE
   class PlayerController : public CEActor
   {
    public:
-    PlayerController(CEObject* Owner = nullptr, FString NewName = "PlayerController");
+    PlayerController(CObject* Owner = nullptr, FString NewName = "PlayerController");
     virtual ~PlayerController() = default;
 
     virtual void BeginPlay() override;

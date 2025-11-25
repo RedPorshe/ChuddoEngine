@@ -8,11 +8,11 @@
 
 namespace CE
 {
-  class SceneComponent : public CEComponent
+  class CSceneComponent : public CEComponent
   {
    public:
-    SceneComponent(CEObject* Owner = nullptr, FString NewName = "SceneComponent");
-    virtual ~SceneComponent() = default;
+    CSceneComponent(CObject* Owner = nullptr, FString NewName = "SceneComponent");
+    virtual ~CSceneComponent() = default;
 
     // position methods
     void SetPosition(const glm::vec3& Position);
@@ -63,13 +63,13 @@ namespace CE
     }
 
     // Hierarchy
-    void AttachToComponent(SceneComponent* Parent);
+    void AttachToComponent(CSceneComponent* Parent);
     void DetachFromParent();
-    SceneComponent* GetParent() const
+    CSceneComponent* GetParent() const
     {
       return m_Parent;
     }
-    const std::vector<SceneComponent*>& GetChildren() const
+    const std::vector<CSceneComponent*>& GetChildren() const
     {
       return m_Children;
     }
@@ -83,8 +83,8 @@ namespace CE
    protected:
     void UpdateTransformMatrix();
     void UpdateRotationFromQuat();
-    void AddChild(SceneComponent* Child);
-    void RemoveChild(SceneComponent* Child);
+    void AddChild(CSceneComponent* Child);
+    void RemoveChild(CSceneComponent* Child);
 
     // Internal methods
     void ClampPitchRotation();
@@ -103,8 +103,8 @@ namespace CE
     glm::mat4 m_TransformMatrix{1.0f};
 
     // hierarchy
-    SceneComponent* m_Parent = nullptr;
-    std::vector<SceneComponent*> m_Children;
+    CSceneComponent* m_Parent = nullptr;
+    std::vector<CSceneComponent*> m_Children;
 
     // quaternion for rotation
     glm::quat m_RotationQuat = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);

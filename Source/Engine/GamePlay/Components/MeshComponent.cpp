@@ -4,8 +4,8 @@
 
 namespace CE
 {
-  MeshComponent::MeshComponent(CEObject* Owner, FString NewName)
-      : SceneComponent(Owner, NewName)
+  MeshComponent::MeshComponent(CObject* Owner, FString NewName)
+      : CSceneComponent(Owner, NewName)
   {
     m_Mesh.vertices.clear();
     m_Mesh.indices.clear();
@@ -117,7 +117,7 @@ namespace CE
 
   void MeshComponent::Update(float DeltaTime)
   {
-    SceneComponent::Update(DeltaTime);
+    CSceneComponent::Update(DeltaTime);
 
     UpdateMeshTransform();
   }

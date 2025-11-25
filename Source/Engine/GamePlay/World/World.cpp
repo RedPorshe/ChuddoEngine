@@ -1,16 +1,16 @@
-#include "Engine/GamePlay/World/CEWorld.h"
+#include "Engine/GamePlay/World/World.h"
 
 #include "Engine/Core/Rendering/Data/RenderData.h"
 #include "Engine/GamePlay/Actors/Actor.h"
 #include "Engine/GamePlay/Components/CameraComponent.h"
 #include "Engine/GamePlay/Components/MeshComponent.h"
-#include "Engine/GamePlay/World/Levels/CELevel.h"
+#include "Engine/GamePlay/World/Levels/Level.h"
 #include "glm/glm.hpp"
 
 namespace CE
 {
-  CEWorld::CEWorld(CEObject* Owner, FString WorldName)
-      : CEObject(Owner, WorldName)
+  CEWorld::CEWorld(CObject* Owner, FString WorldName)
+      : CObject(Owner, WorldName)
   {
     CE_CORE_DEBUG("World created: ", WorldName);
   }
@@ -131,7 +131,7 @@ namespace CE
 
   void CEWorld::BeginPlay()
   {
-    CEObject::BeginPlay();
+    CObject::BeginPlay();
 
     if (!m_Levels.empty() && !m_CurrentLevel)
     {
@@ -141,7 +141,7 @@ namespace CE
 
   void CEWorld::Update(float DeltaTime)
   {
-    CEObject::Update(DeltaTime);
+    CObject::Update(DeltaTime);
 
     if (m_CurrentLevel)
     {

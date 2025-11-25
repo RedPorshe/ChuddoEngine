@@ -7,7 +7,7 @@ namespace CE
   class CECharacter : public CEPawn
   {
    public:
-    CECharacter(CEObject* Owner = nullptr, FString NewName = "Character");
+    CECharacter(CObject* Owner = nullptr, FString NewName = "Character");
     virtual ~CECharacter() = default;
     virtual void BeginPlay() override;
     virtual void Tick(float DeltaTime) override;

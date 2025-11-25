@@ -1,5 +1,5 @@
 // CEStaticMeshComponent.cpp
-#include "Engine/GamePlay/Components/CEStaticMeshComponent.h"
+#include "Engine/GamePlay/Components/StaticMeshComponent.h"
 
 #include <fstream>
 #include <sstream>
@@ -8,7 +8,7 @@
 
 namespace CE
 {
-  CEStaticMeshComponent::CEStaticMeshComponent(CEObject* Owner, FString NewName)
+  CEStaticMeshComponent::CEStaticMeshComponent(CObject* Owner, FString NewName)
       : MeshComponent(Owner, NewName)
   {
     // Не создаем куб по умолчанию - меш будет пустым

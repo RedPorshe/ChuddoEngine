@@ -3,7 +3,7 @@
 #include "Engine/Core/AppInfo.h"
 #include "Engine/Core/Rendering/Data/RenderData.h"
 #include "Engine/Core/Rendering/Vulkan/Integration/RenderSystem.h"
-#include "Engine/GamePlay/GameInstance/CEGameInstance.h"
+#include "Engine/GamePlay/GameInstance/GameInstance.h"
 
 namespace CE
 {

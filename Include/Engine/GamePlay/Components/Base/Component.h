@@ -1,12 +1,12 @@
 #pragma once
-#include "Engine/Core/CEObject.h"
+#include "Engine/Core/Object.h"
 
 namespace CE
 {
-  class CEComponent : public CEObject
+  class CEComponent : public CObject
   {
    public:
-    CEComponent(CEObject* Owner = nullptr, FString NewName = "Component");
+    CEComponent(CObject* Owner = nullptr, FString NewName = "Component");
     virtual ~CEComponent() = default;
     virtual void Update(float DeltaTime) override;
     virtual void BeginPlay() override;

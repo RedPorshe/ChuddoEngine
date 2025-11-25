@@ -4,10 +4,10 @@
 
 namespace CE
 {
-  class SpringArmComponent : public SceneComponent
+  class SpringArmComponent : public CSceneComponent
   {
    public:
-    SpringArmComponent(CEObject* Owner = nullptr, FString NewName = "SpringArmComponent");
+    SpringArmComponent(CObject* Owner = nullptr, FString NewName = "SpringArmComponent");
     virtual ~SpringArmComponent() = default;
 
     // Настройки spring arm

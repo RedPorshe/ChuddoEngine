@@ -4,13 +4,13 @@
 #include <vector>
 
 #include "Engine/GamePlay/Components/MeshComponent.h"
-#include "Engine/GamePlay/World/CEWorld.h"
+#include "Engine/GamePlay/World/World.h"
 #include "Engine/Utils/Logger.h"
 #include "glm/glm.hpp"
 
 namespace CE
 {
-  TerrainActor::TerrainActor(CEObject* Owner, FString NewName)
+  TerrainActor::TerrainActor(CObject* Owner, FString NewName)
       : CEActor(Owner, NewName)
   {
   }

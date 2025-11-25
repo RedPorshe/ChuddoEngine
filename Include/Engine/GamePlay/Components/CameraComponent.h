@@ -3,10 +3,10 @@
 
 namespace CE
 {
-  class CameraComponent : public SceneComponent
+  class CameraComponent : public CSceneComponent
   {
    public:
-    CameraComponent(CEObject* Owner = nullptr, FString NewName = "CameraComponent");
+    CameraComponent(CObject* Owner = nullptr, FString NewName = "CameraComponent");
     virtual ~CameraComponent() = default;
 
     // Настройки камеры

@@ -3,7 +3,7 @@
 #include "Engine/GamePlay/Actors/Character.h"
 #include "Engine/GamePlay/Actors/Pawn.h"
 #include "Engine/GamePlay/Controllers/PlayerController.h"
-#include "Engine/GamePlay/World/Levels/CELevel.h"
+#include "Engine/GamePlay/World/Levels/Level.h"
 namespace CE
 {
   class TerrainActor;
@@ -12,7 +12,7 @@ namespace CE
 class MainLevel : public CE::CELevel
 {
  public:
-  MainLevel(CE::CEObject* Owner = nullptr,
+  MainLevel(CE::CObject* Owner = nullptr,
             CE::FString NewName = "Main level");
   virtual ~MainLevel() = default;
   virtual void BeginPlay() override;

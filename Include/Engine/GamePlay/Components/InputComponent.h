@@ -31,7 +31,7 @@ namespace CE
   class InputComponent : public CEComponent
   {
    public:
-    InputComponent(CEObject* Owner = nullptr, FString NewName = "InputComponent");
+    InputComponent(CObject* Owner = nullptr, FString NewName = "InputComponent");
     virtual ~InputComponent();
 
     void BindAction(const FString& ActionName, EInputEvent EventType, std::function<void()> Callback);

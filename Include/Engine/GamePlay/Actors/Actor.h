@@ -1,16 +1,16 @@
 #pragma once
 
-#include "Engine/Core/CEObject.h"
+#include "Engine/Core/Object.h"
 #include "Engine/GamePlay/Components/SceneComponent.h"
-#include "Engine/GamePlay/World/Levels/CELevel.h"
+#include "Engine/GamePlay/World/Levels/Level.h"
 
 namespace CE
 {
 
-  class CEActor : public CEObject
+  class CEActor : public CObject
   {
    public:
-    CEActor(CEObject* Owner = nullptr, FString NewName = "Actor");
+    CEActor(CObject* Owner = nullptr, FString NewName = "Actor");
     virtual ~CEActor() = default;
 
     // UE-совместимый SpawnActor
@@ -21,11 +21,11 @@ namespace CE
     template <typename T, typename... Args>
     T* AddDefaultSubObject(const std::string& Name, Args&&... args);
 
-    void SetRootComponent(SceneComponent* Root)
+    void SetRootComponent(CSceneComponent* Root)
     {
       m_RootComponent = Root;
     }
-    SceneComponent* GetRootComponent() const
+    CSceneComponent* GetRootComponent() const
     {
       return m_RootComponent;
     }
@@ -80,7 +80,7 @@ namespace CE
     }
 
    protected:
-    SceneComponent* m_RootComponent = nullptr;
+    CSceneComponent* m_RootComponent = nullptr;
 
     bool bIsUsePhysics{false};
     
@@ -111,7 +111,7 @@ namespace CE
     // Авто-аттач только для SceneComponent
     if (m_RootComponent && component != m_RootComponent)
     {
-      if (auto* sceneComp = dynamic_cast<SceneComponent*>(component))
+      if (auto* sceneComp = dynamic_cast<CSceneComponent*>(component))
       {
         sceneComp->AttachToComponent(m_RootComponent);
         CE_CORE_DEBUG("Auto-attached ", Name, " to ", m_RootComponent->GetName());

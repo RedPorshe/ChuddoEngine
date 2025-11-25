@@ -4,17 +4,17 @@
 
 namespace CE
 {
-  CEActor::CEActor(CEObject* Owner, FString NewName)
-      : CEObject(Owner, NewName)
+  CEActor::CEActor(CObject* Owner, FString NewName)
+      : CObject(Owner, NewName)
   {
     // Создаем root component
-    m_RootComponent = AddDefaultSubObject<SceneComponent>("root", this, "RootComponent");
+    m_RootComponent = AddDefaultSubObject<CSceneComponent>("root", this, "RootComponent");
     CE_CORE_DEBUG("CEActor created: ", NewName);
   }
 
   CELevel* CEActor::GetLevel() const
   {
-    const CEObject* current = this;
+    const CObject* current = this;
     while (current)
     {
       if (auto* level = dynamic_cast<const CELevel*>(current))
@@ -91,14 +91,14 @@ namespace CE
 
   void CEActor::BeginPlay()
   {
-    CEObject::BeginPlay();
+    CObject::BeginPlay();
 
    
   }
 
   void CEActor::Update(float DeltaTime)
   {
-    CEObject::Update(DeltaTime);
+    CObject::Update(DeltaTime);
 
     if (bIsGravityEnabled)
     {

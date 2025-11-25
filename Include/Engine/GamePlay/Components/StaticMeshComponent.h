@@ -9,7 +9,7 @@ namespace CE
   class CEStaticMeshComponent : public MeshComponent
   {
    public:
-    CEStaticMeshComponent(CEObject* Owner = nullptr, FString NewName = "CEStaticMeshComponent");
+    CEStaticMeshComponent(CObject* Owner = nullptr, FString NewName = "CEStaticMeshComponent");
     virtual ~CEStaticMeshComponent() = default;
 
     // Переопределяем SetMesh для загрузки из OBJ файла

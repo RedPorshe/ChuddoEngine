@@ -9,7 +9,7 @@ namespace CE
   class CEPawn : public CEActor
   {
    public:
-    CEPawn(CEObject* Owner = nullptr, FString NewName = "Pawn");
+    CEPawn(CObject* Owner = nullptr, FString NewName = "Pawn");
     virtual ~CEPawn() = default;
 
     virtual void BeginPlay() override;

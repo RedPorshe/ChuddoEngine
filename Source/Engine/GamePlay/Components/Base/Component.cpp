@@ -2,23 +2,23 @@
 
 namespace CE
 {
-  CEComponent::CEComponent(CEObject* Owner, FString NewName)
-      : CEObject(Owner, NewName)
+  CEComponent::CEComponent(CObject* Owner, FString NewName)
+      : CObject(Owner, NewName)
   {
   }
 
   void CEComponent::Update(float DeltaTime)
   {
-    CEObject::Update(DeltaTime);
+    CObject::Update(DeltaTime);
   }
 
   void CEComponent::Tick(float DeltaTime)
   {
-    CEObject::Tick(DeltaTime);
+    CObject::Tick(DeltaTime);
   }
 
   void CEComponent::BeginPlay()
   {
-    CEObject::BeginPlay();
+    CObject::BeginPlay();
   }
 }  // namespace CE

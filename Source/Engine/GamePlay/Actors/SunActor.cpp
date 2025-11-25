@@ -5,12 +5,12 @@
 
 #include "Engine/Core/Rendering/Data/RenderData.h"
 #include "Engine/GamePlay/Components/MeshComponent.h"
-#include "Engine/GamePlay/World/CEWorld.h"
+#include "Engine/GamePlay/World/World.h"
 #include "glm/gtc/constants.hpp"
 
 namespace CE
 {
-  SunActor::SunActor(CEObject* Owner, FString NewName)
+  SunActor::SunActor(CObject* Owner, FString NewName)
       : CEActor(Owner, NewName)
   {
   }
@@ -59,7 +59,7 @@ namespace CE
       if (!level)
         return;
 
-      CEObject* levelOwner = level->GetOwner();
+      CObject* levelOwner = level->GetOwner();
       if (!levelOwner)
         return;
 
@@ -80,7 +80,7 @@ namespace CE
       if (!level)
         return;
 
-      CEObject* levelOwner = level->GetOwner();
+      CObject* levelOwner = level->GetOwner();
       if (!levelOwner)
         return;
 

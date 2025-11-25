@@ -3,18 +3,18 @@
 #include <string>
 #include <vector>
 
-#include "Engine/Core/CEObject.h"
+#include "Engine/Core/Object.h"
 #include "Engine/Core/Rendering/Data/RenderData.h"
-#include "Engine/GamePlay/World/Levels/CELevel.h"
+#include "Engine/GamePlay/World/Levels/Level.h"
 
 namespace CE
 {
   class CameraComponent;
 
-  class CEWorld : public CEObject
+  class CEWorld : public CObject
   {
    public:
-    CEWorld(CEObject* Owner = nullptr, FString WorldName = "World");
+    CEWorld(CObject* Owner = nullptr, FString WorldName = "World");
     virtual ~CEWorld() = default;
 
     // Allow world to provide a default lighting setup that will be used when

@@ -3,17 +3,17 @@
 #include <memory>
 #include <vector>
 
-#include "Engine/Core/CEObject.h"
+#include "Engine/Core/Object.h"
 
 namespace CE
 {
 
   class CEActor;
 
-  class CELevel : public CEObject
+  class CELevel : public CObject
   {
    public:
-    CELevel(CEObject* Owner = nullptr, FString LevelName = "Level");
+    CELevel(CObject* Owner = nullptr, FString LevelName = "Level");
     virtual ~CELevel();
 
     template <typename T, typename... Args>

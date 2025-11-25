@@ -1,33 +1,33 @@
-#include "Engine/Core/CEObject.h"
+#include "Engine/Core/Object.h"
 
 #include "Engine/GamePlay/Components/Base/Component.h"
 
 namespace CE
 {
-  CEObject::CEObject(CEObject* Owner, FString NewName)
+  CObject::CObject(CObject* Owner, FString NewName)
       : m_Owner(Owner), m_Name(NewName)
   {
   }
 
-  CEObject::~CEObject()
+  CObject::~CObject()
   {
   }
 
-  CEObject* CEObject::GetOwner() const
+  CObject* CObject::GetOwner() const
   {
     return m_Owner;
   }
 
-  void CEObject::SetOwner(CEObject* Owner)
+  void CObject::SetOwner(CObject* Owner)
   {
     m_Owner = Owner;
   }
 
-  void CEObject::BeginPlay()
+  void CObject::BeginPlay()
   {
   }
 
-  void CEObject::Update(float DeltaTime)
+  void CObject::Update(float DeltaTime)
   {
     for (auto& [name, component] : m_Components)
     {
@@ -35,7 +35,7 @@ namespace CE
     }
   }
 
-  void CEObject::Tick(float DeltaTime)
+  void CObject::Tick(float DeltaTime)
   {
     Update(DeltaTime);
   }

@@ -1,5 +1,5 @@
 #pragma once
-#include "Engine/GamePlay/GameInstance/CEGameInstance.h"
+#include "Engine/GamePlay/GameInstance/GameInstance.h"
 
 class MainGameInstance : public CE::CEGameInstance
 {

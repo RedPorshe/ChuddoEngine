@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "Engine/Core/CEObject.h"
+#include "Engine/Core/Object.h"
 #include "Engine/GamePlay/Actors/Actor.h"
 #include "glm/glm.hpp"
 
@@ -13,7 +13,7 @@ namespace CE
   class TerrainActor : public CEActor
   {
    public:
-    TerrainActor(CEObject* Owner, FString NewName);
+    TerrainActor(CObject* Owner, FString NewName);
     virtual ~TerrainActor() = default;
 
     virtual void BeginPlay() override;

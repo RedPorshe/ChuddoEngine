@@ -1,11 +1,11 @@
 #include "Engine/GamePlay/Controllers/PlayerController.h"
 
-#include "Engine/GamePlay/World/CEWorld.h"
-#include "Engine/GamePlay/World/Levels/CELevel.h"
+#include "Engine/GamePlay/World/World.h"
+#include "Engine/GamePlay/World/Levels/Level.h"
 
 namespace CE
 {
-  PlayerController::PlayerController(CEObject* Owner, FString NewName)
+  PlayerController::PlayerController(CObject* Owner, FString NewName)
       : CEActor(Owner, NewName)
   {
     // Используем AddSubObject вместо AddDefaultSubObject чтобы избежать проблем с типами

@@ -6,8 +6,8 @@
 
 namespace CE
 {
-  CameraComponent::CameraComponent(CEObject* Owner, FString NewName)
-      : SceneComponent(Owner, NewName)
+  CameraComponent::CameraComponent(CObject* Owner, FString NewName)
+      : CSceneComponent(Owner, NewName)
   {
   }
 
@@ -96,6 +96,6 @@ namespace CE
 
   void CameraComponent::Update(float DeltaTime)
   {
-    SceneComponent::Update(DeltaTime);
+    CSceneComponent::Update(DeltaTime);
   }
 }  // namespace CE

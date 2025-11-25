@@ -1,12 +1,12 @@
 #include "Engine/GamePlay/Actors/Character.h"
 
 
-#include "Engine/GamePlay/Components/CEStaticMeshComponent.h"
+#include "Engine/GamePlay/Components/StaticMeshComponent.h"
 
 
 namespace CE
 {
-  CECharacter::CECharacter(CEObject* Owner, FString NewName)
+  CECharacter::CECharacter(CObject* Owner, FString NewName)
       : CEPawn(Owner, NewName), m_VerticalVelocity(0.0f), m_IsOnGround(false)
   {
     

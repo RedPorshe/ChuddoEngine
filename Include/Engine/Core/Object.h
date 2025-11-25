@@ -12,11 +12,11 @@ namespace CE
 {
   class CEComponent;
 
-  class CEObject
+  class CObject
   {
    public:
-    CEObject(CEObject* Owner = nullptr, FString NewName = "Object");
-    virtual ~CEObject();
+    CObject(CObject* Owner = nullptr, FString NewName = "Object");
+    virtual ~CObject();
 
     virtual void BeginPlay();
     virtual void Update(float DeltaTime);
@@ -30,9 +30,9 @@ namespace CE
     template <typename T, typename... Args>
     T* AddSubObject(const std::string& Name, Args&&... args);
 
-    CEObject* GetOwner() const;
+    CObject* GetOwner() const;
 
-    void SetOwner(CEObject* Owner);
+    void SetOwner(CObject* Owner);
     const FString& GetName() const
     {
       return m_Name;
@@ -80,12 +80,12 @@ namespace CE
 
    protected:
     std::unordered_map<std::string, std::unique_ptr<CEComponent>> m_Components;
-    CEObject* m_Owner = nullptr;
+    CObject* m_Owner = nullptr;
     FString m_Name{};
   };
 
   template <typename T, typename... Args>
-  T* CEObject::AddSubObject(const std::string& Name, Args&&... args)
+  T* CObject::AddSubObject(const std::string& Name, Args&&... args)
   {
     auto component = std::make_unique<T>(std::forward<Args>(args)...);
     T* ptr = component.get();
@@ -94,7 +94,7 @@ namespace CE
   }
 
   template <typename T>
-  T* CEObject::GetComponent(const std::string& Name)
+  T* CObject::GetComponent(const std::string& Name)
   {
     auto it = m_Components.find(Name);
     if (it != m_Components.end())

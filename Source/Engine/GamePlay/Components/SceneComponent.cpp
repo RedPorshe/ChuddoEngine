@@ -8,14 +8,14 @@
 
 namespace CE
 {
-  SceneComponent::SceneComponent(CEObject* Owner, FString NewName)
+  CSceneComponent::CSceneComponent(CObject* Owner, FString NewName)
       : CEComponent(Owner, NewName)
   {
     UpdateTransformMatrix();
     CE_CORE_DEBUG("SceneComponent created: ", NewName);
   }
 
-  void SceneComponent::SetPitchLimits(float MinPitch, float MaxPitch)
+  void CSceneComponent::SetPitchLimits(float MinPitch, float MaxPitch)
   {
     m_MinPitch = MinPitch;
     m_MaxPitch = MaxPitch;
@@ -25,7 +25,7 @@ namespace CE
     ClampPitchRotation();
   }
 
-  void SceneComponent::SetPosition(const glm::vec3& Position)
+  void CSceneComponent::SetPosition(const glm::vec3& Position)
   {
     if (m_Parent)
     {
@@ -36,23 +36,23 @@ namespace CE
     UpdateTransformMatrix();
   }
 
-  void SceneComponent::SetPosition(float X, float Y, float Z)
+  void CSceneComponent::SetPosition(float X, float Y, float Z)
   {
     SetPosition(glm::vec3(X, Y, Z));
   }
 
-  void SceneComponent::SetRelativePosition(const glm::vec3& Position)
+  void CSceneComponent::SetRelativePosition(const glm::vec3& Position)
   {
     m_RelativeLocation = Position;
     UpdateTransformMatrix();
   }
 
-  void SceneComponent::SetRelativePosition(float X, float Y, float Z)
+  void CSceneComponent::SetRelativePosition(float X, float Y, float Z)
   {
     SetRelativePosition(glm::vec3(X, Y, Z));
   }
 
-  void SceneComponent::SetRotation(const glm::vec3& Rotation)
+  void CSceneComponent::SetRotation(const glm::vec3& Rotation)
   {
     if (m_Parent)
     {
@@ -67,12 +67,12 @@ namespace CE
     UpdateTransformMatrix();
   }
 
-  void SceneComponent::SetRotation(float Pitch, float Yaw, float Roll)
+  void CSceneComponent::SetRotation(float Pitch, float Yaw, float Roll)
   {
     SetRotation(glm::vec3(Pitch, Yaw, Roll));
   }
 
-  void SceneComponent::SetRelativeRotation(const glm::vec3& Rotation)
+  void CSceneComponent::SetRelativeRotation(const glm::vec3& Rotation)
   {
     m_RelativeRotation = Rotation;
 
@@ -82,12 +82,12 @@ namespace CE
     UpdateTransformMatrix();
   }
 
-  void SceneComponent::SetRelativeRotation(float Pitch, float Yaw, float Roll)
+  void CSceneComponent::SetRelativeRotation(float Pitch, float Yaw, float Roll)
   {
     SetRelativeRotation(glm::vec3(Pitch, Yaw, Roll));
   }
 
-  void SceneComponent::SetScale(const glm::vec3& Scale)
+  void CSceneComponent::SetScale(const glm::vec3& Scale)
   {
     if (m_Parent)
     {
@@ -98,83 +98,83 @@ namespace CE
     UpdateTransformMatrix();
   }
 
-  void SceneComponent::SetScale(float X, float Y, float Z)
+  void CSceneComponent::SetScale(float X, float Y, float Z)
   {
     SetScale(glm::vec3(X, Y, Z));
   }
 
-  void SceneComponent::SetScale(float value)
+  void CSceneComponent::SetScale(float value)
   {
     SetScale(value, value, value);
   }
 
-  void SceneComponent::SetRelativeScale(const glm::vec3& Scale)
+  void CSceneComponent::SetRelativeScale(const glm::vec3& Scale)
   {
     m_RelativeScale = Scale;
     UpdateTransformMatrix();
   }
 
-  void SceneComponent::SetRelativeScale(float X, float Y, float Z)
+  void CSceneComponent::SetRelativeScale(float X, float Y, float Z)
   {
     SetRelativeScale(glm::vec3(X, Y, Z));
   }
 
-  void SceneComponent::SetRelativeScale(float value)
+  void CSceneComponent::SetRelativeScale(float value)
   {
     SetRelativeScale(value, value, value);
   }
 
-  const glm::vec3& SceneComponent::GetPosition() const
+  const glm::vec3& CSceneComponent::GetPosition() const
   {
     return m_WorldLocation;
   }
 
-  const glm::vec3& SceneComponent::GetRelativePosition() const
+  const glm::vec3& CSceneComponent::GetRelativePosition() const
   {
     return m_RelativeLocation;
   }
 
-  const glm::vec3& SceneComponent::GetRotation() const
+  const glm::vec3& CSceneComponent::GetRotation() const
   {
     return m_WorldRotation;
   }
 
-  const glm::vec3& SceneComponent::GetRelativeRotation() const
+  const glm::vec3& CSceneComponent::GetRelativeRotation() const
   {
     return m_RelativeRotation;
   }
 
-  const glm::vec3& SceneComponent::GetScale() const
+  const glm::vec3& CSceneComponent::GetScale() const
   {
     return m_WorldScale;
   }
 
-  const glm::vec3& SceneComponent::GetRelativeScale() const
+  const glm::vec3& CSceneComponent::GetRelativeScale() const
   {
     return m_RelativeScale;
   }
 
-  const glm::mat4& SceneComponent::GetTransformMatrix() const
+  const glm::mat4& CSceneComponent::GetTransformMatrix() const
   {
     return m_TransformMatrix;
   }
 
-  glm::vec3 SceneComponent::GetForwardVector() const
+  glm::vec3 CSceneComponent::GetForwardVector() const
   {
     return glm::normalize(m_RotationQuat * glm::vec3(0.0f, 0.0f, -1.0f));
   }
 
-  glm::vec3 SceneComponent::GetUpVector() const
+  glm::vec3 CSceneComponent::GetUpVector() const
   {
     return glm::normalize(m_RotationQuat * glm::vec3(0.0f, 1.0f, 0.0f));
   }
 
-  glm::vec3 SceneComponent::GetRightVector() const
+  glm::vec3 CSceneComponent::GetRightVector() const
   {
     return glm::normalize(m_RotationQuat * glm::vec3(1.0f, 0.0f, 0.0f));
   }
 
-  void SceneComponent::AddYawInput(float Value)
+  void CSceneComponent::AddYawInput(float Value)
   {
     // Rotate around global Y axis (horizontal) - CORRECTED
     glm::quat yawRot = glm::angleAxis(glm::radians(Value), glm::vec3(0.0f, 1.0f, 0.0f));
@@ -183,7 +183,7 @@ namespace CE
     UpdateRotationFromQuat();
   }
 
-  void SceneComponent::AddPitchInput(float Value)
+  void CSceneComponent::AddPitchInput(float Value)
   {
     // Rotate around LOCAL X axis (vertical) - use current right vector - CORRECTED
     glm::vec3 localRight = GetRightVector();
@@ -199,7 +199,7 @@ namespace CE
     }
   }
 
-  void SceneComponent::ClampPitchRotation()
+  void CSceneComponent::ClampPitchRotation()
   {
     // Получаем текущее относительное вращение
     glm::vec3 currentRotation = GetRelativeRotation();
@@ -214,7 +214,7 @@ namespace CE
     }
   }
 
-  void SceneComponent::UpdateRotationFromQuat()
+  void CSceneComponent::UpdateRotationFromQuat()
   {
     // Convert quaternion back to euler angles for compatibility
     glm::vec3 euler = glm::degrees(glm::eulerAngles(m_RotationQuat));
@@ -226,20 +226,20 @@ namespace CE
     UpdateTransformMatrix();
   }
 
-  void SceneComponent::Move(const glm::vec3& Delta)
+  void CSceneComponent::Move(const glm::vec3& Delta)
   {
     m_RelativeLocation += Delta;
     UpdateTransformMatrix();
   }
 
-  void SceneComponent::Rotate(const glm::vec3& Delta)
+  void CSceneComponent::Rotate(const glm::vec3& Delta)
   {
     m_RelativeRotation += Delta;
     m_RotationQuat = glm::quat(glm::radians(m_RelativeRotation));
     UpdateTransformMatrix();
   }
 
-  void SceneComponent::AttachToComponent(SceneComponent* Parent)
+  void CSceneComponent::AttachToComponent(CSceneComponent* Parent)
   {
     if (m_Parent)
       m_Parent->RemoveChild(this);
@@ -251,7 +251,7 @@ namespace CE
     UpdateTransformMatrix();
   }
 
-  void SceneComponent::DetachFromParent()
+  void CSceneComponent::DetachFromParent()
   {
     if (m_Parent)
     {
@@ -261,7 +261,7 @@ namespace CE
     UpdateTransformMatrix();
   }
 
-  void SceneComponent::AddChild(SceneComponent* Child)
+  void CSceneComponent::AddChild(CSceneComponent* Child)
   {
     if (Child && std::find(m_Children.begin(), m_Children.end(), Child) == m_Children.end())
     {
@@ -269,7 +269,7 @@ namespace CE
     }
   }
 
-  void SceneComponent::RemoveChild(SceneComponent* Child)
+  void CSceneComponent::RemoveChild(CSceneComponent* Child)
   {
     auto it = std::find(m_Children.begin(), m_Children.end(), Child);
     if (it != m_Children.end())
@@ -278,17 +278,17 @@ namespace CE
     }
   }
 
-  glm::mat4 SceneComponent::GetWorldTransform() const
+  glm::mat4 CSceneComponent::GetWorldTransform() const
   {
     return m_TransformMatrix;
   }
 
-  glm::vec3 SceneComponent::GetWorldLocation() const
+  glm::vec3 CSceneComponent::GetWorldLocation() const
   {
     return m_WorldLocation;
   }
 
-  void SceneComponent::UpdateTransformMatrix()
+  void CSceneComponent::UpdateTransformMatrix()
   {
     // Build local transform matrix using quaternion for rotation
     glm::mat4 localTransform = glm::mat4(1.0f);
@@ -327,7 +327,7 @@ namespace CE
     }
   }
 
-  void SceneComponent::Update(float DeltaTime)
+  void CSceneComponent::Update(float DeltaTime)
   {
     CEComponent::Update(DeltaTime);
   }

@@ -8,7 +8,7 @@
 
 namespace CE
 {
-  CEPawn::CEPawn(CEObject* Owner, FString NewName)
+  CEPawn::CEPawn(CObject* Owner, FString NewName)
       : CEActor(Owner, NewName)
   {
     auto* mesh = AddDefaultSubObject<MeshComponent>("Mesh", this, "MeshComponent");

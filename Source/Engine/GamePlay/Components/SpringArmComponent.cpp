@@ -4,8 +4,8 @@
 
 namespace CE
 {
-  SpringArmComponent::SpringArmComponent(CEObject* Owner, FString NewName)
-      : SceneComponent(Owner, NewName)
+  SpringArmComponent::SpringArmComponent(CObject* Owner, FString NewName)
+      : CSceneComponent(Owner, NewName)
   {
     CE_CORE_DEBUG("SpringArmComponent created: ", NewName);
   }
@@ -31,7 +31,7 @@ namespace CE
 
   void SpringArmComponent::Update(float DeltaTime)
   {
-    SceneComponent::Update(DeltaTime);
+    CSceneComponent::Update(DeltaTime);
 
     // Плавное движение камеры к целевой позиции
     glm::vec3 targetCameraPos = GetCameraWorldLocation();

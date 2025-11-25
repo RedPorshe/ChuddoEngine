@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Engine/GamePlay/Actors/Actor.h"
-#include "Engine/GamePlay/World/CEWorld.h"
+#include "Engine/GamePlay/World/World.h"
 #include "glm/glm.hpp"
 
 namespace CE
@@ -11,7 +11,7 @@ namespace CE
   class SunActor : public CEActor
   {
    public:
-    SunActor(CEObject* Owner = nullptr, FString NewName = "Sun");
+    SunActor(CObject* Owner = nullptr, FString NewName = "Sun");
     virtual ~SunActor() = default;
 
     virtual void BeginPlay() override;

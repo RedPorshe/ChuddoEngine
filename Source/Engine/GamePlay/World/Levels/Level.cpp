@@ -1,9 +1,9 @@
-#include "Engine/GamePlay/World/Levels/CELevel.h"
+#include "Engine/GamePlay/World/Levels/Level.h"
 
 namespace CE
 {
-  CELevel::CELevel(CEObject* Owner, FString LevelName)
-      : CEObject(Owner, LevelName)
+  CELevel::CELevel(CObject* Owner, FString LevelName)
+      : CObject(Owner, LevelName)
   {
     CE_CORE_DEBUG("Level created: ", LevelName);
   }
@@ -40,7 +40,7 @@ namespace CE
 
   void CELevel::BeginPlay()
   {
-    CEObject::BeginPlay();
+    CObject::BeginPlay();
 
     for (auto& actor : m_Actors)
     {
@@ -50,7 +50,7 @@ namespace CE
 
   void CELevel::Update(float DeltaTime)
   {
-    CEObject::Update(DeltaTime);
+    CObject::Update(DeltaTime);
 
     for (auto& actor : m_Actors)
     {

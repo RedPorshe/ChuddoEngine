@@ -1,12 +1,12 @@
 #pragma once
 #include <unordered_map>
 
-#include "Engine/Core/CEObject.h"
-#include "Engine/GamePlay/World/CEWorld.h"
+#include "Engine/Core/Object.h"
+#include "Engine/GamePlay/World/World.h"
 
 namespace CE
 {
-  class CEGameInstance : public CEObject
+  class CEGameInstance : public CObject
   {
    public:
     CEGameInstance();
