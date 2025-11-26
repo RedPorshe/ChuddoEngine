@@ -4,7 +4,7 @@
 
 namespace CE
 {
-  CEActor::CEActor(CObject* Owner, FString NewName)
+  CActor::CActor(CObject* Owner, FString NewName)
       : CObject(Owner, NewName)
   {
     // Создаем root component
@@ -12,40 +12,40 @@ namespace CE
     CE_CORE_DEBUG("CEActor created: ", NewName);
   }
 
-  CELevel* CEActor::GetLevel() const
+  CLevel* CActor::GetLevel() const
   {
     const CObject* current = this;
     while (current)
     {
-      if (auto* level = dynamic_cast<const CELevel*>(current))
+      if (auto* level = dynamic_cast<const CLevel*>(current))
       {
-        return const_cast<CELevel*>(level);
+        return const_cast<CLevel*>(level);
       }
       current = current->GetOwner();
     }
     return nullptr;
   }
 
-  glm::vec3 CEActor::GetActorForwardVector() const
+  glm::vec3 CActor::GetActorForwardVector() const
   {
     return m_RootComponent ? m_RootComponent->GetForwardVector() : glm::vec3(0.0f, 0.0f, 1.0f);
   }
-  glm::vec3 CEActor::GetActorRightVector() const
+  glm::vec3 CActor::GetActorRightVector() const
   {
     return m_RootComponent ? m_RootComponent->GetRightVector() : glm::vec3(1.0f, 0.0f, 0.0f);
   }
 
-  glm::vec3 CEActor::GetActorUpVector() const
+  glm::vec3 CActor::GetActorUpVector() const
   {
     return m_RootComponent ? m_RootComponent->GetUpVector() : glm::vec3(0.0f, 1.0f, 0.0f);
   }
 
-  void CEActor::SetActorLocation(const float x, const float y, const float z)
+  void CActor::SetActorLocation(const float x, const float y, const float z)
   {
     SetActorLocation(glm::vec3(x, y, z));
   }
 
-  void CEActor::SetActorLocation(const glm::vec3& NewLocation)
+  void CActor::SetActorLocation(const glm::vec3& NewLocation)
   {
     if (m_RootComponent && !m_RootComponent->GetParent())
     {
@@ -53,7 +53,7 @@ namespace CE
     }
   }
 
-  void CEActor::SetActorRotation(const glm::vec3& NewRotation)
+  void CActor::SetActorRotation(const glm::vec3& NewRotation)
   {
     if (m_RootComponent && !m_RootComponent->GetParent())
     {
@@ -61,12 +61,12 @@ namespace CE
     }
   }
 
-  void CEActor::SetActorScale(const float& NewScale)
+  void CActor::SetActorScale(const float& NewScale)
   {
     SetActorScale(glm::vec3(NewScale, NewScale, NewScale));
   }
 
-  void CEActor::SetActorScale(const glm::vec3& NewScale)
+  void CActor::SetActorScale(const glm::vec3& NewScale)
   {
     if (m_RootComponent && !m_RootComponent->GetParent())
     {
@@ -74,39 +74,39 @@ namespace CE
     }
   }
 
-  glm::vec3 CEActor::GetActorLocation() const
+  glm::vec3 CActor::GetActorLocation() const
   {
     return m_RootComponent ? m_RootComponent->GetWorldLocation() : glm::vec3(0.0f);
   }
 
-  glm::vec3 CEActor::GetActorRotation() const
+  glm::vec3 CActor::GetActorRotation() const
   {
     return m_RootComponent ? m_RootComponent->GetRotation() : glm::vec3(0.0f);
   }
 
-  glm::vec3 CEActor::GetActorScale() const
+  glm::vec3 CActor::GetActorScale() const
   {
     return m_RootComponent ? m_RootComponent->GetScale() : glm::vec3(1.0f);
   }
 
-  void CEActor::BeginPlay()
+  void CActor::BeginPlay()
   {
     CObject::BeginPlay();
 
    
   }
 
-  void CEActor::Update(float DeltaTime)
+  void CActor::Update(float DeltaTime)
   {
     CObject::Update(DeltaTime);
 
     if (bIsGravityEnabled)
     {
       // Применяем гравитацию
-      auto world = dynamic_cast<CELevel*>(GetOwner());
+      auto world = dynamic_cast<CLevel*>(GetOwner());
       if (world)
       {
-        auto* level = static_cast<CELevel*>(world);
+        auto* level = static_cast<CLevel*>(world);
         const glm::vec3 gravity = level->GetGravity();
         if (m_RootComponent->GetParent() == nullptr)
         {
@@ -123,7 +123,7 @@ namespace CE
 
  
 
-  void CEActor::Tick(float DeltaTime)
+  void CActor::Tick(float DeltaTime)
   {
     Update(DeltaTime);
     if (GetActorLocation().y <= -1000.f)

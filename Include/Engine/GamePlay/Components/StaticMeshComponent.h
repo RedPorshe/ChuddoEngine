@@ -6,11 +6,11 @@
 
 namespace CE
 {
-  class CEStaticMeshComponent : public MeshComponent
+  class CStaticMeshComponent : public CMeshComponent
   {
    public:
-    CEStaticMeshComponent(CObject* Owner = nullptr, FString NewName = "CEStaticMeshComponent");
-    virtual ~CEStaticMeshComponent() = default;
+    CStaticMeshComponent(CObject* Owner = nullptr, FString NewName = "CEStaticMeshComponent");
+    virtual ~CStaticMeshComponent() = default;
 
     // Переопределяем SetMesh для загрузки из OBJ файла
     virtual void SetMesh(const std::string& MeshPath) override;

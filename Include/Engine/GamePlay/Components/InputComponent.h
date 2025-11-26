@@ -16,7 +16,7 @@ namespace CE
     Axis
   };
 
-  struct InputActionBinding
+  struct FInputActionBinding
   {
     std::function<void()> Callback;
     EInputEvent EventType;
@@ -28,11 +28,11 @@ namespace CE
     float Scale = 1.0f;
   };
 
-  class InputComponent : public CEComponent
+  class CInputComponent : public CComponent
   {
    public:
-    InputComponent(CObject* Owner = nullptr, FString NewName = "InputComponent");
-    virtual ~InputComponent();
+    CInputComponent(CObject* Owner = nullptr, FString NewName = "InputComponent");
+    virtual ~CInputComponent();
 
     void BindAction(const FString& ActionName, EInputEvent EventType, std::function<void()> Callback);
 
@@ -47,7 +47,7 @@ namespace CE
     void Update(float DeltaTime) override;
 
    private:
-    std::unordered_map<FString, std::vector<InputActionBinding>> m_ActionBindings;
+    std::unordered_map<FString, std::vector<FInputActionBinding>> m_ActionBindings;
     std::unordered_map<FString, InputAxisBinding> m_AxisBindings;
     std::unordered_map<int, bool> m_KeyStates;
 

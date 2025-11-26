@@ -7,10 +7,10 @@ DEFINE_LOG_CATEGORY(LogMyGame)
 int main(int argc, char* argv[])
 {
   // Инициализация логгера ДО всего
-  CE::Logger::Initialize(false, true);
+  CE::CLogger::Initialize(false, true);
 
 #ifdef _DEBUG
-  CE::Logger::SetGlobalLogLevel(CE::LogLevel::Verbose);
+  CE::CLogger::SetGlobalLogLevel(CE::ELogLevel::Verbose);
   CE_CORE_DISPLAY("=== DEBUG BUILD ===");
 #else
   CE::Logger::SetGlobalLogLevel(CE::LogLevel::Warning);
@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
   }
 
   // Завершение логгера ПОСЛЕ всего
-  CE::Logger::Shutdown();
+  CE::CLogger::Shutdown();
 
   return result;
 }

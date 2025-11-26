@@ -7,11 +7,11 @@
 namespace CE
 {
 
-  class CEActor : public CObject
+  class CActor : public CObject
   {
    public:
-    CEActor(CObject* Owner = nullptr, FString NewName = "Actor");
-    virtual ~CEActor() = default;
+    CActor(CObject* Owner = nullptr, FString NewName = "Actor");
+    virtual ~CActor() = default;
 
     // UE-совместимый SpawnActor
     template <typename T, typename... Args>
@@ -45,7 +45,7 @@ namespace CE
     glm::vec3 GetActorRightVector() const;
     glm::vec3 GetActorUpVector() const;
     // Получение уровня
-    CELevel* GetLevel() const;
+    CLevel* GetLevel() const;
 
     virtual void BeginPlay() override;
     virtual void Update(float DeltaTime) override;
@@ -93,9 +93,9 @@ namespace CE
   };
 
   template <typename T, typename... Args>
-  T* CEActor::SpawnActor(Args&&... args)
+  T* CActor::SpawnActor(Args&&... args)
   {
-    if (CELevel* Level = GetLevel())
+    if (CLevel* Level = GetLevel())
     {
       return Level->template SpawnActor<T>(std::forward<Args>(args)...);
     }
@@ -104,7 +104,7 @@ namespace CE
   }
 
   template <typename T, typename... Args>
-  T* CEActor::AddDefaultSubObject(const std::string& Name, Args&&... args)
+  T* CActor::AddDefaultSubObject(const std::string& Name, Args&&... args)
   {
     auto* component = AddSubObject<T>(Name, std::forward<Args>(args)...);
 

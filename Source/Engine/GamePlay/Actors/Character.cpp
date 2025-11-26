@@ -6,13 +6,13 @@
 
 namespace CE
 {
-  CECharacter::CECharacter(CObject* Owner, FString NewName)
-      : CEPawn(Owner, NewName), m_VerticalVelocity(0.0f), m_IsOnGround(false)
+  CCharacter::CCharacter(CObject* Owner, FString NewName)
+      : CPawn(Owner, NewName), m_VerticalVelocity(0.0f), m_IsOnGround(false)
   {
     
    
 
-    m_MeshComponent = AddDefaultSubObject<CEStaticMeshComponent>("mesh", this);
+    m_MeshComponent = AddDefaultSubObject<CStaticMeshComponent>("mesh", this);
     m_MeshComponent->SetMesh("Assets/meshes/Icosahedron.obj");
    
     m_MeshComponent->SetPosition(0.f, 0.f, 0.f);
@@ -21,19 +21,19 @@ namespace CE
     m_IsOnGround = false;
   }
 
-  void CECharacter::BeginPlay()
+  void CCharacter::BeginPlay()
   {
-    CEPawn::BeginPlay();
+    CPawn::BeginPlay();
   }
 
-  void CECharacter::Tick(float DeltaTime)
+  void CCharacter::Tick(float DeltaTime)
   {
-    CEPawn::Tick(DeltaTime);
+    CPawn::Tick(DeltaTime);
   }
 
-  void CECharacter::SetupPlayerInputComponent()
+  void CCharacter::SetupPlayerInputComponent()
   {
-    CEPawn::SetupPlayerInputComponent();
+    CPawn::SetupPlayerInputComponent();
 
     if (GetInputComponent())
     {

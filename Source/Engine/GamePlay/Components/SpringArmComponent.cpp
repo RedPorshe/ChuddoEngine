@@ -4,13 +4,13 @@
 
 namespace CE
 {
-  SpringArmComponent::SpringArmComponent(CObject* Owner, FString NewName)
+  CSpringArmComponent::CSpringArmComponent(CObject* Owner, FString NewName)
       : CSceneComponent(Owner, NewName)
   {
     CE_CORE_DEBUG("SpringArmComponent created: ", NewName);
   }
 
-  glm::vec3 SpringArmComponent::GetCameraWorldLocation() const
+  glm::vec3 CSpringArmComponent::GetCameraWorldLocation() const
   {
     // Получаем мировую позицию цели (точка, куда смотрит камера)
     glm::vec3 targetPosition = GetWorldLocation() + m_TargetOffset;
@@ -29,7 +29,7 @@ namespace CE
     return targetPosition + rotatedOffset;
   }
 
-  void SpringArmComponent::Update(float DeltaTime)
+  void CSpringArmComponent::Update(float DeltaTime)
   {
     CSceneComponent::Update(DeltaTime);
 

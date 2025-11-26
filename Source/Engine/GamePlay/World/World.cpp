@@ -9,13 +9,13 @@
 
 namespace CE
 {
-  CEWorld::CEWorld(CObject* Owner, FString WorldName)
+  CWorld::CWorld(CObject* Owner, FString WorldName)
       : CObject(Owner, WorldName)
   {
     CE_CORE_DEBUG("World created: ", WorldName);
   }
 
-  void CEWorld::AddLevel(std::unique_ptr<CELevel> Level)
+  void CWorld::AddLevel(std::unique_ptr<CLevel> Level)
   {
     if (!Level)
       return;
@@ -36,7 +36,7 @@ namespace CE
     CE_CORE_DEBUG("Added level to world: ", m_Levels.back()->GetName());
   }
 
-  void CEWorld::RemoveLevel(const FString& LevelName)
+  void CWorld::RemoveLevel(const FString& LevelName)
   {
     auto it = std::find_if(m_Levels.begin(), m_Levels.end(),
                            [&LevelName](const auto& level)
@@ -57,7 +57,7 @@ namespace CE
     }
   }
 
-  CELevel* CEWorld::FindLevel(const FString& LevelName)
+  CLevel* CWorld::FindLevel(const FString& LevelName)
   {
     for (const auto& level : m_Levels)
     {
@@ -69,9 +69,9 @@ namespace CE
     return nullptr;
   }
 
-  void CEWorld::SetCurrentLevel(const FString& LevelName)
+  void CWorld::SetCurrentLevel(const FString& LevelName)
   {
-    CELevel* level = FindLevel(LevelName);
+    CLevel* level = FindLevel(LevelName);
     if (level)
     {
       SetCurrentLevel(level);
@@ -82,7 +82,7 @@ namespace CE
     }
   }
 
-  void CEWorld::SetCurrentLevel(CELevel* Level)
+  void CWorld::SetCurrentLevel(CLevel* Level)
   {
     if (Level && std::find_if(m_Levels.begin(), m_Levels.end(),
                               [Level](const auto& ptr)
@@ -106,9 +106,9 @@ namespace CE
     }
   }
 
-  void CEWorld::LoadLevel(const FString& LevelName)
+  void CWorld::LoadLevel(const FString& LevelName)
   {
-    CELevel* level = FindLevel(LevelName);
+    CLevel* level = FindLevel(LevelName);
     if (level)
     {
       CE_CORE_DEBUG("Loading level: ", LevelName);
@@ -120,7 +120,7 @@ namespace CE
     }
   }
 
-  void CEWorld::UnloadCurrentLevel()
+  void CWorld::UnloadCurrentLevel()
   {
     if (m_CurrentLevel)
     {
@@ -129,7 +129,7 @@ namespace CE
     }
   }
 
-  void CEWorld::BeginPlay()
+  void CWorld::BeginPlay()
   {
     CObject::BeginPlay();
 
@@ -139,7 +139,7 @@ namespace CE
     }
   }
 
-  void CEWorld::Update(float DeltaTime)
+  void CWorld::Update(float DeltaTime)
   {
     CObject::Update(DeltaTime);
 
@@ -149,20 +149,20 @@ namespace CE
     }
   }
 
-  void CEWorld::Tick(float DeltaTime)
+  void CWorld::Tick(float DeltaTime)
   {
     Update(DeltaTime);
     m_CurrentLevel->Tick(DeltaTime);
   }
 
-  CameraComponent* CEWorld::FindActiveCamera()
+  CCameraComponent* CWorld::FindActiveCamera()
   {
     if (!m_CurrentLevel)
       return nullptr;
 
     for (const auto& actor : m_CurrentLevel->GetActors())
     {
-      auto cameraComponents = actor->GetComponents<CameraComponent>();
+      auto cameraComponents = actor->GetComponents<CCameraComponent>();
       if (!cameraComponents.empty())
       {
         return cameraComponents[0];
@@ -172,7 +172,7 @@ namespace CE
     return nullptr;
   }
 
-  void CEWorld::CollectRenderData(FrameRenderData& renderData)
+  void CWorld::CollectRenderData(FrameRenderData& renderData)
   {
     if (!m_CurrentLevel)
       return;
@@ -206,7 +206,7 @@ namespace CE
 
     for (const auto& actor : m_CurrentLevel->GetActors())
     {
-      auto meshComponents = actor->GetComponents<MeshComponent>();
+      auto meshComponents = actor->GetComponents<CMeshComponent>();
 
       for (auto* meshComp : meshComponents)
       {
@@ -237,7 +237,7 @@ namespace CE
     }
   }
 
-  void CEWorld::SetDefaultLighting(const LightingUBO& lighting)
+  void CWorld::SetDefaultLighting(const LightingUBO& lighting)
   {
     m_defaultLighting = lighting;
   }

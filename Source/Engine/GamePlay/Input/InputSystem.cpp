@@ -6,16 +6,16 @@
 
 namespace CE
 {
-  InputSystem* InputSystem::s_Instance = nullptr;
+  CInputSystem* CInputSystem::s_Instance = nullptr;
 
-  InputSystem& InputSystem::Get()
+  CInputSystem& CInputSystem::Get()
   {
-    static InputSystem instance;
+    static CInputSystem instance;
     s_Instance = &instance;
     return instance;
   }
 
-  void InputSystem::Initialize(GLFWwindow* Window)
+  void CInputSystem::Initialize(GLFWwindow* Window)
   {
     m_Window = Window;
 
@@ -48,30 +48,30 @@ namespace CE
     }
   }
 
-  void InputSystem::Shutdown()
+  void CInputSystem::Shutdown()
   {
     m_InputComponents.clear();
     m_Window = nullptr;
     CE_CORE_DEBUG("InputSystem shutdown");
   }
 
-  void InputSystem::ProcessMouseButton(int button, int action, int mods)
+  void CInputSystem::ProcessMouseButton(int button, int action, int mods)
   {
     (void)mods;
 
     m_KeyStates[button] = (action != GLFW_RELEASE);
   }
 
-  void InputSystem::MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
+  void CInputSystem::MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
   {
-    InputSystem* inputSystem = static_cast<InputSystem*>(glfwGetWindowUserPointer(window));
+    CInputSystem* inputSystem = static_cast<CInputSystem*>(glfwGetWindowUserPointer(window));
     if (inputSystem)
     {
       inputSystem->ProcessMouseButton(button, action, mods);
     }
   }
 
-  void InputSystem::RegisterInputComponent(InputComponent* Component)
+  void CInputSystem::RegisterInputComponent(CInputComponent* Component)
   {
     if (Component && std::find(m_InputComponents.begin(), m_InputComponents.end(), Component) == m_InputComponents.end())
     {
@@ -80,7 +80,7 @@ namespace CE
     }
   }
 
-  void InputSystem::UnregisterInputComponent(InputComponent* Component)
+  void CInputSystem::UnregisterInputComponent(CInputComponent* Component)
   {
     auto it = std::find(m_InputComponents.begin(), m_InputComponents.end(), Component);
     if (it != m_InputComponents.end())
@@ -90,7 +90,7 @@ namespace CE
     }
   }
 
-  void InputSystem::setFPSInputMode(bool mode)
+  void CInputSystem::setFPSInputMode(bool mode)
   {
     if (mode)
     {
@@ -101,7 +101,7 @@ namespace CE
       glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
     }
   }
-  void InputSystem::Update(float DeltaTime)
+  void CInputSystem::Update(float DeltaTime)
   {
     for (auto* component : m_InputComponents)
     {
@@ -114,7 +114,7 @@ namespace CE
     m_MouseDelta = glm::vec2(0.0f, 0.0f);
   }
 
-  void InputSystem::ProcessKeyInput(int key, int scancode, int action, int mods)
+  void CInputSystem::ProcessKeyInput(int key, int scancode, int action, int mods)
   {
     (void)scancode;
     (void)mods;
@@ -129,7 +129,7 @@ namespace CE
     }
   }
 
-  void InputSystem::ProcessMouseMovement(double xpos, double ypos)
+  void CInputSystem::ProcessMouseMovement(double xpos, double ypos)
   {
     float x = static_cast<float>(xpos);
     float y = static_cast<float>(ypos);
@@ -157,7 +157,7 @@ namespace CE
     }
   }
 
-  void InputSystem::ProcessMouseScroll(double xoffset, double yoffset)
+  void CInputSystem::ProcessMouseScroll(double xoffset, double yoffset)
   {
     (void)xoffset;
     for (auto* component : m_InputComponents)
@@ -169,34 +169,34 @@ namespace CE
     }
   }
 
-  bool InputSystem::IsKeyPressed(int key) const
+  bool CInputSystem::IsKeyPressed(int key) const
   {
     auto it = m_KeyStates.find(key);
     bool pressed = it != m_KeyStates.end() && it->second;
     return pressed;
   }
 
-  void InputSystem::KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
+  void CInputSystem::KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
   {
-    InputSystem* inputSystem = static_cast<InputSystem*>(glfwGetWindowUserPointer(window));
+    CInputSystem* inputSystem = static_cast<CInputSystem*>(glfwGetWindowUserPointer(window));
     if (inputSystem)
     {
       inputSystem->ProcessKeyInput(key, scancode, action, mods);
     }
   }
 
-  void InputSystem::MouseCallback(GLFWwindow* window, double xpos, double ypos)
+  void CInputSystem::MouseCallback(GLFWwindow* window, double xpos, double ypos)
   {
-    InputSystem* inputSystem = static_cast<InputSystem*>(glfwGetWindowUserPointer(window));
+    CInputSystem* inputSystem = static_cast<CInputSystem*>(glfwGetWindowUserPointer(window));
     if (inputSystem)
     {
       inputSystem->ProcessMouseMovement(xpos, ypos);
     }
   }
 
-  void InputSystem::ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
+  void CInputSystem::ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
   {
-    InputSystem* inputSystem = static_cast<InputSystem*>(glfwGetWindowUserPointer(window));
+    CInputSystem* inputSystem = static_cast<CInputSystem*>(glfwGetWindowUserPointer(window));
     if (inputSystem)
     {
       inputSystem->ProcessMouseScroll(xoffset, yoffset);

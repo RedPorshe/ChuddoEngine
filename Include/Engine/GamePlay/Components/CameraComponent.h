@@ -3,11 +3,11 @@
 
 namespace CE
 {
-  class CameraComponent : public CSceneComponent
+  class CCameraComponent : public CSceneComponent
   {
    public:
-    CameraComponent(CObject* Owner = nullptr, FString NewName = "CameraComponent");
-    virtual ~CameraComponent() = default;
+    CCameraComponent(CObject* Owner = nullptr, FString NewName = "CameraComponent");
+    virtual ~CCameraComponent() = default;
 
     // Настройки камеры
     void SetFieldOfView(float FOV)

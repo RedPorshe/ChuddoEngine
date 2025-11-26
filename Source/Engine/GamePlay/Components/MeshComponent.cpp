@@ -4,14 +4,14 @@
 
 namespace CE
 {
-  MeshComponent::MeshComponent(CObject* Owner, FString NewName)
+  CMeshComponent::CMeshComponent(CObject* Owner, FString NewName)
       : CSceneComponent(Owner, NewName)
   {
     m_Mesh.vertices.clear();
     m_Mesh.indices.clear();
   }
 
-  void MeshComponent::SetMesh(const std::string& MeshPath)
+  void CMeshComponent::SetMesh(const std::string& MeshPath)
   {
     m_MeshPath = MeshPath;
     // По умолчанию не создаем куб, только если путь не пустой
@@ -40,12 +40,12 @@ namespace CE
     }
   }
 
-  void MeshComponent::SetMaterial(const std::string& MaterialPath)
+  void CMeshComponent::SetMaterial(const std::string& MaterialPath)
   {
     m_MaterialPath = MaterialPath;
   }
 
-  void MeshComponent::CreateCubeMesh()
+  void CMeshComponent::CreateCubeMesh()
   {
     // Вершины куба (позиция, нормаль, цвет (белый), UV)
     std::vector<Vertex> vertices = {
@@ -105,17 +105,17 @@ namespace CE
     m_Mesh.color = glm::vec3(1.0f);
   }
 
-  glm::mat4 MeshComponent::GetRenderTransform() const
+  glm::mat4 CMeshComponent::GetRenderTransform() const
   {
     return GetWorldTransform();
   }
 
-  void MeshComponent::UpdateMeshTransform()
+  void CMeshComponent::UpdateMeshTransform()
   {
     m_Mesh.transform = GetWorldTransform();
   }
 
-  void MeshComponent::Update(float DeltaTime)
+  void CMeshComponent::Update(float DeltaTime)
   {
     CSceneComponent::Update(DeltaTime);
 

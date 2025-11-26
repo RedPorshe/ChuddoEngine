@@ -11,17 +11,17 @@
 namespace CE
 {
   SunActor::SunActor(CObject* Owner, FString NewName)
-      : CEActor(Owner, NewName)
+      : CActor(Owner, NewName)
   {
   }
 
   void SunActor::BeginPlay()
   {
-    CEActor::BeginPlay();
+    CActor::BeginPlay();
     CE_CORE_DEBUG("SunActor BeginPlay: ", GetName());
 
     // Create a small sphere mesh as a visual marker for the sun
-    m_SunMarkerMesh = AddDefaultSubObject<MeshComponent>("SunMarker");
+    m_SunMarkerMesh = AddDefaultSubObject<CMeshComponent>("SunMarker");
     if (m_SunMarkerMesh)
     {
       // Load the sphere model from Assets
@@ -37,7 +37,7 @@ namespace CE
 
   void SunActor::Update(float DeltaTime)
   {
-    CEActor::Update(DeltaTime);
+    CActor::Update(DeltaTime);
     if (m_AngularSpeed != 0.0f)
     {
       m_Angle += m_AngularSpeed * DeltaTime;
@@ -55,7 +55,7 @@ namespace CE
         m_SunMarkerMesh->SetRelativePosition(glm::vec3(0.0f));
       }
 
-      CELevel* level = GetLevel();
+      CLevel* level = GetLevel();
       if (!level)
         return;
 
@@ -63,7 +63,7 @@ namespace CE
       if (!levelOwner)
         return;
 
-      CEWorld* world = dynamic_cast<CEWorld*>(levelOwner);
+      CWorld* world = dynamic_cast<CWorld*>(levelOwner);
       if (!world)
         return;
 
@@ -76,7 +76,7 @@ namespace CE
     }
     else
     {
-      CELevel* level = GetLevel();
+      CLevel* level = GetLevel();
       if (!level)
         return;
 
@@ -84,7 +84,7 @@ namespace CE
       if (!levelOwner)
         return;
 
-      CEWorld* world = dynamic_cast<CEWorld*>(levelOwner);
+      CWorld* world = dynamic_cast<CWorld*>(levelOwner);
       if (!world)
         return;
       auto sunPos = GetActorLocation();

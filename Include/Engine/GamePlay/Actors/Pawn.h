@@ -6,11 +6,11 @@
 
 namespace CE
 {
-  class CEPawn : public CEActor
+  class CPawn : public CActor
   {
    public:
-    CEPawn(CObject* Owner = nullptr, FString NewName = "Pawn");
-    virtual ~CEPawn() = default;
+    CPawn(CObject* Owner = nullptr, FString NewName = "Pawn");
+    virtual ~CPawn() = default;
 
     virtual void BeginPlay() override;
     virtual void Tick(float DeltaTime) override;
@@ -20,7 +20,7 @@ namespace CE
     virtual void SetupPlayerInputComponent();
 
     // Компоненты
-    InputComponent* GetInputComponent() const
+    CInputComponent* GetInputComponent() const
     {
       return this->m_InputComponent;
     }
@@ -61,14 +61,14 @@ namespace CE
     }
 
    protected:
-    InputComponent* m_InputComponent = nullptr;
+    CInputComponent* m_InputComponent = nullptr;
     glm::vec3 m_MovementInput{0.0f, 0.0f, 0.0f};
     glm::vec3 m_ControlRotation{0.0f, 0.0f, 0.0f};  // Pitch, Yaw, Roll
     bool m_bMovementInputConsumed = false;
     bool m_bUseControllerRotation = false;
 
    private:
-    CameraComponent* FindCameraComponent() const;
+    CCameraComponent* FindCameraComponent() const;
     bool m_bIsJumping = false;
     void ApplyRotationToActor();
     void ApplyMovementInputToActor();

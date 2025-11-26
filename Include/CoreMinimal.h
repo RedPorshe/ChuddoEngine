@@ -59,10 +59,10 @@ namespace CE
 // Forward declarations
 namespace CE
 {
-  class Logger;
-  class Actor;
-  class Component;
-  class World;
+  class CLogger;
+  class CActor;
+  class CComponent;
+  class CWorld;
 }  // namespace CE
 #include "Engine/Core/AppInfo.h"
 #include "Engine/Utils/Logger.h"

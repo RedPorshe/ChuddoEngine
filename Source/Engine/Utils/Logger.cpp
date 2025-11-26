@@ -2,26 +2,26 @@
 
 namespace CE
 {
-  LogCategory LogTemp("LogTemp");
-  LogCategory LogCore("LogCore");
-  LogCategory LogRender("LogRender");
-  LogCategory LogInput("LogInput");
-  LogCategory LogAudio("LogAudio");
-  LogCategory LogGameplay("LogGameplay");
-  LogCategory LogEditor("LogEditor");
-  LogCategory LogSystem("LogSystem");
+  CLogCategory LogTemp("LogTemp");
+  CLogCategory LogCore("LogCore");
+  CLogCategory LogRender("LogRender");
+  CLogCategory LogInput("LogInput");
+  CLogCategory LogAudio("LogAudio");
+  CLogCategory LogGameplay("LogGameplay");
+  CLogCategory LogEditor("LogEditor");
+  CLogCategory LogSystem("LogSystem");
 
   // Static member initialization
-  LogLevel Logger::s_globalLevel = LogLevel::Log;
-  bool Logger::s_consoleOutput = true;
-  bool Logger::s_fileOutput = true;
-  bool Logger::s_initialized = false;
-  bool Logger::s_useUniqueLogFile = true;
-  bool Logger::s_overwriteExisting = false;
-  std::ofstream Logger::s_logFile;
-  std::unordered_map<const LogCategory*, LogLevel> Logger::s_categoryLevels;
+  ELogLevel CLogger::s_globalLevel = ELogLevel::Log;
+  bool CLogger::s_consoleOutput = true;
+  bool CLogger::s_fileOutput = true;
+  bool CLogger::s_initialized = false;
+  bool CLogger::s_useUniqueLogFile = true;
+  bool CLogger::s_overwriteExisting = false;
+  std::ofstream CLogger::s_logFile;
+  std::unordered_map<const CLogCategory*, ELogLevel> CLogger::s_categoryLevels;
 
-  void Logger::Initialize(bool useUniqueLogFile, bool overwriteExisting)
+  void CLogger::Initialize(bool useUniqueLogFile, bool overwriteExisting)
   {
     if (s_initialized)
       return;
@@ -50,7 +50,7 @@ namespace CE
     CE_CORE_DISPLAY("Log file: ", logPath.string());
   }
 
-  void Logger::Shutdown()
+  void CLogger::Shutdown()
   {
     if (!s_initialized)
       return;
@@ -65,31 +65,31 @@ namespace CE
     s_initialized = false;
   }
 
-  void Logger::SetGlobalLogLevel(LogLevel level)
+  void CLogger::SetGlobalLogLevel(ELogLevel level)
   {
     s_globalLevel = level;
     CE_CORE_DISPLAY("Global log level set to: ", GetLevelString(level));
   }
 
-  void Logger::SetCategoryLogLevel(const LogCategory& category, LogLevel level)
+  void CLogger::SetCategoryLogLevel(const CLogCategory& category, ELogLevel level)
   {
     s_categoryLevels[&category] = level;
     CE_CORE_DISPLAY("Category ", category.GetName(), " log level set to: ", GetLevelString(level));
   }
 
-  void Logger::SetConsoleOutput(bool enable)
+  void CLogger::SetConsoleOutput(bool enable)
   {
     s_consoleOutput = enable;
     CE_CORE_DISPLAY("Console output: ", enable ? "enabled" : "disabled");
   }
 
-  void Logger::SetFileOutput(bool enable)
+  void CLogger::SetFileOutput(bool enable)
   {
     s_fileOutput = enable;
     CE_CORE_DISPLAY("File output: ", enable ? "enabled" : "disabled");
   }
 
-  void Logger::WriteToConsole(LogLevel level, const LogCategory& category, const std::string& message)
+  void CLogger::WriteToConsole(ELogLevel level, const CLogCategory& category, const std::string& message)
   {
     (void)category;  // Помечаем как неиспользуемый
 
@@ -100,25 +100,25 @@ namespace CE
     // Цвета как в Unreal Engine
     switch (level)
     {
-      case LogLevel::Fatal:
+      case ELogLevel::Fatal:
         color = BACKGROUND_RED | FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY;
         break;
-      case LogLevel::Error:
+      case ELogLevel::Error:
         color = FOREGROUND_RED | FOREGROUND_INTENSITY;
         break;
-      case LogLevel::Warning:
+      case ELogLevel::Warning:
         color = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY;  // Yellow
         break;
-      case LogLevel::Display:
+      case ELogLevel::Display:
         color = FOREGROUND_GREEN | FOREGROUND_INTENSITY;
         break;
-      case LogLevel::Log:
+      case ELogLevel::Log:
         color = 7;  // White
         break;
-      case LogLevel::Verbose:
+      case ELogLevel::Verbose:
         color = 8;  // Gray
         break;
-      case LogLevel::VeryVerbose:
+      case ELogLevel::VeryVerbose:
         color = 8;  // Gray
         break;
     }
@@ -158,7 +158,7 @@ namespace CE
 #endif
   }
 
-  void Logger::WriteToFile(const std::string& message)
+  void CLogger::WriteToFile(const std::string& message)
   {
     if (s_logFile.is_open())
     {
@@ -167,7 +167,7 @@ namespace CE
     }
   }
 
-  std::string Logger::GetCurrentTimeStamp()
+  std::string CLogger::GetCurrentTimeStamp()
   {
     auto now = std::chrono::system_clock::now();
     auto time_t = std::chrono::system_clock::to_time_t(now);
@@ -189,53 +189,53 @@ namespace CE
     return stream.str();
   }
 
-  std::string Logger::GetLevelString(LogLevel level)
+  std::string CLogger::GetLevelString(ELogLevel level)
   {
     switch (level)
     {
-      case LogLevel::Fatal:
+      case ELogLevel::Fatal:
         return "Fatal";
-      case LogLevel::Error:
+      case ELogLevel::Error:
         return "Error";
-      case LogLevel::Warning:
+      case ELogLevel::Warning:
         return "Warning";
-      case LogLevel::Display:
+      case ELogLevel::Display:
         return "Display";
-      case LogLevel::Log:
+      case ELogLevel::Log:
         return "Log";
-      case LogLevel::Verbose:
+      case ELogLevel::Verbose:
         return "Verbose";
-      case LogLevel::VeryVerbose:
+      case ELogLevel::VeryVerbose:
         return "VeryVerbose";
       default:
         return "Unknown";
     }
   }
 
-  std::string Logger::GetLevelDisplayName(LogLevel level)
+  std::string CLogger::GetLevelDisplayName(ELogLevel level)
   {
     switch (level)
     {
-      case LogLevel::Fatal:
+      case ELogLevel::Fatal:
         return "Fatal";
-      case LogLevel::Error:
+      case ELogLevel::Error:
         return "Error";
-      case LogLevel::Warning:
+      case ELogLevel::Warning:
         return "Warning";
-      case LogLevel::Display:
+      case ELogLevel::Display:
         return "Display";
-      case LogLevel::Log:
+      case ELogLevel::Log:
         return "Log";
-      case LogLevel::Verbose:
+      case ELogLevel::Verbose:
         return "Verbose";
-      case LogLevel::VeryVerbose:
+      case ELogLevel::VeryVerbose:
         return "VeryVerbose";
       default:
         return "Unknown";
     }
   }
 
-  std::string Logger::GetLogFilePath()
+  std::string CLogger::GetLogFilePath()
   {
     std::filesystem::path exePath = std::filesystem::current_path();
     std::filesystem::path logDir = exePath / "logs";

@@ -18,7 +18,7 @@ namespace CE
     void Shutdown();
 
     // Геттеры для доступа извне
-    CEGameInstance* GetGameInstance() const
+    CGameInstance* GetGameInstance() const
     {
       return m_GameInstance.get();
     }
@@ -34,7 +34,7 @@ namespace CE
     void Render();
 
    protected:
-    std::unique_ptr<CEGameInstance> m_GameInstance;
+    std::unique_ptr<CGameInstance> m_GameInstance;
     std::unique_ptr<RenderSystem> m_RenderSystem;
     CE::FrameRenderData m_RenderData;
     // Application Info

@@ -9,7 +9,7 @@ namespace CE
   class TerrainActor;
 }
 
-class MainLevel : public CE::CELevel
+class MainLevel : public CE::CLevel
 {
  public:
   MainLevel(CE::CObject* Owner = nullptr,
@@ -20,8 +20,8 @@ class MainLevel : public CE::CELevel
   virtual void Update(float DeltaTime) override;
 
  protected:
-  CE::PlayerController* playerController;
-  CE::CEPawn* playerCharacter;
+  CE::CPlayerController* playerController;
+  CE::CPawn* playerCharacter;
   CE::TerrainActor* terrain = nullptr;
-  CE::CEActor* enemy = nullptr;
+  CE::CActor* enemy = nullptr;
 };

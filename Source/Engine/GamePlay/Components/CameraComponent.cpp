@@ -6,12 +6,12 @@
 
 namespace CE
 {
-  CameraComponent::CameraComponent(CObject* Owner, FString NewName)
+  CCameraComponent::CCameraComponent(CObject* Owner, FString NewName)
       : CSceneComponent(Owner, NewName)
   {
   }
 
-  glm::vec3 CameraComponent::GetCameraForwardVector() const
+  glm::vec3 CCameraComponent::GetCameraForwardVector() const
   {
     if (GetParent())
     {
@@ -24,7 +24,7 @@ namespace CE
     return forward;
   }
 
-  glm::vec3 CameraComponent::GetCameraRightVector() const
+  glm::vec3 CCameraComponent::GetCameraRightVector() const
   {
     if (GetParent())
     {
@@ -33,7 +33,7 @@ namespace CE
     return GetRightVector();
   }
 
-  glm::vec3 CameraComponent::GetCameraUpVector() const
+  glm::vec3 CCameraComponent::GetCameraUpVector() const
   {
     if (GetParent())
     {
@@ -42,9 +42,9 @@ namespace CE
     return GetUpVector();
   }
 
-  glm::mat4 CameraComponent::GetViewMatrix() const
+  glm::mat4 CCameraComponent::GetViewMatrix() const
   {
-    if (auto* springArm = dynamic_cast<SpringArmComponent*>(GetParent()))
+    if (auto* springArm = dynamic_cast<CSpringArmComponent*>(GetParent()))
     {
       glm::vec3 worldPos = springArm->GetCameraWorldLocation();
       glm::vec3 targetPos = springArm->GetWorldLocation() + springArm->GetTargetOffset();
@@ -56,19 +56,19 @@ namespace CE
     else
     {
       glm::vec3 worldPos = GetWorldLocation();
-      // worldPos.y *= -1.0f;  // Invert Y for view matrix
+     
       glm::vec3 forward = GetCameraForwardVector();
-      // forward.y *= -1.0f;  // Invert Y for view matrix
+     
       glm::vec3 up = GetCameraUpVector();
-      // up.y *= -1.0f;  // Invert Y for view matrix
+     
 
       return glm::lookAt(worldPos, worldPos + forward, up);
     }
   }
 
-  glm::mat4 CameraComponent::GetProjectionMatrix() const
+  glm::mat4 CCameraComponent::GetProjectionMatrix() const
   {
-    if (auto* springArm = dynamic_cast<SpringArmComponent*>(GetParent()))
+    if (auto* springArm = dynamic_cast<CSpringArmComponent*>(GetParent()))
     {
       glm::mat4 projection = glm::perspective(
           glm::radians(m_FieldOfView),
@@ -87,14 +87,14 @@ namespace CE
           m_AspectRatio,
           m_NearPlane,
           m_FarPlane);
-      CE_DISPLAY("without spring arm");
+      
       projection = glm::scale(projection, glm::vec3(1.0f, -1.0f, 1.0f));
 
       return projection;
     }
   }
 
-  void CameraComponent::Update(float DeltaTime)
+  void CCameraComponent::Update(float DeltaTime)
   {
     CSceneComponent::Update(DeltaTime);
   }

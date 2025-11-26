@@ -8,7 +8,7 @@
 
 namespace CE
 {
-  class CSceneComponent : public CEComponent
+  class CSceneComponent : public CComponent
   {
    public:
     CSceneComponent(CObject* Owner = nullptr, FString NewName = "SceneComponent");
@@ -113,6 +113,6 @@ namespace CE
     float m_MinPitch = -89.0f;
     float m_MaxPitch = 89.0f;
     bool m_UsePitchLimits = false;
-    friend class SpringArmComponent;
+    friend class CSpringArmComponent;
   };
 }  // namespace CE

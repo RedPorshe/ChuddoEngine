@@ -9,13 +9,13 @@
 
 namespace CE
 {
-  class CameraComponent;
+  class CCameraComponent;
 
-  class CEWorld : public CObject
+  class CWorld : public CObject
   {
    public:
-    CEWorld(CObject* Owner = nullptr, FString WorldName = "World");
-    virtual ~CEWorld() = default;
+    CWorld(CObject* Owner = nullptr, FString WorldName = "World");
+    virtual ~CWorld() = default;
 
     // Allow world to provide a default lighting setup that will be used when
     // a level doesn't populate lighting in CollectRenderData.
@@ -26,17 +26,17 @@ namespace CE
     }
 
     void CollectRenderData(class FrameRenderData& renderData);
-    CameraComponent* FindActiveCamera();
+    CCameraComponent* FindActiveCamera();
 
     // Управление уровнями
-    void AddLevel(std::unique_ptr<CELevel> Level);
+    void AddLevel(std::unique_ptr<CLevel> Level);
     void RemoveLevel(const FString& LevelName);
-    CELevel* FindLevel(const FString& LevelName);
+    CLevel* FindLevel(const FString& LevelName);
 
     // Текущий активный уровень
     void SetCurrentLevel(const FString& LevelName);
-    void SetCurrentLevel(CELevel* Level);
-    CELevel* GetCurrentLevel() const
+    void SetCurrentLevel(CLevel* Level);
+    CLevel* GetCurrentLevel() const
     {
       return m_CurrentLevel;
     }
@@ -46,7 +46,7 @@ namespace CE
     void UnloadCurrentLevel();
 
     // Получение всех уровней
-    const std::vector<std::unique_ptr<CELevel>>& GetLevels() const
+    const std::vector<std::unique_ptr<CLevel>>& GetLevels() const
     {
       return m_Levels;
     }
@@ -57,9 +57,9 @@ namespace CE
     virtual void Tick(float DeltaTime) override;
 
    private:
-    std::vector<std::unique_ptr<CELevel>> m_Levels;
-    CELevel* m_CurrentLevel = nullptr;
-    CELevel* m_PendingLevel = nullptr;  // Для плавных переходов
+    std::vector<std::unique_ptr<CLevel>> m_Levels;
+    CLevel* m_CurrentLevel = nullptr;
+    CLevel* m_PendingLevel = nullptr;  // Для плавных переходов
     // Optional world-level lighting that can be applied into FrameRenderData
     // when a level doesn't explicitly set lighting.
     LightingUBO m_defaultLighting;

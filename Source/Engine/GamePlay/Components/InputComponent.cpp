@@ -18,34 +18,34 @@
 
 namespace CE
 {
-  InputComponent::InputComponent(CObject* Owner, FString NewName)
-      : CEComponent(Owner, NewName)
+  CInputComponent::CInputComponent(CObject* Owner, FString NewName)
+      : CComponent(Owner, NewName)
   {
     SetupDefaultKeyMappings();
 
-    InputSystem::Get().RegisterInputComponent(this);
+    CInputSystem::Get().RegisterInputComponent(this);
 
     CE_CORE_DEBUG("InputComponent created: ", NewName);
   }
 
-  InputComponent::~InputComponent()
+  CInputComponent::~CInputComponent()
   {
-    InputSystem::Get().UnregisterInputComponent(this);
+    CInputSystem::Get().UnregisterInputComponent(this);
 
     CE_CORE_DEBUG("InputComponent destroyed: ", GetName());
   }
 
-  void InputComponent::BindAction(const FString& ActionName, EInputEvent EventType, std::function<void()> Callback)
+  void CInputComponent::BindAction(const FString& ActionName, EInputEvent EventType, std::function<void()> Callback)
   {
     m_ActionBindings[ActionName].push_back({Callback, EventType});
   }
 
-  void InputComponent::BindAxis(const FString& AxisName, std::function<void(float)> Callback, float Scale)
+  void CInputComponent::BindAxis(const FString& AxisName, std::function<void(float)> Callback, float Scale)
   {
     m_AxisBindings[AxisName] = {Callback, Scale};
   }
 
-  void InputComponent::ProcessKey(int key, int action, [[maybe_unused]] float deltaTime)
+  void CInputComponent::ProcessKey(int key, int action, [[maybe_unused]] float deltaTime)
   {
     EInputEvent eventType;
     if (action == GLFW_PRESS)
@@ -74,7 +74,7 @@ namespace CE
     }
   }
 
-  void InputComponent::ProcessMouseMovement(float xOffset, float yOffset, float deltaTime)
+  void CInputComponent::ProcessMouseMovement(float xOffset, float yOffset, float deltaTime)
   {
     float scaledX = (xOffset * 10.1f) * deltaTime;
     float scaledY = (yOffset * 10.1f) * deltaTime;
@@ -91,18 +91,18 @@ namespace CE
     }
   }
 
-  void InputComponent::ProcessMouseScroll([[maybe_unused]] float yOffset)
+  void CInputComponent::ProcessMouseScroll([[maybe_unused]] float yOffset)
   {
   }
 
-  bool InputComponent::IsKeyPressed(int key) const
+  bool CInputComponent::IsKeyPressed(int key) const
   {
-    return InputSystem::Get().IsKeyPressed(key);
+    return CInputSystem::Get().IsKeyPressed(key);
   }
 
-  void InputComponent::Update(float DeltaTime)
+  void CInputComponent::Update(float DeltaTime)
   {
-    CEComponent::Update(DeltaTime);
+    CComponent::Update(DeltaTime);
 
     for (const auto& [key, axisName] : m_KeyToAxisMap)
     {
@@ -130,7 +130,7 @@ namespace CE
     }
   }
 
-  void InputComponent::SetupDefaultKeyMappings()
+  void CInputComponent::SetupDefaultKeyMappings()
   {
     m_KeyToAxisMap[GLFW_KEY_W] = "MoveForward";
     m_KeyToAxisMap[GLFW_KEY_S] = "MoveForward";

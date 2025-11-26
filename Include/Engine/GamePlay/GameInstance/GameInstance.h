@@ -6,26 +6,26 @@
 
 namespace CE
 {
-  class CEGameInstance : public CObject
+  class CGameInstance : public CObject
   {
    public:
-    CEGameInstance();
-    virtual ~CEGameInstance() = default;
+    CGameInstance();
+    virtual ~CGameInstance() = default;
 
     // Жизненный цикл
     virtual void Initialize();
     virtual void Shutdown();
 
     // Управление мирами
-    CEWorld* CreateWorld(const FString& WorldName);
+    CWorld* CreateWorld(const FString& WorldName);
     void LoadWorld(const FString& WorldName);
     void UnloadCurrentWorld();
 
-    CEWorld* GetCurrentWorld() const
+    CWorld* GetCurrentWorld() const
     {
       return m_CurrentWorld;
     }
-    CEWorld* GetWorld(const FString& WorldName) const;
+    CWorld* GetWorld(const FString& WorldName) const;
 
     // Глобальное состояние
     virtual void BeginPlay();
@@ -36,7 +36,7 @@ namespace CE
     virtual void SetupWorlds();  // Виртуальный метод для настройки миров
 
    protected:
-    CEWorld* m_CurrentWorld = nullptr;
-    std::unordered_map<FString, std::unique_ptr<CEWorld>> m_Worlds;
+    CWorld* m_CurrentWorld = nullptr;
+    std::unordered_map<FString, std::unique_ptr<CWorld>> m_Worlds;
   };
 }  // namespace CE

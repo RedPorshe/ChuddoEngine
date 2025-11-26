@@ -8,9 +8,9 @@
 
 namespace CE
 {
-  class MeshComponent;
+  class CMeshComponent;
 
-  class TerrainActor : public CEActor
+  class TerrainActor : public CActor
   {
    public:
     TerrainActor(CObject* Owner, FString NewName);
@@ -29,7 +29,7 @@ namespace CE
     }
 
    private:
-    MeshComponent* m_TerrainMesh = nullptr;
+    CMeshComponent* m_TerrainMesh = nullptr;
 
     // Terrain properties
     int m_GridWidth = 100;

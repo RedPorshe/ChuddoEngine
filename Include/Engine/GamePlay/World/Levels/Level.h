@@ -8,19 +8,19 @@
 namespace CE
 {
 
-  class CEActor;
+  class CActor;
 
-  class CELevel : public CObject
+  class CLevel : public CObject
   {
    public:
-    CELevel(CObject* Owner = nullptr, FString LevelName = "Level");
-    virtual ~CELevel();
+    CLevel(CObject* Owner = nullptr, FString LevelName = "Level");
+    virtual ~CLevel();
 
     template <typename T, typename... Args>
     T* SpawnActor(Args&&... args);
 
-    void DestroyActor(CEActor* Actor);
-    CEActor* FindActorByName(const FString& Name);
+    void DestroyActor(CActor* Actor);
+    CActor* FindActorByName(const FString& Name);
     glm::vec3 GetGravity() const
     {
       return m_gravity;
@@ -29,7 +29,7 @@ namespace CE
     {
       m_gravity = gravity;
     }
-    const std::vector<std::unique_ptr<CEActor>>& GetActors() const
+    const std::vector<std::unique_ptr<CActor>>& GetActors() const
     {
       return m_Actors;
     }
@@ -39,7 +39,7 @@ namespace CE
     virtual void Tick(float DeltaTime) override;
 
    protected:
-    std::vector<std::unique_ptr<CEActor>> m_Actors;
+    std::vector<std::unique_ptr<CActor>> m_Actors;
     glm::vec3 m_gravity{0.0f, -9.81f, 0.0f};
   };
 
@@ -50,9 +50,9 @@ namespace CE
 namespace CE
 {
   template <typename T, typename... Args>
-  T* CELevel::SpawnActor(Args&&... args)
+  T* CLevel::SpawnActor(Args&&... args)
   {
-    static_assert(std::is_base_of_v<CEActor, T>, "T must be derived from CEActor");
+    static_assert(std::is_base_of_v<CActor, T>, "T must be derived from CEActor");
 
     auto actor = std::make_unique<T>(std::forward<Args>(args)...);
     T* ptr = actor.get();

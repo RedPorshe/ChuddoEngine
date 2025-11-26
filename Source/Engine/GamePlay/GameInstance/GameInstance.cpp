@@ -2,35 +2,35 @@
 
 namespace CE
 {
-  CEGameInstance::CEGameInstance()
+  CGameInstance::CGameInstance()
       : CObject(nullptr, "GameInstance")
   {
     CE_CORE_DEBUG("GameInstance created");
   }
 
-  void CEGameInstance::Initialize()
+  void CGameInstance::Initialize()
   {
     CE_CORE_DISPLAY("=== Initializing GameInstance ===");
     SetupWorlds();  // Настраиваем миры при инициализации
   }
 
-  void CEGameInstance::Shutdown()
+  void CGameInstance::Shutdown()
   {
     CE_CORE_DISPLAY("=== Shutting Down GameInstance ===");
     UnloadCurrentWorld();
     m_Worlds.clear();
   }
 
-  CEWorld* CEGameInstance::CreateWorld(const FString& WorldName)
+  CWorld* CGameInstance::CreateWorld(const FString& WorldName)
   {
-    auto world = std::make_unique<CEWorld>(nullptr, WorldName);
+    auto world = std::make_unique<CWorld>(nullptr, WorldName);
     auto* worldPtr = world.get();
     m_Worlds[WorldName] = std::move(world);
     CE_CORE_DEBUG("Created world: ", WorldName);
     return worldPtr;
   }
 
-  void CEGameInstance::LoadWorld(const FString& WorldName)
+  void CGameInstance::LoadWorld(const FString& WorldName)
   {
     auto it = m_Worlds.find(WorldName);
     if (it != m_Worlds.end() && it->second)
@@ -46,7 +46,7 @@ namespace CE
     }
   }
 
-  void CEGameInstance::UnloadCurrentWorld()
+  void CGameInstance::UnloadCurrentWorld()
   {
     if (m_CurrentWorld)
     {
@@ -56,20 +56,20 @@ namespace CE
     }
   }
 
-  CEWorld* CEGameInstance::GetWorld(const FString& WorldName) const
+  CWorld* CGameInstance::GetWorld(const FString& WorldName) const
   {
     auto it = m_Worlds.find(WorldName);
     return it != m_Worlds.end() ? it->second.get() : nullptr;
   }
 
-  void CEGameInstance::SetupWorlds()
+  void CGameInstance::SetupWorlds()
   {
     // Базовая реализация - создаем пустой мир
     // Производные классы переопределят этот метод
     CreateWorld("DefaultWorld");
   }
 
-  void CEGameInstance::BeginPlay()
+  void CGameInstance::BeginPlay()
   {
     CObject::BeginPlay();
 
@@ -80,7 +80,7 @@ namespace CE
     }
   }
 
-  void CEGameInstance::Update(float DeltaTime)
+  void CGameInstance::Update(float DeltaTime)
   {
     CObject::Update(DeltaTime);
 
@@ -90,7 +90,7 @@ namespace CE
     }
   }
 
-  void CEGameInstance::Tick(float DeltaTime)
+  void CGameInstance::Tick(float DeltaTime)
   {
     Update(DeltaTime);
     m_CurrentWorld->Tick(DeltaTime);

@@ -5,30 +5,30 @@
 
 namespace CE
 {
-  PlayerController::PlayerController(CObject* Owner, FString NewName)
-      : CEActor(Owner, NewName)
+  CPlayerController::CPlayerController(CObject* Owner, FString NewName)
+      : CActor(Owner, NewName)
   {
     // Используем AddSubObject вместо AddDefaultSubObject чтобы избежать проблем с типами
-    m_InputComponent = AddSubObject<InputComponent>("Input", this, "InputComponent");
+    m_InputComponent = AddSubObject<CInputComponent>("Input", this, "InputComponent");
     CE_CORE_DEBUG("PlayerController created: ", NewName);
   }
 
-  void PlayerController::BeginPlay()
+  void CPlayerController::BeginPlay()
   {
-    CEActor::BeginPlay();
+    CActor::BeginPlay();
     SetupInputComponent();
     CE_CORE_DEBUG("PlayerController BeginPlay: ", GetName());
   }
 
-  void PlayerController::Update(float DeltaTime)
+  void CPlayerController::Update(float DeltaTime)
   {
-    CEActor::Update(DeltaTime);
+    CActor::Update(DeltaTime);
 
     // Здесь можно добавить логику обновления контроллера
     // Например, проверку состояний ввода и т.д.
   }
 
-  void PlayerController::Possess(CEPawn* Pawn)
+  void CPlayerController::Possess(CPawn* Pawn)
   {
     if (m_PossessedPawn == Pawn)
     {
@@ -54,7 +54,7 @@ namespace CE
     }
   }
 
-  void PlayerController::UnPossess()
+  void CPlayerController::UnPossess()
   {
     if (m_PossessedPawn)
     {
@@ -63,7 +63,7 @@ namespace CE
     }
   }
 
-  void PlayerController::SetupInputComponent()
+  void CPlayerController::SetupInputComponent()
   {
     if (m_InputComponent)
     {
@@ -76,7 +76,7 @@ namespace CE
     }
   }
 
-  PlayerController* PlayerController::GetFirstPlayerController(CEWorld* World)
+  CPlayerController* CPlayerController::GetFirstPlayerController(CWorld* World)
   {
     if (!World || !World->GetCurrentLevel())
       return nullptr;
@@ -84,7 +84,7 @@ namespace CE
     // Ищем первый PlayerController в текущем уровне
     for (const auto& actor : World->GetCurrentLevel()->GetActors())
     {
-      if (auto* controller = dynamic_cast<PlayerController*>(actor.get()))
+      if (auto* controller = dynamic_cast<CPlayerController*>(actor.get()))
       {
         return controller;
       }

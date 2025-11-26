@@ -11,17 +11,17 @@
 namespace CE
 {
   TerrainActor::TerrainActor(CObject* Owner, FString NewName)
-      : CEActor(Owner, NewName)
+      : CActor(Owner, NewName)
   {
   }
 
   void TerrainActor::BeginPlay()
   {
-    CEActor::BeginPlay();
+    CActor::BeginPlay();
     CE_CORE_DEBUG("TerrainActor BeginPlay: ", GetName());
 
     // Create terrain mesh
-    m_TerrainMesh = AddDefaultSubObject<MeshComponent>("TerrainMesh");
+    m_TerrainMesh = AddDefaultSubObject<CMeshComponent>("TerrainMesh");
     if (m_TerrainMesh)
     {
       // Generate and set procedural terrain (including heightmap data)
@@ -39,7 +39,7 @@ namespace CE
 
   void TerrainActor::Update(float DeltaTime)
   {
-    CEActor::Update(DeltaTime);
+    CActor::Update(DeltaTime);
     // Terrain is static, no updates needed
   }
 

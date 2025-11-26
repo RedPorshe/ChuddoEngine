@@ -2,22 +2,22 @@
 
 namespace CE
 {
-  CEComponent::CEComponent(CObject* Owner, FString NewName)
+  CComponent::CComponent(CObject* Owner, FString NewName)
       : CObject(Owner, NewName)
   {
   }
 
-  void CEComponent::Update(float DeltaTime)
+  void CComponent::Update(float DeltaTime)
   {
     CObject::Update(DeltaTime);
   }
 
-  void CEComponent::Tick(float DeltaTime)
+  void CComponent::Tick(float DeltaTime)
   {
     CObject::Tick(DeltaTime);
   }
 
-  void CEComponent::BeginPlay()
+  void CComponent::BeginPlay()
   {
     CObject::BeginPlay();
   }

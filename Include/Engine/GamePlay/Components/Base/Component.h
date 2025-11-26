@@ -3,11 +3,11 @@
 
 namespace CE
 {
-  class CEComponent : public CObject
+  class CComponent : public CObject
   {
    public:
-    CEComponent(CObject* Owner = nullptr, FString NewName = "Component");
-    virtual ~CEComponent() = default;
+    CComponent(CObject* Owner = nullptr, FString NewName = "Component");
+    virtual ~CComponent() = default;
     virtual void Update(float DeltaTime) override;
     virtual void BeginPlay() override;
     virtual void Tick(float DeltaTime) override;

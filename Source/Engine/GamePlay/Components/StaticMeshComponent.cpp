@@ -8,15 +8,15 @@
 
 namespace CE
 {
-  CEStaticMeshComponent::CEStaticMeshComponent(CObject* Owner, FString NewName)
-      : MeshComponent(Owner, NewName)
+  CStaticMeshComponent::CStaticMeshComponent(CObject* Owner, FString NewName)
+      : CMeshComponent(Owner, NewName)
   {
     // Не создаем куб по умолчанию - меш будет пустым
     m_Mesh.vertices.clear();
     m_Mesh.indices.clear();
   }
 
-  void CEStaticMeshComponent::SetMesh(const std::string& MeshPath)
+  void CStaticMeshComponent::SetMesh(const std::string& MeshPath)
   {
     m_MeshPath = MeshPath;
 
@@ -49,7 +49,7 @@ namespace CE
     }
   }
 
-  bool CEStaticMeshComponent::LoadOBJFile(const std::string& filename)
+  bool CStaticMeshComponent::LoadOBJFile(const std::string& filename)
   {
     std::ifstream file(filename);
     if (!file.is_open())
@@ -110,7 +110,7 @@ namespace CE
     return false;
   }
 
-  void CEStaticMeshComponent::ProcessOBJFace(const std::string& faceLine,
+  void CStaticMeshComponent::ProcessOBJFace(const std::string& faceLine,
                                              const std::vector<glm::vec3>& positions,
                                              const std::vector<glm::vec2>& texCoords,
                                              const std::vector<glm::vec3>& normals,

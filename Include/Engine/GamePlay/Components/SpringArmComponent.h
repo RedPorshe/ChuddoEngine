@@ -4,11 +4,11 @@
 
 namespace CE
 {
-  class SpringArmComponent : public CSceneComponent
+  class CSpringArmComponent : public CSceneComponent
   {
    public:
-    SpringArmComponent(CObject* Owner = nullptr, FString NewName = "SpringArmComponent");
-    virtual ~SpringArmComponent() = default;
+    CSpringArmComponent(CObject* Owner = nullptr, FString NewName = "SpringArmComponent");
+    virtual ~CSpringArmComponent() = default;
 
     // Настройки spring arm
     void SetTargetOffset(const glm::vec3& Offset)

@@ -2,18 +2,18 @@
 
 namespace CE
 {
-  CELevel::CELevel(CObject* Owner, FString LevelName)
+  CLevel::CLevel(CObject* Owner, FString LevelName)
       : CObject(Owner, LevelName)
   {
     CE_CORE_DEBUG("Level created: ", LevelName);
   }
 
-  CELevel::~CELevel()
+  CLevel::~CLevel()
   {
     CE_CORE_DEBUG("Level destroyed: ", GetName());
   }
 
-  void CELevel::DestroyActor(CEActor* Actor)
+  void CLevel::DestroyActor(CActor* Actor)
   {
     auto it = std::find_if(m_Actors.begin(), m_Actors.end(),
                            [Actor](const auto& ptr)
@@ -26,7 +26,7 @@ namespace CE
     }
   }
 
-  CEActor* CELevel::FindActorByName(const FString& Name)
+  CActor* CLevel::FindActorByName(const FString& Name)
   {
     for (auto& actor : m_Actors)
     {
@@ -38,7 +38,7 @@ namespace CE
     return nullptr;
   }
 
-  void CELevel::BeginPlay()
+  void CLevel::BeginPlay()
   {
     CObject::BeginPlay();
 
@@ -48,7 +48,7 @@ namespace CE
     }
   }
 
-  void CELevel::Update(float DeltaTime)
+  void CLevel::Update(float DeltaTime)
   {
     CObject::Update(DeltaTime);
 
@@ -58,7 +58,7 @@ namespace CE
     }
   }
 
-  void CELevel::Tick(float DeltaTime)
+  void CLevel::Tick(float DeltaTime)
   {
     Update(DeltaTime);
     for (auto& actor : m_Actors)

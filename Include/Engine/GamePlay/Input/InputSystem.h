@@ -9,16 +9,16 @@ typedef struct GLFWwindow GLFWwindow;
 
 namespace CE
 {
-  class InputSystem
+  class CInputSystem
   {
    public:
-    static InputSystem& Get();
+    static CInputSystem& Get();
 
     void Initialize(GLFWwindow* Window);
     void Shutdown();
 
-    void RegisterInputComponent(class InputComponent* Component);
-    void UnregisterInputComponent(class InputComponent* Component);
+    void RegisterInputComponent(class CInputComponent* Component);
+    void UnregisterInputComponent(class CInputComponent* Component);
     void setFPSInputMode(bool mode);
 
     void Update(float DeltaTime);
@@ -39,8 +39,8 @@ namespace CE
     }
 
    private:
-    InputSystem() = default;
-    ~InputSystem() = default;
+    CInputSystem() = default;
+    ~CInputSystem() = default;
 
     void ProcessKeyInput(int key, int scancode, int action, int mods);
     void ProcessMouseMovement(double xpos, double ypos);
@@ -48,7 +48,7 @@ namespace CE
     void ProcessMouseScroll(double xoffset, double yoffset);
 
     GLFWwindow* m_Window = nullptr;
-    std::vector<class InputComponent*> m_InputComponents;
+    std::vector<class CInputComponent*> m_InputComponents;
 
     std::unordered_map<int, bool> m_KeyStates;
 
@@ -57,6 +57,6 @@ namespace CE
     glm::vec2 m_MouseDelta{0.0f, 0.0f};
     bool m_FirstMouse = true;
     bool bIsFPS{true};
-    static InputSystem* s_Instance;
+    static CInputSystem* s_Instance;
   };
 }  // namespace CE

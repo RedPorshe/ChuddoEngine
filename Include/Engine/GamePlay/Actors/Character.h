@@ -4,16 +4,16 @@
 
 namespace CE
 {
-  class CECharacter : public CEPawn
+  class CCharacter : public CPawn
   {
    public:
-    CECharacter(CObject* Owner = nullptr, FString NewName = "Character");
-    virtual ~CECharacter() = default;
+    CCharacter(CObject* Owner = nullptr, FString NewName = "Character");
+    virtual ~CCharacter() = default;
     virtual void BeginPlay() override;
     virtual void Tick(float DeltaTime) override;
 
     
-    MeshComponent* GetMeshComponent() const
+    CMeshComponent* GetMeshComponent() const
     {
       return m_MeshComponent;
     }
@@ -22,7 +22,7 @@ namespace CE
     virtual void SetupPlayerInputComponent() override;
 
    
-    MeshComponent* m_MeshComponent = nullptr;
+    CMeshComponent* m_MeshComponent = nullptr;
     float m_VerticalVelocity = 0.0f;
     bool m_IsOnGround = false;
 

@@ -36,7 +36,7 @@ namespace CE
     GLFWwindow* window = m_RenderSystem->GetWindow();
     if (window)
     {
-      InputSystem::Get().Initialize(window);
+      CInputSystem::Get().Initialize(window);
       CE_CORE_DEBUG("Input system initialized with GLFW window");
     }
     else
@@ -120,7 +120,7 @@ namespace CE
   void Application::Update()
   {
     // Обновление системы ввода
-    InputSystem::Get().Update(m_DeltaTime);
+    CInputSystem::Get().Update(m_DeltaTime);
 
    
     if (m_GameInstance)
@@ -154,7 +154,7 @@ namespace CE
     m_IsRunning = false;
 
     // Завершение системы ввода
-    InputSystem::Get().Shutdown();
+    CInputSystem::Get().Shutdown();
 
     // Завершение игрового инстанса
     if (m_GameInstance)

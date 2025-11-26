@@ -6,9 +6,9 @@
 
 namespace CE
 {
-  class MeshComponent;
+  class CMeshComponent;
 
-  class SunActor : public CEActor
+  class SunActor : public CActor
   {
    public:
     SunActor(CObject* Owner = nullptr, FString NewName = "Sun");
@@ -42,6 +42,6 @@ namespace CE
     float m_Radius = 10.0f;  // orbit radius (large = more directional)
 
     // Visual marker mesh
-    MeshComponent* m_SunMarkerMesh = nullptr;
+    CMeshComponent* m_SunMarkerMesh = nullptr;
   };
 }  // namespace CE

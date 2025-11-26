@@ -9,7 +9,7 @@
 namespace CE
 {
   CSceneComponent::CSceneComponent(CObject* Owner, FString NewName)
-      : CEComponent(Owner, NewName)
+      : CComponent(Owner, NewName)
   {
     UpdateTransformMatrix();
     CE_CORE_DEBUG("SceneComponent created: ", NewName);
@@ -329,6 +329,6 @@ namespace CE
 
   void CSceneComponent::Update(float DeltaTime)
   {
-    CEComponent::Update(DeltaTime);
+    CComponent::Update(DeltaTime);
   }
 }  // namespace CE

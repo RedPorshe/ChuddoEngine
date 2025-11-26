@@ -8,15 +8,15 @@
 
 namespace CE
 {
-  CEPawn::CEPawn(CObject* Owner, FString NewName)
-      : CEActor(Owner, NewName)
+  CPawn::CPawn(CObject* Owner, FString NewName)
+      : CActor(Owner, NewName)
   {
-    auto* mesh = AddDefaultSubObject<MeshComponent>("Mesh", this, "MeshComponent");
+    auto* mesh = AddDefaultSubObject<CMeshComponent>("Mesh", this, "MeshComponent");
     SetRootComponent(mesh);
     mesh->SetMesh("Assets/Meshes/test_cube.obj");
-    m_InputComponent = AddSubObject<InputComponent>("Input", this, "InputComponent");
-    auto* m_cameraComponent = AddSubObject<CameraComponent>("Camera", this, "CameraComponent");
-    auto* m_springArmComponent = AddSubObject<SpringArmComponent>("SpringArm", this, "SpringArmComponent");
+    m_InputComponent = AddSubObject<CInputComponent>("Input", this, "InputComponent");
+    auto* m_cameraComponent = AddSubObject<CCameraComponent>("Camera", this, "CameraComponent");
+    auto* m_springArmComponent = AddSubObject<CSpringArmComponent>("SpringArm", this, "SpringArmComponent");
     m_springArmComponent->AttachToComponent(m_RootComponent);
     m_springArmComponent->SetRelativePosition(glm::vec3(0.0f, 1.0f, 0.0f));
     m_springArmComponent->SetRelativeRotation(glm::vec3(-10.0f, 0.0f, 0.0f));
@@ -31,11 +31,11 @@ namespace CE
     CE_CORE_DEBUG("CEPawn created: {}", NewName.c_str());
   }
 
-  void CEPawn::BeginPlay()
+  void CPawn::BeginPlay()
   {
-    CEActor::BeginPlay();
+    CActor::BeginPlay();
   }
-  void CEPawn::ApplyRotationToActor()
+  void CPawn::ApplyRotationToActor()
   {
     if (m_bUseControllerRotation)
     {
@@ -50,7 +50,7 @@ namespace CE
       // Если не использовать вращение контроллера, можно реализовать другую логику
     }
   }
-  void CEPawn::ApplyMovementInputToActor()
+  void CPawn::ApplyMovementInputToActor()
   {
     if (glm::length(m_MovementInput) > 0.01f)
     {
@@ -92,9 +92,9 @@ namespace CE
     }
   }
 
-  void CEPawn::Tick(float DeltaTime)
+  void CPawn::Tick(float DeltaTime)
   {
-    CEActor::Tick(DeltaTime);
+    CActor::Tick(DeltaTime);
 
     ApplyRotationToActor();
     ApplyMovementInputToActor();
@@ -111,11 +111,11 @@ namespace CE
     }
   }
 
-  CameraComponent* CEPawn::FindCameraComponent() const
+  CCameraComponent* CPawn::FindCameraComponent() const
   {
     // Ищем компонент камеры среди дочерних компонентов
-    CameraComponent* camera = nullptr;
-    ForEachComponent<CameraComponent>([&camera](CameraComponent* comp)
+    CCameraComponent* camera = nullptr;
+    ForEachComponent<CCameraComponent>([&camera](CCameraComponent* comp)
                                       {
       if (!camera) 
       {
@@ -131,9 +131,9 @@ namespace CE
     return camera;
   }
 
-  glm::vec3 CEPawn::GetPawnViewLocation() const
+  glm::vec3 CPawn::GetPawnViewLocation() const
   {
-    if (CameraComponent* camera = FindCameraComponent())
+    if (CCameraComponent* camera = FindCameraComponent())
     {
       glm::vec3 pos = camera->GetWorldLocation();
       return pos;
@@ -143,9 +143,9 @@ namespace CE
     return pos;
   }
 
-  glm::vec3 CEPawn::GetViewForwardVector() const
+  glm::vec3 CPawn::GetViewForwardVector() const
   {
-    if (CameraComponent* camera = FindCameraComponent())
+    if (CCameraComponent* camera = FindCameraComponent())
     {
       glm::vec3 forward = camera->GetCameraForwardVector();
       return forward;
@@ -154,9 +154,9 @@ namespace CE
     return glm::vec3(0.0f, 0.0f, -1.0f);
   }
 
-  glm::vec3 CEPawn::GetViewRightVector() const
+  glm::vec3 CPawn::GetViewRightVector() const
   {
-    if (CameraComponent* camera = FindCameraComponent())
+    if (CCameraComponent* camera = FindCameraComponent())
     {
       glm::vec3 right = camera->GetCameraRightVector();
       return right;
@@ -164,7 +164,7 @@ namespace CE
     return glm::vec3(1.0f, 0.0f, 0.0f);
   }
 
-  void CEPawn::MoveForward(float Value)
+  void CPawn::MoveForward(float Value)
   {
     if (Value != 0.0f)
     {
@@ -187,20 +187,20 @@ namespace CE
       }
     }
   }
-  void CEPawn::lookUp(float Value)
+  void CPawn::lookUp(float Value)
   {
     AddControllerPitchInput(Value);
   }
-  void CEPawn::turn(float Value)
+  void CPawn::turn(float Value)
   {
     AddControllerYawInput(Value);
   }
-  void CEPawn::jump()
+  void CPawn::jump()
   {
     if (!m_bIsJumping)
       m_bIsJumping = true;
   }
-  void CEPawn::MoveRight(float Value)
+  void CPawn::MoveRight(float Value)
   {
     if (Value != 0.0f)
     {
@@ -227,9 +227,9 @@ namespace CE
     }
   }
 
-  glm::vec3 CEPawn::GetViewUpVector() const
+  glm::vec3 CPawn::GetViewUpVector() const
   {
-    if (CameraComponent* camera = FindCameraComponent())
+    if (CCameraComponent* camera = FindCameraComponent())
     {
       return camera->GetCameraUpVector();
     }
@@ -237,12 +237,12 @@ namespace CE
     return glm::vec3(0.0f, 1.0f, 0.0f);
   }
 
-  void CEPawn::OnPossess()
+  void CPawn::OnPossess()
   {
     SetupPlayerInputComponent();
   }
 
-  void CEPawn::SetupPlayerInputComponent()
+  void CPawn::SetupPlayerInputComponent()
   {
     if (m_InputComponent)
     {
@@ -259,7 +259,7 @@ namespace CE
     }
   }
 
-  void CEPawn::AddMovementInput(const glm::vec3& WorldDirection, float ScaleValue, bool bForce)
+  void CPawn::AddMovementInput(const glm::vec3& WorldDirection, float ScaleValue, bool bForce)
   {
     if (ScaleValue != 0.0f && (bForce || m_RootComponent != nullptr))
     {
@@ -274,7 +274,7 @@ namespace CE
     }
   }
 
-  void CEPawn::AddControllerYawInput(float Value)
+  void CPawn::AddControllerYawInput(float Value)
   {
     m_ControlRotation.y += Value;
     while (m_ControlRotation.y > 180.0f)
@@ -283,19 +283,19 @@ namespace CE
       m_ControlRotation.y += 360.0f;
   }
 
-  void CEPawn::AddControllerPitchInput(float Value)
+  void CPawn::AddControllerPitchInput(float Value)
   {
     m_ControlRotation.x += Value;
     m_ControlRotation.x = glm::clamp(m_ControlRotation.x, -89.0f, 89.0f);
   }
 
-  void CEPawn::SetControlRotation(const glm::vec3& NewRotation)
+  void CPawn::SetControlRotation(const glm::vec3& NewRotation)
   {
     m_ControlRotation = NewRotation;
     m_ControlRotation.x = glm::clamp(m_ControlRotation.x, -89.0f, 89.0f);
   }
 
-  void CEPawn::ConsumeMovementInput()
+  void CPawn::ConsumeMovementInput()
   {
     m_MovementInput = glm::vec3(0.0f);
     m_bMovementInputConsumed = true;

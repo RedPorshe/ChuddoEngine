@@ -10,7 +10,7 @@
 
 namespace CE
 {
-  class CEComponent;
+  class CComponent;
 
   class CObject
   {
@@ -66,7 +66,7 @@ namespace CE
     }
 
     // НОВАЯ ФУНКЦИЯ: Итерация по всем компонентам (без типа)
-    void ForEachComponent(std::function<void(CEComponent*)> callback) const
+    void ForEachComponent(std::function<void(CComponent*)> callback) const
     {
       for (const auto& [name, component] : m_Components)
       {
@@ -79,7 +79,7 @@ namespace CE
     T* GetComponent(const std::string& Name);
 
    protected:
-    std::unordered_map<std::string, std::unique_ptr<CEComponent>> m_Components;
+    std::unordered_map<std::string, std::unique_ptr<CComponent>> m_Components;
     CObject* m_Owner = nullptr;
     FString m_Name{};
   };

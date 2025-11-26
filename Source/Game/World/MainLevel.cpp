@@ -7,11 +7,11 @@
 
 
 MainLevel::MainLevel(CE::CObject* Owner,
-                     CE::FString NewName) : CE::CELevel(Owner, NewName)
+                     CE::FString NewName) : CE::CLevel(Owner, NewName)
 {
   CE_GAMEPLAY_DEBUG(this->GetName(), " Created ");
-  playerController = SpawnActor<CE::PlayerController>(this, "Player Controller");
-  playerCharacter = SpawnActor<CE::CEPawn>(this, "Player Character");
+  playerController = SpawnActor<CE::CPlayerController>(this, "Player Controller");
+  playerCharacter = SpawnActor<CE::CPawn>(this, "Player Character");
   playerController->Possess(playerCharacter);
 
   playerCharacter->SetActorLocation(1.f, 1.f, 1.f);
@@ -26,8 +26,8 @@ MainLevel::MainLevel(CE::CObject* Owner,
  
 
   // Спавним меш-акторы
-  enemy = SpawnActor<CE::CEActor>(this, "Enemy");
-  enemy->SetRootComponent(enemy->AddSubObject<CE::CEStaticMeshComponent>("EnemyMesh", enemy, "EnemyMesh"));
+  enemy = SpawnActor<CE::CActor>(this, "Enemy");
+  enemy->SetRootComponent(enemy->AddSubObject<CE::CStaticMeshComponent>("EnemyMesh", enemy, "EnemyMesh"));
   enemy->SetActorLocation(glm::vec3(.0f, 0.f, -5.0f));
   enemy->SetActorScale(5.f);
   enemy->SetActorRotation(glm::vec3(-90.0f, -90.0f, 0.0f));
@@ -49,11 +49,11 @@ MainLevel::MainLevel(CE::CObject* Owner,
 
   for (int i = 0; i < (int)positions.size(); i++)
   {
-    auto* actor = SpawnActor<CE::CEActor>(this, "Sphere_" + std::to_string(i));
-    actor->SetRootComponent(actor->AddSubObject<CE::CEStaticMeshComponent>("Mesh", actor, "Mesh"));
+    auto* actor = SpawnActor<CE::CActor>(this, "Sphere_" + std::to_string(i));
+    actor->SetRootComponent(actor->AddSubObject<CE::CStaticMeshComponent>("Mesh", actor, "Mesh"));
     actor->SetActorLocation(positions[i]);
 
-    auto* mesh = dynamic_cast<CE::CEStaticMeshComponent*>(actor->GetRootComponent());
+    auto* mesh = dynamic_cast<CE::CStaticMeshComponent*>(actor->GetRootComponent());
     if (mesh)
     {
       mesh->SetColor(colors[i]);
@@ -63,7 +63,7 @@ MainLevel::MainLevel(CE::CObject* Owner,
     actor->SetUseGravity(true);
   }
 
-  auto* enemyMesh = dynamic_cast<CE::CEStaticMeshComponent*>(enemy->GetRootComponent());
+  auto* enemyMesh = dynamic_cast<CE::CStaticMeshComponent*>(enemy->GetRootComponent());
   if (enemyMesh)
   {
     enemyMesh->SetMesh("Assets/Meshes/VikingRoom.obj");
@@ -86,16 +86,16 @@ MainLevel::MainLevel(CE::CObject* Owner,
 }
 void MainLevel::BeginPlay()
 {
-  CE::CELevel::BeginPlay();
+  CE::CLevel::BeginPlay();
 }
 
 void MainLevel::Tick(float DeltaTime)
 {
-  CE::CELevel::Tick(DeltaTime);
+  CE::CLevel::Tick(DeltaTime);
 }
 void MainLevel::Update(float DeltaTime)
 {
-  CE::CELevel::Update(DeltaTime);
+  CE::CLevel::Update(DeltaTime);
 
   static float totalTime = 0.0f;
   static float random = 1.0f;
@@ -106,7 +106,7 @@ void MainLevel::Update(float DeltaTime)
   int idx = 0;
   for (const auto& actorPtr : GetActors())
   {
-    CE::CEActor* actor = actorPtr.get();
+    CE::CActor* actor = actorPtr.get();
     if (!actor)
       continue;
 

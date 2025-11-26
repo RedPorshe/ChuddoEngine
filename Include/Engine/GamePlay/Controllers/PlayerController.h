@@ -6,40 +6,40 @@
 // Forward declaration
 namespace CE
 {
-  class CEWorld;
+  class CWorld;
 }
 
 namespace CE
 {
-  class PlayerController : public CEActor
+  class CPlayerController : public CActor
   {
    public:
-    PlayerController(CObject* Owner = nullptr, FString NewName = "PlayerController");
-    virtual ~PlayerController() = default;
+    CPlayerController(CObject* Owner = nullptr, FString NewName = "PlayerController");
+    virtual ~CPlayerController() = default;
 
     virtual void BeginPlay() override;
     virtual void Update(float DeltaTime) override;
 
     // Управление Pawn'ом
-    void Possess(CEPawn* Pawn);
+    void Possess(CPawn* Pawn);
     void UnPossess();
-    CEPawn* GetPossessedPawn() const
+    CPawn* GetPossessedPawn() const
     {
       return m_PossessedPawn;
     }
 
     // Система ввода
     virtual void SetupInputComponent();
-    InputComponent* GetInputComponent() const
+    CInputComponent* GetInputComponent() const
     {
       return m_InputComponent;
     }
 
     // Получение контроллера из мира
-    static PlayerController* GetFirstPlayerController(CEWorld* World);
+    static CPlayerController* GetFirstPlayerController(CWorld* World);
 
    protected:
-    CEPawn* m_PossessedPawn = nullptr;
-    InputComponent* m_InputComponent = nullptr;
+    CPawn* m_PossessedPawn = nullptr;
+    CInputComponent* m_InputComponent = nullptr;
   };
 }  // namespace CE
