@@ -12,17 +12,26 @@ enum class ECollisionChannel
     WorldDynamic,
     Pawn,
     PhysicsBody,
-    Venicle,
+    Vehicle,
     Destructible,
+    Ragdoll,
     Projectile,
     Camera,
     Trigger,
     UI,
 
-    MAX
+   Max
 };
 
-enum class ECollisionResponce
+   enum class ECollisionShape
+    {
+        Box,
+        Sphere,
+        Capsule,
+        Mesh
+    };
+
+enum class ECollisionResponse
 
 {
     Ignore,
@@ -41,7 +50,12 @@ struct FCollisionProfile
 {
 FString ProfileName;
 ECollisionChannel CollisionChannel;
-std::unordered_map<ECollisionChannel, ECollisionResponce> Responses;
+std::unordered_map<ECollisionChannel, ECollisionResponse> Responses;
+
+    FCollisionProfile() 
+            : ProfileName("Default")
+            , CollisionChannel(ECollisionChannel::WorldDynamic)
+        {}
 
 FCollisionProfile(const FString & Name,ECollisionChannel Channel)
 : ProfileName(Name), CollisionChannel(Channel) {}

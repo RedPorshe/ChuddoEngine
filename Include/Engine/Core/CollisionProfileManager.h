@@ -1,19 +1,25 @@
 #pragma once
 
 #include "Engine/GamePlay/CollisionSystem/CollisionTypes.h"
+#include <unordered_map>
 
 namespace CE
 {
-    class CollisionProfileManager
+    class CCollisionProfileManager
     {
-public:
-static CollisionProfileManager& Get();
-void InitializeDefaultProfiles();
+    public:
+        static CCollisionProfileManager& Get();
+        
+        void InitializeDefaultProfiles();
 
-const FCollisionProfile* FindProfile(const FString& ProfileName) const;
-void AddProfile(const FCollisionProfile& Profile);
+        const FCollisionProfile* FindProfile(const FString& ProfileName) const;
+        void AddProfile(const FCollisionProfile& Profile);
+        
+        bool CreateProfile(const FString& ProfileName, ECollisionChannel Channel, 
+                          const std::unordered_map<ECollisionChannel, ECollisionResponse>& Responses);
+        std::vector<FString> GetAllProfileNames() const;
+        bool RemoveProfile(const FString& ProfileName);
 
-   
         static FString NoCollision;
         static FString BlockAll;
         static FString OverlapAll;
@@ -31,7 +37,7 @@ void AddProfile(const FCollisionProfile& Profile);
         static FString Vehicle;
         static FString UI;
 
-         private:
+    private:
         std::unordered_map<FString, FCollisionProfile> m_Profiles;
     };
 }
