@@ -11,9 +11,9 @@ namespace CE
   StaticMesh ObjLoader::LoadOBJ(const std::string& filePath)
   {
     StaticMesh mesh;
-    std::vector<glm::vec3> positions;
-    std::vector<glm::vec3> normals;
-    std::vector<glm::vec2> texCoords;
+    std::vector<Math::Vector3f> positions;
+    std::vector<Math::Vector3f> normals;
+    std::vector<Math::Vector2f> texCoords;
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;
 
@@ -42,7 +42,7 @@ namespace CE
         float x, y, z;
         if (iss >> x >> y >> z)
         {
-          positions.push_back(glm::vec3(x, y, z));
+          positions.push_back(Math::Vector3f(x, y, z));
         }
         else
         {
@@ -54,7 +54,7 @@ namespace CE
         float x, y, z;
         if (iss >> x >> y >> z)
         {
-          normals.push_back(glm::normalize(glm::vec3(x, y, z)));
+          normals.push_back(Math::Vector3f(x, y, z));
         }
       }
       else if (token == "vt")
@@ -62,7 +62,7 @@ namespace CE
         float u, v;
         if (iss >> u >> v)
         {
-          texCoords.push_back(glm::vec2(u, v));
+          texCoords.push_back(Math::Vector2f(u, v));
         }
       }
       else if (token == "f")
@@ -118,13 +118,13 @@ namespace CE
             }
             else
             {
-              vertex.normal = glm::vec3(0.0f, 1.0f, 0.0f);  // Дефолтная нормаль
+              vertex.normal = Math::Vector3f(0.0f, 1.0f, 0.0f);  // Дефолтная нормаль
             }
             if (texIdx < texCoords.size())
             {
               vertex.texCoord = texCoords[texIdx];
             }
-            vertex.color = glm::vec3(1.0f);
+            vertex.color = Math::Vector3f(1.0f);
 
             vertices.push_back(vertex);
             faceIndices.push_back(static_cast<uint32_t>(vertices.size()) - 1);
@@ -154,7 +154,7 @@ namespace CE
 
     mesh.vertices = vertices;
     mesh.indices = indices;
-    mesh.color = glm::vec3(1.0f);
+    mesh.color = Math::Vector3f(1.0f);
 
     CE_LOG("Successfully loaded OBJ: ", filePath.c_str(), " (vertices: ", vertices.size(), ", indices: ", indices.size(),
            ")");

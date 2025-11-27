@@ -11,7 +11,7 @@ namespace CE
     virtual ~CSpringArmComponent() = default;
 
     // Настройки spring arm
-    void SetTargetOffset(const glm::vec3& Offset)
+    void SetTargetOffset(const Math::Vector3f& Offset)
     {
       m_TargetOffset = Offset;
     }
@@ -28,7 +28,7 @@ namespace CE
       m_bUsePawnControlRotation = bUse;
     }
 
-    const glm::vec3& GetTargetOffset() const
+    const Math::Vector3f& GetTargetOffset() const
     {
       return m_TargetOffset;
     }
@@ -46,16 +46,16 @@ namespace CE
     }
 
     // Получение конечной позиции камеры
-    glm::vec3 GetCameraWorldLocation() const;
+    Math::Vector3f GetCameraWorldLocation() const;
 
     virtual void Update(float DeltaTime) override;
 
    private:
-    glm::vec3 m_TargetOffset{0.0f, 0.7f, 0.0f};  // Смещение от цели (Vulkan: Y+ вверх)
+    Math::Vector3f m_TargetOffset{0.0f, 0.7f, 0.0f};  // Смещение от цели (Vulkan: Y+ вверх)
     float m_ArmLength = 5.0f;                    // Длина "руки" камеры
     float m_CameraLag = 0.05f;                   // Задержка движения камеры
     bool m_bUsePawnControlRotation = true;       // Использовать вращение от Pawn
 
-    glm::vec3 m_CurrentCameraPosition{0.0f, 0.0f, 0.0f};
+    Math::Vector3f m_CurrentCameraPosition{0.0f, 0.0f, 0.0f};
   };
 }  // namespace CE

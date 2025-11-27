@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "Engine/Core/Rendering/Data/Vertex.h"
+#include "Engine/Utils/Math/AllMath.h"
 
 namespace CE
 {
@@ -10,16 +11,16 @@ namespace CE
   struct RenderObject
   {
     const StaticMesh* mesh;
-    glm::mat4 transform;
-    glm::vec3 color;
+    Math::Matrix4f transform;
+    Math::Vector3f color;
   };
 
   // Данные камеры для рендеринга
   struct CameraData
   {
-    glm::mat4 viewMatrix;
-    glm::mat4 projectionMatrix;
-    glm::vec3 position;
+    Math::Matrix4f viewMatrix;
+    Math::Matrix4f projectionMatrix;
+    Math::Vector3f position;
 
     CameraData() : viewMatrix(1.0f), projectionMatrix(1.0f), position(0.0f)
     {
@@ -29,43 +30,37 @@ namespace CE
   // UBO структуры для шейдеров
   struct SceneUBO
   {
-    glm::mat4 view;
-    glm::mat4 proj;
-    glm::vec3 cameraPos;
+    Math::Matrix4f view;
+    Math::Matrix4f proj;
+    Math::Vector3f cameraPos;
 
     float padding[13];
   };
 
   struct ModelUBO
   {
-    glm::mat4 model;
-
-    // Добавляем цвет меша в UBO, чтобы передавать его в шейдер (выравнивание под std140)
-    glm::vec4 color;
-
+    Math::Matrix4f model;    
+    Math::Vector4f color;
     float padding[8];
   };
 
   struct LightingUBO
   {
-    glm::vec4 lightPositions[4];
-    glm::vec4 lightColors[4];
-    // We store intensity in the 'w' component of lightColors and ambientColor
-    // to keep the layout compact and avoid a separate array. This matches
-    // the shader convention where lightColors[i].w is the intensity and
-    // ambientColor.w is the ambient intensity.
-    glm::vec4 ambientColor;  // ambientColor.w == ambient intensity
+    Math::Vector4f lightPositions[4];
+    Math::Vector4f lightColors[4];
+    
+    Math::Vector4f ambientColor;  
     int lightCount;
-    float padding[3];  // pad to 16 byte (std140-friendly)
+    float padding[3];  
 
     LightingUBO()
     {
       lightCount = 0;
-      ambientColor = glm::vec4(0.0f);
+      ambientColor = Math::Vector4f(0.0f);
       for (int i = 0; i < 4; i++)
       {
-        lightPositions[i] = glm::vec4(0.0f);
-        lightColors[i] = glm::vec4(0.0f);
+        lightPositions[i] = Math::Vector4f(0.0f);
+        lightColors[i] = Math::Vector4f(0.0f);
       }
       padding[0] = 0.0f;
       padding[1] = 0.0f;
@@ -81,11 +76,6 @@ namespace CE
 
     LightingUBO lighting;
 
-    // Статическая проверка размера и выравнивания
-    // Updated size/offsets to match std140-like layout when intensities are
-    // stored in the w component of vec4 colors. Layout is:
-    // lightPositions[4] (0..63), lightColors[4] (64..127), ambientColor (128..143),
-    // lightCount (144) + padding -> total size 160.
     static_assert(sizeof(LightingUBO) == 160, "LightingUBO size should be 160 bytes");
     static_assert(offsetof(LightingUBO, lightPositions) == 0, "lightPositions offset mismatch");
     static_assert(offsetof(LightingUBO, lightColors) == 64, "lightColors offset mismatch");
@@ -109,7 +99,7 @@ namespace CE
       camera = camData;
     }
 
-    // Методы для получения UBO
+    
     SceneUBO GetSceneUBO() const
     {
       SceneUBO ubo{};
@@ -119,11 +109,11 @@ namespace CE
       return ubo;
     }
 
-    ModelUBO GetModelUBO(const glm::mat4& modelMatrix, const glm::vec3& meshColor) const
+    ModelUBO GetModelUBO(const Math::Matrix4f& modelMatrix, const Math::Vector3f& meshColor) const
     {
       ModelUBO ubo{};
       ubo.model = modelMatrix;
-      ubo.color = glm::vec4(meshColor, 1.0f);
+      ubo.color = Math::Vector4f(meshColor, 1.0f);
       return ubo;
     }
 
@@ -131,10 +121,10 @@ namespace CE
     void SetupDefaultLighting()
     {
       lighting.lightCount = 1;
-      lighting.lightPositions[0] = glm::vec4(0.0f, 5.0f, 5.0f, 1.0f);  // Точечный свет
-      lighting.lightColors[0] = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);     // Белый свет
+      lighting.lightPositions[0] = Math::Vector4f(0.0f, 5.0f, 5.0f, 1.0f);  // Точечный свет
+      lighting.lightColors[0] = Math::Vector4f(1.0f, 1.0f, 1.0f, 1.0f);     // Белый свет
 
-      lighting.ambientColor = glm::vec4(0.2f, 0.2f, 0.2f, .3f);  // Слабый ambient
+      lighting.ambientColor = Math::Vector4f(0.2f, 0.2f, 0.2f, .3f);  // Слабый ambient
     }
   };
 }  // namespace CE

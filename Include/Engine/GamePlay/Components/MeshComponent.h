@@ -2,6 +2,7 @@
 #include "Engine/Core/Rendering/Data/Vertex.h"
 #include "Engine/GamePlay/Components/SceneComponent.h"
 
+
 // Forward declaration для ObjLoader
 namespace CE
 {
@@ -33,18 +34,18 @@ namespace CE
     {
       return m_Mesh;
     }
-    glm::mat4 GetRenderTransform() const;
+    Math::Matrix4f GetRenderTransform() const;
 
     // Цвет материала (временно)
-    void SetColor(const glm::vec3& color)
+    void SetColor(const Math::Vector3f& color)
     {
       m_Mesh.color = color;
     }
-    void SetColor(const glm::vec4& color)
+    void SetColor(const Math::Vector4f& color)
     {
-      m_Mesh.color = glm::vec3(color);
+      m_Mesh.color = color.XYZ();
     }
-    const glm::vec3& GetColor() const
+    const Math::Vector3f& GetColor() const
     {
       return m_Mesh.color;
     }

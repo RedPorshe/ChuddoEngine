@@ -2,7 +2,7 @@
 
 #include "Engine/GamePlay/Actors/Actor.h"
 #include "Engine/GamePlay/World/World.h"
-#include "glm/glm.hpp"
+#include "Engine/Utils/Math/AllMath.h"
 
 namespace CE
 {
@@ -17,7 +17,7 @@ namespace CE
     virtual void BeginPlay() override;
     virtual void Update(float DeltaTime) override;
 
-    void SetColor(const glm::vec3& color)
+    void SetColor(const Math::Vector3f& color)
     {
       m_Color = color;
     }
@@ -35,7 +35,7 @@ namespace CE
     }
 
    private:
-    glm::vec3 m_Color = glm::vec3(1.0f);
+    Math::Vector3f m_Color = Math::Vector3f(1.0f);
     float m_Intensity = 1.0f;
     float m_AngularSpeed = 0.00f;  // radians per second
     float m_Angle = 0.0f;

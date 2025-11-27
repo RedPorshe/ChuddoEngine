@@ -74,7 +74,7 @@ namespace CE
       }
     }
 
-   private:
+   
     template <typename T>
     T* GetComponent(const std::string& Name);
 

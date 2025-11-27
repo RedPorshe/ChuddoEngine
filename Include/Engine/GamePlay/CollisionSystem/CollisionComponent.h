@@ -18,8 +18,8 @@ namespace CE
  virtual ECollisionShape GetCollisionShape() const =0;
  virtual bool CheckCollision(const CCollisionComponent* other) const = 0;
 
- virtual glm::vec3 GetBoundingBoxMin() const = 0;
- virtual glm::vec3 GetBoundingBoxMax() const = 0;
+ virtual Math::Vector3f GetBoundingBoxMin() const = 0;
+ virtual Math::Vector3f GetBoundingBoxMax() const = 0;
 
  void SetCollisionEnabled(bool Enabled){bIsCollisionEnabled = Enabled;}
  bool IsCollisionEnabled() const {return bIsCollisionEnabled;}
@@ -35,7 +35,7 @@ namespace CE
 
  virtual void OnOverlapBegin(const CCollisionComponent* Other) {}
         virtual void OnOverlapEnd(const CCollisionComponent* Other) {}
-        virtual void OnHit(const CCollisionComponent* Other, const glm::vec3& ImpactPoint) {}
+        virtual void OnHit(const CCollisionComponent* Other, const Math::Vector3f& ImpactPoint) {}
 ECollisionChannel GetCollisionChannel() const {return m_CollisionChannel;}
  protected:
 FString m_ProfileName {"BlockAll"};

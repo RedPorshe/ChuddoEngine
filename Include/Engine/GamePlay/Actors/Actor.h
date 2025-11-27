@@ -3,6 +3,7 @@
 #include "Engine/Core/Object.h"
 #include "Engine/GamePlay/Components/SceneComponent.h"
 #include "Engine/GamePlay/World/Levels/Level.h"
+#include "Engine/Utils/Math/AllMath.h"
 
 namespace CE
 {
@@ -31,19 +32,19 @@ namespace CE
     }
 
     // World transform
-    void SetActorLocation(const glm::vec3& NewLocation);
+    void SetActorLocation(const Math::Vector3f& NewLocation);
     void SetActorLocation(const float x, const float y, const float z);
-    void SetActorRotation(const glm::vec3& NewRotation);
+    void SetActorRotation(const Math::Vector3f& NewRotation);
     void SetActorScale(const float& NewScale);
-    void SetActorScale(const glm::vec3& NewScale);
+    void SetActorScale(const Math::Vector3f& NewScale);
 
-    glm::vec3 GetActorLocation() const;
-    glm::vec3 GetActorRotation() const;
-    glm::vec3 GetActorScale() const;
+    Math::Vector3f GetActorLocation() const;
+    Math::Vector3f GetActorRotation() const;
+    Math::Vector3f GetActorScale() const;
 
-    glm::vec3 GetActorForwardVector() const;
-    glm::vec3 GetActorRightVector() const;
-    glm::vec3 GetActorUpVector() const;
+    Math::Vector3f GetActorForwardVector() const;
+    Math::Vector3f GetActorRightVector() const;
+    Math::Vector3f GetActorUpVector() const;
     // Получение уровня
     CLevel* GetLevel() const;
 

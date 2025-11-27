@@ -9,14 +9,14 @@ namespace CE
 public:
 CBoxComponent(CObject* Owner = nullptr, FString Name = "BoxComponent");
 virtual ~CBoxComponent() = default;
- void SetExtents(const glm::vec3& Extents) { m_Extents = Extents; }
+ void SetExtents(const Math::Vector3f& Extents) { m_Extents = Extents; }
 virtual ECollisionShape GetCollisionShape() const override { return ECollisionShape::Box;}
 virtual bool CheckCollision(const CCollisionComponent* other) const override;
- virtual glm::vec3 GetBoundingBoxMin() const override;
- virtual glm::vec3 GetBoundingBoxMax() const override;
+ virtual Math::Vector3f GetBoundingBoxMin() const override;
+ virtual Math::Vector3f GetBoundingBoxMax() const override;
 
  protected:
- glm::vec3 m_Extents = glm::vec3(1.0f);
+ Math::Vector3f m_Extents = Math::Vector3f(1.0f);
 
     }; 
 }

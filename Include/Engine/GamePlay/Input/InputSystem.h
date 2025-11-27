@@ -3,7 +3,7 @@
 #include <unordered_map>
 
 #include "CoreMinimal.h"
-#include "glm/glm.hpp"
+#include "Engine/Utils/Math/AllMath.h"
 
 typedef struct GLFWwindow GLFWwindow;
 
@@ -29,11 +29,11 @@ namespace CE
     static void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 
     bool IsKeyPressed(int key) const;
-    glm::vec2 GetMousePosition() const
+    Math::Vector2f GetMousePosition() const
     {
       return m_MousePosition;
     }
-    glm::vec2 GetMouseDelta() const
+    Math::Vector2f GetMouseDelta() const
     {
       return m_MouseDelta;
     }
@@ -52,9 +52,9 @@ namespace CE
 
     std::unordered_map<int, bool> m_KeyStates;
 
-    glm::vec2 m_MousePosition{0.0f, 0.0f};
-    glm::vec2 m_LastMousePosition{0.0f, 0.0f};
-    glm::vec2 m_MouseDelta{0.0f, 0.0f};
+    Math::Vector2f m_MousePosition{0.0f, 0.0f};
+    Math::Vector2f m_LastMousePosition{0.0f, 0.0f};
+    Math::Vector2f m_MouseDelta{0.0f, 0.0f};
     bool m_FirstMouse = true;
     bool bIsFPS{true};
     static CInputSystem* s_Instance;

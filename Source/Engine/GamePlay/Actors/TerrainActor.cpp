@@ -28,10 +28,10 @@ namespace CE
       GenerateTerrainMesh();
 
       // Position terrain at origin
-      m_TerrainMesh->SetRelativePosition(glm::vec3(0.0f, -2.0f, 0.0f));
+      m_TerrainMesh->SetRelativePosition(Math::Vector3f(0.0f, -2.0f, 0.0f));
 
       // Set terrain color to green
-      m_TerrainMesh->SetColor(glm::vec4(0.2f, 0.7f, 0.2f, 1.0f));
+      m_TerrainMesh->SetColor(Math::Vector4f(0.2f, 0.7f, 0.2f, 1.0f));
     }
 
     CE_LOG("[LogTemp] Terrain heightmap collision ready with ", m_GridWidth, "x", m_GridHeight, " heightmap");
@@ -79,10 +79,10 @@ namespace CE
         m_HeightMap[z][x] = height;
 
         Vertex vertex;
-        vertex.position = glm::vec3(posX, height, posZ);
-        vertex.normal = glm::vec3(0.0f, 1.0f, 0.0f);  // Default up normal
-        vertex.texCoord = glm::vec2(x * 0.1f, z * 0.1f);
-        vertex.color = glm::vec3(0.2f, 0.7f, 0.2f);
+        vertex.position = Math::Vector3f(posX, height, posZ);
+        vertex.normal = Math::Vector3f(0.0f, 1.0f, 0.0f);  // Default up normal
+        vertex.texCoord = Math::Vector2f(x * 0.1f, z * 0.1f);
+        vertex.color = Math::Vector3f(0.2f, 0.7f, 0.2f);
 
         vertices.push_back(vertex);
       }
@@ -114,21 +114,21 @@ namespace CE
     StaticMesh terrainMesh;
     terrainMesh.vertices = vertices;
     terrainMesh.indices = indices;
-    terrainMesh.color = glm::vec3(0.2f, 0.7f, 0.2f);
+    terrainMesh.color = Math::Vector3f(0.2f, 0.7f, 0.2f);
 
     m_TerrainMesh->SetStaticMesh(terrainMesh);
 
     CE_LOG("[LogTemp] Terrain generated: ", m_GridWidth, "x", m_GridHeight, " grid with ", static_cast<int>(indices.size() / 3), " triangles");
   }
 
-  float TerrainActor::GetHeightAtPosition(const glm::vec3& WorldPosition) const
+  float TerrainActor::GetHeightAtPosition(const Math::Vector3f& WorldPosition) const
   {
     // Validate heightmap exists and is properly initialized
     if (m_HeightMap.empty() || m_HeightMap[0].empty())
       return 0.0f;
 
     // Convert world position to terrain local position
-    glm::vec3 localPos = WorldPosition - GetActorLocation();
+    Math::Vector3f localPos = WorldPosition - GetActorLocation();
 
     // Convert to grid coordinates
     float gridX = (localPos.x + m_TerrainOffsetX) / m_GridSpacing;

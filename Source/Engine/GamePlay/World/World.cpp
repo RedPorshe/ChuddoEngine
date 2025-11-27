@@ -189,16 +189,16 @@ namespace CE
     else
     {
       CameraData defaultCam;
-      glm::vec3 defaultCamPosition = glm::vec3(5.0f, 1.0f, 10.0f);
-      glm::vec3 defaultCameraUp = glm::vec3(0.0f, -1.0f, 0.0f);
-      glm::vec3 defaultCameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
+      Math::Vector3f defaultCamPosition = Math::Vector3f(5.0f, 1.0f, 10.0f);
+      Math::Vector3f defaultCameraUp = Math::Vector3f(0.0f, -1.0f, 0.0f);
+      Math::Vector3f defaultCameraTarget = Math::Vector3f(0.0f, 0.0f, 0.0f);
 
-      defaultCam.viewMatrix = glm::lookAt(
+      defaultCam.viewMatrix = Math::Matrix4f::LookAt(
           defaultCamPosition,
           defaultCameraTarget,
           defaultCameraUp);
-      defaultCam.projectionMatrix = glm::perspective(
-          glm::radians(45.0f), 16.0f / 9.0f, 0.1f, 1000.0f);
+      defaultCam.projectionMatrix = Math::Matrix4f::Perspective (
+          Math::ToRadians(45.0f), 16.0f / 9.0f, 0.1f, 1000.0f);
       defaultCam.position = defaultCamPosition;
 
       renderData.SetCameraData(defaultCam);
@@ -230,10 +230,10 @@ namespace CE
     {
       CE_CORE_DEBUG("Setting up default lighting...");
       lighting.lightCount = 1;
-      lighting.lightPositions[0] = glm::vec4(5.0f, 5.0f, 5.0f, 1.0f);
-      lighting.lightColors[0] = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+      lighting.lightPositions[0] = Math::Vector4f(5.0f, 5.0f, 5.0f, 1.0f);
+      lighting.lightColors[0] = Math::Vector4f(1.0f, 1.0f, 1.0f, 1.0f);
       lighting.lightColors[0].w = 2.0f;
-      lighting.ambientColor = glm::vec4(0.2f, 0.2f, 0.2f, .2f);
+      lighting.ambientColor = Math::Vector4f(0.2f, 0.2f, 0.2f, .2f);
     }
   }
 

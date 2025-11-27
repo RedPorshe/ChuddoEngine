@@ -26,25 +26,25 @@ namespace CE
     }
 
     // Аналог AddMovementInput из UE
-    void AddMovementInput(const glm::vec3& WorldDirection, float ScaleValue = 1.0f, bool bForce = false);
+    void AddMovementInput(const Math::Vector3f& WorldDirection, float ScaleValue = 1.0f, bool bForce = false);
     void AddControllerYawInput(float Value);
     void AddControllerPitchInput(float Value);
 
     // Управление вращением
-    void SetControlRotation(const glm::vec3& NewRotation);
-    const glm::vec3& GetControlRotation() const
+    void SetControlRotation(const Math::Vector3f& NewRotation);
+    const Math::Vector3f& GetControlRotation() const
     {
       return m_ControlRotation;
     }
 
     // Получение векторов движения (аналогично камере)
-    glm::vec3 GetPawnViewLocation() const;
-    glm::vec3 GetViewForwardVector() const;
-    glm::vec3 GetViewRightVector() const;
-    glm::vec3 GetViewUpVector() const;
+    Math::Vector3f GetPawnViewLocation() const;
+    Math::Vector3f GetViewForwardVector() const;
+    Math::Vector3f GetViewRightVector() const;
+    Math::Vector3f GetViewUpVector() const;
 
     // Получение векторов движения
-    glm::vec3 GetMovementDirection() const
+    Math::Vector3f GetMovementDirection() const
     {
       return m_MovementInput;
     }
@@ -62,8 +62,8 @@ namespace CE
 
    protected:
     CInputComponent* m_InputComponent = nullptr;
-    glm::vec3 m_MovementInput{0.0f, 0.0f, 0.0f};
-    glm::vec3 m_ControlRotation{0.0f, 0.0f, 0.0f};  // Pitch, Yaw, Roll
+    Math::Vector3f m_MovementInput{0.0f, 0.0f, 0.0f};
+    Math::Vector3f m_ControlRotation{0.0f, 0.0f, 0.0f};  // Pitch, Yaw, Roll
     bool m_bMovementInputConsumed = false;
     bool m_bUseControllerRotation = false;
 

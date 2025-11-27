@@ -18,9 +18,9 @@ namespace CE
    private:
     bool LoadOBJFile(const std::string& filename);
     void ProcessOBJFace(const std::string& faceLine,
-                        const std::vector<glm::vec3>& positions,
-                        const std::vector<glm::vec2>& texCoords,
-                        const std::vector<glm::vec3>& normals,
+                        const std::vector<Math::Vector3f>& positions,
+                        const std::vector<Math::Vector2f>& texCoords,
+                        const std::vector<Math::Vector3f>& normals,
                         std::unordered_map<std::string, uint32_t>& vertexMap,
                         std::vector<Vertex>& outVertices,
                         std::vector<uint32_t>& outIndices);

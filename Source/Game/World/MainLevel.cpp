@@ -2,7 +2,7 @@
 
 #include "Engine/GamePlay/Actors/SunActor.h"
 #include "Engine/GamePlay/Actors/TerrainActor.h"
-
+#include "Engine/Utils/Math/AllMath.h"
 #include "Engine/GamePlay/Components/StaticMeshComponent.h"
 
 
@@ -20,7 +20,7 @@ MainLevel::MainLevel(CE::CObject* Owner,
   terrain = SpawnActor<CE::TerrainActor>(this, "Terrain");
   if (terrain)
   {
-    terrain->SetActorLocation(glm::vec3(0.0f, -2.0f, 0.0f));
+    terrain->SetActorLocation(CE::Math::Vector3f(0.0f, -2.0f, 0.0f));
   }
 
  
@@ -28,24 +28,24 @@ MainLevel::MainLevel(CE::CObject* Owner,
   // Спавним меш-акторы
   enemy = SpawnActor<CE::CActor>(this, "Enemy");
   enemy->SetRootComponent(enemy->AddSubObject<CE::CStaticMeshComponent>("EnemyMesh", enemy, "EnemyMesh"));
-  enemy->SetActorLocation(glm::vec3(.0f, 0.f, -5.0f));
+  enemy->SetActorLocation(CE::Math::Vector3f(.0f, 0.f, -5.0f));
   enemy->SetActorScale(5.f);
-  enemy->SetActorRotation(glm::vec3(-90.0f, -90.0f, 0.0f));
+  enemy->SetActorRotation(CE::Math::Vector3f(-90.0f, -90.0f, 0.0f));
 
  
-  std::vector<glm::vec3> positions = {
-      glm::vec3(-3.0f, 0.5f, 0.0f),  
-      glm::vec3(0.0f, 0.5f, 0.0f),   
-      glm::vec3(3.0f, 0.5f, 0.0f),   
-      glm::vec3(-1.5f, 2.0f, 0.0f),
-      glm::vec3(1.5f, 2.0f, 0.0f)};
+  std::vector<CE::Math::Vector3f> positions = {
+      CE::Math::Vector3f(-3.0f, 0.5f, 0.0f),  
+      CE::Math::Vector3f(0.0f, 0.5f, 0.0f),   
+      CE::Math::Vector3f(3.0f, 0.5f, 0.0f),   
+      CE::Math::Vector3f(-1.5f, 2.0f, 0.0f),
+      CE::Math::Vector3f(1.5f, 2.0f, 0.0f)};
 
-  std::vector<glm::vec3> colors = {
-      glm::vec3(1.0f, 0.0f, 0.0f),
-      glm::vec3(0.0f, 1.0f, 0.0f),
-      glm::vec3(0.0f, 0.0f, 1.0f),
-      glm::vec3(1.0f, 1.0f, 0.0f),
-      glm::vec3(1.0f, 0.0f, 1.0f)};
+  std::vector<CE::Math::Vector3f> colors = {
+      CE::Math::Vector3f(1.0f, 0.0f, 0.0f),
+      CE::Math::Vector3f(0.0f, 1.0f, 0.0f),
+      CE::Math::Vector3f(0.0f, 0.0f, 1.0f),
+      CE::Math::Vector3f(1.0f, 1.0f, 0.0f),
+      CE::Math::Vector3f(1.0f, 0.0f, 1.0f)};
 
   for (int i = 0; i < (int)positions.size(); i++)
   {
@@ -56,45 +56,75 @@ MainLevel::MainLevel(CE::CObject* Owner,
     auto* mesh = dynamic_cast<CE::CStaticMeshComponent*>(actor->GetRootComponent());
     if (mesh)
     {
-      mesh->SetColor(colors[i]);
       mesh->CreateCubeMesh();
+      mesh->SetColor(colors[i]);
     }
     // actor->SetIsStatic(false);
-    actor->SetUseGravity(true);
+    
+     actor->SetUseGravity(false);
+     if (i == 1) 
+    {
+      mesh->SetMesh("Assets/Meshes/test_cube.obj");
+      mesh->SetColor(colors[i]);
+    }
+    if (i == 2) 
+    {
+      mesh->SetMesh("Assets/Meshes/Sphere.obj");
+       mesh->SetColor(colors[i]);
+    }
+   
+    if ( i ==4 )
+    {
+      mesh->SetMesh("Assets/Meshes/Icosahedron.obj");
+       mesh->SetColor(colors[i]);
+    }
   }
 
   for (int i = 0; i < (int)positions.size(); i++)
   {
     auto* actor = SpawnActor<CE::CActor>(this, "Sphere_" + std::to_string(i));
     actor->SetRootComponent(actor->AddSubObject<CE::CStaticMeshComponent>("Mesh", actor, "Mesh"));
-    actor->SetActorLocation(colors[i]);
+    actor->SetActorLocation(positions[i]*static_cast<float>(i));
 
     auto* mesh = dynamic_cast<CE::CStaticMeshComponent*>(actor->GetRootComponent());
     if (mesh)
     {
-      mesh->SetColor(colors[i]);
       mesh->CreateCubeMesh();
+      mesh->SetColor(colors[i]);
     }
     // actor->SetIsStatic(false);
     actor->SetUseGravity(false);
+     if (i == 1) 
+    {
+      mesh->SetMesh("Assets/Meshes/test_cube.obj");
+    }
+    if (i == 2) 
+    {
+      mesh->SetMesh("Assets/Meshes/Sphere.obj");
+    }
+   
+    if ( i ==4 )
+    {
+      mesh->SetMesh("Assets/Meshes/Icosahedron.obj");
+    }
   }
 
   auto* enemyMesh = dynamic_cast<CE::CStaticMeshComponent*>(enemy->GetRootComponent());
   if (enemyMesh)
   {
     enemyMesh->SetMesh("Assets/Meshes/VikingRoom.obj");
-    enemyMesh->SetColor(glm::vec3(0.8f, 0.2f, 0.2f));
+    enemyMesh->SetColor(CE::Math::Vector3f(0.8f, 0.2f, 0.2f));
   }
 
   // Spawn a SunActor to control world's directional/positional "sun" light
   auto* sun = SpawnActor<CE::SunActor>(this, "SunActor");
   if (sun)
   {
-    sun->SetColor(glm::vec3(1.0f, 1.f, 1.f));
+    sun->SetColor(CE::Math::Vector3f(1.0f, 1.f, 1.f));
     sun->SetIntensity(2.0f);
     sun->SetRadius(100.0f);
     sun->SetAngularSpeed(0.025f);
-    sun->SetActorLocation(glm::vec3(0.0f, 1000.0f, 0.0f));
+    sun->SetActorLocation(CE::Math::Vector3f(0.0f, 1000.0f, 0.0f));
   }
 
  
@@ -133,8 +163,8 @@ void MainLevel::Update(float DeltaTime)
     }
     random *= -1.f;
     float speed = rotationSpeed + (idx * 7.5f);
-    glm::vec3 rot = glm::vec3(
-        totalTime * glm::radians(speed * 1.5f) * random, totalTime * glm::radians(speed * 1.5f) * random, totalTime * glm::radians(speed * 1.5f) * random);
+    CE::Math::Vector3f rot = CE::Math::Vector3f(
+        totalTime * CE::Math::ToRadians(speed * 1.5f) * random, totalTime * CE::Math::ToRadians(speed * 1.5f) * random, totalTime * CE::Math::ToRadians(speed * 1.5f) * random);
 
     actor->SetActorRotation(rot);
     ++idx;

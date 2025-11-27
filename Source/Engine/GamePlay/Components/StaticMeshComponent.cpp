@@ -57,9 +57,9 @@ namespace CE
       return false;
     }
 
-    std::vector<glm::vec3> positions;
-    std::vector<glm::vec2> texCoords;
-    std::vector<glm::vec3> normals;
+    std::vector<Math::Vector3f> positions;
+    std::vector<Math::Vector2f> texCoords;
+    std::vector<Math::Vector3f> normals;
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;
 
@@ -74,19 +74,19 @@ namespace CE
 
       if (prefix == "v")  // Vertex position
       {
-        glm::vec3 pos;
+        Math::Vector3f pos;
         iss >> pos.x >> pos.y >> pos.z;
         positions.push_back(pos);
       }
       else if (prefix == "vt")  // Texture coordinate
       {
-        glm::vec2 tex;
+        Math::Vector2f tex;
         iss >> tex.x >> tex.y;
         texCoords.push_back(tex);
       }
       else if (prefix == "vn")  // Normal
       {
-        glm::vec3 normal;
+        Math::Vector3f normal;
         iss >> normal.x >> normal.y >> normal.z;
         normals.push_back(normal);
       }
@@ -103,7 +103,7 @@ namespace CE
     {
       m_Mesh.vertices = vertices;
       m_Mesh.indices = indices;
-      m_Mesh.color = glm::vec3(1.0f);  // Белый цвет по умолчанию
+      m_Mesh.color = Math::Vector3f(1.0f);  // Белый цвет по умолчанию
       return true;
     }
 
@@ -111,9 +111,9 @@ namespace CE
   }
 
   void CStaticMeshComponent::ProcessOBJFace(const std::string& faceLine,
-                                             const std::vector<glm::vec3>& positions,
-                                             const std::vector<glm::vec2>& texCoords,
-                                             const std::vector<glm::vec3>& normals,
+                                             const std::vector<Math::Vector3f>& positions,
+                                             const std::vector<Math::Vector2f>& texCoords,
+                                             const std::vector<Math::Vector3f>& normals,
                                              std::unordered_map<std::string, uint32_t>& vertexMap,
                                              std::vector<Vertex>& outVertices,
                                              std::vector<uint32_t>& outIndices)
@@ -175,7 +175,7 @@ namespace CE
       }
 
       // Цвет по умолчанию
-      vertex.color = glm::vec3(1.0f);
+      vertex.color = Math::Vector3f(1.0f);
 
       // Добавляем вершину
       outVertices.push_back(vertex);

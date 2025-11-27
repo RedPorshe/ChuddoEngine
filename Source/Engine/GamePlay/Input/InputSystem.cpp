@@ -37,8 +37,8 @@ namespace CE
       }
       double xpos, ypos;
       glfwGetCursorPos(m_Window, &xpos, &ypos);
-      m_LastMousePosition = glm::vec2(xpos, ypos);
-      m_MousePosition = glm::vec2(xpos, ypos);
+      m_LastMousePosition = Math::Vector2f(xpos, ypos);
+      m_MousePosition = Math::Vector2f(xpos, ypos);
 
       CE_CORE_DEBUG("InputSystem initialized with GLFW window");
     }
@@ -111,7 +111,7 @@ namespace CE
       }
     }
 
-    m_MouseDelta = glm::vec2(0.0f, 0.0f);
+    m_MouseDelta = Math::Vector2f(0.0f, 0.0f);
   }
 
   void CInputSystem::ProcessKeyInput(int key, int scancode, int action, int mods)
@@ -136,7 +136,7 @@ namespace CE
 
     if (m_FirstMouse)
     {
-      m_LastMousePosition = glm::vec2(x, y);
+      m_LastMousePosition = Math::Vector2f(x, y);
       m_FirstMouse = false;
       return;
     }
@@ -144,9 +144,9 @@ namespace CE
     float xOffset = x - m_LastMousePosition.x;
     float yOffset = m_LastMousePosition.y - y;
 
-    m_LastMousePosition = glm::vec2(x, y);
-    m_MousePosition = glm::vec2(x, y);
-    m_MouseDelta = glm::vec2(xOffset, yOffset);
+    m_LastMousePosition = Math::Vector2f(x, y);
+    m_MousePosition = Math::Vector2f(x, y);
+    m_MouseDelta = Math::Vector2f(xOffset, yOffset);
 
     for (auto* component : m_InputComponents)
     {

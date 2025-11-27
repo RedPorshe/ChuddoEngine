@@ -4,24 +4,25 @@
 #include <array>
 #include <glm/glm.hpp>
 #include <vector>
+#include "Engine/Utils/Math/AllMath.h"
 
 namespace CE
 {
   struct Vertex
   {
-    glm::vec3 position;
-    glm::vec3 normal;
-    glm::vec3 color;
-    glm::vec2 texCoord;
+    Math::Vector3f position;
+    Math::Vector3f  normal;
+    Math::Vector3f  color;
+    Math::Vector2f  texCoord;
     Vertex()
     {
     }
-    Vertex(const glm::vec3& pos, const glm::vec3& norm = glm::vec3(0.0f), const glm::vec2& uv = glm::vec2(0.0f))
+    Vertex(const Math::Vector3f& pos, const Math::Vector3f& norm = Math::Vector3f(0.0f), const Math::Vector2f& uv = Math::Vector2f(0.0f))
         : position(pos), normal(norm), texCoord(uv)
     {
     }
-    Vertex(const glm::vec3& pos, const glm::vec3& norm = glm::vec3(0.0f),
-           const glm::vec3& col = glm::vec3(1.0f), const glm::vec2& uv = glm::vec2(0.0f))
+    Vertex(const Math::Vector3f& pos, const Math::Vector3f& norm = Math::Vector3f(0.0f),
+           const Math::Vector3f& col = Math::Vector3f(1.0f), const Math::Vector2f& uv = Math::Vector2f(0.0f))
         : position(pos), normal(norm), color(col), texCoord(uv)
     {
     }
@@ -45,10 +46,10 @@ namespace CE
     std::vector<uint32_t> indices;
 
     // Матрица трансформации для рендеринга
-    glm::mat4 transform{1.0f};
+    Math::Matrix4f transform{1.0f};
 
     // Материал (пока базовый)
-    glm::vec3 color{1.0f, 1.0f, 1.0f};
+    Math::Vector3f color{1.0f, 1.0f, 1.0f};
 
     StaticMesh() = default;
     StaticMesh(const std::vector<Vertex>& verts, const std::vector<uint32_t>& inds)

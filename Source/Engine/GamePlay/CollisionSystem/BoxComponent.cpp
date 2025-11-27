@@ -15,10 +15,10 @@ bool CBoxComponent::CheckCollision(const CCollisionComponent* other) const
 
   if (responseToOther == ECollisionResponse::Ignore || otherToThisResponse == ECollisionResponse::Ignore) { return false;}
 
-  glm::vec3 thisMin = this->GetBoundingBoxMin();
-  glm::vec3 thisMax = this->GetBoundingBoxMax();
-  glm::vec3 otherMin = other->GetBoundingBoxMin();
-  glm::vec3 otherMax = other->GetBoundingBoxMax();
+  Math::Vector3f thisMin = this->GetBoundingBoxMin();
+  Math::Vector3f thisMax = this->GetBoundingBoxMax();
+  Math::Vector3f otherMin = other->GetBoundingBoxMin();
+  Math::Vector3f otherMax = other->GetBoundingBoxMax();
 
   bool aabbCollision = (thisMin.x <= otherMax.x && thisMax.x >= otherMin.x) &&
   (thisMin.y <= otherMax.y && thisMax.y >= otherMin.y) &&
@@ -30,12 +30,12 @@ bool CBoxComponent::CheckCollision(const CCollisionComponent* other) const
   return bisBlocking || bisOverlapin;
 }
 
-glm::vec3 CBoxComponent::GetBoundingBoxMin() const
+Math::Vector3f CBoxComponent::GetBoundingBoxMin() const
 {
   return this->GetWorldLocation() - m_Extents;
 }
 
-glm::vec3 CBoxComponent::GetBoundingBoxMax() const
+Math::Vector3f CBoxComponent::GetBoundingBoxMax() const
 {
   return this->GetWorldLocation()+ m_Extents;
 }

@@ -27,13 +27,15 @@ namespace CE
       m_FarPlane = Far;
     }
 
+    void DebugMatrix(const Math::Matrix4f& m, const char* name) const;
+    void DebugMatrix(const char* message) const;
     // Получение матриц
-    glm::mat4 GetViewMatrix() const;
-    glm::mat4 GetProjectionMatrix() const;
+    Math::Matrix4f GetViewMatrix() const;
+    Math::Matrix4f GetProjectionMatrix() const;
 
-    glm::vec3 GetCameraForwardVector() const;
-    glm::vec3 GetCameraRightVector() const;
-    glm::vec3 GetCameraUpVector() const;
+    Math::Vector3f GetCameraForwardVector() const;
+    Math::Vector3f GetCameraRightVector() const;
+    Math::Vector3f GetCameraUpVector() const;
 
     virtual void Update(float DeltaTime) override;
 

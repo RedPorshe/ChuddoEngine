@@ -8,7 +8,7 @@ namespace CE
       : CObject(Owner, NewName)
   {
     // Создаем root component
-    m_RootComponent = AddDefaultSubObject<CSceneComponent>("root", this, "RootComponent");
+   
     CE_CORE_DEBUG("CEActor created: ", NewName);
   }
 
@@ -26,26 +26,26 @@ namespace CE
     return nullptr;
   }
 
-  glm::vec3 CActor::GetActorForwardVector() const
+  Math::Vector3f CActor::GetActorForwardVector() const
   {
-    return m_RootComponent ? m_RootComponent->GetForwardVector() : glm::vec3(0.0f, 0.0f, 1.0f);
+    return m_RootComponent ? m_RootComponent->GetForwardVector() : Math::Vector3f(0.0f, 0.0f, 1.0f);
   }
-  glm::vec3 CActor::GetActorRightVector() const
+  Math::Vector3f CActor::GetActorRightVector() const
   {
-    return m_RootComponent ? m_RootComponent->GetRightVector() : glm::vec3(1.0f, 0.0f, 0.0f);
+    return m_RootComponent ? m_RootComponent->GetRightVector() : Math::Vector3f(1.0f, 0.0f, 0.0f);
   }
 
-  glm::vec3 CActor::GetActorUpVector() const
+  Math::Vector3f CActor::GetActorUpVector() const
   {
-    return m_RootComponent ? m_RootComponent->GetUpVector() : glm::vec3(0.0f, 1.0f, 0.0f);
+    return m_RootComponent ? m_RootComponent->GetUpVector() : Math::Vector3f(0.0f, 1.0f, 0.0f);
   }
 
   void CActor::SetActorLocation(const float x, const float y, const float z)
   {
-    SetActorLocation(glm::vec3(x, y, z));
+    SetActorLocation(Math::Vector3f(x, y, z));
   }
 
-  void CActor::SetActorLocation(const glm::vec3& NewLocation)
+  void CActor::SetActorLocation(const Math::Vector3f& NewLocation)
   {
     if (m_RootComponent && !m_RootComponent->GetParent())
     {
@@ -53,7 +53,7 @@ namespace CE
     }
   }
 
-  void CActor::SetActorRotation(const glm::vec3& NewRotation)
+  void CActor::SetActorRotation(const Math::Vector3f& NewRotation)
   {
     if (m_RootComponent && !m_RootComponent->GetParent())
     {
@@ -63,10 +63,10 @@ namespace CE
 
   void CActor::SetActorScale(const float& NewScale)
   {
-    SetActorScale(glm::vec3(NewScale, NewScale, NewScale));
+    SetActorScale(Math::Vector3f(NewScale, NewScale, NewScale));
   }
 
-  void CActor::SetActorScale(const glm::vec3& NewScale)
+  void CActor::SetActorScale(const Math::Vector3f& NewScale)
   {
     if (m_RootComponent && !m_RootComponent->GetParent())
     {
@@ -74,19 +74,19 @@ namespace CE
     }
   }
 
-  glm::vec3 CActor::GetActorLocation() const
+  Math::Vector3f CActor::GetActorLocation() const
   {
-    return m_RootComponent ? m_RootComponent->GetWorldLocation() : glm::vec3(0.0f);
+    return m_RootComponent ? m_RootComponent->GetWorldLocation() : Math::Vector3f(0.0f);
   }
 
-  glm::vec3 CActor::GetActorRotation() const
+  Math::Vector3f CActor::GetActorRotation() const
   {
-    return m_RootComponent ? m_RootComponent->GetRotation() : glm::vec3(0.0f);
+    return m_RootComponent ? m_RootComponent->GetRotation() : Math::Vector3f(0.0f);
   }
 
-  glm::vec3 CActor::GetActorScale() const
+  Math::Vector3f CActor::GetActorScale() const
   {
-    return m_RootComponent ? m_RootComponent->GetScale() : glm::vec3(1.0f);
+    return m_RootComponent ? m_RootComponent->GetScale() : Math::Vector3f(1.0f);
   }
 
   void CActor::BeginPlay()
@@ -107,11 +107,11 @@ namespace CE
       if (world)
       {
         auto* level = static_cast<CLevel*>(world);
-        const glm::vec3 gravity = level->GetGravity();
+        const Math::Vector3f gravity = level->GetGravity();
         if (m_RootComponent->GetParent() == nullptr)
         {
           m_verticalVelocity += gravity.y * DeltaTime * Weight;
-          glm::vec3 currentLocation = m_RootComponent->GetWorldLocation();
+          Math::Vector3f currentLocation = m_RootComponent->GetWorldLocation();
           currentLocation += gravity * DeltaTime;
           m_RootComponent->SetPosition(currentLocation);
           

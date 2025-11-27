@@ -20,7 +20,7 @@ namespace CE
     virtual void Update(float DeltaTime) override;
 
     // Get terrain height at world position (for heightmap collision)
-    float GetHeightAtPosition(const glm::vec3& WorldPosition) const;
+    float GetHeightAtPosition(const Math::Vector3f& WorldPosition) const;
 
     // Check if heightmap is initialized and ready
     bool IsHeightmapReady() const

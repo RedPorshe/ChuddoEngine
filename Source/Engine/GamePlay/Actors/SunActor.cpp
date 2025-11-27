@@ -1,12 +1,13 @@
 // Consolidated includes
 #include "Engine/GamePlay/Actors/SunActor.h"
 
-#include <cmath>
+
 
 #include "Engine/Core/Rendering/Data/RenderData.h"
 #include "Engine/GamePlay/Components/MeshComponent.h"
 #include "Engine/GamePlay/World/World.h"
-#include "glm/gtc/constants.hpp"
+
+#include "Engine/Utils/Math/AllMath.h"
 
 namespace CE
 {
@@ -28,7 +29,7 @@ namespace CE
       m_SunMarkerMesh->SetMesh("Assets/Meshes/Sphere.obj");
 
       // Scale it down to a small marker size (0.3 units)
-      m_SunMarkerMesh->SetRelativeScale(glm::vec3(0.3f));
+      m_SunMarkerMesh->SetRelativeScale(0.3f);
 
       // Set emissive yellow color to make it stand out
       m_SunMarkerMesh->SetColor(m_Color);
@@ -46,13 +47,13 @@ namespace CE
       float y = std::sin(m_Angle) * (m_Radius * 0.5f) + (m_Radius * 0.2f);
       float z = std::sin(m_Angle * 0.5f) * (m_Radius * 0.3f);
 
-      glm::vec3 sunPos = glm::vec3(x, y, z);
+      Math::Vector3f sunPos = Math::Vector3f(x, y, z);
 
       // Update sun marker position
       if (m_SunMarkerMesh)
       {
         this->SetActorLocation(sunPos);
-        m_SunMarkerMesh->SetRelativePosition(glm::vec3(0.0f));
+        m_SunMarkerMesh->SetRelativePosition(0.0f);
       }
 
       CLevel* level = GetLevel();
@@ -69,8 +70,8 @@ namespace CE
 
       LightingUBO lighting = world->GetDefaultLighting();
       lighting.lightCount = 1;
-      lighting.lightPositions[0] = glm::vec4(sunPos, 1.0f);
-      lighting.lightColors[0] = glm::vec4(m_Color, m_Intensity);
+      lighting.lightPositions[0] = Math::Vector4f(sunPos, 1.0f);
+      lighting.lightColors[0] = Math::Vector4f(m_Color, m_Intensity);
 
       world->SetDefaultLighting(lighting);
     }
@@ -90,8 +91,8 @@ namespace CE
       auto sunPos = GetActorLocation();
       LightingUBO lighting = world->GetDefaultLighting();
       lighting.lightCount = 1;
-      lighting.lightPositions[0] = glm::vec4(sunPos, 1.0f);
-      lighting.lightColors[0] = glm::vec4(m_Color, m_Intensity);
+      lighting.lightPositions[0] = Math::Vector4f(sunPos, 1.0f);
+      lighting.lightColors[0] = Math::Vector4f(m_Color, m_Intensity);
 
       world->SetDefaultLighting(lighting);
     }

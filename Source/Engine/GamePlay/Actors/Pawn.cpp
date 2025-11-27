@@ -18,14 +18,14 @@ namespace CE
     auto* m_cameraComponent = AddSubObject<CCameraComponent>("Camera", this, "CameraComponent");
     auto* m_springArmComponent = AddSubObject<CSpringArmComponent>("SpringArm", this, "SpringArmComponent");
     m_springArmComponent->AttachToComponent(m_RootComponent);
-    m_springArmComponent->SetRelativePosition(glm::vec3(0.0f, 1.0f, 0.0f));
-    m_springArmComponent->SetRelativeRotation(glm::vec3(-10.0f, 0.0f, 0.0f));
+    m_springArmComponent->SetRelativePosition(Math::Vector3f(0.0f, 1.0f, 0.0f));
+    m_springArmComponent->SetRelativeRotation(Math::Vector3f(-10.0f, 0.0f, 0.0f));
     m_springArmComponent->SetArmLength(5.0f);
 
     m_cameraComponent->AttachToComponent(m_springArmComponent);
 
     m_cameraComponent->SetFieldOfView(60.0f);
-    m_cameraComponent->SetRelativeRotation(glm::vec3(0.0f, 0.0f, 0.0f));
+    m_cameraComponent->SetRelativeRotation(Math::Vector3f(0.0f, 0.0f, 0.0f));
 
     SetupPlayerInputComponent();
     CE_CORE_DEBUG("CEPawn created: {}", NewName.c_str());
@@ -41,9 +41,9 @@ namespace CE
     {
       auto currentRotation = this->GetActorRotation();
       float newYaw = m_ControlRotation.y;
-      this->SetActorRotation(glm::vec3(currentRotation.x, newYaw, currentRotation.z));
+      this->SetActorRotation(Math::Vector3f(currentRotation.x, newYaw, currentRotation.z));
       float newPitch = m_ControlRotation.x;
-      this->SetActorRotation(glm::vec3(newPitch, currentRotation.y, currentRotation.z));
+      this->SetActorRotation(Math::Vector3f(newPitch, currentRotation.y, currentRotation.z));
     }
     else
     {
@@ -52,68 +52,29 @@ namespace CE
   }
   void CPawn::ApplyMovementInputToActor()
   {
-    if (glm::length(m_MovementInput) > 0.01f)
-    {
-      // Логика перемещения уже реализована в Tick, здесь можно оставить пустым
-      glm::vec3 finalMovement = m_MovementInput;
-      finalMovement.y *= -1.0f;
-      if (m_bUseControllerRotation)
-      {
-        finalMovement = m_MovementInput;
-        finalMovement.y *= -1.0f;
-        glm::vec3 forward = this->GetActorForwardVector();
-        glm::vec3 right = this->GetActorRightVector();
-        forward.y = 0.0f;
-        right.y = 0.0f;
-
-        if (glm::length(forward) > 0.01f)
-          forward = glm::normalize(forward);
-        if (glm::length(right) > 0.01f)
-          right = glm::normalize(right);
-        finalMovement = forward * m_MovementInput.z + right * m_MovementInput.x;
-      }
-      else
-      {
-        glm::vec3 forward = GetViewForwardVector();
-        glm::vec3 right = GetViewRightVector();
-
-        forward.y = 0.0f;
-        right.y = 0.0f;
-
-        if (glm::length(forward) > 0.01f)
-          forward = glm::normalize(forward);
-        if (glm::length(right) > 0.01f)
-          right = glm::normalize(right);
-
-        finalMovement = forward * m_MovementInput.z + right * m_MovementInput.x;
-      }
-
-      m_RootComponent->Move(finalMovement);
-    }
+    
   }
 
   void CPawn::Tick(float DeltaTime)
   {
     CActor::Tick(DeltaTime);
 
+static float rotationAngle = 0.0f;
+    rotationAngle += 30.0f * DeltaTime;
+    AddControllerPitchInput(rotationAngle);
+        AddControllerYawInput(rotationAngle);
+
     ApplyRotationToActor();
     ApplyMovementInputToActor();
     ConsumeMovementInput();
-    if (m_bIsJumping)
-    {
-      if (m_RootComponent)
-      {
-        glm::vec3 currentLocation = GetRootComponent()->GetWorldLocation();
-        currentLocation.y += 0.5f;  // Высота прыжка
-        GetRootComponent()->SetPosition(currentLocation);
-      }
-      m_bIsJumping = false;
-    }
+   
+    
+
+     
   }
 
   CCameraComponent* CPawn::FindCameraComponent() const
-  {
-    // Ищем компонент камеры среди дочерних компонентов
+  {    
     CCameraComponent* camera = nullptr;
     ForEachComponent<CCameraComponent>([&camera](CCameraComponent* comp)
                                       {
@@ -131,110 +92,76 @@ namespace CE
     return camera;
   }
 
-  glm::vec3 CPawn::GetPawnViewLocation() const
+  Math::Vector3f CPawn::GetPawnViewLocation() const
   {
     if (CCameraComponent* camera = FindCameraComponent())
     {
-      glm::vec3 pos = camera->GetWorldLocation();
+      Math::Vector3f pos = camera->GetWorldLocation();
       return pos;
     }
 
-    glm::vec3 pos = GetActorLocation() + glm::vec3(0.0f, -0.1f, 0.0f);
+    Math::Vector3f pos = GetActorLocation() + Math::Vector3f(0.0f, -0.1f, 0.0f);
     return pos;
   }
 
-  glm::vec3 CPawn::GetViewForwardVector() const
+  Math::Vector3f CPawn::GetViewForwardVector() const
   {
     if (CCameraComponent* camera = FindCameraComponent())
     {
-      glm::vec3 forward = camera->GetCameraForwardVector();
+      Math::Vector3f forward = camera->GetCameraForwardVector();
       return forward;
     }
 
-    return glm::vec3(0.0f, 0.0f, -1.0f);
+    return Math::Vector3f(0.0f, 0.0f, -1.0f);
   }
 
-  glm::vec3 CPawn::GetViewRightVector() const
+  Math::Vector3f CPawn::GetViewRightVector() const
   {
     if (CCameraComponent* camera = FindCameraComponent())
     {
-      glm::vec3 right = camera->GetCameraRightVector();
+      Math::Vector3f right = camera->GetCameraRightVector();
       return right;
     }
-    return glm::vec3(1.0f, 0.0f, 0.0f);
+    return Math::Vector3f(1.0f, 0.0f, 0.0f);
   }
 
   void CPawn::MoveForward(float Value)
   {
     if (Value != 0.0f)
     {
-      Value *= .20f;
-      if (m_bUseControllerRotation)
-      {
-        glm::vec3 forward = this->GetActorForwardVector();
-        forward.y = 0.0f;
-        if (glm::length(forward) > 0.01f)
-          forward = glm::normalize(forward);
-        AddMovementInput(forward, Value);
-      }
-      else
-      {
-        glm::vec3 forward = GetViewForwardVector();
-        forward.y = 0.0f;
-        if (glm::length(forward) > 0.01f)
-          forward = glm::normalize(forward);
-        AddMovementInput(forward, Value);
-      }
+      
     }
   }
   void CPawn::lookUp(float Value)
   {
-    AddControllerPitchInput(Value);
+    AddControllerPitchInput(Value);    
   }
   void CPawn::turn(float Value)
   {
-    AddControllerYawInput(Value);
+    AddControllerYawInput(Value);    
   }
   void CPawn::jump()
   {
-    if (!m_bIsJumping)
-      m_bIsJumping = true;
+        
   }
   void CPawn::MoveRight(float Value)
   {
     if (Value != 0.0f)
     {
-      Value *= .20f;
-      if (m_bUseControllerRotation)
-      {
-        glm::vec3 right = this->GetActorRightVector();
-        right.y = 0.0f;
-        right.x *= -1.0f;
-        if (glm::length(right) > 0.01f)
-          right = glm::normalize(right);
-        AddMovementInput(right, Value);
-      }
-      else
-      {
-        glm::vec3 right = GetViewRightVector();
-        right.y = 0.0f;
-        right.x *= -1.0f;
-        if (glm::length(right) > 0.01f)
-          right = glm::normalize(right);
-
-        AddMovementInput(right, Value);
-      }
+      
+      
+      
     }
   }
 
-  glm::vec3 CPawn::GetViewUpVector() const
+  Math::Vector3f CPawn::GetViewUpVector() const
   {
     if (CCameraComponent* camera = FindCameraComponent())
     {
       return camera->GetCameraUpVector();
     }
 
-    return glm::vec3(0.0f, 1.0f, 0.0f);
+    return Math::Vector3f(0.0f, 1.0f, 0.0f);
   }
 
   void CPawn::OnPossess()
@@ -259,18 +186,13 @@ namespace CE
     }
   }
 
-  void CPawn::AddMovementInput(const glm::vec3& WorldDirection, float ScaleValue, bool bForce)
+  void CPawn::AddMovementInput(const Math::Vector3f& WorldDirection, float ScaleValue, bool bForce)
   {
     if (ScaleValue != 0.0f && (bForce || m_RootComponent != nullptr))
     {
-      glm::vec3 direction = WorldDirection;
-      if (glm::length(direction) > 0.01f)
-      {
-        direction = glm::normalize(direction);
-      }
-      direction.z *= -1.0f;  // Invert Z for Vulkan coordinate system
-      m_MovementInput += direction * ScaleValue;
-      m_bMovementInputConsumed = false;
+      (void)WorldDirection;
+      (void)ScaleValue;
+      (void)bForce;
     }
   }
 
@@ -286,18 +208,18 @@ namespace CE
   void CPawn::AddControllerPitchInput(float Value)
   {
     m_ControlRotation.x += Value;
-    m_ControlRotation.x = glm::clamp(m_ControlRotation.x, -89.0f, 89.0f);
+    m_ControlRotation.x = Math::Clamp(m_ControlRotation.x, -89.0f, 89.0f);
   }
 
-  void CPawn::SetControlRotation(const glm::vec3& NewRotation)
+  void CPawn::SetControlRotation(const Math::Vector3f& NewRotation)
   {
     m_ControlRotation = NewRotation;
-    m_ControlRotation.x = glm::clamp(m_ControlRotation.x, -89.0f, 89.0f);
+    m_ControlRotation.x = Math::Clamp(m_ControlRotation.x, -89.0f, 89.0f);
   }
 
   void CPawn::ConsumeMovementInput()
   {
-    m_MovementInput = glm::vec3(0.0f);
+    m_MovementInput = Math::Vector3f(0.0f);
     m_bMovementInputConsumed = true;
   }
 }  // namespace CE

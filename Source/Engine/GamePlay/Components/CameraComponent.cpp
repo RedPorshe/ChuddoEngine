@@ -1,6 +1,6 @@
 #include "Engine/GamePlay/Components/CameraComponent.h"
 
-#include <glm/gtc/matrix_transform.hpp>
+#include "Engine/Utils/Math/AllMath.h"
 
 #include "Engine/GamePlay/Components/SpringArmComponent.h"
 
@@ -11,7 +11,7 @@ namespace CE
   {
   }
 
-  glm::vec3 CCameraComponent::GetCameraForwardVector() const
+  Math::Vector3f CCameraComponent::GetCameraForwardVector() const
   {
     if (GetParent())
     {
@@ -24,7 +24,7 @@ namespace CE
     return forward;
   }
 
-  glm::vec3 CCameraComponent::GetCameraRightVector() const
+  Math::Vector3f CCameraComponent::GetCameraRightVector() const
   {
     if (GetParent())
     {
@@ -33,7 +33,7 @@ namespace CE
     return GetRightVector();
   }
 
-  glm::vec3 CCameraComponent::GetCameraUpVector() const
+  Math::Vector3f CCameraComponent::GetCameraUpVector() const
   {
     if (GetParent())
     {
@@ -42,57 +42,59 @@ namespace CE
     return GetUpVector();
   }
 
-  glm::mat4 CCameraComponent::GetViewMatrix() const
-  {
+  Math::Matrix4f CCameraComponent::GetViewMatrix() const
+{
+   
+    
     if (auto* springArm = dynamic_cast<CSpringArmComponent*>(GetParent()))
     {
-      glm::vec3 worldPos = springArm->GetCameraWorldLocation();
-      glm::vec3 targetPos = springArm->GetWorldLocation() + springArm->GetTargetOffset();
-      glm::vec3 up = springArm->GetUpVector();
-      up.y *= -1.0f;  // Invert Y for view matrix
-
-      return glm::lookAt(worldPos, targetPos, up);
-    }
-    else
-    {
-      glm::vec3 worldPos = GetWorldLocation();
-     
-      glm::vec3 forward = GetCameraForwardVector();
-     
-      glm::vec3 up = GetCameraUpVector();
-     
-
-      return glm::lookAt(worldPos, worldPos + forward, up);
-    }
-  }
-
-  glm::mat4 CCameraComponent::GetProjectionMatrix() const
-  {
-    if (auto* springArm = dynamic_cast<CSpringArmComponent*>(GetParent()))
-    {
-      glm::mat4 projection = glm::perspective(
-          glm::radians(m_FieldOfView),
-          m_AspectRatio,
-          m_NearPlane,
-          m_FarPlane);
-      (void)springArm;
-      projection = glm::scale(projection, glm::vec3(1.0f, 1.0f, 1.0f));
-
-      return projection;
-    }
-    else
-    {
-      glm::mat4 projection = glm::perspective(
-          glm::radians(m_FieldOfView),
-          m_AspectRatio,
-          m_NearPlane,
-          m_FarPlane);
+        Math::Vector3f worldPos = springArm->GetCameraWorldLocation();
+        Math::Vector3f targetPos = springArm->GetWorldLocation() + springArm->GetTargetOffset();
+        Math::Vector3f up = springArm->GetUpVector();
       
-      projection = glm::scale(projection, glm::vec3(1.0f, -1.0f, 1.0f));
-
-      return projection;
+        Math::Matrix4f view = Math::Matrix4f::LookAt(worldPos, targetPos, up);
+       
+        return view;
     }
-  }
+    else
+    {
+        Math::Vector3f worldPos = GetWorldLocation();
+        Math::Vector3f forward = GetCameraForwardVector();
+        Math::Vector3f up = GetCameraUpVector();
+
+        Math::Matrix4f view = Math::Matrix4f::LookAt(worldPos, worldPos + forward, up);
+        
+        return view;
+    }
+}
+
+
+void CCameraComponent::DebugMatrix(const Math::Matrix4f& m, const char* name) const
+{
+    CE_CORE_DEBUG(name," Matrix:");
+    for (int i = 0; i < 4; i++) {
+        CE_CORE_DEBUG("  [",m(i,0), " , ", m(i,1), ",",m(i,2), ",",m(i,3), "]");
+    }
+    CE_CORE_DEBUG("  Determinant: ", m.Determinant());
+}
+
+void CCameraComponent::DebugMatrix(const char* message) const
+{
+    CE_CORE_DEBUG( message);
+}
+
+  Math::Matrix4f CCameraComponent::GetProjectionMatrix() const
+{
+    Math::Matrix4f projection = Math::Matrix4f::Perspective(
+        Math::ToRadians(m_FieldOfView),
+        m_AspectRatio,
+        m_NearPlane,
+        m_FarPlane);
+
+  
+    
+    return projection;
+}
 
   void CCameraComponent::Update(float DeltaTime)
   {
