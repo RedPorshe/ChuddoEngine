@@ -33,7 +33,10 @@ namespace CE
  void SetCollisionResponseToChannel(ECollisionChannel Channel, ECollisionResponse Response);
   ECollisionResponse GetCollisionResponseToChannel(ECollisionChannel Channel) const;
 
-
+ virtual void OnOverlapBegin(const CCollisionComponent* Other) {}
+        virtual void OnOverlapEnd(const CCollisionComponent* Other) {}
+        virtual void OnHit(const CCollisionComponent* Other, const glm::vec3& ImpactPoint) {}
+ECollisionChannel GetCollisionChannel() const {return m_CollisionChannel;}
  protected:
 FString m_ProfileName {"BlockAll"};
 

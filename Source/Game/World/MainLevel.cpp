@@ -32,11 +32,11 @@ MainLevel::MainLevel(CE::CObject* Owner,
   enemy->SetActorScale(5.f);
   enemy->SetActorRotation(glm::vec3(-90.0f, -90.0f, 0.0f));
 
-  // Создаем несколько кубов в разных позициях
+ 
   std::vector<glm::vec3> positions = {
-      glm::vec3(-3.0f, 0.5f, 0.0f),  // Над землей
-      glm::vec3(0.0f, 0.5f, 0.0f),   // Над землей
-      glm::vec3(3.0f, 0.5f, 0.0f),   // Над землей
+      glm::vec3(-3.0f, 0.5f, 0.0f),  
+      glm::vec3(0.0f, 0.5f, 0.0f),   
+      glm::vec3(3.0f, 0.5f, 0.0f),   
       glm::vec3(-1.5f, 2.0f, 0.0f),
       glm::vec3(1.5f, 2.0f, 0.0f)};
 
@@ -61,6 +61,22 @@ MainLevel::MainLevel(CE::CObject* Owner,
     }
     // actor->SetIsStatic(false);
     actor->SetUseGravity(true);
+  }
+
+  for (int i = 0; i < (int)positions.size(); i++)
+  {
+    auto* actor = SpawnActor<CE::CActor>(this, "Sphere_" + std::to_string(i));
+    actor->SetRootComponent(actor->AddSubObject<CE::CStaticMeshComponent>("Mesh", actor, "Mesh"));
+    actor->SetActorLocation(colors[i]);
+
+    auto* mesh = dynamic_cast<CE::CStaticMeshComponent*>(actor->GetRootComponent());
+    if (mesh)
+    {
+      mesh->SetColor(colors[i]);
+      mesh->CreateCubeMesh();
+    }
+    // actor->SetIsStatic(false);
+    actor->SetUseGravity(false);
   }
 
   auto* enemyMesh = dynamic_cast<CE::CStaticMeshComponent*>(enemy->GetRootComponent());
