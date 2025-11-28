@@ -1,4 +1,14 @@
 #include "Engine/GamePlay/Actors/Actor.h"
+#include "Engine/GamePlay/World/Levels/Level.h"
+#include "Engine/GamePlay/Components/MeshComponent.h"
+#include "Engine/GamePlay/CollisionSystem/CollisionComponent.h"
+#include "Engine/GamePlay/CollisionSystem/TerrainCollisionComponent.h"
+#include "Engine/Core/Object.h"
+#include "Engine/Utils/Math/AllMath.h"
+#include "Engine/GamePlay/Components/PhysicsComponent.h"
+#include "Engine/Utils/Logger.h"
+#include <algorithm>
+#include <cfloat>
 
 
 
@@ -99,26 +109,6 @@ namespace CE
   void CActor::Update(float DeltaTime)
   {
     CObject::Update(DeltaTime);
-
-    if (bIsGravityEnabled)
-    {
-      // Применяем гравитацию
-      auto world = dynamic_cast<CLevel*>(GetOwner());
-      if (world)
-      {
-        auto* level = static_cast<CLevel*>(world);
-        const Math::Vector3f gravity = level->GetGravity();
-        if (m_RootComponent->GetParent() == nullptr)
-        {
-          m_verticalVelocity += gravity.y * DeltaTime * Weight;
-          Math::Vector3f currentLocation = m_RootComponent->GetWorldLocation();
-          currentLocation += gravity * DeltaTime;
-          m_RootComponent->SetPosition(currentLocation);
-          
-        }
-      }
-    }
-   
   }
 
  
@@ -126,22 +116,23 @@ namespace CE
   void CActor::Tick(float DeltaTime)
   {
     Update(DeltaTime);
-    if (GetActorLocation().y <= -1000.f)
+
+    // Update physics components
+    auto physicsComponents = GetComponents<CPhysicsComponent>();
+    for (auto* physics : physicsComponents)
     {
-      this->SetActorLocation(GetActorLocation().x, 1000.f, GetActorLocation().z);  // this is stub for destoy actor
-      // need add function to destroy actor...
-      m_verticalVelocity = 0.f;
+      physics->Update(DeltaTime);
     }
 
-        if (!bIsStatic)
+    if (GetActorLocation().y <= -1000.f)
     {
-      if (bIsUsePhysics)
-      {
-        if (bIsSimulatingPhysics)
-        {
-        }
-      }
+      this->SetActorLocation(GetActorLocation().x, 100.f, GetActorLocation().z);  // this is stub for destroy actor
+      // need add function to destroy actor...
     }
   }
+
+
+
+
 
 }  // namespace CE

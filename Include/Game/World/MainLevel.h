@@ -21,7 +21,7 @@ class MainLevel : public CE::CLevel
 
  protected:
   CE::CPlayerController* playerController;
-  CE::CPawn* playerCharacter;
+  CE::CCharacter* playerCharacter;
   CE::TerrainActor* terrain = nullptr;
   CE::CActor* enemy = nullptr;
 };

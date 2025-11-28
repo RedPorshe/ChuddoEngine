@@ -1,5 +1,6 @@
 #pragma once
 #include "MathConstants.h"
+#include <iostream>
 #include <vulkan/vulkan.h>
 
 namespace CE::Math
@@ -76,6 +77,13 @@ namespace CE::Math
         Vector2 ToPixelSpace(const Vector2& viewportSize) const { return *this * viewportSize; }
         Vector2 ToNormalizedSpace(const Vector2& viewportSize) const { return *this / viewportSize; }
     };
+
+    template<typename T>
+    std::ostream& operator<<(std::ostream& os, const Vector2<T>& vec)
+    {
+        os << "(" << vec.x << ", " << vec.y << ")";
+        return os;
+    }
 
     using Vector2f = Vector2<float>;
     using Vector2i = Vector2<int32_t>;

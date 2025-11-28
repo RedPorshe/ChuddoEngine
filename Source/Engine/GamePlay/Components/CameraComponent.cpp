@@ -52,8 +52,6 @@ namespace CE
         Math::Vector3f targetPos = springArm->GetWorldLocation() + springArm->GetTargetOffset();
         Math::Vector3f up = springArm->GetUpVector();
 
-        CE_CORE_DEBUG("Camera position: (", worldPos.x, ", ", worldPos.y, ", ", worldPos.z, ")");
-        CE_CORE_DEBUG("Camera target: (", targetPos.x, ", ", targetPos.y, ", ", targetPos.z, ")");
 
         Math::Matrix4f view = Math::Matrix4f::LookAt(worldPos, targetPos, up);
 

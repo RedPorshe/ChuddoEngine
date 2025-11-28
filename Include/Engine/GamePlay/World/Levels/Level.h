@@ -46,7 +46,7 @@ namespace CE
     }
 
     // Raycast method
-    bool Raycast(const Math::Ray& ray, FRaycastHit& outHit, float maxDistance = 1000.0f);
+    bool Raycast(const Math::Ray& ray, FRaycastHit& outHit, float maxDistance = 1000.0f, CActor* ignoreActor = nullptr);
 
     virtual void BeginPlay() override;
     virtual void Update(float DeltaTime) override;
@@ -55,6 +55,10 @@ namespace CE
    protected:
     std::vector<std::unique_ptr<CActor>> m_Actors;
     Math::Vector3f m_gravity{0.0f, -9.81f, 0.0f};
+
+   private:
+    void PerformCollisionDetection(float DeltaTime);
+    void HandleCollision(CCollisionComponent* compA, CCollisionComponent* compB, float DeltaTime);
   };
 
 }  // namespace CE

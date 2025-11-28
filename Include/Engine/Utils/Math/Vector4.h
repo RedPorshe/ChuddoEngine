@@ -1,5 +1,6 @@
 #pragma once
 #include "Vector3.h"
+#include <iostream>
 
 namespace CE::Math
 {
@@ -115,6 +116,13 @@ namespace CE::Math
         static Vector4 Zero() { return Vector4(T(0), T(0), T(0), T(0)); }
         static Vector4 One() { return Vector4(T(1), T(1), T(1), T(1)); }
     };
+
+    template<typename T>
+    std::ostream& operator<<(std::ostream& os, const Vector4<T>& vec)
+    {
+        os << "(" << vec.x << ", " << vec.y << ", " << vec.z << ", " << vec.w << ")";
+        return os;
+    }
 
     using Vector4f = Vector4<float>;
     using Vector4i = Vector4<int32_t>;

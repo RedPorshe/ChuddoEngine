@@ -1,12 +1,15 @@
 #pragma once
 
 #include "Engine/Core/Object.h"
+#include "Engine/GamePlay/Components/Base/Component.h"
 #include "Engine/GamePlay/Components/SceneComponent.h"
 #include "Engine/GamePlay/World/Levels/Level.h"
 #include "Engine/Utils/Math/AllMath.h"
 
 namespace CE
 {
+  class CCollisionComponent;
+  class CMeshComponent;
 
   class CActor : public CObject
   {
@@ -51,46 +54,16 @@ namespace CE
     virtual void BeginPlay() override;
     virtual void Update(float DeltaTime) override;
     virtual void Tick(float DeltaTime) override;
-    float GetVerticalVelocity() const
-    {
-      return m_verticalVelocity;
-    }
-    void SetUseGravity(bool value)
-    {
-      bIsGravityEnabled = value;
-    }
-    void SetSimulatePhysics(bool value)
-    {
-      bIsSimulatingPhysics = value;
-    }
-    void SetKinematic(bool value)
-    {
-      bIsKinematic = value;
-    }
-    void SetUsePhysics(bool value)
-    {
-      bIsUsePhysics = value;
-    }
-    void SetIsStatic(bool value)
-    {
-      bIsStatic = value;
-    }
-    void SetWeight(float InWeight)
-    {
-      Weight = InWeight;
-    }
 
-   protected:
+
+
+
+  protected:
     CSceneComponent* m_RootComponent = nullptr;
 
     bool bIsUsePhysics{false};
-    
-    float Weight = 1.0f;
-    bool bIsStatic{false};
-    bool bIsKinematic{false};
-    bool bIsSimulatingPhysics{false};
-    bool bIsGravityEnabled{false};
-    float m_verticalVelocity{0.0f};
+
+
   };
 
   template <typename T, typename... Args>
@@ -115,7 +88,7 @@ namespace CE
       if (auto* sceneComp = dynamic_cast<CSceneComponent*>(component))
       {
         sceneComp->AttachToComponent(m_RootComponent);
-        CE_CORE_DEBUG("Auto-attached ", Name, " to ", m_RootComponent->GetName());
+        CE_CORE_DEBUG("Auto-attached ", Name, " to root component");
       }
     }
 

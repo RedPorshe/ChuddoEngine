@@ -32,10 +32,22 @@ namespace CE
 
  void SetCollisionResponseToChannel(ECollisionChannel Channel, ECollisionResponse Response);
   ECollisionResponse GetCollisionResponseToChannel(ECollisionChannel Channel) const;
+  void SetCollisionChannel(ECollisionChannel Channel) { m_CollisionChannel = Channel; }
 
- virtual void OnOverlapBegin(const CCollisionComponent* Other) {}
-        virtual void OnOverlapEnd(const CCollisionComponent* Other) {}
-        virtual void OnHit(const CCollisionComponent* Other, const Math::Vector3f& ImpactPoint) {}
+ virtual void OnOverlapBegin(const CCollisionComponent* Other) { if(!Other) {
+     return;
+   }
+ }
+        virtual void OnOverlapEnd(const CCollisionComponent* Other) { if(!Other){
+            return;
+          }
+        }
+        virtual void OnHit(const CCollisionComponent* Other, const Math::Vector3f& ImpactPoint) { if (!Other) {
+            auto re = ImpactPoint;
+            re = {0.f};
+            return;
+          }
+        }
 ECollisionChannel GetCollisionChannel() const {return m_CollisionChannel;}
  protected:
 FString m_ProfileName {"BlockAll"};

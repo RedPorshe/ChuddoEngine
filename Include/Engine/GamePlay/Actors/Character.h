@@ -2,6 +2,7 @@
 #include "Engine/GamePlay/Actors/Pawn.h"
 #include "Engine/GamePlay/Components/MeshComponent.h"
 #include "Engine/GamePlay/CollisionSystem/CapsuleComponent.h"
+#include "Engine/GamePlay/Components/SpringArmComponent.h"
 
 namespace CE
 {
@@ -16,17 +17,26 @@ namespace CE
 
     CMeshComponent* GetMeshComponent() const
     {
-      return m_MeshComponent;
+      return m_Mesh;
     }
 
    protected:
     virtual void SetupPlayerInputComponent() override;
 
+    // Movement functions moved from CPawn
+    void MoveForward(float Value);
+    void MoveRight(float Value);
+    void Jump();
+    void LookUp(float Value);
+    void Turn(float Value);
 
-    CMeshComponent* m_MeshComponent = nullptr;
-    CCapsuleComponent* m_CapsuleComponent = nullptr;
+    CMeshComponent* m_Mesh = nullptr;
+    CCapsuleComponent* m_Capsule = nullptr;
+    CCameraComponent* m_Camera = nullptr;
+    CSpringArmComponent* m_SpringArm = nullptr;
     float m_VerticalVelocity = 0.0f;
     bool m_IsOnGround = false;
+    bool bIsJumping{false};
 
    private:
   };

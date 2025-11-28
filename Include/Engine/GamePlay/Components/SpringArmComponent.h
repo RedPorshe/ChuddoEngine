@@ -51,7 +51,7 @@ namespace CE
     virtual void Update(float DeltaTime) override;
 
    private:
-    Math::Vector3f m_TargetOffset{0.0f, 0.7f, 0.0f};  // Смещение от цели (Vulkan: Y+ вверх)
+    Math::Vector3f m_TargetOffset{0.0f, -0.9f, 1.0f};  // Смещение от цели (Vulkan: Y+ вверх)
     float m_ArmLength = 5.0f;                    // Длина "руки" камеры
     float m_CameraLag = 0.05f;                   // Задержка движения камеры
     bool m_bUsePawnControlRotation = true;       // Использовать вращение от Pawn

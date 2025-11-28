@@ -11,23 +11,7 @@ namespace CE
   CPawn::CPawn(CObject* Owner, FString NewName)
       : CActor(Owner, NewName)
   {
-    auto* mesh = AddDefaultSubObject<CMeshComponent>("Mesh", this, "MeshComponent");
-    SetRootComponent(mesh);
-    mesh->SetMesh("Assets/Meshes/test_cube.obj");
-    m_InputComponent = AddSubObject<CInputComponent>("Input", this, "InputComponent");
-    auto* m_cameraComponent = AddSubObject<CCameraComponent>("Camera", this, "CameraComponent");
-    auto* m_springArmComponent = AddSubObject<CSpringArmComponent>("SpringArm", this, "SpringArmComponent");
-    m_springArmComponent->AttachToComponent(m_RootComponent);
-    m_springArmComponent->SetRelativePosition(Math::Vector3f(0.0f, 1.0f, 0.0f));
-    m_springArmComponent->SetRelativeRotation(Math::Vector3f(-10.0f, 0.0f, 0.0f));
-    m_springArmComponent->SetArmLength(5.0f);
-
-    m_cameraComponent->AttachToComponent(m_springArmComponent);
-
-    m_cameraComponent->SetFieldOfView(60.0f);
-    m_cameraComponent->SetRelativeRotation(Math::Vector3f(0.0f, 0.0f, 0.0f));
-
-    SetupPlayerInputComponent();
+    
     CE_CORE_DEBUG("CEPawn created: {}", NewName.c_str());
   }
 
@@ -42,8 +26,7 @@ namespace CE
       auto currentRotation = this->GetActorRotation();
       float newYaw = m_ControlRotation.y;
       this->SetActorRotation(Math::Vector3f(currentRotation.x, newYaw, currentRotation.z));
-      float newPitch = m_ControlRotation.x;
-      this->SetActorRotation(Math::Vector3f(newPitch, currentRotation.y, currentRotation.z));
+      // Pitch handled by SpringArm
     }
     else
     {
@@ -59,11 +42,7 @@ namespace CE
   {
     CActor::Tick(DeltaTime);
 
-    // Remove the automatic rotation that was causing camera to spin
-    // static float rotationAngle = 0.0f;
-    // rotationAngle += 30.0f * DeltaTime;
-    // AddControllerPitchInput(rotationAngle);
-    // AddControllerYawInput(rotationAngle);
+    
 
     ApplyRotationToActor();
     ApplyMovementInputToActor();
@@ -130,7 +109,7 @@ namespace CE
       Math::Vector3f forward = GetViewForwardVector();
       forward.y = 0.0f; // Keep movement on horizontal plane
       forward = forward.Normalized();
-      Math::Vector3f delta = forward * Value * 50.0f * 0.016f; // Increased speed for testing
+      Math::Vector3f delta = forward * Value * 5.0f * 0.016f; // Increased speed for testing
       Math::Vector3f currentLoc = GetActorLocation();
       Math::Vector3f newLocation = currentLoc + delta;
       CE_CORE_DEBUG("Moving pawn forward from (", currentLoc.x, ", ", currentLoc.y, ", ", currentLoc.z, ") to (", newLocation.x, ", ", newLocation.y, ", ", newLocation.z, ")");
@@ -155,10 +134,10 @@ namespace CE
     if (Value != 0.0f)
     {
       CE_CORE_DEBUG("MoveRight called with value: ", Value);
-      Math::Vector3f right = GetViewRightVector();
+      Math::Vector3f right = -GetViewRightVector();
       right.y = 0.0f; // Keep movement on horizontal plane
       right = right.Normalized();
-      Math::Vector3f delta = right * Value * 50.0f * 0.016f; // Increased speed for testing
+      Math::Vector3f delta = right * Value * 5.0f * 0.016f; // Increased speed for testing
       Math::Vector3f currentLoc = GetActorLocation();
       Math::Vector3f newLocation = currentLoc + delta;
       CE_CORE_DEBUG("Moving pawn right from (", currentLoc.x, ", ", currentLoc.y, ", ", currentLoc.z, ") to (", newLocation.x, ", ", newLocation.y, ", ", newLocation.z, ")");
@@ -183,19 +162,7 @@ namespace CE
 
   void CPawn::SetupPlayerInputComponent()
   {
-    if (m_InputComponent)
-    {
-      m_InputComponent->BindAxis("MoveForward", [this](float Value)
-                                 { MoveForward(Value); });
-      m_InputComponent->BindAxis("MoveRight", [this](float value)
-                                 { MoveRight(value); });
-      m_InputComponent->BindAxis("LookHorizontal", [this](float value)
-                                 { turn(value); });
-      m_InputComponent->BindAxis("LookVertical", [this](float value)
-                                 { lookUp(value); });
-      m_InputComponent->BindAction("Jump", EInputEvent::Pressed, [this]()
-                                   { jump(); });
-    }
+    // Empty implementation, logic moved to CCharacter
   }
 
   void CPawn::AddMovementInput(const Math::Vector3f& WorldDirection, float ScaleValue, bool bForce)
@@ -210,17 +177,17 @@ namespace CE
 
   void CPawn::AddControllerYawInput(float Value)
   {
-    m_ControlRotation.y += Value;
-    while (m_ControlRotation.y > 180.0f)
-      m_ControlRotation.y -= 360.0f;
-    while (m_ControlRotation.y < -180.0f)
-      m_ControlRotation.y += 360.0f;
+    m_ControlRotation.x += Value;
+    while (m_ControlRotation.x > 180.0f)
+      m_ControlRotation.x -= 360.0f;
+    while (m_ControlRotation.x < -180.0f)
+      m_ControlRotation.x += 360.0f;
   }
 
   void CPawn::AddControllerPitchInput(float Value)
   {
-    m_ControlRotation.x += Value;
-    m_ControlRotation.x = Math::Clamp(m_ControlRotation.x, -89.0f, 89.0f);
+    m_ControlRotation.y += Value;
+    m_ControlRotation.y = Math::Clamp(m_ControlRotation.y, -89.0f, 89.0f);
   }
 
   void CPawn::SetControlRotation(const Math::Vector3f& NewRotation)

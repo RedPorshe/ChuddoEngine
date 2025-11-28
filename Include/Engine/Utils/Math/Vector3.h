@@ -1,6 +1,8 @@
 #pragma once
 #include "Vector2.h"
 #include "Engine/Utils/Logger.h"
+#include <iostream>
+
 
 namespace CE::Math
 {
@@ -91,6 +93,8 @@ const T& operator[](int index) const
             return x * x + y * y + z * z; 
         }
         
+
+
         T Dot(const Vector3& other) const { 
             return x * other.x + y * other.y + z * other.z; 
         }
@@ -175,6 +179,13 @@ const T& operator[](int index) const
         static Vector3 Zero() { return Vector3(T(0), T(0), T(0)); }
         static Vector3 One() { return Vector3(T(1), T(1), T(1)); }
     };
+
+    template<typename T>
+    std::ostream& operator<<(std::ostream& os, const Vector3<T>& vec)
+    {
+        os << "(" << vec.x << ", " << vec.y << ", " << vec.z << ")";
+        return os;
+    }
 
     using Vector3f = Vector3<float>;
     using Vector3i = Vector3<int32_t>;
