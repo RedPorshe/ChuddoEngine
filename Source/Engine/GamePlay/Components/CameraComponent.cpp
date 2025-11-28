@@ -44,16 +44,19 @@ namespace CE
 
   Math::Matrix4f CCameraComponent::GetViewMatrix() const
 {
-   
-    
+
+
     if (auto* springArm = dynamic_cast<CSpringArmComponent*>(GetParent()))
     {
         Math::Vector3f worldPos = springArm->GetCameraWorldLocation();
         Math::Vector3f targetPos = springArm->GetWorldLocation() + springArm->GetTargetOffset();
         Math::Vector3f up = springArm->GetUpVector();
-      
+
+        CE_CORE_DEBUG("Camera position: (", worldPos.x, ", ", worldPos.y, ", ", worldPos.z, ")");
+        CE_CORE_DEBUG("Camera target: (", targetPos.x, ", ", targetPos.y, ", ", targetPos.z, ")");
+
         Math::Matrix4f view = Math::Matrix4f::LookAt(worldPos, targetPos, up);
-       
+
         return view;
     }
     else
@@ -63,7 +66,7 @@ namespace CE
         Math::Vector3f up = GetCameraUpVector();
 
         Math::Matrix4f view = Math::Matrix4f::LookAt(worldPos, worldPos + forward, up);
-        
+
         return view;
     }
 }

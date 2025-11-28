@@ -21,7 +21,7 @@ namespace CE::Math
                     data[i][j] = arrayData[i * 4 + j];
         }
 
-        Matrix4(const Vector4<T>& col0, const Vector4<T>& col1, 
+        Matrix4(const Vector4<T>& col0, const Vector4<T>& col1,
                 const Vector4<T>& col2, const Vector4<T>& col3)
         {
             data[0][0] = col0.x; data[0][1] = col0.y; data[0][2] = col0.z; data[0][3] = col0.w;
@@ -163,16 +163,16 @@ namespace CE::Math
         static Matrix4 Perspective(T fovY, T aspect, T zNear, T zFar)
         {
             Matrix4 result;
-    T tanHalfFov = std::tan(fovY / T(2));
-    
-    result(0, 0) = T(1) / (aspect * tanHalfFov);
-    result(1, 1) = T(1) / tanHalfFov;
-    result(2, 2) = zFar / (zNear - zFar);        // zFar / (zNear - zFar)
-    result(2, 3) = T(-1);                        // -1 для Vulkan
-    result(3, 2) = (zFar * zNear) / (zNear - zFar); // (zFar * zNear) / (zNear - zFar)
-    result(3, 3) = T(0);
-    
-    return result;
+            T tanHalfFov = std::tan(fovY / T(2));
+
+            result(0, 0) = T(1) / (aspect * tanHalfFov);
+            result(1, 1) = -T(1) / tanHalfFov;  // Flip Y for Vulkan (Y points down in NDC)
+            result(2, 2) = -zFar / (zFar - zNear);
+            result(2, 3) = -(zFar * zNear) / (zFar - zNear);
+            result(3, 2) = T(-1);
+            result(3, 3) = T(0);
+
+            return result;
         }
 
         static Matrix4 Orthographic(T left, T right, T bottom, T top, T zNear, T zFar)
@@ -190,20 +190,20 @@ namespace CE::Math
         // LookAt матрица (Vulkan uses right-handed, Y-up)
         static Matrix4 LookAt(const Vector3<T>& eye, const Vector3<T>& target, const Vector3<T>& up)
         {
-            Vector3<T> zAxis = (target - eye).Normalized();  // ИСПРАВЛЕНО: target - eye
-    Vector3<T> xAxis = up.Cross(zAxis).Normalized();
-    Vector3<T> yAxis = zAxis.Cross(xAxis);
+            Vector3<T> zAxis = (target - eye).Normalized();  // forward direction
+            Vector3<T> xAxis = zAxis.Cross(up).Normalized();  // right direction
+            Vector3<T> yAxis = xAxis.Cross(zAxis);  // up direction
 
-    Matrix4 result;
-    result(0, 0) = xAxis.x; result(0, 1) = xAxis.y; result(0, 2) = xAxis.z;
-    result(1, 0) = yAxis.x; result(1, 1) = yAxis.y; result(1, 2) = yAxis.z;
-    result(2, 0) = zAxis.x; result(2, 1) = zAxis.y; result(2, 2) = zAxis.z;
-    
-    result(0, 3) = -xAxis.Dot(eye);
-    result(1, 3) = -yAxis.Dot(eye);
-    result(2, 3) = -zAxis.Dot(eye);
+            Matrix4 result;
+            result(0, 0) = xAxis.x; result(0, 1) = xAxis.y; result(0, 2) = xAxis.z;
+            result(1, 0) = yAxis.x; result(1, 1) = yAxis.y; result(1, 2) = yAxis.z;
+            result(2, 0) = zAxis.x; result(2, 1) = zAxis.y; result(2, 2) = zAxis.z;
 
-    return result;
+            result(0, 3) = -xAxis.Dot(eye);
+            result(1, 3) = -yAxis.Dot(eye);
+            result(2, 3) = -zAxis.Dot(eye);
+
+            return result;
         }
 
         // Инверсия матрицы

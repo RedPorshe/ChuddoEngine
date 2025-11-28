@@ -14,7 +14,9 @@ MainLevel::MainLevel(CE::CObject* Owner,
   playerCharacter = SpawnActor<CE::CPawn>(this, "Player Character");
   playerController->Possess(playerCharacter);
 
-  playerCharacter->SetActorLocation(1.f, 1.f, 1.f);
+  playerCharacter->SetActorLocation(10.f, 10.f, 5.f);
+  playerCharacter->SetUseGravity(false);  // Disable gravity for player character
+  CE_CORE_DEBUG("Player character initial position set to: (", playerCharacter->GetActorLocation().x, ", ", playerCharacter->GetActorLocation().y, ", ", playerCharacter->GetActorLocation().z, ")");
 
   // === СОЗДАЕМ ЛАНДШАФТ ===
   terrain = SpawnActor<CE::TerrainActor>(this, "Terrain");

@@ -137,8 +137,8 @@ namespace CE
           for (size_t i = 1; i + 1 < faceIndices.size(); ++i)
           {
             indices.push_back(faceIndices[0]);
-            indices.push_back(faceIndices[i]);
             indices.push_back(faceIndices[i + 1]);
+            indices.push_back(faceIndices[i]);
           }
         }
       }

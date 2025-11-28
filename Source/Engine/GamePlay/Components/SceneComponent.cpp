@@ -11,7 +11,7 @@ namespace CE
 
   void CSceneComponent::SetPosition(const Math::Vector3f& Position)
   {
-    m_WorldLocation = Position;
+    m_RelativeLocation = Position;
     UpdateTransformMatrix();
   }
 

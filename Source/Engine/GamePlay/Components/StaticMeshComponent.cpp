@@ -54,8 +54,10 @@ namespace CE
     std::ifstream file(filename);
     if (!file.is_open())
     {
+      CE_CORE_ERROR("Failed to open OBJ file: ", filename);
       return false;
     }
+    CE_CORE_DEBUG("Loading OBJ file: ", filename);
 
     std::vector<Math::Vector3f> positions;
     std::vector<Math::Vector2f> texCoords;

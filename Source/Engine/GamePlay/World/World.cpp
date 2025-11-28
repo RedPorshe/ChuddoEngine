@@ -189,8 +189,8 @@ namespace CE
     else
     {
       CameraData defaultCam;
-      Math::Vector3f defaultCamPosition = Math::Vector3f(5.0f, 1.0f, 10.0f);
-      Math::Vector3f defaultCameraUp = Math::Vector3f(0.0f, -1.0f, 0.0f);
+      Math::Vector3f defaultCamPosition = Math::Vector3f(0.0f, 2.0f, 10.0f);
+      Math::Vector3f defaultCameraUp = Math::Vector3f(0.0f, 1.0f, 0.0f);
       Math::Vector3f defaultCameraTarget = Math::Vector3f(0.0f, 0.0f, 0.0f);
 
       defaultCam.viewMatrix = Math::Matrix4f::LookAt(

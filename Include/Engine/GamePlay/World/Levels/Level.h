@@ -1,5 +1,6 @@
 #pragma once
 #include "Engine/Utils/Math/Vector3.h"
+#include "Engine/Utils/Math/Ray.h"
 #include <memory>
 #include <vector>
 
@@ -9,6 +10,16 @@ namespace CE
 {
 
   class CActor;
+  class CCollisionComponent;
+
+  struct FRaycastHit
+  {
+      CCollisionComponent* Component = nullptr;
+      Math::Vector3f Location;
+      Math::Vector3f Normal;
+      float Distance = 0.0f;
+      bool bBlockingHit = false;
+  };
 
   class CLevel : public CObject
   {
@@ -33,6 +44,9 @@ namespace CE
     {
       return m_Actors;
     }
+
+    // Raycast method
+    bool Raycast(const Math::Ray& ray, FRaycastHit& outHit, float maxDistance = 1000.0f);
 
     virtual void BeginPlay() override;
     virtual void Update(float DeltaTime) override;

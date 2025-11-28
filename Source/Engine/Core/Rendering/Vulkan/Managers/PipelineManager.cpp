@@ -95,7 +95,7 @@ namespace CE
       configInfo.depthStencilInfo.depthWriteEnable = VK_TRUE;
       configInfo.depthStencilInfo.depthCompareOp = VK_COMPARE_OP_LESS;
 
-      // ИСПРАВЛЯЕМ НАПРАВЛЕНИЕ ОБХОДА ГРАНЕЙ
+      // НАПРАВЛЕНИЕ ОБХОДА ГРАНЕЙ ПО УМОЛЧАНИЮ
       configInfo.rasterizationInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
 
       // ВЫКЛЮЧАЕМ BIAS ГЛУБИНЫ ДЛЯ ГЛАДКИХ ПОВЕРХНОСТЕЙ

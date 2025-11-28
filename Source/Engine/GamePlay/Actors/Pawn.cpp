@@ -59,18 +59,15 @@ namespace CE
   {
     CActor::Tick(DeltaTime);
 
-static float rotationAngle = 0.0f;
-    rotationAngle += 30.0f * DeltaTime;
-    AddControllerPitchInput(rotationAngle);
-        AddControllerYawInput(rotationAngle);
+    // Remove the automatic rotation that was causing camera to spin
+    // static float rotationAngle = 0.0f;
+    // rotationAngle += 30.0f * DeltaTime;
+    // AddControllerPitchInput(rotationAngle);
+    // AddControllerYawInput(rotationAngle);
 
     ApplyRotationToActor();
     ApplyMovementInputToActor();
     ConsumeMovementInput();
-   
-    
-
-     
   }
 
   CCameraComponent* CPawn::FindCameraComponent() const
@@ -129,7 +126,16 @@ static float rotationAngle = 0.0f;
   {
     if (Value != 0.0f)
     {
-      
+      CE_CORE_DEBUG("MoveForward called with value: ", Value);
+      Math::Vector3f forward = GetViewForwardVector();
+      forward.y = 0.0f; // Keep movement on horizontal plane
+      forward = forward.Normalized();
+      Math::Vector3f delta = forward * Value * 50.0f * 0.016f; // Increased speed for testing
+      Math::Vector3f currentLoc = GetActorLocation();
+      Math::Vector3f newLocation = currentLoc + delta;
+      CE_CORE_DEBUG("Moving pawn forward from (", currentLoc.x, ", ", currentLoc.y, ", ", currentLoc.z, ") to (", newLocation.x, ", ", newLocation.y, ", ", newLocation.z, ")");
+      SetActorLocation(newLocation);
+      CE_CORE_DEBUG("Pawn location after move: (", GetActorLocation().x, ", ", GetActorLocation().y, ", ", GetActorLocation().z, ")");
     }
   }
   void CPawn::lookUp(float Value)
@@ -148,9 +154,15 @@ static float rotationAngle = 0.0f;
   {
     if (Value != 0.0f)
     {
-      
-      
-      
+      CE_CORE_DEBUG("MoveRight called with value: ", Value);
+      Math::Vector3f right = GetViewRightVector();
+      right.y = 0.0f; // Keep movement on horizontal plane
+      right = right.Normalized();
+      Math::Vector3f delta = right * Value * 50.0f * 0.016f; // Increased speed for testing
+      Math::Vector3f currentLoc = GetActorLocation();
+      Math::Vector3f newLocation = currentLoc + delta;
+      CE_CORE_DEBUG("Moving pawn right from (", currentLoc.x, ", ", currentLoc.y, ", ", currentLoc.z, ") to (", newLocation.x, ", ", newLocation.y, ", ", newLocation.z, ")");
+      SetActorLocation(newLocation);
     }
   }
 

@@ -1,4 +1,8 @@
 #include "Engine/GamePlay/World/Levels/Level.h"
+#include "Engine/GamePlay/CollisionSystem/CollisionComponent.h"
+#include "Engine/GamePlay/CollisionSystem/BoxComponent.h"
+#include "Engine/GamePlay/CollisionSystem/CapsuleComponent.h"
+#include "Engine/Utils/Math/AABB.h"
 
 namespace CE
 {
@@ -36,6 +40,37 @@ namespace CE
       }
     }
     return nullptr;
+  }
+
+  bool CLevel::Raycast(const Math::Ray& ray, FRaycastHit& outHit, float maxDistance)
+  {
+    outHit = FRaycastHit();
+    float closestDistance = maxDistance;
+    bool bHit = false;
+
+    for (const auto& actor : m_Actors)
+    {
+      auto collisionComponents = actor->GetComponents<CCollisionComponent>();
+      for (auto* comp : collisionComponents)
+      {
+        if (!comp->IsCollisionEnabled()) continue;
+
+        Math::AABB aabb(comp->GetBoundingBoxMin(), comp->GetBoundingBoxMax());
+        float tMin, tMax;
+        if (ray.Intersects(aabb, tMin, tMax) && tMin >= 0.0f && tMin < closestDistance)
+        {
+          outHit.Component = comp;
+          outHit.Distance = tMin;
+          outHit.Location = ray.GetPoint(tMin);
+          outHit.Normal = Math::Vector3f(0.0f, 0.0f, 1.0f); // Placeholder normal
+          outHit.bBlockingHit = true;
+          closestDistance = tMin;
+          bHit = true;
+        }
+      }
+    }
+
+    return bHit;
   }
 
   void CLevel::BeginPlay()
