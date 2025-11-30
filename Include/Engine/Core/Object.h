@@ -7,6 +7,7 @@
 #include <unordered_map>
 
 #include "CoreMinimal.h"
+#include "Engine/Core/Reflection.h"
 
 namespace CE
 {
@@ -37,6 +38,8 @@ namespace CE
     {
       return m_Name;
     }
+
+    virtual const ClassInfo* GetClassInfo() const { return nullptr; }
 
     template <typename T>
     std::vector<T*> GetComponents() const

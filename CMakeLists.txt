@@ -1,11 +1,11 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 4.1.2)
 
-# Убираем сброс компиляторов - это вызывает предупреждения
-# Вместо этого используем find_program для надежного поиска
+# Remove compiler reset - this causes warnings
+# Instead, we use find_program for reliable search
 
 project(GameEngine VERSION 1.0.0 LANGUAGES CXX)
 
-# Надежный поиск MinGW компиляторов
+# Reliable search for MinGW compilers
 if(WIN32)
     find_program(MINGW_CXX_COMPILER 
         NAMES g++ c++ x86_64-w64-mingw32-g++ 
@@ -28,7 +28,7 @@ if(WIN32)
     endif()
 endif()
 
-# Добавьте это после project()
+# Add this after project()
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug)
 endif()
@@ -37,13 +37,13 @@ message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "C++ compiler: ${CMAKE_CXX_COMPILER}")
 message(STATUS "C compiler: ${CMAKE_C_COMPILER}")
 
-# Определяем MINGW явно (альтернативный способ)
+# Define MINGW explicitly (alternative way)
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND WIN32)
     set(MINGW TRUE CACHE BOOL "Using MinGW compiler")
     message(STATUS "MinGW compiler detected: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
 endif()
 
-# Определяем макросы в зависимости от типа сборки
+# Define macros depending on build type
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_compile_definitions(_DEBUG)
     message(STATUS "Debug build - _DEBUG defined")
@@ -58,7 +58,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Configuration
 set(ENGINE_NAME "GameEngine")
 
-# Для MinGW создаем отдельные папки для Debug и Release
+# For MinGW, create separate folders for Debug and Release
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/Debug)
     set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/Debug)
@@ -72,23 +72,62 @@ endif()
 # External dependencies
 set(EXTERNAL_DIR ${CMAKE_SOURCE_DIR}/thirdParty)
 
-# GLFW
-if(EXISTS ${EXTERNAL_DIR}/glfw/CMakeLists.txt)
-    # Исправляем пути для MinGW
+# SDL3
+if(EXISTS ${EXTERNAL_DIR}/SDL/CMakeLists.txt)
+    # Disable SDL tests and some features to speed up build
+    set(SDL_TESTS OFF CACHE BOOL "Disable SDL tests" FORCE)
     if(MINGW)
-        set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Build the GLFW example programs")
-        set(GLFW_BUILD_TESTS OFF CACHE BOOL "Build the GLFW test programs")
-        set(GLFW_BUILD_DOCS OFF CACHE BOOL "Build the GLFW documentation")
-        set(GLFW_INSTALL OFF CACHE BOOL "Generate installation target")
+        set(SDL_SHARED OFF CACHE BOOL "Disable SDL shared library for MinGW" FORCE)
+        set(SDL_STATIC ON CACHE BOOL "Build SDL as static library for MinGW" FORCE)
+        message(STATUS "Using bundled SDL3 static library for MinGW")
+    else()
+        set(SDL_SHARED ON CACHE BOOL "Build SDL as shared library" FORCE)
+        set(SDL_STATIC OFF CACHE BOOL "Disable SDL static library" FORCE)
+        message(STATUS "Using bundled SDL3 shared library")
     endif()
-    
-    add_subdirectory(${EXTERNAL_DIR}/glfw)
-    set(GLFW_LIBRARY glfw)
-    message(STATUS "Using bundled GLFW")
+    set(SDL_DISABLE_INSTALL ON CACHE BOOL "Disable SDL install rules" FORCE)
+    add_subdirectory(${EXTERNAL_DIR}/SDL)
+    if(MINGW)
+        set(SDL3_LIBRARY SDL3-static)
+    else()
+        set(SDL3_LIBRARY SDL3)
+    endif()
+    set(SDL3_INCLUDE_DIRS ${EXTERNAL_DIR}/SDL/include ${EXTERNAL_DIR}/SDL/include/SDL3)
+    message(STATUS "Using bundled SDL3")
 else()
-    find_package(glfw3 REQUIRED)
-    set(GLFW_LIBRARY glfw)
-    message(STATUS "Using system GLFW")
+    find_package(SDL3 REQUIRED)
+    set(SDL3_LIBRARY SDL3)
+    message(STATUS "Using system SDL3")
+endif()
+
+# ImGui
+if(EXISTS ${EXTERNAL_DIR}/imgui)
+    # Add ImGui sources manually for Vulkan backend
+    set(IMGUI_SOURCES
+        ${EXTERNAL_DIR}/imgui/imgui.cpp
+        ${EXTERNAL_DIR}/imgui/imgui_draw.cpp
+        ${EXTERNAL_DIR}/imgui/imgui_widgets.cpp
+        ${EXTERNAL_DIR}/imgui/imgui_tables.cpp
+        ${EXTERNAL_DIR}/imgui/backends/imgui_impl_sdl3.cpp
+        ${EXTERNAL_DIR}/imgui/backends/imgui_impl_vulkan.cpp
+    )
+
+    add_library(imgui STATIC ${IMGUI_SOURCES})
+    target_include_directories(imgui PUBLIC
+        ${EXTERNAL_DIR}/imgui
+        ${EXTERNAL_DIR}/imgui/backends
+        ${SDL3_INCLUDE_DIRS}
+        ${Vulkan_INCLUDE_DIRS}
+    )
+    target_link_libraries(imgui PUBLIC ${SDL3_LIBRARY} Vulkan::Vulkan)
+    set(IMGUI_LIBRARY imgui)
+    message(STATUS "Using bundled ImGui with Vulkan backend")
+else()
+    find_package(imgui QUIET)
+    if(NOT imgui_FOUND)
+        message(FATAL_ERROR "ImGui not found! Please run setup_dependencies.bat or install ImGui manually")
+    endif()
+    set(IMGUI_LIBRARY imgui)
 endif()
 
 # GLM (header-only)
@@ -114,6 +153,7 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/Include
     ${GLM_INCLUDE_DIRS}
     ${Vulkan_INCLUDE_DIRS}
+    ${SDL3_INCLUDE_DIRS}
 )
 
 # Source files
@@ -125,7 +165,7 @@ file(GLOB_RECURSE SOURCES
 # Create executable
 add_executable(${ENGINE_NAME} ${SOURCES})
 
-# Отключаем консоль в Release версии (только для MinGW)
+# Disable console in Release version (only for MinGW)
 if(CMAKE_BUILD_TYPE STREQUAL "Release" AND MINGW)
     target_link_options(${ENGINE_NAME} PRIVATE -mwindows)
     message(STATUS "Console disabled for Release build (MinGW)")
@@ -133,11 +173,11 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "Debug" AND MINGW)
     message(STATUS "Console enabled for Debug build (MinGW)")
 endif()
 
-# Найдите glslangValidator
+# Find glslangValidator
 find_program(GLSLANG_VALIDATOR glslangValidator)
 
 if(GLSLANG_VALIDATOR)
-    # Находим ВСЕ файлы шейдеров
+    # Find ALL shader files
     file(GLOB SHADER_FILES 
         "${CMAKE_SOURCE_DIR}/Assets/Shaders/*.vert"
         "${CMAKE_SOURCE_DIR}/Assets/Shaders/*.frag"
@@ -150,13 +190,13 @@ if(GLSLANG_VALIDATOR)
     set(SPV_FILES "")
     set(SHADER_DEPENDENCIES "")
     
-    # Создаем правила для каждого шейдера
+    # Create rules for each shader
     foreach(SHADER_FILE ${SHADER_FILES})
-        # Получаем имя файла без расширения
+        # Get filename without extension
         get_filename_component(SHADER_NAME ${SHADER_FILE} NAME_WE)
         get_filename_component(SHADER_EXT ${SHADER_FILE} EXT)
         
-        # Определяем тип шейдера по расширению
+        # Determine shader type by extension
         if(SHADER_EXT STREQUAL ".vert")
             set(SPV_EXT "_vert.spv")
         elseif(SHADER_EXT STREQUAL ".frag")
@@ -174,10 +214,10 @@ if(GLSLANG_VALIDATOR)
             continue()
         endif()
         
-        # Определяем выходной файл
+        # Define output file
         set(SPV_FILE "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Assets/Shaders/${SHADER_NAME}${SPV_EXT}")
         
-        # Создаем правило компиляции
+        # Create compilation rule
         add_custom_command(
             OUTPUT ${SPV_FILE}
             COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Assets/Shaders"
@@ -192,7 +232,7 @@ if(GLSLANG_VALIDATOR)
         message(STATUS "Shader compilation rule added: ${SHADER_FILE} -> ${SPV_FILE}")
     endforeach()
     
-    # Добавляем цель для компиляции всех шейдеров
+    # Add target for compiling all shaders
     add_custom_target(CompileAllShaders ALL DEPENDS ${SPV_FILES})
     add_dependencies(${ENGINE_NAME} CompileAllShaders)
     
@@ -202,7 +242,7 @@ else()
     message(WARNING "glslangValidator not found - shaders must be precompiled")
 endif()
 
-# Копируем Assets папку (без исходников шейдеров, только скомпилированные)
+# Copy Assets folder (without shader sources, only compiled)
 if(EXISTS ${CMAKE_SOURCE_DIR}/Assets)
     add_custom_command(TARGET ${ENGINE_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Assets"
@@ -211,7 +251,7 @@ if(EXISTS ${CMAKE_SOURCE_DIR}/Assets)
             "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Assets"
     )
     
-    # Удаляем исходники шейдеров после копирования (оставляем только .spv)
+    # Remove shader sources after copying (keep only .spv)
     add_custom_command(TARGET ${ENGINE_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E remove
             "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Assets/Shaders/*.vert"
@@ -230,11 +270,12 @@ endif()
 
 # Link libraries
 target_link_libraries(${ENGINE_NAME}
-    ${GLFW_LIBRARY}
+    ${SDL3_LIBRARY}
+    ${IMGUI_LIBRARY}
     Vulkan::Vulkan
 )
 
-# Статическая линковка для MinGW
+# Static linking for MinGW
 if(MINGW)
     target_link_options(${ENGINE_NAME} PRIVATE 
         -static
@@ -249,7 +290,7 @@ target_compile_options(${ENGINE_NAME} PRIVATE -Wall -Wextra)
 
 # Copy DLLs for Windows
 if(WIN32)
-    # Копируем только Vulkan DLL
+    # Copy only Vulkan DLL
     find_file(VULKAN_DLL vulkan-1.dll 
         PATHS "C:/VulkanSDK/*/Bin"
         DOC "Path to Vulkan DLL"
@@ -264,10 +305,9 @@ if(WIN32)
     endif()
 endif()
 
-# Убираем статические библиотеки после сборки
+# Remove static libraries after build
 add_custom_command(TARGET ${ENGINE_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E remove
-        "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/libglfw3.a"
         "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/libglm.a"
     COMMENT "Removing static library files"
 )

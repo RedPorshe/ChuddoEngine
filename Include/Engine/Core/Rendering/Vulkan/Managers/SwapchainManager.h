@@ -7,15 +7,15 @@
 #include "Engine/Core/Rendering/Vulkan/Utils/VulkanUtils.h"
 #include "vulkan/vulkan.h"
 
-// Forward declare GLFW type (we include GLFW in VulkanContext.cpp)
-struct GLFWwindow;
+// Forward declare SDL type
+struct SDL_Window;
 
 namespace CE
 {
   class SwapchainManager
   {
    public:
-    SwapchainManager(VkInstance instance, VkSurfaceKHR surface, std::shared_ptr<DeviceManager> deviceManager, GLFWwindow* window);
+    SwapchainManager(VkInstance instance, VkSurfaceKHR surface, std::shared_ptr<DeviceManager> deviceManager, SDL_Window* window);
     ~SwapchainManager();
 
     // Удаляем копирование
@@ -104,6 +104,6 @@ namespace CE
 
     VkRenderPass m_renderPass = VK_NULL_HANDLE;
     // Window pointer used to query actual framebuffer size when needed
-    GLFWwindow* m_window = nullptr;
+    SDL_Window* m_window = nullptr;
   };
 }  // namespace CE

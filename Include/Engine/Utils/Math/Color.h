@@ -7,6 +7,11 @@ namespace CE::Math
     class Color : public Vector4f
     {
     public:
+        float& r = x;
+        float& g = y;
+        float& b = z;
+        float& a = w;
+
         Color() : Vector4f(0,0,0,1) {}
         Color(float r, float g, float b, float a = 1.0f) : Vector4f(r,g,b,a) {}
         Color(const Vector4f& vec) : Vector4f(vec) {}

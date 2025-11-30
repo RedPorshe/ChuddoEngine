@@ -1,6 +1,7 @@
 #include "Engine/Core/Rendering/Vulkan/Core/VulkanContext.h"
 
-#include <GLFW/glfw3.h>
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_vulkan.h>
 
 CE::VulkanContext::VulkanContext(AppInfo* info) : m_info{info}
 {
@@ -210,13 +211,13 @@ void CE::VulkanContext::Shutdown()
   // Cleanup window
   if (m_window)
   {
-    glfwDestroyWindow(m_window);
+    SDL_DestroyWindow(m_window);
     m_window = nullptr;
     CE_RENDER_DEBUG("Window destroyed");
   }
 
-  glfwTerminate();
-  CE_RENDER_DEBUG("GLFW terminated");
+  SDL_Quit();
+  CE_RENDER_DEBUG("SDL terminated");
 }
 
 void CE::VulkanContext::DrawFrame(const FrameRenderData& renderData)
@@ -443,6 +444,7 @@ void CE::VulkanContext::CleanupSyncObjects()
 void CE::VulkanContext::RecordCommandBuffer(uint32_t imageIndex, const FrameRenderData& renderData)
 {
   m_commandBufferManager->BeginRecording(imageIndex);
+  m_currentCommandBuffer = m_commandBufferManager->GetCommandBuffer(imageIndex);
 
   std::vector<VkClearValue> clearValues(2);
   clearValues[0].color = {{.0f, 1.0f, 1.0f, 1.0f}};
@@ -533,73 +535,44 @@ void CE::VulkanContext::UpdateUniformBuffers(const FrameRenderData& renderData)
 
 bool CE::VulkanContext::ShouldClose() const
 {
-  return glfwWindowShouldClose(m_window);
+  return m_shouldClose;
 }
 
 bool CE::VulkanContext::InitWindow()
 {
-  if (!glfwInit())
+  if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0)
     return false;
-
-  glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
   if (m_info->Fullscreen)
   {
     // Borderless Fullscreen режим
-    GLFWmonitor* primaryMonitor = glfwGetPrimaryMonitor();
-    const GLFWvidmode* mode = glfwGetVideoMode(primaryMonitor);
-
-    // Устанавливаем параметры видеорежима для borderless
-    glfwWindowHint(GLFW_RED_BITS, mode->redBits);
-    glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
-    glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
-    glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
-
-    // Отключаем рамку и заголовок окна
-    glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-
-    m_window = glfwCreateWindow(
-        mode->width,
-        mode->height,
+    m_window = SDL_CreateWindow(
         m_info->AppName.c_str(),
-        nullptr,  // nullptr для borderless fullscreen
-        nullptr);
+        0,
+        0,
+        SDL_WINDOW_VULKAN | SDL_WINDOW_FULLSCREEN);
 
-    // Перемещаем окно на основной монитор
-    if (m_window)
-    {
-      glfwSetWindowPos(m_window, 0, 0);
-    }
-
-    CE_RENDER_DEBUG("Borderless fullscreen window created: ", mode->width, "x", mode->height, " @", mode->refreshRate, "Hz");
+    CE_RENDER_DEBUG("Borderless fullscreen window created");
   }
   else
   {
     // Оконный режим
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-    glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);  // Включаем рамку
+    m_window = SDL_CreateWindow(
+        m_info->AppName.c_str(),
+        m_info->Width,
+        m_info->Height,
+        SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
 
-    m_window = glfwCreateWindow(m_info->Width, m_info->Height, m_info->AppName.c_str(), nullptr, nullptr);
     CE_RENDER_DEBUG("Windowed window created : ", m_info->Width, "x", m_info->Height);
   }
 
   if (!m_window)
   {
     CE_RENDER_DEBUG("Failed to Create window");
-    glfwTerminate();
+    SDL_Quit();
     return false;
   }
 
-  glfwSetWindowUserPointer(m_window, this);
-
-  glfwSetFramebufferSizeCallback(m_window, [](GLFWwindow* window, int width, int height)
-                                 {
-                                   (void)width;
-                                   (void)height;
-                                   auto ctx = reinterpret_cast<CE::VulkanContext*>(glfwGetWindowUserPointer(window));
-                                   if (ctx)
-                                     ctx->OnFramebufferResized(); });
   CE_RENDER_DEBUG("Window Created : ", m_window);
   return true;
 }
@@ -686,8 +659,11 @@ bool CE::VulkanContext::SetupDebugMessenger()
 
 bool CE::VulkanContext::CreateSurface()
 {
-  VkResult result = glfwCreateWindowSurface(m_instance, m_window, nullptr, &m_surface);
-  VK_CHECK(result, "Failed to create window surface");
+  if (!SDL_Vulkan_CreateSurface(m_window, m_instance, nullptr, &m_surface))
+  {
+    CE_RENDER_ERROR("Failed to create window surface");
+    return false;
+  }
   return true;
 }
 

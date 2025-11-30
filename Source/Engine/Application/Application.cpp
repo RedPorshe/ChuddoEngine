@@ -1,7 +1,7 @@
 #include "Engine/Application/Application.h"
 
 #include <chrono>
-
+#include <SDL2/SDL.h>
 
 #include "Engine/GamePlay/Input/InputSystem.h"
 
@@ -33,15 +33,15 @@ namespace CE
     m_RenderSystem->Initialize();
 
     // 2. Инициализация системы ввода
-    GLFWwindow* window = m_RenderSystem->GetWindow();
+    SDL_Window* window = m_RenderSystem->GetWindow();
     if (window)
     {
       CInputSystem::Get().Initialize(window);
-      CE_CORE_DEBUG("Input system initialized with GLFW window");
+      CE_CORE_DEBUG("Input system initialized with SDL window");
     }
     else
     {
-      CE_CORE_ERROR("Failed to get GLFW window for input system");
+      CE_CORE_ERROR("Failed to get SDL window for input system");
     }
 
     
@@ -104,8 +104,8 @@ namespace CE
 
   void Application::ProcessInput()
   {
-    
-    if (glfwGetKey(m_RenderSystem->GetWindow(), GLFW_KEY_ESCAPE) == GLFW_PRESS)
+    const bool* state = SDL_GetKeyboardState(NULL);
+    if (state[SDL_SCANCODE_ESCAPE])
     {
       m_IsRunning = false;
     }

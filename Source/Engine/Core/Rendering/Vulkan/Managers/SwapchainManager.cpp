@@ -1,11 +1,12 @@
 #include "Engine/Core/Rendering/Vulkan/Managers/SwapchainManager.h"
 
+#include <SDL3/SDL.h>
 #include <algorithm>
 #include <stdexcept>
 
 namespace CE
 {
-  SwapchainManager::SwapchainManager(VkInstance instance, VkSurfaceKHR surface, std::shared_ptr<DeviceManager> deviceManager, GLFWwindow* window)
+  SwapchainManager::SwapchainManager(VkInstance instance, VkSurfaceKHR surface, std::shared_ptr<DeviceManager> deviceManager, SDL_Window* window)
       : m_instance(instance), m_surface(surface), m_deviceManager(deviceManager), m_window(window)
   {
   }
@@ -399,7 +400,7 @@ namespace CE
       if (m_window)
       {
         int width = 0, height = 0;
-        glfwGetFramebufferSize(m_window, &width, &height);
+        SDL_GetWindowSize(m_window, &width, &height);
         actualExtent.width = static_cast<uint32_t>(width);
         actualExtent.height = static_cast<uint32_t>(height);
       }

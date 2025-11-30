@@ -32,8 +32,9 @@ namespace CE
                                  const std::string& sceneUBOName,
                                  const std::string& modelUBOName,
                                  const std::string& lightingUBOName);
+    VkDescriptorPool GetDescriptorPool() const { return m_descriptorPool; }
 
-     private:
+   private:
     std::shared_ptr<DeviceManager> m_deviceManager;
     std::shared_ptr<BufferManager> m_bufferManager;
     std::unordered_map<std::string, VkDescriptorSet> m_meshDescriptorSets;

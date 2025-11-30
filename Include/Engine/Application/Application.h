@@ -11,11 +11,11 @@ namespace CE
   {
    public:
     Application(AppInfo* info);
-    ~Application();
+    virtual ~Application();
 
     virtual void Initialize();
-    void Run();
-    void Shutdown();
+    virtual void Run();
+    virtual void Shutdown();
 
     // Геттеры для доступа извне
     CGameInstance* GetGameInstance() const
@@ -27,13 +27,13 @@ namespace CE
       return m_DeltaTime;
     }
 
-   private:
+    protected:
+   
     void CalculateDeltaTime();
     void ProcessInput();
     void Update();
     void Render();
 
-   protected:
     std::unique_ptr<CGameInstance> m_GameInstance;
     std::unique_ptr<RenderSystem> m_RenderSystem;
     CE::FrameRenderData m_RenderData;

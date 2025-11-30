@@ -4,11 +4,11 @@ echo Setting up dependencies...
 mkdir thirdParty 2>nul
 cd thirdParty
 
-echo Cloning GLFW...
-if not exist glfw (
-    git clone https://github.com/glfw/glfw.git
+echo Cloning SDL2...
+if not exist SDL (
+    git clone https://github.com/libsdl-org/SDL.git
 ) else (
-    echo GLFW already exists
+    echo SDL2 already exists
 )
 
 echo Cloning GLM...
@@ -16,6 +16,20 @@ if not exist glm (
     git clone https://github.com/g-truc/glm.git
 ) else (
     echo GLM already exists
+)
+
+echo Cloning ImGui...
+if not exist imgui (
+    git clone https://github.com/ocornut/imgui.git
+) else (
+    echo ImGui already exists
+)
+
+echo Cloning Assimp (for FBX, OBJ, and other model formats)...
+if not exist assimp (
+    git clone https://github.com/assimp/assimp.git
+) else (
+    echo Assimp already exists
 )
 
 echo.

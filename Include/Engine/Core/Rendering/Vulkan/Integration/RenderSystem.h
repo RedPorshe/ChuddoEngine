@@ -18,7 +18,7 @@ namespace CE
     void DrawFrame(const FrameRenderData& renderData);
     bool ShouldClose() const;
 
-    GLFWwindow* GetWindow() const
+    SDL_Window* GetWindow() const
     {
       return m_vulkanContext->GetWindow();
     }
@@ -36,6 +36,11 @@ namespace CE
       return m_info->Height;
     }
     void PollEvents();
+
+    VulkanContext* GetVulkanContext() const
+    {
+      return m_vulkanContext;
+    }
 
    private:
     AppInfo* m_info = nullptr;

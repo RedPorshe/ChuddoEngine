@@ -14,15 +14,9 @@ if "%ERRORLEVEL%"=="0" (
     timeout /t 1 /nobreak >nul
 )
 
-:: Очищаем старый кеш если есть
-if exist "build\CMakeCache.txt" (
-    echo Removing old CMake cache...
-    del "build\CMakeCache.txt"
-)
-
-:: Конфигурируем для Debug с MinGW
+:: Конфигурируем для Debug с MinGW (кеш сохраняется для скорости)
 echo Configuring CMake for Debug (MinGW)...
-cmake -B build -DCMAKE_BUILD_TYPE=Debug -G "MinGW Makefiles"
+cmake -B build -DCMAKE_BUILD_TYPE=Debug -G "MinGW Makefiles" -DCMAKE_DISABLE_FIND_PACKAGE_PkgConfig=ON -DCMAKE_SKIP_RPATH=ON -DCMAKE_DISABLE_PRECOMPILE_HEADERS=ON -DCMAKE_SKIP_INSTALL_RULES=ON
 
 :: Компилируем проект
 echo Building project...
@@ -66,4 +60,3 @@ if exist "%EXE_PATH%" (
     dir "build\bin\Debug" /b 2>nul
 )
 
-pause

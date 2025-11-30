@@ -2,6 +2,8 @@
 #include <memory>
 #include <unordered_map>
 
+#include <SDL3/SDL.h>
+
 #include "CoreMinimal.h"
 #include "Engine/Core/Rendering/Data/RenderData.h"
 #include "Engine/Core/Rendering/Vulkan/Managers/BufferManager.h"
@@ -30,7 +32,7 @@ namespace CE
     VulkanContext(AppInfo* info);
     ~VulkanContext() {};
 
-    GLFWwindow* GetWindow() const
+    SDL_Window* GetWindow() const
     {
       return m_window;
     }
@@ -40,7 +42,15 @@ namespace CE
     bool ShouldClose() const;
     void Pollevents()
     {
-      glfwPollEvents();
+      SDL_Event event;
+      while (SDL_PollEvent(&event))
+      {
+        if (event.type == SDL_EVENT_QUIT)
+        {
+          m_shouldClose = true;
+        }
+        // Handle other events if needed
+      }
     }
     // Called by the GLFW framebuffer-size callback when the window changes
     // size so the rendering code can recreate the swapchain on next frame.
@@ -50,6 +60,19 @@ namespace CE
     }
     void RegisterMesh(const std::string& name, const StaticMesh& mesh);
     void UnregisterMesh(const std::string& name);
+
+    // Getters for ImGui integration
+    VkInstance GetInstance() const { return m_instance; }
+    VkPhysicalDevice GetPhysicalDevice() const { return m_deviceManager->GetPhysicalDevice(); }
+    VkDevice GetDevice() const { return m_deviceManager->GetDevice(); }
+    uint32_t GetGraphicsQueueFamily() const { return m_deviceManager->getIndices().graphicsFamily; }
+    VkQueue GetGraphicsQueue() const { return m_deviceManager->GetGraphicsQueue(); }
+    VkDescriptorPool GetDescriptorPool() const { return m_descriptorManager->GetDescriptorPool(); }
+    uint32_t GetSwapchainImageCount() const { return m_swapchainManager->GetImageCount(); }
+    VkRenderPass GetRenderPass() const { return m_swapchainManager->GetRenderPass(); }
+    VkCommandBuffer BeginSingleTimeCommands() { return m_commandBufferManager->BeginSingleTimeCommands(); }
+    void EndSingleTimeCommands(VkCommandBuffer commandBuffer) { m_commandBufferManager->EndSingleTimeCommands(commandBuffer); }
+    VkCommandBuffer GetCurrentCommandBuffer() const { return m_currentCommandBuffer; }
 
    private:
     bool InitWindow();
@@ -69,7 +92,7 @@ namespace CE
 
    private:
     AppInfo* m_info = nullptr;
-    GLFWwindow* m_window = nullptr;
+    SDL_Window* m_window = nullptr;
 
     VkInstance m_instance = VK_NULL_HANDLE;
     VkSurfaceKHR m_surface = VK_NULL_HANDLE;
@@ -89,11 +112,15 @@ namespace CE
     std::vector<VkFence> m_imagesInFlight;
     uint32_t m_currentFrame = 0;
     bool m_frameBufferResized = false;
+    bool m_shouldClose = false;
 
     // Buffers
     std::unordered_map<std::string, MeshBuffers> m_meshBufferMap;
     const std::string m_sceneUBOBufferName = "scene_ubo";
     const std::string m_lightingUBOBufferName = "lighting_ubo";
+
+    // Current command buffer for ImGui
+    VkCommandBuffer m_currentCommandBuffer = VK_NULL_HANDLE;
 
     static constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 3;
     const bool bIsValidationEnabled = true;

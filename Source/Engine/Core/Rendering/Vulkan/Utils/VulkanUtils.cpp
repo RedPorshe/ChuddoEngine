@@ -1,5 +1,7 @@
 #include "Engine/Core/Rendering/Vulkan/Utils/VulkanUtils.h"
 
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_vulkan.h>
 #include <fstream>
 #include <stdexcept>
 
@@ -37,11 +39,10 @@ namespace CE
 
   std::vector<const char*> VulkanUtils::GetRequiredExtensions(bool enableValidationLayers)
   {
-    uint32_t glfwExtensionCount = 0;
-    const char** glfwExtensions;
-    glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+    uint32_t sdlExtensionCount = 0;
+    const char* const* sdlExtensions = SDL_Vulkan_GetInstanceExtensions(&sdlExtensionCount);
 
-    std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
+    std::vector<const char*> extensions(sdlExtensions, sdlExtensions + sdlExtensionCount);
 
     if (enableValidationLayers)
     {

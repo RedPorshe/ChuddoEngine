@@ -1,7 +1,7 @@
 #pragma once
 
 #include <unordered_map>
-
+#include <SDL3/SDL.h>
 #include "CoreMinimal.h"
 #include "Engine/Utils/Math/AllMath.h"
 
@@ -14,7 +14,7 @@ namespace CE
    public:
     static CInputSystem& Get();
 
-    void Initialize(GLFWwindow* Window);
+    void Initialize(SDL_Window* Window);
     void Shutdown();
 
     void RegisterInputComponent(class CInputComponent* Component);
@@ -22,11 +22,6 @@ namespace CE
     void setFPSInputMode(bool mode);
 
     void Update(float DeltaTime);
-
-    static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
-    static void MouseCallback(GLFWwindow* window, double xpos, double ypos);
-    static void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
-    static void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 
     bool IsKeyPressed(int key) const;
     Math::Vector2f GetMousePosition() const
@@ -42,12 +37,12 @@ namespace CE
     CInputSystem() = default;
     ~CInputSystem() = default;
 
-    void ProcessKeyInput(int key, int scancode, int action, int mods);
+    void ProcessKeyInput(int key, int scancode, bool down, int mods);
     void ProcessMouseMovement(double xpos, double ypos);
-    void ProcessMouseButton(int button, int action, int mods);
+    void ProcessMouseButton(int button, bool down, int mods);
     void ProcessMouseScroll(double xoffset, double yoffset);
 
-    GLFWwindow* m_Window = nullptr;
+    SDL_Window* m_Window = nullptr;
     std::vector<class CInputComponent*> m_InputComponents;
 
     std::unordered_map<int, bool> m_KeyStates;
