@@ -11,8 +11,7 @@
 #include "CoreMinimal.h"
 #include "Engine/Utils/Math/AllMath.h"
 
-namespace CE
-{
+
   // Forward declarations
   class CObject;
   class Property;
@@ -135,11 +134,11 @@ namespace CE
       else if constexpr (std::is_same_v<T, float>) return EPropertyType::Float;
       else if constexpr (std::is_same_v<T, double>) return EPropertyType::Double;
       else if constexpr (std::is_same_v<T, FString>) return EPropertyType::String;
-      else if constexpr (std::is_same_v<T, CE::Math::Vector2f>) return EPropertyType::Vector2;
-      else if constexpr (std::is_same_v<T, CE::Math::Vector3f>) return EPropertyType::Vector3;
-      else if constexpr (std::is_same_v<T, CE::Math::Vector4f>) return EPropertyType::Vector4;
-      else if constexpr (std::is_same_v<T, CE::Math::Quaternionf>) return EPropertyType::Quaternion;
-      else if constexpr (std::is_same_v<T, CE::Math::Color>) return EPropertyType::Color;
+      else if constexpr (std::is_same_v<T, CEMath::Vector2f>) return EPropertyType::Vector2;
+      else if constexpr (std::is_same_v<T, CEMath::Vector3f>) return EPropertyType::Vector3;
+      else if constexpr (std::is_same_v<T, CEMath::Vector4f>) return EPropertyType::Vector4;
+      else if constexpr (std::is_same_v<T, CEMath::Quaternionf>) return EPropertyType::Quaternion;
+      else if constexpr (std::is_same_v<T, CEMath::Color>) return EPropertyType::Color;
       else return EPropertyType::Custom;
     }
 
@@ -150,33 +149,33 @@ namespace CE
       else if constexpr (std::is_same_v<T, float>) return std::stof(str);
       else if constexpr (std::is_same_v<T, double>) return std::stod(str);
       else if constexpr (std::is_same_v<T, FString>) return FString(str.c_str());
-      else if constexpr (std::is_same_v<T, CE::Math::Vector2f>)
+      else if constexpr (std::is_same_v<T, CEMath::Vector2f>)
       {
-        CE::Math::Vector2f v;
+        CEMath::Vector2f v;
         sscanf(str.c_str(), "%f,%f", &v.x, &v.y);
         return v;
       }
-      else if constexpr (std::is_same_v<T, CE::Math::Vector3f>)
+      else if constexpr (std::is_same_v<T, CEMath::Vector3f>)
       {
-        CE::Math::Vector3f v;
+        CEMath::Vector3f v;
         sscanf(str.c_str(), "%f,%f,%f", &v.x, &v.y, &v.z);
         return v;
       }
-      else if constexpr (std::is_same_v<T, CE::Math::Vector4f>)
+      else if constexpr (std::is_same_v<T, CEMath::Vector4f>)
       {
-        CE::Math::Vector4f v;
+        CEMath::Vector4f v;
         sscanf(str.c_str(), "%f,%f,%f,%f", &v.x, &v.y, &v.z, &v.w);
         return v;
       }
-      else if constexpr (std::is_same_v<T, CE::Math::Quaternionf>)
+      else if constexpr (std::is_same_v<T, CEMath::Quaternionf>)
       {
-        CE::Math::Quaternionf q;
+        CEMath::Quaternionf q;
         sscanf(str.c_str(), "%f,%f,%f,%f", &q.x, &q.y, &q.z, &q.w);
         return q;
       }
-      else if constexpr (std::is_same_v<T, CE::Math::Color>)
+      else if constexpr (std::is_same_v<T, CEMath::Color>)
       {
-        CE::Math::Color c;
+        CEMath::Color c;
         sscanf(str.c_str(), "%f,%f,%f,%f", &c.x, &c.y, &c.z, &c.w);
         return c;
       }
@@ -194,11 +193,11 @@ namespace CE
       else if constexpr (std::is_same_v<T, float>) return std::to_string(val);
       else if constexpr (std::is_same_v<T, double>) return std::to_string(val);
       else if constexpr (std::is_same_v<T, FString>) return std::string(val.c_str());
-      else if constexpr (std::is_same_v<T, Math::Vector2f>) return std::to_string(val.x) + "," + std::to_string(val.y);
-      else if constexpr (std::is_same_v<T, Math::Vector3f>) return std::to_string(val.x) + "," + std::to_string(val.y) + "," + std::to_string(val.z);
-      else if constexpr (std::is_same_v<T, Math::Vector4f>) return std::to_string(val.x) + "," + std::to_string(val.y) + "," + std::to_string(val.z) + "," + std::to_string(val.w);
-      else if constexpr (std::is_same_v<T, Math::Quaternionf>) return std::to_string(val.x) + "," + std::to_string(val.y) + "," + std::to_string(val.z) + "," + std::to_string(val.w);
-      else if constexpr (std::is_same_v<T, Math::Color>) return std::to_string(val.GetR()) + "," + std::to_string(val.GetG()) + "," + std::to_string(val.GetB()) + "," + std::to_string(val.GetA());
+      else if constexpr (std::is_same_v<T, CEMath::Vector2f>) return std::to_string(val.x) + "," + std::to_string(val.y);
+      else if constexpr (std::is_same_v<T, CEMath::Vector3f>) return std::to_string(val.x) + "," + std::to_string(val.y) + "," + std::to_string(val.z);
+      else if constexpr (std::is_same_v<T, CEMath::Vector4f>) return std::to_string(val.x) + "," + std::to_string(val.y) + "," + std::to_string(val.z) + "," + std::to_string(val.w);
+      else if constexpr (std::is_same_v<T, CEMath::Quaternionf>) return std::to_string(val.x) + "," + std::to_string(val.y) + "," + std::to_string(val.z) + "," + std::to_string(val.w);
+      else if constexpr (std::is_same_v<T, CEMath::Color>) return std::to_string(val.GetR()) + "," + std::to_string(val.GetG()) + "," + std::to_string(val.GetB()) + "," + std::to_string(val.GetA());
       else return "custom";
     }
   };
@@ -307,4 +306,4 @@ namespace CE
   static int Name##_Dummy = (ClassName##_ClassInfo->AddFunction(std::make_unique<Function>(#Name, \
     [](void* obj) { static_cast<ClassName*>(obj)->Name(); }, Category)), 0)
 
-}  // namespace CE
+

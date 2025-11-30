@@ -7,8 +7,7 @@
 
 #include "CoreMinimal.h"
 
-namespace CE
-{
+
   class Config
   {
    public:
@@ -47,4 +46,3 @@ namespace CE
     std::string Encrypt(const std::string& data) const;
     std::string Decrypt(const std::string& data) const;
   };
-}  // namespace CE

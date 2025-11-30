@@ -3,8 +3,7 @@
 #include "Engine/GamePlay/Components/MeshComponent.h"
 #include "Engine/GamePlay/Components/SpringArmComponent.h"
 
-namespace CE
-{
+
   class CCharacter : public CPawn
   {
    public:
@@ -38,4 +37,3 @@ namespace CE
 
    private:
   };
-}  // namespace CE

@@ -4,8 +4,15 @@
 #include <algorithm>
 #include <stdexcept>
 
-namespace CE
-{
+#include "Engine/Utils/Logger.h"
+
+
+#include <SDL3/SDL.h>
+#include <algorithm>
+#include <stdexcept>
+
+#include "Engine/Utils/Logger.h"
+
   SwapchainManager::SwapchainManager(VkInstance instance, VkSurfaceKHR surface, std::shared_ptr<DeviceManager> deviceManager, SDL_Window* window)
       : m_instance(instance), m_surface(surface), m_deviceManager(deviceManager), m_window(window)
   {
@@ -18,7 +25,7 @@ namespace CE
 
   bool SwapchainManager::Initialize()
   {
-    CE_RENDER_DEBUG("Initializing SwapchainManager...");
+    RENDER_DEBUG("Initializing SwapchainManager...");
 
     try
     {
@@ -28,12 +35,12 @@ namespace CE
       CreateRenderPass();
       CreateFramebuffers();
 
-      CE_RENDER_DEBUG("SwapchainManager initialized successfully");
+      RENDER_DEBUG("SwapchainManager initialized successfully");
       return true;
     }
     catch (const std::exception& e)
     {
-      CE_RENDER_ERROR("Failed to initialize SwapchainManager: %s", e.what());
+      RENDER_ERROR("Failed to initialize SwapchainManager: %s", e.what());
       return false;
     }
   }
@@ -45,7 +52,7 @@ namespace CE
 
   void SwapchainManager::RecreateSwapchain()
   {
-    CE_RENDER_DEBUG("Recreating swapchain...");
+    RENDER_DEBUG("Recreating swapchain...");
 
     vkDeviceWaitIdle(m_deviceManager->GetDevice());
 
@@ -132,7 +139,7 @@ namespace CE
     m_swapchainImageFormat = surfaceFormat.format;
     m_swapchainExtent = extent;
 
-    CE_RENDER_DEBUG("Swapchain created with %d images, format: %d, extent: %dx%d",
+    RENDER_DEBUG("Swapchain created with %d images, format: %d, extent: %dx%d",
                     imageCount, surfaceFormat.format, extent.width, extent.height);
   }
 
@@ -161,7 +168,7 @@ namespace CE
       VK_CHECK(result, "Failed to create image views!");
     }
 
-    CE_RENDER_DEBUG("Created %d image views", m_swapchainImageViews.size());
+    RENDER_DEBUG("Created %d image views", m_swapchainImageViews.size());
   }
 
   void SwapchainManager::CreateDepthResources()
@@ -220,7 +227,7 @@ namespace CE
     result = vkCreateImageView(device, &viewInfo, nullptr, &m_depthImageView);
     VK_CHECK(result, "Failed to create depth image view!");
 
-    CE_RENDER_DEBUG("Depth resources created with format: %d", m_depthFormat);
+    RENDER_DEBUG("Depth resources created with format: %d", m_depthFormat);
   }
 
   void SwapchainManager::CreateRenderPass()
@@ -286,7 +293,7 @@ namespace CE
     VkResult result = vkCreateRenderPass(m_deviceManager->GetDevice(), &renderPassInfo, nullptr, &m_renderPass);
     VK_CHECK(result, "Failed to create render pass!");
 
-    CE_RENDER_DEBUG("Render pass created with depth attachment");
+    RENDER_DEBUG("Render pass created with depth attachment");
   }
 
   void SwapchainManager::CreateFramebuffers()
@@ -312,7 +319,7 @@ namespace CE
       VK_CHECK(result, "Failed to create framebuffer!");
     }
 
-    CE_RENDER_DEBUG("Created %d framebuffers with depth attachment", m_swapchainFramebuffers.size());
+    RENDER_DEBUG("Created %d framebuffers with depth attachment", m_swapchainFramebuffers.size());
   }
 
   void SwapchainManager::CleanupSwapchain()
@@ -443,4 +450,3 @@ namespace CE
 
     throw std::runtime_error("Failed to find supported format!");
   }
-}  // namespace CE

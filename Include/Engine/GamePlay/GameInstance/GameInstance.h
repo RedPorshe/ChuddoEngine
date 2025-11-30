@@ -25,14 +25,13 @@ class CGameInstance : public CObject
   }
   CWorld* GetWorld(const FString& WorldName) const;
 
-  // Глобальное состояние
+ 
   virtual void BeginPlay();
   virtual void Update(float DeltaTime);
   virtual void Tick(float DeltaTime);
 
  protected:
-  virtual void SetupWorlds();  // Виртуальный метод для настройки миров
-
+  virtual void SetupWorlds();  
  protected:
   CWorld* m_CurrentWorld = nullptr;
   std::unordered_map<FString, std::unique_ptr<CWorld>> m_Worlds;

@@ -6,8 +6,7 @@
 #include "Engine/Core/Object.h"
 #include "Engine/Core/Reflection.h"
 
-namespace CE
-{
+
   class PropertyEditor
   {
    public:
@@ -16,7 +15,7 @@ namespace CE
 
     void Initialize();
     void Shutdown();
-    void Render();
+    void Render(CObject* selectedObject);
     void SetSelectedObject(CObject* object);
 
    private:
@@ -36,4 +35,3 @@ namespace CE
     CObject* m_SelectedObject = nullptr;
     bool m_IsInitialized = false;
   };
-}  // namespace CE

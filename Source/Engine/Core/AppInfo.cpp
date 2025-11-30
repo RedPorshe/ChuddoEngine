@@ -13,6 +13,6 @@ void AppInfo::LoadFromConfig()
   MSAA = config.GetInt("MSAASamples", 4);
   MaxFPS = config.GetInt("MaxFPS", 120);
 
-  CE_CORE_DEBUG("AppInfo loaded from config: ", Width, "x", Height,
+  CORE_DEBUG("AppInfo loaded from config: ", Width, "x", Height,
                 " Fullscreen:", Fullscreen, " VSync:", VSync);
 }

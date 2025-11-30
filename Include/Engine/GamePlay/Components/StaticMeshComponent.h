@@ -4,8 +4,7 @@
 
 #include "Engine/GamePlay/Components/MeshComponent.h"
 
-namespace CE
-{
+
   class CStaticMeshComponent : public CMeshComponent
   {
    public:
@@ -18,11 +17,10 @@ namespace CE
    private:
     bool LoadOBJFile(const std::string& filename);
     void ProcessOBJFace(const std::string& faceLine,
-                        const std::vector<Math::Vector3f>& positions,
-                        const std::vector<Math::Vector2f>& texCoords,
-                        const std::vector<Math::Vector3f>& normals,
+                        const std::vector<CEMath::Vector3f>& positions,
+                        const std::vector<CEMath::Vector2f>& texCoords,
+                        const std::vector<CEMath::Vector3f>& normals,
                         std::unordered_map<std::string, uint32_t>& vertexMap,
                         std::vector<Vertex>& outVertices,
                         std::vector<uint32_t>& outIndices);
   };
-}  // namespace CE

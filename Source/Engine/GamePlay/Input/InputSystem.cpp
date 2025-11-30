@@ -4,8 +4,7 @@
 
 #include "Engine/GamePlay/Components/InputComponent.h"
 
-namespace CE
-{
+
   CInputSystem* CInputSystem::s_Instance = nullptr;
 
   CInputSystem& CInputSystem::Get()
@@ -32,14 +31,14 @@ namespace CE
 
       float x, y;
       SDL_GetMouseState(&x, &y);
-      m_LastMousePosition = Math::Vector2f(x, y);
-      m_MousePosition = Math::Vector2f(x, y);
+      m_LastMousePosition = CEMath::Vector2f(x, y);
+      m_MousePosition = CEMath::Vector2f(x, y);
 
-      CE_CORE_DEBUG("InputSystem initialized with SDL window");
+      CORE_DEBUG("InputSystem initialized with SDL window");
     }
     else
     {
-      CE_CORE_ERROR("InputSystem: No SDL window provided");
+      CORE_ERROR("InputSystem: No SDL window provided");
     }
   }
 
@@ -47,7 +46,7 @@ namespace CE
   {
     m_InputComponents.clear();
     m_Window = nullptr;
-    CE_CORE_DEBUG("InputSystem shutdown");
+    CORE_DEBUG("InputSystem shutdown");
   }
 
   void CInputSystem::ProcessMouseButton(int button, bool down, int mods)
@@ -62,7 +61,7 @@ namespace CE
     if (Component && std::find(m_InputComponents.begin(), m_InputComponents.end(), Component) == m_InputComponents.end())
     {
       m_InputComponents.push_back(Component);
-      CE_CORE_DEBUG("InputComponent registered to InputSystem");
+      CORE_DEBUG("InputComponent registered to InputSystem");
     }
   }
 
@@ -72,7 +71,7 @@ namespace CE
     if (it != m_InputComponents.end())
     {
       m_InputComponents.erase(it);
-      CE_CORE_DEBUG(  "InputComponent unregistered from InputSystem");
+      CORE_DEBUG(  "InputComponent unregistered from InputSystem");
     }
   }
 
@@ -122,7 +121,7 @@ namespace CE
       }
     }
 
-    m_MouseDelta = Math::Vector2f(0.0f, 0.0f);
+    m_MouseDelta = CEMath::Vector2f(0.0f, 0.0f);
   }
 
   void CInputSystem::ProcessKeyInput(int key, int scancode, bool down, int mods)
@@ -147,7 +146,7 @@ namespace CE
 
     if (m_FirstMouse)
     {
-      m_LastMousePosition = Math::Vector2f(x, y);
+      m_LastMousePosition = CEMath::Vector2f(x, y);
       m_FirstMouse = false;
       return;
     }
@@ -155,9 +154,9 @@ namespace CE
     float xOffset = x - m_LastMousePosition.x;
     float yOffset = m_LastMousePosition.y - y;
 
-    m_LastMousePosition = Math::Vector2f(x, y);
-    m_MousePosition = Math::Vector2f(x, y);
-    m_MouseDelta = Math::Vector2f(xOffset, yOffset);
+    m_LastMousePosition = CEMath::Vector2f(x, y);
+    m_MousePosition = CEMath::Vector2f(x, y);
+    m_MouseDelta = CEMath::Vector2f(xOffset, yOffset);
 
     for (auto* component : m_InputComponents)
     {
@@ -186,6 +185,3 @@ namespace CE
     bool pressed = it != m_KeyStates.end() && it->second;
     return pressed;
   }
-
-
-}  // namespace CE

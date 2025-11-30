@@ -14,7 +14,7 @@ float CEGetCurrentTime()
 
 Application::Application(AppInfo* info) : m_info{info}
 {
-  CE_CORE_DEBUG("Application created");
+  CORE_DEBUG("Application created");
 }
 
 Application::~Application()
@@ -34,7 +34,7 @@ void Application::Initialize()
   SDL_Window* window = m_RenderSystem->GetWindow();
   if (window)
   {
-    InputSystem::Get().Initialize(window);
+    CInputSystem::Get().Initialize(window);
     CORE_DEBUG("Input system initialized with SDL window");
   }
   else
@@ -44,10 +44,10 @@ void Application::Initialize()
 
 
 
-  // 4. Настройка данных рендеринга из текущего мира
-  m_RenderData.SetupDefaultLighting();  // Оставляем вызов для безопасности
+  
+  m_RenderData.SetupDefaultLighting();  
 
-  // Пока НЕ вызываем BeginPlay() - он будет вызван перед основным циклом
+
 
   m_LastFrameTime = CEGetCurrentTime();
 
@@ -56,7 +56,7 @@ void Application::Initialize()
 
 void Application::Run()
 {
-  CE_CORE_DEBUG("Starting main loop");
+  CORE_DEBUG("Starting main loop");
 
   // ВЫЗЫВАЕМ BeginPlay ПЕРЕД ОСНОВНЫМ ЦИКЛОМ
   if (m_GameInstance)
@@ -67,7 +67,7 @@ void Application::Run()
     if (auto* world = m_GameInstance->GetCurrentWorld())
     {
       m_RenderData.lighting = world->GetDefaultLighting();
-      CE_CORE_DEBUG("RenderData lighting initialized from world default (lights=", m_RenderData.lighting.lightCount, ")");
+      CORE_DEBUG("RenderData lighting initialized from world default (lights=", m_RenderData.lighting.lightCount, ")");
     }
   }
   m_IsRunning = true;
@@ -112,7 +112,7 @@ void Application::ProcessInput()
 void Application::Update()
 {
 
-  InputSystem::Get().Update(m_DeltaTime);
+  CInputSystem::Get().Update(m_DeltaTime);
 
 
   if (m_GameInstance)
@@ -141,26 +141,26 @@ void Application::Render()
 
 void Application::Shutdown()
 {
-  CE_CORE_DISPLAY("=== Shutting Down Application ===");
+  CORE_DISPLAY("=== Shutting Down Application ===");
 
   m_IsRunning = false;
 
 
-  InputSystem::Get().Shutdown();
+  CInputSystem::Get().Shutdown();
 
-  // Завершение игрового инстанса
+  
   if (m_GameInstance)
   {
     m_GameInstance->Shutdown();
     m_GameInstance.reset();
   }
 
-  // Завершение рендер-системы
+  
   if (m_RenderSystem)
   {
     m_RenderSystem->Shutdown();
     m_RenderSystem.reset();
   }
 
-  CE_CORE_DISPLAY("=== Application Shutdown Complete ===");
+  CORE_DISPLAY("=== Application Shutdown Complete ===");
 }

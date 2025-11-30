@@ -2,8 +2,7 @@
 
 #include "Engine/GamePlay/Components/SceneComponent.h"
 
-namespace CE
-{
+
   class CSpringArmComponent : public CSceneComponent
   {
    public:
@@ -11,7 +10,7 @@ namespace CE
     virtual ~CSpringArmComponent() = default;
 
     // Настройки spring arm
-    void SetTargetOffset(const Math::Vector3f& Offset)
+    void SetTargetOffset(const CEMath::Vector3f& Offset)
     {
       m_TargetOffset = Offset;
     }
@@ -28,7 +27,7 @@ namespace CE
       m_bUsePawnControlRotation = bUse;
     }
 
-    const Math::Vector3f& GetTargetOffset() const
+    const CEMath::Vector3f& GetTargetOffset() const
     {
       return m_TargetOffset;
     }
@@ -46,16 +45,15 @@ namespace CE
     }
 
     // Получение конечной позиции камеры
-    Math::Vector3f GetCameraWorldLocation() const;
+    CEMath::Vector3f GetCameraWorldLocation() const;
 
     virtual void Update(float DeltaTime) override;
 
    private:
-    Math::Vector3f m_TargetOffset{0.0f, -0.9f, 1.0f};  // Смещение от цели (Vulkan: Y+ вверх)
+    CEMath::Vector3f m_TargetOffset{0.0f, -0.9f, 1.0f};  // Смещение от цели (Vulkan: Y+ вверх)
     float m_ArmLength = 5.0f;                    // Длина "руки" камеры
     float m_CameraLag = 0.05f;                   // Задержка движения камеры
     bool m_bUsePawnControlRotation = true;       // Использовать вращение от Pawn
 
-    Math::Vector3f m_CurrentCameraPosition{0.0f, 0.0f, 0.0f};
+    CEMath::Vector3f m_CurrentCameraPosition{0.0f, 0.0f, 0.0f};
   };
-}  // namespace CE

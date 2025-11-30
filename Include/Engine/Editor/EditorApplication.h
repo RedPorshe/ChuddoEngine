@@ -1,9 +1,9 @@
 #pragma once
 
+#include "Engine/Editor/UI/PropertyEditor.h"
 #include "Engine/Application/Application.h"
 
-namespace CE
-{
+
   enum class EditorMode
   {
     Play,
@@ -14,7 +14,7 @@ namespace CE
   {
    public:
     EditorApplication(AppInfo* info);
-    ~EditorApplication() override;
+    virtual ~EditorApplication() override;
 
     void Initialize() override;
     void Run() override;
@@ -52,4 +52,3 @@ namespace CE
 
     PropertyEditor m_PropertyEditor;
   };
-}  // namespace CE

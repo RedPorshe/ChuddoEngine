@@ -4,8 +4,7 @@
 
 #include "Engine/Core/Rendering/Data/RenderData.h"
 
-namespace CE
-{
+
   BufferManager::BufferManager(std::shared_ptr<DeviceManager> deviceManager)
       : m_deviceManager(deviceManager)
   {
@@ -18,7 +17,7 @@ namespace CE
 
   bool BufferManager::Initialize()
   {
-    CE_RENDER_DEBUG("Initializing BufferManager...");
+    RENDER_DEBUG("Initializing BufferManager...");
 
     VkCommandPoolCreateInfo poolInfo{};
     poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -28,7 +27,7 @@ namespace CE
     VkResult result = vkCreateCommandPool(m_deviceManager->GetDevice(), &poolInfo, nullptr, &m_commandPool);
     VK_CHECK(result, "Failed to create command pool for buffer manager");
 
-    CE_RENDER_DEBUG("BufferManager initialized successfully");
+    RENDER_DEBUG("BufferManager initialized successfully");
     return true;
   }
 
@@ -40,10 +39,10 @@ namespace CE
     {
       vkDestroyCommandPool(m_deviceManager->GetDevice(), m_commandPool, nullptr);
       m_commandPool = VK_NULL_HANDLE;
-      CE_RENDER_DEBUG("BufferManager command pool destroyed");
+      RENDER_DEBUG("BufferManager command pool destroyed");
     }
 
-    CE_RENDER_DEBUG("BufferManager shutdown complete");
+    RENDER_DEBUG("BufferManager shutdown complete");
   }
 
   VkDescriptorBufferInfo BufferManager::GetBufferInfo(const std::string& name) const
@@ -58,7 +57,7 @@ namespace CE
       return bufferInfo;
     }
 
-    CE_RENDER_ERROR("Buffer '", name, "' not found for descriptor info");
+    RENDER_ERROR("Buffer '", name, "' not found for descriptor info");
     return VkDescriptorBufferInfo{};
   }
 
@@ -68,7 +67,7 @@ namespace CE
     {
       if (m_buffers.find(name) != m_buffers.end())
       {
-        CE_RENDER_WARN("Vertex buffer '", name, "' already exists");
+        RENDER_WARN("Vertex buffer '", name, "' already exists");
         return true;
       }
 
@@ -80,7 +79,7 @@ namespace CE
                         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
                         stagingBuffer, stagingBufferMemory))
       {
-        CE_RENDER_ERROR("Failed to create staging buffer for vertex buffer '", name, "'");
+        RENDER_ERROR("Failed to create staging buffer for vertex buffer '", name, "'");
         return false;
       }
 
@@ -96,7 +95,7 @@ namespace CE
                         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
                         vertexBuffer, vertexBufferMemory))
       {
-        CE_RENDER_ERROR("Failed to create vertex buffer '", name, "'");
+        RENDER_ERROR("Failed to create vertex buffer '", name, "'");
         vkDestroyBuffer(m_deviceManager->GetDevice(), stagingBuffer, nullptr);
         vkFreeMemory(m_deviceManager->GetDevice(), stagingBufferMemory, nullptr);
         return false;
@@ -125,7 +124,7 @@ namespace CE
     {
       if (m_buffers.find(name) != m_buffers.end())
       {
-        CE_RENDER_WARN("Index buffer '", name, "' already exists");
+        RENDER_WARN("Index buffer '", name, "' already exists");
         return true;
       }
 
@@ -137,7 +136,7 @@ namespace CE
                         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
                         stagingBuffer, stagingBufferMemory))
       {
-        CE_RENDER_ERROR("Failed to create staging buffer for index buffer '", name, "'");
+        RENDER_ERROR("Failed to create staging buffer for index buffer '", name, "'");
         return false;
       }
 
@@ -153,7 +152,7 @@ namespace CE
                         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
                         indexBuffer, indexBufferMemory))
       {
-        CE_RENDER_ERROR("Failed to create index buffer '", name, "'");
+        RENDER_ERROR("Failed to create index buffer '", name, "'");
         vkDestroyBuffer(m_deviceManager->GetDevice(), stagingBuffer, nullptr);
         vkFreeMemory(m_deviceManager->GetDevice(), stagingBufferMemory, nullptr);
         return false;
@@ -180,7 +179,7 @@ namespace CE
   {
     if (m_buffers.find(name) != m_buffers.end())
     {
-      CE_RENDER_WARN("Uniform buffer '", name, "' already exists");
+      RENDER_WARN("Uniform buffer '", name, "' already exists");
       return true;
     }
 
@@ -191,7 +190,7 @@ namespace CE
                       VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
                       uniformBuffer, uniformBufferMemory))
     {
-      CE_RENDER_ERROR("Failed to create uniform buffer '", name, "'");
+      RENDER_ERROR("Failed to create uniform buffer '", name, "'");
       return false;
     }
 
@@ -209,7 +208,7 @@ namespace CE
   {
     if (m_buffers.find(name) != m_buffers.end())
     {
-      CE_RENDER_WARN("Staging buffer '", name, "' already exists");
+      RENDER_WARN("Staging buffer '", name, "' already exists");
       return true;
     }
 
@@ -220,7 +219,7 @@ namespace CE
                       VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
                       stagingBuffer, stagingBufferMemory))
     {
-      CE_RENDER_ERROR("Failed to create staging buffer '", name, "'");
+      RENDER_ERROR("Failed to create staging buffer '", name, "'");
       return false;
     }
 
@@ -231,7 +230,7 @@ namespace CE
     bufferInfo.type = BufferType::STAGING;
     m_buffers[name] = bufferInfo;
 
-    CE_RENDER_DEBUG("Created staging buffer '", name, "' with size ", size);
+    RENDER_DEBUG("Created staging buffer '", name, "' with size ", size);
     return true;
   }
 
@@ -240,14 +239,14 @@ namespace CE
     auto it = m_buffers.find(name);
     if (it == m_buffers.end() || it->second.type != BufferType::VERTEX)
     {
-      CE_RENDER_ERROR("Vertex buffer '", name, "' not found or wrong type");
+      RENDER_ERROR("Vertex buffer '", name, "' not found or wrong type");
       return false;
     }
 
     VkDeviceSize newSize = sizeof(vertices[0]) * vertices.size();
     if (newSize > it->second.size)
     {
-      CE_RENDER_ERROR("New vertex data too large for buffer '", name, "'");
+      RENDER_ERROR("New vertex data too large for buffer '", name, "'");
       return false;
     }
 
@@ -269,7 +268,7 @@ namespace CE
     // Удаляем временный staging buffer
     DestroyBuffer(stagingName);
 
-    CE_RENDER_DEBUG("Updated vertex buffer '", name, "' with ", vertices.size(), " vertices");
+    RENDER_DEBUG("Updated vertex buffer '", name, "' with ", vertices.size(), " vertices");
     return true;
   }
 
@@ -278,14 +277,14 @@ namespace CE
     auto it = m_buffers.find(name);
     if (it == m_buffers.end() || it->second.type != BufferType::INDEX)
     {
-      CE_RENDER_ERROR("Index buffer '", name, "' not found or wrong type");
+      RENDER_ERROR("Index buffer '", name, "' not found or wrong type");
       return false;
     }
 
     VkDeviceSize newSize = sizeof(indices[0]) * indices.size();
     if (newSize > it->second.size)
     {
-      CE_RENDER_ERROR("New index data too large for buffer '", name, "'");
+      RENDER_ERROR("New index data too large for buffer '", name, "'");
       return false;
     }
 
@@ -307,7 +306,7 @@ namespace CE
     // Удаляем временный staging buffer
     DestroyBuffer(stagingName);
 
-    CE_RENDER_DEBUG("Updated index buffer '", name, "' with ", indices.size(), " indices");
+    RENDER_DEBUG("Updated index buffer '", name, "' with ", indices.size(), " indices");
     return true;
   }
 
@@ -316,13 +315,13 @@ namespace CE
     auto it = m_buffers.find(name);
     if (it == m_buffers.end() || it->second.type != BufferType::UNIFORM)
     {
-      CE_RENDER_ERROR("Uniform buffer '", name, "' not found or wrong type");
+      RENDER_ERROR("Uniform buffer '", name, "' not found or wrong type");
       return false;
     }
 
     if (size > it->second.size)
     {
-      CE_RENDER_ERROR("Data too large for uniform buffer '", name, "'");
+      RENDER_ERROR("Data too large for uniform buffer '", name, "'");
       return false;
     }
 
@@ -340,7 +339,7 @@ namespace CE
 
     if (srcIt == m_buffers.end() || dstIt == m_buffers.end())
     {
-      CE_RENDER_ERROR("Source or destination buffer not found for copy operation");
+      RENDER_ERROR("Source or destination buffer not found for copy operation");
       return;
     }
 
@@ -377,13 +376,13 @@ namespace CE
     auto it = m_buffers.find(name);
     if (it == m_buffers.end())
     {
-      CE_RENDER_ERROR("Buffer '", name, "' not found for mapping");
+      RENDER_ERROR("Buffer '", name, "' not found for mapping");
       return nullptr;
     }
 
     if (it->second.mappedData)
     {
-      CE_RENDER_WARN("Buffer '", name, "' is already mapped");
+      RENDER_WARN("Buffer '", name, "' is already mapped");
       return it->second.mappedData;
     }
 
@@ -418,7 +417,7 @@ namespace CE
 
     DestroyBuffer(it->second);
     m_buffers.erase(it);
-    CE_RENDER_DEBUG("Destroyed buffer '", name, "'");
+    RENDER_DEBUG("Destroyed buffer '", name, "'");
   }
 
   void BufferManager::DestroyAllBuffers()
@@ -430,7 +429,7 @@ namespace CE
         vkUnmapMemory(m_deviceManager->GetDevice(), bufferInfo.memory);
       }
       DestroyBuffer(bufferInfo);
-      CE_RENDER_DEBUG("Destroyed buffer '", name, "'");
+      RENDER_DEBUG("Destroyed buffer '", name, "'");
     }
     m_buffers.clear();
   }
@@ -448,7 +447,7 @@ namespace CE
     VkResult result = vkCreateBuffer(m_deviceManager->GetDevice(), &bufferInfo, nullptr, &buffer);
     if (result != VK_SUCCESS)
     {
-      CE_RENDER_ERROR("Failed to create buffer");
+      RENDER_ERROR("Failed to create buffer");
       return false;
     }
 
@@ -463,7 +462,7 @@ namespace CE
     result = vkAllocateMemory(m_deviceManager->GetDevice(), &allocInfo, nullptr, &bufferMemory);
     if (result != VK_SUCCESS)
     {
-      CE_RENDER_ERROR("Failed to allocate buffer memory");
+      RENDER_ERROR("Failed to allocate buffer memory");
       vkDestroyBuffer(m_deviceManager->GetDevice(), buffer, nullptr);
       return false;
     }
@@ -491,4 +490,3 @@ namespace CE
   {
     return VulkanUtils::FindMemoryType(m_deviceManager->GetPhysicalDevice(), typeFilter, properties);
   }
-}  // namespace CE

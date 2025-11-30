@@ -16,8 +16,7 @@
 #define GLFW_RELEASE 0
 #define GLFW_REPEAT 2
 
-namespace CE
-{
+
   CInputComponent::CInputComponent(CObject* Owner, FString NewName)
       : CComponent(Owner, NewName)
   {
@@ -25,14 +24,14 @@ namespace CE
 
     CInputSystem::Get().RegisterInputComponent(this);
 
-    CE_CORE_DEBUG("InputComponent created: ", NewName);
+    CORE_DEBUG("InputComponent created: ", NewName);
   }
 
   CInputComponent::~CInputComponent()
   {
     CInputSystem::Get().UnregisterInputComponent(this);
 
-    CE_CORE_DEBUG("InputComponent destroyed: ", GetName());
+    CORE_DEBUG("InputComponent destroyed: ", GetName());
   }
 
   void CInputComponent::BindAction(const FString& ActionName, EInputEvent EventType, std::function<void()> Callback)
@@ -142,16 +141,15 @@ namespace CE
     m_KeyToActionMap[GLFW_KEY_E] = "Interact";
     m_KeyToActionMap[GLFW_KEY_ESCAPE] = "Pause";
 
-    CE_CORE_DEBUG("Default key mappings setup");
+    CORE_DEBUG("Default key mappings setup");
 
     // Отладочный вывод маппинга
     for (const auto& [key, axis] : m_KeyToAxisMap)
     {
-      CE_INPUT_DEBUG("Axis mapping: key=", key, " -> ", axis);
+      INPUT_DEBUG("Axis mapping: key=", key, " -> ", axis);
     }
     for (const auto& [key, action] : m_KeyToActionMap)
     {
-      CE_INPUT_DEBUG("Action mapping: key=", key, " -> ", action);
+      INPUT_DEBUG("Action mapping: key=", key, " -> ", action);
     }
   }
-}  // namespace CE

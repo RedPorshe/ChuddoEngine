@@ -6,8 +6,7 @@
 #include "Engine/GamePlay/Actors/Actor.h"
 #include "glm/glm.hpp"
 
-namespace CE
-{
+
   class CMeshComponent;
 
   class TerrainActor : public CActor
@@ -20,7 +19,7 @@ namespace CE
     virtual void Update(float DeltaTime) override;
 
     // Get terrain height at world position (for heightmap collision)
-    float GetHeightAtPosition(const Math::Vector3f& WorldPosition) const;
+    float GetHeightAtPosition(const CEMath::Vector3f& WorldPosition) const;
 
     // Check if heightmap is initialized and ready
     bool IsHeightmapReady() const
@@ -47,4 +46,3 @@ namespace CE
     // Generate procedural terrain mesh with height variation
     void GenerateTerrainMesh();
   };
-}  // namespace CE

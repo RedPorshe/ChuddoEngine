@@ -56,7 +56,7 @@ namespace CEMath
         case 2: return z;
         default: 
             static T dummy;
-            CE_CORE_ERROR("Vector3 index out of range");
+            CORE_ERROR("Vector3 index out of range");
             return dummy;
     }
 }
@@ -70,7 +70,7 @@ const T& operator[](int index) const
         case 2: return z;
         default: 
             static T dummy;
-            CE_CORE_ERROR("Vector3 index out of range");
+            CORE_ERROR("Vector3 index out of range");
             return dummy;
     }
 }

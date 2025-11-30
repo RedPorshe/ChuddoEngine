@@ -1,7 +1,6 @@
 #include "Engine/Core/Rendering/Data/Vertex.h"
 
-namespace CE
-{
+
   VkVertexInputBindingDescription Vertex::GetBindingDescription()
   {
     VkVertexInputBindingDescription bindingDescription{};
@@ -36,4 +35,3 @@ namespace CE
 
     return attributeDescriptions;
   }
-}  // namespace CE

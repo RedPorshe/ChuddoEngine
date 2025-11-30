@@ -4,8 +4,7 @@
 #include "Engine/GamePlay/World/World.h"
 #include "Engine/Utils/Math/AllMath.h"
 
-namespace CE
-{
+
   class CMeshComponent;
 
   class SunActor : public CActor
@@ -17,7 +16,7 @@ namespace CE
     virtual void BeginPlay() override;
     virtual void Update(float DeltaTime) override;
 
-    void SetColor(const Math::Vector3f& color)
+    void SetColor(const CEMath::Vector3f& color)
     {
       m_Color = color;
     }
@@ -35,7 +34,7 @@ namespace CE
     }
 
    private:
-    Math::Vector3f m_Color = Math::Vector3f(1.0f);
+    CEMath::Vector3f m_Color = CEMath::Vector3f(1.0f);
     float m_Intensity = 1.0f;
     float m_AngularSpeed = 0.00f;  // radians per second
     float m_Angle = 0.0f;
@@ -44,4 +43,3 @@ namespace CE
     // Visual marker mesh
     CMeshComponent* m_SunMarkerMesh = nullptr;
   };
-}  // namespace CE

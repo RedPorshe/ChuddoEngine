@@ -3,10 +3,7 @@
 #include "Engine/Core/Rendering/Data/RenderData.h"
 #include "Engine/Core/Rendering/Vulkan/Core/VulkanContext.h"
 
-namespace CE
-{
-  // Высокоуровневый интерфейс для приложения
-  class RenderSystem
+class RenderSystem
   {
    public:
     RenderSystem(AppInfo* info);
@@ -47,4 +44,3 @@ namespace CE
     bool m_initialized = false;
     VulkanContext* m_vulkanContext = nullptr;
   };
-}  // namespace CE

@@ -5,22 +5,21 @@
 #include "Engine/Core/Rendering/Data/Vertex.h"
 #include "Engine/Utils/Math/AllMath.h"
 
-namespace CE
-{
+
   // Данные для одного рендер-объекта
   struct RenderObject
   {
-    const StaticMesh* mesh;
-    Math::Matrix4f transform;
-    Math::Vector3f color;
+    const FStaticMesh* mesh;
+    CEMath::Matrix4f transform;
+    CEMath::Vector3f color;
   };
 
   // Данные камеры для рендеринга
   struct CameraData
   {
-    Math::Matrix4f viewMatrix;
-    Math::Matrix4f projectionMatrix;
-    Math::Vector3f position;
+    CEMath::Matrix4f viewMatrix;
+    CEMath::Matrix4f projectionMatrix;
+    CEMath::Vector3f position;
 
     CameraData() : viewMatrix(1.0f), projectionMatrix(1.0f), position(0.0f)
     {
@@ -30,37 +29,37 @@ namespace CE
   // UBO структуры для шейдеров
   struct SceneUBO
   {
-    Math::Matrix4f view;
-    Math::Matrix4f proj;
-    Math::Vector3f cameraPos;
+    CEMath::Matrix4f view;
+    CEMath::Matrix4f proj;
+    CEMath::Vector3f cameraPos;
 
     float padding[13];
   };
 
   struct ModelUBO
   {
-    Math::Matrix4f model;    
-    Math::Vector4f color;
+    CEMath::Matrix4f model;    
+    CEMath::Vector4f color;
     float padding[8];
   };
 
   struct LightingUBO
   {
-    Math::Vector4f lightPositions[4];
-    Math::Vector4f lightColors[4];
+    CEMath::Vector4f lightPositions[4];
+    CEMath::Vector4f lightColors[4];
     
-    Math::Vector4f ambientColor;  
+    CEMath::Vector4f ambientColor;  
     int lightCount;
     float padding[3];  
 
     LightingUBO()
     {
       lightCount = 0;
-      ambientColor = Math::Vector4f(0.0f);
+      ambientColor = CEMath::Vector4f(0.0f);
       for (int i = 0; i < 4; i++)
       {
-        lightPositions[i] = Math::Vector4f(0.0f);
-        lightColors[i] = Math::Vector4f(0.0f);
+        lightPositions[i] = CEMath::Vector4f(0.0f);
+        lightColors[i] = CEMath::Vector4f(0.0f);
       }
       padding[0] = 0.0f;
       padding[1] = 0.0f;
@@ -68,7 +67,7 @@ namespace CE
     }
   };
 
-  // Собранные данные для рендеринга кадра
+
   struct FrameRenderData
   {
     CameraData camera;
@@ -109,11 +108,11 @@ namespace CE
       return ubo;
     }
 
-    ModelUBO GetModelUBO(const Math::Matrix4f& modelMatrix, const Math::Vector3f& meshColor) const
+    ModelUBO GetModelUBO(const CEMath::Matrix4f& modelMatrix, const CEMath::Vector3f& meshColor) const
     {
       ModelUBO ubo{};
       ubo.model = modelMatrix;
-      ubo.color = Math::Vector4f(meshColor, 1.0f);
+      ubo.color = CEMath::Vector4f(meshColor, 1.0f);
       return ubo;
     }
 
@@ -121,10 +120,9 @@ namespace CE
     void SetupDefaultLighting()
     {
       lighting.lightCount = 1;
-      lighting.lightPositions[0] = Math::Vector4f(0.0f, 5.0f, 5.0f, 1.0f);  // Точечный свет
-      lighting.lightColors[0] = Math::Vector4f(1.0f, 1.0f, 1.0f, 1.0f);     // Белый свет
+      lighting.lightPositions[0] = CEMath::Vector4f(0.0f, 5.0f, 5.0f, 1.0f);  // Точечный свет
+      lighting.lightColors[0] = CEMath::Vector4f(1.0f, 1.0f, 1.0f, 1.0f);     // Белый свет
 
-      lighting.ambientColor = Math::Vector4f(0.2f, 0.2f, 0.2f, .3f);  // Слабый ambient
+      lighting.ambientColor = CEMath::Vector4f(0.2f, 0.2f, 0.2f, .3f);  // Слабый ambient
     }
   };
-}  // namespace CE

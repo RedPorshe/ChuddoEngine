@@ -6,8 +6,7 @@
 #include "Engine/Utils/Math/Matrix4.h"
 #include "Engine/GamePlay/Components/Base/Component.h"
 
-namespace CE
-{
+
   class CSceneComponent : public CComponent
   {
    public:
@@ -15,43 +14,43 @@ namespace CE
     virtual ~CSceneComponent() = default;
 
     // position methods
-    void SetPosition(const Math::Vector3f& Position);
+    void SetPosition(const CEMath::Vector3f& Position);
     void SetPosition(float X, float Y, float Z);
-    void SetRelativePosition(const Math::Vector3f& Position);
+    void SetRelativePosition(const CEMath::Vector3f& Position);
     void SetRelativePosition(float X, float Y, float Z);
 
     // rotation methods
-    void SetRotation(const Math::Vector3f& Rotation);
+    void SetRotation(const CEMath::Vector3f& Rotation);
     void SetRotation(float Pitch, float Yaw, float Roll);
-    void SetRelativeRotation(const Math::Vector3f& Rotation);
+    void SetRelativeRotation(const CEMath::Vector3f& Rotation);
     void SetRelativeRotation(float Pitch, float Yaw, float Roll);
-    void SetRotation(const Math::Quaternionf& Rotation);
-    void SetRelativeRotation(const Math::Quaternionf& Rotation);
+    void SetRotation(const CEMath::Quaternionf& Rotation);
+    void SetRelativeRotation(const CEMath::Quaternionf& Rotation);
 
     // scale methods
-    void SetScale(const Math::Vector3f& Scale);
+    void SetScale(const CEMath::Vector3f& Scale);
     void SetScale(float X, float Y, float Z);
     void SetScale(float value);
-    void SetRelativeScale(const Math::Vector3f& Scale);
+    void SetRelativeScale(const CEMath::Vector3f& Scale);
     void SetRelativeScale(float X, float Y, float Z);
     void SetRelativeScale(float value);
 
     // getters
-    const Math::Vector3f& GetPosition() const;
-    const Math::Vector3f& GetRelativePosition() const;
-    const Math::Vector3f& GetRotation() const;
-    const Math::Vector3f& GetRelativeRotation() const;
-    const Math::Vector3f& GetScale() const;
-    const Math::Vector3f& GetRelativeScale() const;
-    const Math::Matrix4f& GetTransformMatrix() const;
+    const CEMath::Vector3f& GetPosition() const;
+    const CEMath::Vector3f& GetRelativePosition() const;
+    const CEMath::Vector3f& GetRotation() const;
+    const CEMath::Vector3f& GetRelativeRotation() const;
+    const CEMath::Vector3f& GetScale() const;
+    const CEMath::Vector3f& GetRelativeScale() const;
+    const CEMath::Matrix4f& GetTransformMatrix() const;
 
-    Math::Matrix4f GetWorldTransform() const;
-    Math::Vector3f GetWorldLocation() const;
+    CEMath::Matrix4f GetWorldTransform() const;
+    CEMath::Vector3f GetWorldLocation() const;
 
     // Direction vectors
-    Math::Vector3f GetForwardVector() const;
-    Math::Vector3f GetRightVector() const;
-    Math::Vector3f GetUpVector() const;
+    CEMath::Vector3f GetForwardVector() const;
+    CEMath::Vector3f GetRightVector() const;
+    CEMath::Vector3f GetUpVector() const;
 
     // Input methods
     void AddYawInput(float Value);
@@ -59,7 +58,7 @@ namespace CE
     void SetPitchLimits(float MinPitch, float MaxPitch);
 
     // Quaternion access
-    const Math::Quaternionf& GetRotationQuat() const
+    const CEMath::Quaternionf& GetRotationQuat() const
     {
       return m_RotationQuat;
     }
@@ -78,9 +77,9 @@ namespace CE
     }
 
     // Movement
-    void Move(const Math::Vector3f& Delta);
-    void Rotate(const Math::Vector3f& Delta);
-    void Rotate(const Math::Quaternionf& Delta);
+    void Move(const CEMath::Vector3f& Delta);
+    void Rotate(const CEMath::Vector3f& Delta);
+    void Rotate(const CEMath::Quaternionf& Delta);
 
     virtual void Update(float DeltaTime) override;
 
@@ -96,24 +95,24 @@ namespace CE
     bool WouldCreateCycle(CSceneComponent* PotentialParent) const;
 
     // relative transforms
-    Math::Vector3f m_RelativeLocation{0.0f, 0.0f, 0.0f};
-    Math::Vector3f m_RelativeRotation{0.0f, 0.0f, 0.0f};
-    Math::Vector3f m_RelativeScale{1.0f, 1.0f, 1.0f};
+    CEMath::Vector3f m_RelativeLocation{0.0f, 0.0f, 0.0f};
+    CEMath::Vector3f m_RelativeRotation{0.0f, 0.0f, 0.0f};
+    CEMath::Vector3f m_RelativeScale{1.0f, 1.0f, 1.0f};
 
     // world transforms
-    Math::Vector3f m_WorldRotation{0.0f, 0.0f, 0.0f};
-    Math::Vector3f m_WorldScale{1.0f, 1.0f, 1.0f};
-    Math::Vector3f m_WorldLocation{0.0f, 0.0f, 0.0f};
+    CEMath::Vector3f m_WorldRotation{0.0f, 0.0f, 0.0f};
+    CEMath::Vector3f m_WorldScale{1.0f, 1.0f, 1.0f};
+    CEMath::Vector3f m_WorldLocation{0.0f, 0.0f, 0.0f};
 
     // matrix
-    Math::Matrix4f m_TransformMatrix;
+    CEMath::Matrix4f m_TransformMatrix;
 
     // hierarchy
     CSceneComponent* m_Parent = nullptr;
     std::vector<CSceneComponent*> m_Children;
 
     // quaternion for rotation
-    Math::Quaternionf m_RotationQuat = Math::Quaternionf::Identity();
+    CEMath::Quaternionf m_RotationQuat = CEMath::Quaternionf::Identity();
 
       bool m_IsUpdating = false;
     mutable bool m_IsComputingWorldTransform = false;
@@ -124,4 +123,3 @@ namespace CE
     bool m_UsePitchLimits = false;
     friend class CSpringArmComponent;
   };
-}  // namespace CE

@@ -17,7 +17,7 @@ class ObjLoader
    * @param filePath Путь к OBJ файлу
    * @return StaticMesh с загруженными вершинами и индексами, или пустой меш при ошибке
    */
-  static StaticMesh LoadOBJ(const std::string& filePath);
+  static FStaticMesh LoadOBJ(const std::string& filePath);
 
  private:
   ObjLoader() = default;

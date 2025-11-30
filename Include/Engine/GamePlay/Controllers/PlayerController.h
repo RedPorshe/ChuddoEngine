@@ -3,14 +3,9 @@
 #include "Engine/GamePlay/Actors/Actor.h"
 #include "Engine/GamePlay/Actors/Pawn.h"
 
-// Forward declaration
-namespace CE
-{
-  class CWorld;
-}
 
-namespace CE
-{
+  class CWorld;
+
   class CPlayerController : public CActor
   {
    public:
@@ -42,4 +37,3 @@ namespace CE
     CPawn* m_PossessedPawn = nullptr;
     CInputComponent* m_InputComponent = nullptr;
   };
-}  // namespace CE

@@ -3,8 +3,7 @@
 #include <vector>
 #include <Engine/Utils/Math/AllMath.h>
 
-namespace CE
-{
+
     class CActor;
     class AActor;
     class CCameraComponent;
@@ -36,13 +35,13 @@ namespace CE
         bool IsSelected(CActor* actor) const;
         CActor* GetPrimarySelectedActor() const;
 
-        bool IsGizmoHovered(const CE::Math::Vector3f& rayOrigin, const CE::Math::Vector3f& rayDirection, CCameraComponent* camera) const;
-        bool IsGizmoSelected(const CE::Math::Vector3f& rayOrigin, const CE::Math::Vector3f& rayDirection, CCameraComponent* camera) const;
-        void StartGizmoDrag(const CE::Math::Vector3f& initialPosition);
-        void UpdateGizmoDrag(const CE::Math::Vector3f& currentPosition, const CE::Math::Vector3f& dragDelta);
+        bool IsGizmoHovered(const CEMath::Vector3f& rayOrigin, const CEMath::Vector3f& rayDirection, CCameraComponent* camera) const;
+        bool IsGizmoSelected(const CEMath::Vector3f& rayOrigin, const CEMath::Vector3f& rayDirection, CCameraComponent* camera) const;
+        void StartGizmoDrag(const CEMath::Vector3f& initialPosition);
+        void UpdateGizmoDrag(const CEMath::Vector3f& currentPosition, const CEMath::Vector3f& dragDelta);
         void EndGizmoDrag();
 
-        void RenderGizmo(CE::Math::Matrix4f viewMatrix, CE::Math::Matrix4f projectionMatrix);
+        void RenderGizmo(CEMath::Matrix4f viewMatrix, CEMath::Matrix4f projectionMatrix);
 
     private:
         ActorSelection() = default;
@@ -50,18 +49,17 @@ namespace CE
         ActorSelection(const ActorSelection&) = delete;
         ActorSelection& operator=(const ActorSelection&) = delete;
 
-        void RenderTranslateGizmo(const CE::Math::Matrix4f& mvp);
-        void RenderRotateGizmo(const CE::Math::Matrix4f& mvp);
-        void RenderScaleGizmo(const CE::Math::Matrix4f& mvp);
+        void RenderTranslateGizmo(const CEMath::Matrix4f& mvp);
+        void RenderRotateGizmo(const CEMath::Matrix4f& mvp);
+        void RenderScaleGizmo(const CEMath::Matrix4f& mvp);
 
-        CE::Math::Vector3f GetGizmoPosition() const;
-        bool RayIntersectsGizmo(const CE::Math::Vector3f& rayOrigin, const CE::Math::Vector3f& rayDirection,
+        CEMath::Vector3f GetGizmoPosition() const;
+        bool RayIntersectsGizmo(const CEMath::Vector3f& rayOrigin, const CEMath::Vector3f& rayDirection,
                                EGizmoAxis axis, float& distance) const;
 
         std::vector<CActor*> m_SelectedActors;
         EGizmoAxis m_GizmoAxis = EGizmoAxis::None;
         EGizmoMode m_GizmoMode = EGizmoMode::Translate;
         bool m_IsDragging = false;
-        CE::Math::Vector3f m_InitialDragPosition;
+        CEMath::Vector3f m_InitialDragPosition;
     };
-} // namespace CE

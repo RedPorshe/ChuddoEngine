@@ -4,8 +4,7 @@
 #include <fstream>
 #include <stdexcept>
 
-namespace CE
-{
+
   PipelineManager::PipelineManager(std::shared_ptr<DeviceManager> deviceManager)
       : m_deviceManager(deviceManager)
   {
@@ -18,15 +17,15 @@ namespace CE
 
   bool PipelineManager::Initialize()
   {
-    CE_RENDER_DEBUG("Initializing PipelineManager...");
+    RENDER_DEBUG("Initializing PipelineManager...");
 
     if (!CreatePipelineLayout())
     {
-      CE_RENDER_ERROR("Failed to create pipeline layout");
+      RENDER_ERROR("Failed to create pipeline layout");
       return false;
     }
 
-    CE_RENDER_DEBUG("PipelineManager initialized successfully");
+    RENDER_DEBUG("PipelineManager initialized successfully");
     return true;
   }
 
@@ -38,14 +37,14 @@ namespace CE
     for (auto& [name, pipeline] : m_pipelines)
     {
       vkDestroyPipeline(device, pipeline, nullptr);
-      CE_RENDER_DEBUG("Destroyed pipeline: ", name);
+      RENDER_DEBUG("Destroyed pipeline: ", name);
     }
     m_pipelines.clear();
 
     // Уничтожаем layout пайплайна
     DestroyPipelineLayout();
 
-    CE_RENDER_DEBUG("PipelineManager shutdown complete");
+    RENDER_DEBUG("PipelineManager shutdown complete");
   }
 
   VkPipeline PipelineManager::CreateMeshPipeline(const std::string& name, VkRenderPass renderPass)
@@ -53,11 +52,11 @@ namespace CE
     auto it = m_pipelines.find(name);
     if (it != m_pipelines.end())
     {
-      CE_RENDER_WARN("Pipeline '", name, "' already exists");
+      RENDER_WARN("Pipeline '", name, "' already exists");
       return it->second;
     }
 
-    CE_RENDER_DEBUG("Creating mesh pipeline: ", name);
+    RENDER_DEBUG("Creating mesh pipeline: ", name);
 
     try
     {
@@ -108,12 +107,12 @@ namespace CE
 
       m_pipelines[name] = pipeline;
 
-      CE_RENDER_DEBUG("Mesh pipeline '", name, "' created successfully");
+      RENDER_DEBUG("Mesh pipeline '", name, "' created successfully");
       return pipeline;
     }
     catch (const std::exception& e)
     {
-      CE_RENDER_ERROR("Failed to create mesh pipeline '", name, "': ", e.what());
+      RENDER_ERROR("Failed to create mesh pipeline '", name, "': ", e.what());
       return VK_NULL_HANDLE;
     }
   }
@@ -160,7 +159,7 @@ namespace CE
 
     if (result != VK_SUCCESS)
     {
-      CE_RENDER_ERROR("Failed to create descriptor set layout");
+      RENDER_ERROR("Failed to create descriptor set layout");
       return false;
     }
 
@@ -176,7 +175,7 @@ namespace CE
 
     VK_CHECK(result, "Failed to create pipeline layout");
 
-    CE_RENDER_DEBUG("Pipeline layout created successfully");
+    RENDER_DEBUG("Pipeline layout created successfully");
     return true;
   }
 
@@ -188,14 +187,14 @@ namespace CE
     {
       vkDestroyPipelineLayout(device, m_pipelineLayout, nullptr);
       m_pipelineLayout = VK_NULL_HANDLE;
-      CE_RENDER_DEBUG("Pipeline layout destroyed");
+      RENDER_DEBUG("Pipeline layout destroyed");
     }
 
     if (m_descriptorSetLayout != VK_NULL_HANDLE)
     {
       vkDestroyDescriptorSetLayout(device, m_descriptorSetLayout, nullptr);
       m_descriptorSetLayout = VK_NULL_HANDLE;
-      CE_RENDER_DEBUG("Descriptor set layout destroyed");
+      RENDER_DEBUG("Descriptor set layout destroyed");
     }
   }
 
@@ -390,4 +389,3 @@ namespace CE
     configInfo.colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
     configInfo.colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
   }
-}  // namespace CE

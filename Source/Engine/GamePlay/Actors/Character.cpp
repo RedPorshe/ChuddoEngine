@@ -3,8 +3,7 @@
 #include "Engine/GamePlay/World/Levels/Level.h"
 
 
-namespace CE
-{
+
   CCharacter::CCharacter(CObject* Owner, FString NewName)
       : CPawn(Owner, NewName), m_VerticalVelocity(0.0f), m_IsOnGround(false)
   {
@@ -16,7 +15,7 @@ m_InputComponent = AddSubObject<CInputComponent>("Input", this, "InputComponent"
     m_Mesh = AddDefaultSubObject<CMeshComponent>("Mesh", this, "Mesh Component");
     SetRootComponent(m_Mesh);
     m_Mesh->CreateCubeMesh();
-    m_Mesh->SetRelativePosition(Math::Vector3f(0.f, 0.f, 1.f));
+    m_Mesh->SetRelativePosition(CEMath::Vector3f(0.f, 0.f, 1.f));
     m_Mesh->SetRelativeScale(2.f);
 
     m_SpringArm = AddDefaultSubObject<CSpringArmComponent>("SpringArm", this, "SpringArm Component");
@@ -29,7 +28,7 @@ m_InputComponent = AddSubObject<CInputComponent>("Input", this, "InputComponent"
     m_Camera->AttachToComponent(m_SpringArm);
     m_Camera->SetFieldOfView(60.f);
     m_Camera->SetRelativePosition(0.f,0.f,0.f);
-    m_Camera->SetRelativeRotation(Math::Vector3f(0.0f, 0.0f, 0.0f));
+    m_Camera->SetRelativeRotation(CEMath::Vector3f(0.0f, 0.0f, 0.0f));
 
 
 
@@ -72,12 +71,12 @@ m_InputComponent = AddSubObject<CInputComponent>("Input", this, "InputComponent"
     if (Value != 0.0f)
     {
 
-      Math::Vector3f forward = GetViewForwardVector();
+      CEMath::Vector3f forward = GetViewForwardVector();
       forward.y = 0.0f; // Keep movement on horizontal plane
       forward = forward.Normalized();
-      Math::Vector3f delta = forward * Value * 5.0f * 0.016f; // Increased speed for testing
-      Math::Vector3f currentLoc = GetActorLocation();
-      Math::Vector3f newLocation = currentLoc + delta;
+      CEMath::Vector3f delta = forward * Value * 5.0f * 0.016f; // Increased speed for testing
+      CEMath::Vector3f currentLoc = GetActorLocation();
+      CEMath::Vector3f newLocation = currentLoc + delta;
 
       SetActorLocation(newLocation);
 
@@ -89,12 +88,12 @@ m_InputComponent = AddSubObject<CInputComponent>("Input", this, "InputComponent"
     if (Value != 0.0f)
     {
 
-      Math::Vector3f right = -GetViewRightVector();
+      CEMath::Vector3f right = -GetViewRightVector();
       right.y = 0.0f; // Keep movement on horizontal plane
       right = right.Normalized();
-      Math::Vector3f delta = right * Value * 5.0f * 0.016f; // Increased speed for testing
-      Math::Vector3f currentLoc = GetActorLocation();
-      Math::Vector3f newLocation = currentLoc + delta;
+      CEMath::Vector3f delta = right * Value * 5.0f * 0.016f; // Increased speed for testing
+      CEMath::Vector3f currentLoc = GetActorLocation();
+      CEMath::Vector3f newLocation = currentLoc + delta;
 
       SetActorLocation(newLocation);
     }
@@ -120,4 +119,3 @@ m_InputComponent = AddSubObject<CInputComponent>("Input", this, "InputComponent"
   {
     AddControllerYawInput(Value);
   }
-}  // namespace CE

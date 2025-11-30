@@ -2,8 +2,7 @@
 
 #include <stdexcept>
 
-namespace CE
-{
+
   CommandBufferManager::CommandBufferManager(std::shared_ptr<DeviceManager> deviceManager)
       : m_deviceManager(deviceManager)
   {
@@ -16,11 +15,11 @@ namespace CE
 
   bool CommandBufferManager::Initialize()
   {
-    CE_RENDER_DEBUG("Initializing CommandBufferManager...");
+    RENDER_DEBUG("Initializing CommandBufferManager...");
 
     if (!CreateCommandPool())
     {
-      CE_RENDER_ERROR("Failed to create command pool");
+      RENDER_ERROR("Failed to create command pool");
       return false;
     }
 
@@ -29,7 +28,7 @@ namespace CE
         m_deviceManager->GetPhysicalDevice(), VK_NULL_HANDLE);
     m_graphicsQueueFamily = indices.graphicsFamily;
 
-    CE_RENDER_DEBUG("CommandBufferManager initialized successfully");
+    RENDER_DEBUG("CommandBufferManager initialized successfully");
     return true;
   }
 
@@ -40,18 +39,18 @@ namespace CE
       vkFreeCommandBuffers(m_deviceManager->GetDevice(), m_commandPool,
                            static_cast<uint32_t>(m_commandBuffers.size()), m_commandBuffers.data());
       m_commandBuffers.clear();
-      CE_RENDER_DEBUG("Command buffers freed");
+      RENDER_DEBUG("Command buffers freed");
     }
 
     DestroyCommandPool();
-    CE_RENDER_DEBUG("CommandBufferManager shutdown complete");
+    RENDER_DEBUG("CommandBufferManager shutdown complete");
   }
 
   bool CommandBufferManager::CreateCommandBuffers(uint32_t count)
   {
     if (count == 0)
     {
-      CE_RENDER_ERROR("Cannot create 0 command buffers");
+      RENDER_ERROR("Cannot create 0 command buffers");
       return false;
     }
 
@@ -74,7 +73,7 @@ namespace CE
     VkResult result = vkAllocateCommandBuffers(m_deviceManager->GetDevice(), &allocInfo, m_commandBuffers.data());
     VK_CHECK(result, "Failed to allocate command buffers");
 
-    CE_RENDER_DEBUG("Created ", count, " command buffers");
+    RENDER_DEBUG("Created ", count, " command buffers");
     return true;
   }
 
@@ -82,7 +81,7 @@ namespace CE
   {
     if (commandBufferIndex >= m_commandBuffers.size())
     {
-      CE_RENDER_ERROR("Invalid command buffer index: ", commandBufferIndex);
+      RENDER_ERROR("Invalid command buffer index: ", commandBufferIndex);
       return;
     }
 
@@ -99,7 +98,7 @@ namespace CE
   {
     if (commandBufferIndex >= m_commandBuffers.size())
     {
-      CE_RENDER_ERROR("Invalid command buffer index: ", commandBufferIndex);
+      RENDER_ERROR("Invalid command buffer index: ", commandBufferIndex);
       return;
     }
 
@@ -113,7 +112,7 @@ namespace CE
   {
     if (commandBufferIndex >= m_commandBuffers.size())
     {
-      CE_RENDER_ERROR("Invalid command buffer index: ", commandBufferIndex);
+      RENDER_ERROR("Invalid command buffer index: ", commandBufferIndex);
       return;
     }
 
@@ -133,7 +132,7 @@ namespace CE
   {
     if (commandBufferIndex >= m_commandBuffers.size())
     {
-      CE_RENDER_ERROR("Invalid command buffer index: ", commandBufferIndex);
+      RENDER_ERROR("Invalid command buffer index: ", commandBufferIndex);
       return;
     }
 
@@ -144,7 +143,7 @@ namespace CE
   {
     if (commandBufferIndex >= m_commandBuffers.size())
     {
-      CE_RENDER_ERROR("Invalid command buffer index: ", commandBufferIndex);
+      RENDER_ERROR("Invalid command buffer index: ", commandBufferIndex);
       return;
     }
 
@@ -156,7 +155,7 @@ namespace CE
   {
     if (commandBufferIndex >= m_commandBuffers.size())
     {
-      CE_RENDER_ERROR("Invalid command buffer index: ", commandBufferIndex);
+      RENDER_ERROR("Invalid command buffer index: ", commandBufferIndex);
       return;
     }
 
@@ -174,13 +173,13 @@ namespace CE
   {
     if (commandBufferIndex >= m_commandBuffers.size())
     {
-      CE_RENDER_ERROR("Invalid command buffer index: ", commandBufferIndex);
+      RENDER_ERROR("Invalid command buffer index: ", commandBufferIndex);
       return;
     }
 
     if (buffers.size() != offsets.size())
     {
-      CE_RENDER_ERROR("Buffers and offsets size mismatch");
+      RENDER_ERROR("Buffers and offsets size mismatch");
       return;
     }
 
@@ -195,7 +194,7 @@ namespace CE
   {
     if (commandBufferIndex >= m_commandBuffers.size())
     {
-      CE_RENDER_ERROR("Invalid command buffer index: ", commandBufferIndex);
+      RENDER_ERROR("Invalid command buffer index: ", commandBufferIndex);
       return;
     }
 
@@ -207,7 +206,7 @@ namespace CE
   {
     if (commandBufferIndex >= m_commandBuffers.size())
     {
-      CE_RENDER_ERROR("Invalid command buffer index: ", commandBufferIndex);
+      RENDER_ERROR("Invalid command buffer index: ", commandBufferIndex);
       return;
     }
 
@@ -219,7 +218,7 @@ namespace CE
   {
     if (commandBufferIndex >= m_commandBuffers.size())
     {
-      CE_RENDER_ERROR("Invalid command buffer index: ", commandBufferIndex);
+      RENDER_ERROR("Invalid command buffer index: ", commandBufferIndex);
       return;
     }
 
@@ -230,7 +229,7 @@ namespace CE
   {
     if (commandBufferIndex >= m_commandBuffers.size())
     {
-      CE_RENDER_ERROR("Invalid command buffer index: ", commandBufferIndex);
+      RENDER_ERROR("Invalid command buffer index: ", commandBufferIndex);
       return;
     }
 
@@ -241,7 +240,7 @@ namespace CE
   {
     if (commandBufferIndex >= m_commandBuffers.size())
     {
-      CE_RENDER_ERROR("Invalid command buffer index: ", commandBufferIndex);
+      RENDER_ERROR("Invalid command buffer index: ", commandBufferIndex);
       return;
     }
 
@@ -254,7 +253,7 @@ namespace CE
   {
     if (commandBufferIndex >= m_commandBuffers.size())
     {
-      CE_RENDER_ERROR("Invalid command buffer index: ", commandBufferIndex);
+      RENDER_ERROR("Invalid command buffer index: ", commandBufferIndex);
       return;
     }
 
@@ -343,7 +342,6 @@ namespace CE
     {
       vkDestroyCommandPool(m_deviceManager->GetDevice(), m_commandPool, nullptr);
       m_commandPool = VK_NULL_HANDLE;
-      CE_RENDER_DEBUG("Command pool destroyed");
+      RENDER_DEBUG("Command pool destroyed");
     }
   }
-}  // namespace CE

@@ -6,9 +6,9 @@
 
 #include "Engine/Utils/Logger.h"
 
-StaticMesh ObjLoader::LoadOBJ(const std::string& filePath)
+FStaticMesh ObjLoader::LoadOBJ(const std::string& filePath)
 {
-  StaticMesh mesh;
+  FStaticMesh mesh;
   std::vector<CEMath::Vector3f> positions;
   std::vector<CEMath::Vector3f> normals;
   std::vector<CEMath::Vector2f> texCoords;
@@ -18,7 +18,7 @@ StaticMesh ObjLoader::LoadOBJ(const std::string& filePath)
   std::ifstream file(filePath);
   if (!file.is_open())
   {
-    CE_ERROR("Failed to open OBJ file: ", filePath.c_str());
+    CORE_ERROR("Failed to open OBJ file: ", filePath.c_str());
     return mesh;
   }
 
@@ -44,7 +44,7 @@ StaticMesh ObjLoader::LoadOBJ(const std::string& filePath)
       }
       else
       {
-        CE_WARN("Invalid vertex format at line ", lineNum);
+       CORE_WARN("Invalid vertex format at line ", lineNum);
       }
     }
     else if (token == "vn")
@@ -65,11 +65,7 @@ StaticMesh ObjLoader::LoadOBJ(const std::string& filePath)
     }
     else if (token == "f")
     {
-      // Парсим грань: поддерживаем форматы:
-      // v (только позиции)
-      // v/vt (позиции + текстурные координаты)
-      // v/vt/vn (позиции + текстуры + нормали)
-      // v//vn (позиции + нормали без текстур)
+      
 
       std::vector<uint32_t> faceIndices;
       std::string vertexStr;
@@ -83,14 +79,12 @@ StaticMesh ObjLoader::LoadOBJ(const std::string& filePath)
         // v
         if (vertexStream >> posIdx)
         {
-          posIdx--;  // OBJ индексы начинаются с 1
-
-          // v/vt или v/vt/vn или v//vn
+          posIdx--;  
           if (vertexStream.peek() == '/')
           {
             vertexStream >> slash;
 
-            // Проверяем, есть ли текстурная координата (не сразу //)
+            
             if (vertexStream.peek() != '/')
             {
               vertexStream >> texIdx;
@@ -104,7 +98,7 @@ StaticMesh ObjLoader::LoadOBJ(const std::string& filePath)
             }
           }
 
-          // Создаём вершину
+         
           Vertex vertex;
           if (posIdx < positions.size())
           {
@@ -129,7 +123,7 @@ StaticMesh ObjLoader::LoadOBJ(const std::string& filePath)
         }
       }
 
-      // Триангулируем грань (если это не треугольник)
+      
       if (faceIndices.size() >= 3)
       {
         for (size_t i = 1; i + 1 < faceIndices.size(); ++i)
@@ -146,7 +140,7 @@ StaticMesh ObjLoader::LoadOBJ(const std::string& filePath)
 
   if (vertices.empty() || indices.empty())
   {
-    CE_WARN("OBJ file loaded but contains no geometry: ", filePath.c_str());
+    CORE_WARN("OBJ file loaded but contains no geometry: ", filePath.c_str());
     return mesh;
   }
 
@@ -154,7 +148,7 @@ StaticMesh ObjLoader::LoadOBJ(const std::string& filePath)
   mesh.indices = indices;
   mesh.color = CEMath::Vector3f(1.0f);
 
-  CE_LOG("Successfully loaded OBJ: ", filePath.c_str(), " (vertices: ", vertices.size(), ", indices: ", indices.size(),
+  CORE_LOG("Successfully loaded OBJ: ", filePath.c_str(), " (vertices: ", vertices.size(), ", indices: ", indices.size(),
          ")");
 
   return mesh;

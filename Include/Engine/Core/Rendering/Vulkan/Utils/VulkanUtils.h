@@ -4,8 +4,7 @@
 #include "CoreMinimal.h"
 #include "vulkan/vulkan.h"
 
-namespace CE
-{
+
 // Макрос для проверки результатов Vulkan
 #define VK_CHECK(result, message)                                \
   do                                                             \
@@ -13,7 +12,7 @@ namespace CE
     VkResult vkResult = (result);                                \
     if (vkResult != VK_SUCCESS)                                  \
     {                                                            \
-      CE_RENDER_ERROR(message, " (Error code: ", vkResult, ")"); \
+      RENDER_ERROR(message, " (Error code: ", vkResult, ")"); \
       throw std::runtime_error(message);                         \
     }                                                            \
   } while (0)
@@ -32,4 +31,3 @@ namespace CE
     static void CopyBuffer(VkDevice device, VkCommandPool commandPool, VkQueue queue,
                            VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
   };
-}  // namespace CE

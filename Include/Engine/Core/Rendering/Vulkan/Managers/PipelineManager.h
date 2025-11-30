@@ -9,9 +9,7 @@
 #include "Engine/Core/Rendering/Vulkan/Managers/SwapchainManager.h"
 #include "vulkan/vulkan.h"
 
-namespace CE
-{
-  // Конфигурация пайплайна по умолчанию
+
   struct PipelineConfigInfo
   {
     VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo{};
@@ -84,4 +82,3 @@ namespace CE
     static constexpr const char* VERTEX_SHADER_PATH = "Assets/Shaders/mesh_vert.spv";
     static constexpr const char* FRAGMENT_SHADER_PATH = "Assets/Shaders/mesh_frag.spv";
   };
-}  // namespace CE

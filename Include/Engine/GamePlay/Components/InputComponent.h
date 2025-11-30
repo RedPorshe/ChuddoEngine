@@ -5,8 +5,7 @@
 
 #include "Engine/GamePlay/Components/Base/Component.h"
 
-namespace CE
-{
+
 
   enum class EInputEvent
   {
@@ -60,4 +59,3 @@ namespace CE
 
     void SetupDefaultKeyMappings();
   };
-}  // namespace CE

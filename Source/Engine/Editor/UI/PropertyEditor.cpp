@@ -8,8 +8,7 @@
 #include "Engine/Core/Object.h"
 #include "Engine/Utils/Math/AllMath.h"
 
-namespace CE
-{
+
   PropertyEditor::PropertyEditor()
   {
   }
@@ -28,7 +27,7 @@ namespace CE
 
     // ImGui is already initialized in EditorApplication
     m_IsInitialized = true;
-    CE_CORE_DEBUG("PropertyEditor initialized");
+    CORE_DEBUG("PropertyEditor initialized");
   }
 
   void PropertyEditor::Shutdown()
@@ -36,7 +35,7 @@ namespace CE
     if (!m_IsInitialized) return;
 
     m_IsInitialized = false;
-    CE_CORE_DEBUG("PropertyEditor shutdown");
+    CORE_DEBUG("PropertyEditor shutdown");
   }
 
   void PropertyEditor::Render(CObject* selectedObject)
@@ -199,31 +198,31 @@ namespace CE
 
   void PropertyEditor::RenderVector2Property(const Property& property, void* object)
   {
-    CE::Math::Vector2f* value = static_cast<CE::Math::Vector2f*>(property.GetValuePtr(object));
+    CEMath::Vector2f* value = static_cast<CEMath::Vector2f*>(property.GetValuePtr(object));
     ImGui::InputFloat2(property.GetMeta().DisplayName.c_str(), &value->x);
   }
 
   void PropertyEditor::RenderVector3Property(const Property& property, void* object)
   {
-    CE::Math::Vector3f* value = static_cast<CE::Math::Vector3f*>(property.GetValuePtr(object));
+    CEMath::Vector3f* value = static_cast<CEMath::Vector3f*>(property.GetValuePtr(object));
     ImGui::InputFloat3(property.GetMeta().DisplayName.c_str(), &value->x);
   }
 
   void PropertyEditor::RenderVector4Property(const Property& property, void* object)
   {
-    CE::Math::Vector4f* value = static_cast<CE::Math::Vector4f*>(property.GetValuePtr(object));
+    CEMath::Vector4f* value = static_cast<CEMath::Vector4f*>(property.GetValuePtr(object));
     ImGui::InputFloat4(property.GetMeta().DisplayName.c_str(), &value->x);
   }
 
   void PropertyEditor::RenderQuaternionProperty(const Property& property, void* object)
   {
-    CE::Math::Quaternionf* value = static_cast<CE::Math::Quaternionf*>(property.GetValuePtr(object));
+    CEMath::Quaternionf* value = static_cast<CEMath::Quaternionf*>(property.GetValuePtr(object));
     ImGui::InputFloat4(property.GetMeta().DisplayName.c_str(), &value->x);
   }
 
   void PropertyEditor::RenderColorProperty(const Property& property, void* object)
   {
-    CE::Math::Color* value = static_cast<CE::Math::Color*>(property.GetValuePtr(object));
+    CEMath::Color* value = static_cast<CEMath::Color*>(property.GetValuePtr(object));
     ImGui::ColorEdit4(property.GetMeta().DisplayName.c_str(), &value->r);
   }
 
@@ -232,4 +231,3 @@ namespace CE
     ImGui::Text("%s: %s", property.GetMeta().DisplayName.c_str(),
                 property.GetValueAsString(object).c_str());
   }
-}  // namespace CE

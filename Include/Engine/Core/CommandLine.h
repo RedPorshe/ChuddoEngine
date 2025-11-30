@@ -6,8 +6,7 @@
 
 #include "CoreMinimal.h"
 
-namespace CE
-{
+
   class CommandLine
   {
    public:
@@ -41,4 +40,3 @@ namespace CE
 
     static CommandLine s_Instance;
   };
-}  // namespace CE

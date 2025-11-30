@@ -7,8 +7,7 @@
 #include "Engine/Core/Rendering/Vulkan/Managers/SwapchainManager.h"
 #include "vulkan/vulkan.h"
 
-namespace CE
-{
+
   class CommandBufferManager
   {
    public:
@@ -84,4 +83,3 @@ namespace CE
 
     uint32_t m_graphicsQueueFamily = UINT32_MAX;
   };
-}  // namespace CE

@@ -57,8 +57,6 @@ class CWorld : public CObject
  private:
   std::vector<std::unique_ptr<CLevel>> m_Levels;
   CLevel* m_CurrentLevel = nullptr;
-  CLevel* m_PendingLevel = nullptr;  // Для плавных переходов
-  // Optional world-level lighting that can be applied into FrameRenderData
-  // when a level doesn't explicitly set lighting.
+  CLevel* m_PendingLevel = nullptr;  
   LightingUBO m_defaultLighting;
 };

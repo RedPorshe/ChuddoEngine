@@ -46,8 +46,8 @@ namespace CE
     }
 
     s_initialized = true;
-    CE_CORE_DISPLAY("Logger initialized");
-    CE_CORE_DISPLAY("Log file: ", logPath.string());
+    CORE_DISPLAY("Logger initialized");
+    CORE_DISPLAY("Log file: ", logPath.string());
   }
 
   void CLogger::Shutdown()
@@ -55,7 +55,7 @@ namespace CE
     if (!s_initialized)
       return;
 
-    CE_CORE_DISPLAY("Logger shutting down");
+    CORE_DISPLAY("Logger shutting down");
 
     if (s_logFile.is_open())
     {
@@ -68,25 +68,25 @@ namespace CE
   void CLogger::SetGlobalLogLevel(ELogLevel level)
   {
     s_globalLevel = level;
-    CE_CORE_DISPLAY("Global log level set to: ", GetLevelString(level));
+    CORE_DISPLAY("Global log level set to: ", GetLevelString(level));
   }
 
   void CLogger::SetCategoryLogLevel(const CLogCategory& category, ELogLevel level)
   {
     s_categoryLevels[&category] = level;
-    CE_CORE_DISPLAY("Category ", category.GetName(), " log level set to: ", GetLevelString(level));
+    CORE_DISPLAY("Category ", category.GetName(), " log level set to: ", GetLevelString(level));
   }
 
   void CLogger::SetConsoleOutput(bool enable)
   {
     s_consoleOutput = enable;
-    CE_CORE_DISPLAY("Console output: ", enable ? "enabled" : "disabled");
+    CORE_DISPLAY("Console output: ", enable ? "enabled" : "disabled");
   }
 
   void CLogger::SetFileOutput(bool enable)
   {
     s_fileOutput = enable;
-    CE_CORE_DISPLAY("File output: ", enable ? "enabled" : "disabled");
+    CORE_DISPLAY("File output: ", enable ? "enabled" : "disabled");
   }
 
   void CLogger::WriteToConsole(ELogLevel level, const CLogCategory& category, const std::string& message)
@@ -131,25 +131,25 @@ namespace CE
 
     switch (level)
     {
-      case LogLevel::Fatal:
+      case ELogLevel::Fatal:
         colorCode = "\033[1;41;37m";
         break;  // White on red background
-      case LogLevel::Error:
+      case ELogLevel::Error:
         colorCode = "\033[1;31m";
         break;  // Bright Red
-      case LogLevel::Warning:
+      case ELogLevel::Warning:
         colorCode = "\033[1;33m";
         break;  // Bright Yellow
-      case LogLevel::Display:
+      case ELogLevel::Display:
         colorCode = "\033[1;32m";
         break;  // Bright Green
-      case LogLevel::Log:
+      case ELogLevel::Log:
         colorCode = "\033[0m";
         break;  // Normal
-      case LogLevel::Verbose:
+      case ELogLevel::Verbose:
         colorCode = "\033[90m";
         break;  // Gray
-      case LogLevel::VeryVerbose:
+      case ELogLevel::VeryVerbose:
         colorCode = "\033[90m";
         break;  // Gray
     }

@@ -1,8 +1,7 @@
 #pragma once
 #include "Engine/GamePlay/Components/SceneComponent.h"
 
-namespace CE
-{
+
   class CCameraComponent : public CSceneComponent
   {
    public:
@@ -27,15 +26,15 @@ namespace CE
       m_FarPlane = Far;
     }
 
-    void DebugMatrix(const Math::Matrix4f& m, const char* name) const;
+    void DebugMatrix(const CEMath::Matrix4f& m, const char* name) const;
     void DebugMatrix(const char* message) const;
     // Получение матриц
-    Math::Matrix4f GetViewMatrix() const;
-    Math::Matrix4f GetProjectionMatrix() const;
+    CEMath::Matrix4f GetViewMatrix() const;
+    CEMath::Matrix4f GetProjectionMatrix() const;
 
-    Math::Vector3f GetCameraForwardVector() const;
-    Math::Vector3f GetCameraRightVector() const;
-    Math::Vector3f GetCameraUpVector() const;
+    CEMath::Vector3f GetCameraForwardVector() const;
+    CEMath::Vector3f GetCameraRightVector() const;
+    CEMath::Vector3f GetCameraUpVector() const;
 
     virtual void Update(float DeltaTime) override;
 
@@ -45,4 +44,3 @@ namespace CE
     float m_NearPlane = 0.1f;
     float m_FarPlane = 1000.0f;
   };
-}  // namespace CE

@@ -9,8 +9,7 @@
 #include "Engine/Core/Rendering/Vulkan/Utils/VulkanUtils.h"
 #include "vulkan/vulkan.h"
 
-namespace CE
-{
+
   // Типы буферов
   enum class BufferType
   {
@@ -86,4 +85,3 @@ namespace CE
 
     VkCommandPool m_commandPool = VK_NULL_HANDLE;
   };
-}  // namespace CE

@@ -8,8 +8,7 @@
 #include "Engine/Utils/Logger.h"
 #include "glm/glm.hpp"
 
-namespace CE
-{
+
   TerrainActor::TerrainActor(CObject* Owner, FString NewName)
       : CActor(Owner, NewName)
   {
@@ -18,7 +17,7 @@ namespace CE
   void TerrainActor::BeginPlay()
   {
     CActor::BeginPlay();
-    CE_CORE_DEBUG("TerrainActor BeginPlay: ", GetName());
+    CORE_DEBUG("TerrainActor BeginPlay: ", GetName());
 
     // Create terrain mesh
     m_TerrainMesh = AddDefaultSubObject<CMeshComponent>("TerrainMesh");
@@ -28,19 +27,18 @@ namespace CE
       GenerateTerrainMesh();
 
       // Position terrain at origin
-      m_TerrainMesh->SetRelativePosition(Math::Vector3f(0.0f, -2.0f, 0.0f));
+      m_TerrainMesh->SetRelativePosition(CEMath::Vector3f(0.0f, -2.0f, 0.0f));
 
       // Set terrain color to green
-      m_TerrainMesh->SetColor(Math::Vector4f(0.2f, 0.7f, 0.2f, 1.0f));
+      m_TerrainMesh->SetColor(CEMath::Vector4f(0.2f, 0.7f, 0.2f, 1.0f));
     }
 
-    CE_LOG("[LogTemp] Terrain generated with ", m_GridWidth, "x", m_GridHeight, " heightmap");
+    CORE_LOG("[CE::LogTemp] Terrain generated with ", m_GridWidth, "x", m_GridHeight, " heightmap");
   }
 
   void TerrainActor::Update(float DeltaTime)
   {
     CActor::Update(DeltaTime);
-    // Terrain is static, no updates needed
   }
 
   void TerrainActor::GenerateTerrainMesh()
@@ -51,7 +49,7 @@ namespace CE
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;
 
-    // Initialize heightmap
+    
     m_HeightMap.clear();
     m_HeightMap.resize(m_GridHeight + 1);
     for (int i = 0; i <= m_GridHeight; ++i)
@@ -79,10 +77,10 @@ namespace CE
         m_HeightMap[z][x] = height;
 
         Vertex vertex;
-        vertex.position = Math::Vector3f(posX, height, posZ);
-        vertex.normal = Math::Vector3f(0.0f, 1.0f, 0.0f);  // Default up normal
-        vertex.texCoord = Math::Vector2f(x * 0.1f, z * 0.1f);
-        vertex.color = Math::Vector3f(0.2f, 0.7f, 0.2f);
+        vertex.position = CEMath::Vector3f(posX, height, posZ);
+        vertex.normal = CEMath::Vector3f(0.0f, 1.0f, 0.0f);  // Default up normal
+        vertex.texCoord = CEMath::Vector2f(x * 0.1f, z * 0.1f);
+        vertex.color = CEMath::Vector3f(0.2f, 0.7f, 0.2f);
 
         vertices.push_back(vertex);
       }
@@ -111,24 +109,24 @@ namespace CE
     }
 
     // Create static mesh and assign to component
-    StaticMesh terrainMesh;
+    FStaticMesh terrainMesh;
     terrainMesh.vertices = vertices;
     terrainMesh.indices = indices;
-    terrainMesh.color = Math::Vector3f(0.2f, 0.7f, 0.2f);
+    terrainMesh.color = CEMath::Vector3f(0.2f, 0.7f, 0.2f);
 
     m_TerrainMesh->SetStaticMesh(terrainMesh);
 
-    CE_LOG("[LogTemp] Terrain generated: ", m_GridWidth, "x", m_GridHeight, " grid with ", static_cast<int>(indices.size() / 3), " triangles");
+    CORE_LOG("[CE::LogTemp] Terrain generated: ", m_GridWidth, "x", m_GridHeight, " grid with ", static_cast<int>(indices.size() / 3), " triangles");
   }
 
-  float TerrainActor::GetHeightAtPosition(const Math::Vector3f& WorldPosition) const
+  float TerrainActor::GetHeightAtPosition(const CEMath::Vector3f& WorldPosition) const
   {
     // Validate heightmap exists and is properly initialized
     if (m_HeightMap.empty() || m_HeightMap[0].empty())
       return 0.0f;
 
     // Convert world position to terrain local position
-    Math::Vector3f localPos = WorldPosition - GetActorLocation();
+    CEMath::Vector3f localPos = WorldPosition - GetActorLocation();
 
     // Convert to grid coordinates
     float gridX = (localPos.x + m_TerrainOffsetX) / m_GridSpacing;
@@ -178,4 +176,3 @@ namespace CE
 
     return GetActorLocation().y + height;
   }
-}  // namespace CE

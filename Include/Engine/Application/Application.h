@@ -34,7 +34,7 @@ class Application
 
     std::unique_ptr<CGameInstance> m_GameInstance;
     std::unique_ptr<RenderSystem> m_RenderSystem;
-    CE::FrameRenderData m_RenderData;
+    FrameRenderData m_RenderData;
     // Application Info
     AppInfo* m_info = nullptr;
     // Время и FPS

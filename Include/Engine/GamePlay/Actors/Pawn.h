@@ -4,8 +4,7 @@
 #include "Engine/GamePlay/Components/CameraComponent.h"
 #include "Engine/GamePlay/Components/InputComponent.h"
 
-namespace CE
-{
+
   class CPawn : public CActor
   {
    public:
@@ -26,25 +25,25 @@ namespace CE
     }
 
     // Аналог AddMovementInput из UE
-    void AddMovementInput(const Math::Vector3f& WorldDirection, float ScaleValue = 1.0f, bool bForce = false);
+    void AddMovementInput(const CEMath::Vector3f& WorldDirection, float ScaleValue = 1.0f, bool bForce = false);
     void AddControllerYawInput(float Value);
     void AddControllerPitchInput(float Value);
 
     // Управление вращением
-    void SetControlRotation(const Math::Vector3f& NewRotation);
-    const Math::Vector3f& GetControlRotation() const
+    void SetControlRotation(const CEMath::Vector3f& NewRotation);
+    const CEMath::Vector3f& GetControlRotation() const
     {
       return m_ControlRotation;
     }
 
     // Получение векторов движения (аналогично камере)
-    Math::Vector3f GetPawnViewLocation() const;
-    Math::Vector3f GetViewForwardVector() const;
-    Math::Vector3f GetViewRightVector() const;
-    Math::Vector3f GetViewUpVector() const;
+    CEMath::Vector3f GetPawnViewLocation() const;
+    CEMath::Vector3f GetViewForwardVector() const;
+    CEMath::Vector3f GetViewRightVector() const;
+    CEMath::Vector3f GetViewUpVector() const;
 
     // Получение векторов движения
-    Math::Vector3f GetMovementDirection() const
+    CEMath::Vector3f GetMovementDirection() const
     {
       return m_MovementInput;
     }
@@ -62,8 +61,8 @@ namespace CE
 
    protected:
     CInputComponent* m_InputComponent = nullptr;
-    Math::Vector3f m_MovementInput{0.0f, 0.0f, 0.0f};
-    Math::Vector3f m_ControlRotation{0.0f, 0.0f, 0.0f};  // Pitch, Yaw, Roll
+    CEMath::Vector3f m_MovementInput{0.0f, 0.0f, 0.0f};
+    CEMath::Vector3f m_ControlRotation{0.0f, 0.0f, 0.0f};  // Pitch, Yaw, Roll
     bool m_bMovementInputConsumed = false;
     bool m_bUseControllerRotation = false;
 
@@ -79,4 +78,3 @@ namespace CE
     void turn(float Value);
     void jump();
   };
-}  // namespace CE

@@ -51,7 +51,7 @@ T* CLevel::SpawnActor(Args&&... args)
   m_Actors.push_back(std::move(actor));
 
   ptr->BeginPlay();
-  CE_CORE_DEBUG("Spawned actor: ", ptr->GetName(), " in level: ", GetName());
+  CORE_DEBUG("Spawned actor: ", ptr->GetName(), " in level: ", GetName());
 
   return ptr;
 }

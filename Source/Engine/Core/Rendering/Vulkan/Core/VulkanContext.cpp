@@ -185,11 +185,11 @@ void VulkanContext::Shutdown()
   if (m_surface != VK_NULL_HANDLE)
   {
     vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
-    CE_RENDER_DEBUG("Surface destroyed");
+    RENDER_DEBUG("Surface destroyed");
     m_surface = VK_NULL_HANDLE;
   }
 
-  // Cleanup debug messenger
+  
   if (bIsValidationEnabled && m_debugMessenger != VK_NULL_HANDLE)
   {
     auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(m_instance, "vkDestroyDebugUtilsMessengerEXT");
@@ -197,14 +197,14 @@ void VulkanContext::Shutdown()
     {
       func(m_instance, m_debugMessenger, nullptr);
     }
-    CE_RENDER_DEBUG("Debug messenger destroyed");
+    RENDER_DEBUG("Debug messenger destroyed");
   }
 
-  // Cleanup instance
+  
   if (m_instance != VK_NULL_HANDLE)
   {
     vkDestroyInstance(m_instance, nullptr);
-    CE_RENDER_DEBUG("Vulkan instance destroyed");
+    RENDER_DEBUG("Vulkan instance destroyed");
     m_instance = VK_NULL_HANDLE;
   }
 
@@ -213,11 +213,11 @@ void VulkanContext::Shutdown()
   {
     SDL_DestroyWindow(m_window);
     m_window = nullptr;
-    CE_RENDER_DEBUG("Window destroyed");
+    RENDER_DEBUG("Window destroyed");
   }
 
   SDL_Quit();
-  CE_RENDER_DEBUG("SDL terminated");
+  RENDER_DEBUG("SDL terminated");
 }
 
 void VulkanContext::DrawFrame(const FrameRenderData& renderData)
@@ -238,7 +238,7 @@ void VulkanContext::DrawFrame(const FrameRenderData& renderData)
   }
   else if (result != VK_SUCCESS)
   {
-    CE_RENDER_ERROR("Failed to acquire swap chain image");
+    RENDER_ERROR("Failed to acquire swap chain image");
     return;
   }
 
@@ -292,25 +292,25 @@ void VulkanContext::DrawFrame(const FrameRenderData& renderData)
   }
   else if (result != VK_SUCCESS)
   {
-    CE_RENDER_ERROR("Failed to present swap chain image");
+    RENDER_ERROR("Failed to present swap chain image");
   }
 
   m_currentFrame = (m_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
-void VulkanContext::RegisterMesh(const std::string& name, const StaticMesh& mesh)
+void VulkanContext::RegisterMesh(const std::string& name, const FStaticMesh& mesh)
 {
   std::string vertexBufferName = name + "_vertices";
   if (!m_bufferManager->CreateVertexBuffer(vertexBufferName, mesh.vertices))
   {
-    CE_RENDER_ERROR("Failed to create vertex buffer for mesh: ", name);
+    RENDER_ERROR("Failed to create vertex buffer for mesh: ", name);
     return;
   }
 
   std::string indexBufferName = name + "_indices";
   if (!m_bufferManager->CreateIndexBuffer(indexBufferName, mesh.indices))
   {
-    CE_RENDER_ERROR("Failed to create index buffer for mesh: ", name);
+    RENDER_ERROR("Failed to create index buffer for mesh: ", name);
     m_bufferManager->DestroyBuffer(vertexBufferName);
     return;
   }
@@ -318,7 +318,7 @@ void VulkanContext::RegisterMesh(const std::string& name, const StaticMesh& mesh
   std::string modelUBOName = name + "_model_ubo";
   if (!m_bufferManager->CreateUniformBuffer(modelUBOName, sizeof(ModelUBO)))
   {
-    CE_RENDER_ERROR("Failed to create model UBO for mesh: ", name);
+    RENDER_ERROR("Failed to create model UBO for mesh: ", name);
     m_bufferManager->DestroyBuffer(vertexBufferName);
     m_bufferManager->DestroyBuffer(indexBufferName);
     return;
@@ -327,7 +327,7 @@ void VulkanContext::RegisterMesh(const std::string& name, const StaticMesh& mesh
   VkDescriptorSetLayout pipelineLayout = m_pipelineManager->GetDescriptorSetLayout();
   if (!m_descriptorManager->CreateMeshDescriptorSet(name, pipelineLayout))
   {
-    CE_RENDER_ERROR("Failed to create descriptor set for mesh: ", name);
+    RENDER_ERROR("Failed to create descriptor set for mesh: ", name);
     m_bufferManager->DestroyBuffer(vertexBufferName);
     m_bufferManager->DestroyBuffer(indexBufferName);
     m_bufferManager->DestroyBuffer(modelUBOName);
@@ -339,7 +339,7 @@ void VulkanContext::RegisterMesh(const std::string& name, const StaticMesh& mesh
                                                     modelUBOName,
                                                     m_lightingUBOBufferName))
   {
-    CE_RENDER_ERROR("Failed to update descriptor set for mesh: ", name);
+    RENDER_ERROR("Failed to update descriptor set for mesh: ", name);
     m_bufferManager->DestroyBuffer(vertexBufferName);
     m_bufferManager->DestroyBuffer(indexBufferName);
     m_bufferManager->DestroyBuffer(modelUBOName);
@@ -365,7 +365,7 @@ void VulkanContext::UnregisterMesh(const std::string& name)
     m_meshBufferMap.erase(name);
   }
 
-  CE_RENDER_DEBUG("Unregistered mesh: ", name);
+  RENDER_DEBUG("Unregistered mesh: ", name);
 }
 
 void VulkanContext::CreateSyncObjects()
@@ -404,7 +404,7 @@ void VulkanContext::CreateSyncObjects()
     }
   }
 
-  CE_RENDER_DEBUG("Created synchronization objects for ", imageCount, " swapchain images and ", MAX_FRAMES_IN_FLIGHT, " frames in flight");
+  RENDER_DEBUG("Created synchronization objects for ", imageCount, " swapchain images and ", MAX_FRAMES_IN_FLIGHT, " frames in flight");
 }
 
 void VulkanContext::CleanupSyncObjects()
@@ -438,7 +438,7 @@ void VulkanContext::CleanupSyncObjects()
     }
   }
 
-  CE_RENDER_DEBUG("Synchronization objects destroyed");
+  RENDER_DEBUG("Synchronization objects destroyed");
 }
 
 void VulkanContext::RecordCommandBuffer(uint32_t imageIndex, const FrameRenderData& renderData)
@@ -545,39 +545,39 @@ bool VulkanContext::InitWindow()
 
   if (m_info->Fullscreen)
   {
-    // Borderless Fullscreen режим
+    
     m_window = SDL_CreateWindow(
         m_info->AppName.c_str(),
         0,
         0,
         SDL_WINDOW_VULKAN | SDL_WINDOW_FULLSCREEN);
 
-    CE_RENDER_DEBUG("Borderless fullscreen window created");
+    RENDER_DEBUG("Borderless fullscreen window created");
   }
   else
   {
-    // Оконный режим
+   
     m_window = SDL_CreateWindow(
         m_info->AppName.c_str(),
         m_info->Width,
         m_info->Height,
         SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
 
-    CE_RENDER_DEBUG("Windowed window created : ", m_info->Width, "x", m_info->Height);
+    RENDER_DEBUG("Windowed window created : ", m_info->Width, "x", m_info->Height);
   }
 
   if (!m_window)
   {
-    CE_RENDER_DEBUG("Failed to Create window");
+    RENDER_DEBUG("Failed to Create window");
     SDL_Quit();
     return false;
   }
 
-  CE_RENDER_DEBUG("Window Created : ", m_window);
+  RENDER_DEBUG("Window Created : ", m_window);
   return true;
 }
 
-bool CE::VulkanContext::CreateInstance()
+bool VulkanContext::CreateInstance()
 {
   VkApplicationInfo AppInfo{};
   AppInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -597,7 +597,7 @@ bool CE::VulkanContext::CreateInstance()
   // Check validation layer support
   if (bIsValidationEnabled && !VulkanUtils::CheckValidationLayerSupport(validationLayers))
   {
-    CE_RENDER_ERROR("Validation layers requested, but not available!");
+    RENDER_ERROR("Validation layers requested, but not available!");
     return false;
   }
 
@@ -622,11 +622,11 @@ bool CE::VulkanContext::CreateInstance()
 
   VkResult result = vkCreateInstance(&CreateInfo, nullptr, &m_instance);
   VK_CHECK(result, "Failed to create instance");
-  CE_RENDER_DEBUG("Instance Created successfully: ", static_cast<void*>(m_instance));
+  RENDER_DEBUG("Instance Created successfully: ", static_cast<void*>(m_instance));
   return true;
 }
 
-bool CE::VulkanContext::SetupDebugMessenger()
+bool VulkanContext::SetupDebugMessenger()
 {
   if (!bIsValidationEnabled)
     return true;
@@ -647,27 +647,27 @@ bool CE::VulkanContext::SetupDebugMessenger()
   {
     VkResult result = func(m_instance, &createInfo, nullptr, &m_debugMessenger);
     VK_CHECK(result, "Failed to setup debug messenger");
-    CE_RENDER_DEBUG("Debug messenger created successfully");
+    RENDER_DEBUG("Debug messenger created successfully");
     return true;
   }
   else
   {
-    CE_RENDER_ERROR("Failed to get vkCreateDebugUtilsMessengerEXT function pointer");
+    RENDER_ERROR("Failed to get vkCreateDebugUtilsMessengerEXT function pointer");
     return false;
   }
 }
 
-bool CE::VulkanContext::CreateSurface()
+bool VulkanContext::CreateSurface()
 {
   if (!SDL_Vulkan_CreateSurface(m_window, m_instance, nullptr, &m_surface))
   {
-    CE_RENDER_ERROR("Failed to create window surface");
+    RENDER_ERROR("Failed to create window surface");
     return false;
   }
   return true;
 }
 
-VKAPI_ATTR VkBool32 VKAPI_CALL CE::VulkanContext::DebugCallback(
+VKAPI_ATTR VkBool32 VKAPI_CALL VulkanContext::DebugCallback(
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
     VkDebugUtilsMessageTypeFlagsEXT messageType,
     const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
@@ -678,19 +678,19 @@ VKAPI_ATTR VkBool32 VKAPI_CALL CE::VulkanContext::DebugCallback(
 
   if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
   {
-    CE_RENDER_ERROR("Vulkan Validation Error: ", pCallbackData->pMessage);
+    RENDER_ERROR("Vulkan Validation Error: ", pCallbackData->pMessage);
   }
   else if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
   {
-    CE_RENDER_WARN("Vulkan Validation Warning: ", pCallbackData->pMessage);
+    RENDER_WARN("Vulkan Validation Warning: ", pCallbackData->pMessage);
   }
   else if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT)
   {
-    CE_RENDER_DEBUG("Vulkan Validation Info: ", pCallbackData->pMessage);
+    RENDER_DEBUG("Vulkan Validation Info: ", pCallbackData->pMessage);
   }
   else
   {
-    CE_RENDER_TRACE("Vulkan Validation Verbose: ", pCallbackData->pMessage);
+    RENDER_TRACE("Vulkan Validation Verbose: ", pCallbackData->pMessage);
   }
 
   return VK_FALSE;

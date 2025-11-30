@@ -10,7 +10,7 @@
 CWorld::CWorld(CObject* Owner, FString WorldName)
     : CObject(Owner, WorldName)
 {
-  CE_CORE_DEBUG("World created: ", WorldName);
+  CORE_DEBUG("World created: ", WorldName);
 }
 
 void CWorld::AddLevel(std::unique_ptr<CLevel> Level)
@@ -23,7 +23,7 @@ void CWorld::AddLevel(std::unique_ptr<CLevel> Level)
   {
     if (existingLevel->GetName() == Level->GetName())
     {
-      CE_CORE_WARN("Level with name '", Level->GetName(), "' already exists in world");
+      CORE_WARN("Level with name '", Level->GetName(), "' already exists in world");
       return;
     }
   }
@@ -31,7 +31,7 @@ void CWorld::AddLevel(std::unique_ptr<CLevel> Level)
   m_Levels.push_back(std::move(Level));
 
   m_Levels.back()->SetOwner(this);
-  CE_CORE_DEBUG("Added level to world: ", m_Levels.back()->GetName());
+  CORE_DEBUG("Added level to world: ", m_Levels.back()->GetName());
 }
 
 void CWorld::RemoveLevel(const FString& LevelName)
@@ -50,7 +50,7 @@ void CWorld::RemoveLevel(const FString& LevelName)
       m_CurrentLevel = nullptr;
     }
 
-    CE_CORE_DEBUG("Removed level from world: ", LevelName);
+    CORE_DEBUG("Removed level from world: ", LevelName);
     m_Levels.erase(it);
   }
 }
@@ -76,7 +76,7 @@ void CWorld::SetCurrentLevel(const FString& LevelName)
   }
   else
   {
-    CE_CORE_ERROR("Cannot set current level: Level '", LevelName, "' not found in world");
+    CORE_ERROR("Cannot set current level: Level '", LevelName, "' not found in world");
   }
 }
 
@@ -89,18 +89,18 @@ void CWorld::SetCurrentLevel(CLevel* Level)
     if (m_CurrentLevel)
     {
       // Здесь можно добавить логику очистки старого уровня
-      CE_CORE_DEBUG("Unloading previous level: ", m_CurrentLevel->GetName());
+      CORE_DEBUG("Unloading previous level: ", m_CurrentLevel->GetName());
     }
 
     m_CurrentLevel = Level;
-    CE_CORE_DEBUG("Current level set to: ", m_CurrentLevel->GetName());
+    CORE_DEBUG("Current level set to: ", m_CurrentLevel->GetName());
 
     // Вызываем BeginPlay для нового уровня
     m_CurrentLevel->BeginPlay();
   }
   else
   {
-    CE_CORE_ERROR("Cannot set current level: Level not found in world");
+    CORE_ERROR("Cannot set current level: Level not found in world");
   }
 }
 
@@ -109,12 +109,12 @@ void CWorld::LoadLevel(const FString& LevelName)
   CLevel* level = FindLevel(LevelName);
   if (level)
   {
-    CE_CORE_DEBUG("Loading level: ", LevelName);
+    CORE_DEBUG("Loading level: ", LevelName);
     SetCurrentLevel(level);
   }
   else
   {
-    CE_CORE_ERROR("Cannot load level: '", LevelName, "' not found");
+    CORE_ERROR("Cannot load level: '", LevelName, "' not found");
   }
 }
 
@@ -122,7 +122,7 @@ void CWorld::UnloadCurrentLevel()
 {
   if (m_CurrentLevel)
   {
-    CE_CORE_DEBUG("Unloading current level: ", m_CurrentLevel->GetName());
+    CORE_DEBUG("Unloading current level: ", m_CurrentLevel->GetName());
     m_CurrentLevel = nullptr;
   }
 }
@@ -187,16 +187,16 @@ void CWorld::CollectRenderData(FrameRenderData& renderData)
   else
   {
     CameraData defaultCam;
-    Math::Vector3f defaultCamPosition = Math::Vector3f(0.0f, 2.0f, 10.0f);
-    Math::Vector3f defaultCameraUp = Math::Vector3f(0.0f, 1.0f, 0.0f);
-    Math::Vector3f defaultCameraTarget = Math::Vector3f(0.0f, 0.0f, 0.0f);
+    CEMath::Vector3f defaultCamPosition = CEMath::Vector3f(0.0f, 2.0f, 10.0f);
+    CEMath::Vector3f defaultCameraUp = CEMath::Vector3f(0.0f, 1.0f, 0.0f);
+    CEMath::Vector3f defaultCameraTarget = CEMath::Vector3f(0.0f, 0.0f, 0.0f);
 
-    defaultCam.viewMatrix = Math::Matrix4f::LookAt(
+    defaultCam.viewMatrix = CEMath::Matrix4f::LookAt(
         defaultCamPosition,
         defaultCameraTarget,
         defaultCameraUp);
-    defaultCam.projectionMatrix = Math::Matrix4f::Perspective (
-        Math::ToRadians(45.0f), 16.0f / 9.0f, 0.1f, 1000.0f);
+    defaultCam.projectionMatrix = CEMath::Matrix4f::Perspective (
+        CEMath::ToRadians(45.0f), 16.0f / 9.0f, 0.1f, 1000.0f);
     defaultCam.position = defaultCamPosition;
 
     renderData.SetCameraData(defaultCam);
@@ -228,10 +228,10 @@ void CWorld::CollectRenderData(FrameRenderData& renderData)
   {
 
     lighting.lightCount = 1;
-    lighting.lightPositions[0] = Math::Vector4f(5.0f, 5.0f, 5.0f, 1.0f);
-    lighting.lightColors[0] = Math::Vector4f(1.0f, 1.0f, 1.0f, 1.0f);
+    lighting.lightPositions[0] = CEMath::Vector4f(5.0f, 5.0f, 5.0f, 1.0f);
+    lighting.lightColors[0] = CEMath::Vector4f(1.0f, 1.0f, 1.0f, 1.0f);
     lighting.lightColors[0].w = 2.0f;
-    lighting.ambientColor = Math::Vector4f(0.2f, 0.2f, 0.2f, .2f);
+    lighting.ambientColor = CEMath::Vector4f(0.2f, 0.2f, 0.2f, .2f);
   }
 }
 

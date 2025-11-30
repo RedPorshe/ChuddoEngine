@@ -3,12 +3,12 @@
 CLevel::CLevel(CObject* Owner, FString LevelName)
     : CObject(Owner, LevelName)
 {
-  CE_CORE_DEBUG("Level created: ", LevelName);
+  CORE_DEBUG("Level created: ", LevelName);
 }
 
 CLevel::~CLevel()
 {
-  CE_CORE_DEBUG("Level destroyed: ", GetName());
+  CORE_DEBUG("Level destroyed: ", GetName());
 }
 
 void CLevel::DestroyActor(CActor* Actor)
@@ -19,7 +19,7 @@ void CLevel::DestroyActor(CActor* Actor)
 
   if (it != m_Actors.end())
   {
-    CE_CORE_DEBUG("Destroying actor: ", Actor->GetName());
+    CORE_DEBUG("Destroying actor: ", Actor->GetName());
     m_Actors.erase(it);
   }
 }

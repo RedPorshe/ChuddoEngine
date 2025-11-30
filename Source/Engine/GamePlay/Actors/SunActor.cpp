@@ -9,8 +9,7 @@
 
 #include "Engine/Utils/Math/AllMath.h"
 
-namespace CE
-{
+
   SunActor::SunActor(CObject* Owner, FString NewName)
       : CActor(Owner, NewName)
   {
@@ -19,7 +18,7 @@ namespace CE
   void SunActor::BeginPlay()
   {
     CActor::BeginPlay();
-    CE_CORE_DEBUG("SunActor BeginPlay: ", GetName());
+    CORE_DEBUG("SunActor BeginPlay: ", GetName());
 
     // Create a small sphere mesh as a visual marker for the sun
     m_SunMarkerMesh = AddDefaultSubObject<CMeshComponent>("SunMarker");
@@ -47,7 +46,7 @@ namespace CE
       float y = std::sin(m_Angle) * (m_Radius * 0.5f) + (m_Radius * 0.2f);
       float z = std::sin(m_Angle * 0.5f) * (m_Radius * 0.3f);
 
-      Math::Vector3f sunPos = Math::Vector3f(x, y, z);
+      CEMath::Vector3f sunPos = CEMath::Vector3f(x, y, z);
 
       // Update sun marker position
       if (m_SunMarkerMesh)
@@ -70,8 +69,8 @@ namespace CE
 
       LightingUBO lighting = world->GetDefaultLighting();
       lighting.lightCount = 1;
-      lighting.lightPositions[0] = Math::Vector4f(sunPos, 1.0f);
-      lighting.lightColors[0] = Math::Vector4f(m_Color, m_Intensity);
+      lighting.lightPositions[0] = CEMath::Vector4f(sunPos, 1.0f);
+      lighting.lightColors[0] = CEMath::Vector4f(m_Color, m_Intensity);
 
       world->SetDefaultLighting(lighting);
     }
@@ -91,10 +90,9 @@ namespace CE
       auto sunPos = GetActorLocation();
       LightingUBO lighting = world->GetDefaultLighting();
       lighting.lightCount = 1;
-      lighting.lightPositions[0] = Math::Vector4f(sunPos, 1.0f);
-      lighting.lightColors[0] = Math::Vector4f(m_Color, m_Intensity);
+      lighting.lightPositions[0] = CEMath::Vector4f(sunPos, 1.0f);
+      lighting.lightColors[0] = CEMath::Vector4f(m_Color, m_Intensity);
 
       world->SetDefaultLighting(lighting);
     }
   }
-}  // namespace CE

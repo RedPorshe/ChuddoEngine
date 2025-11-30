@@ -7,8 +7,7 @@
 
 typedef struct GLFWwindow GLFWwindow;
 
-namespace CE
-{
+
   class CInputSystem
   {
    public:
@@ -24,11 +23,11 @@ namespace CE
     void Update(float DeltaTime);
 
     bool IsKeyPressed(int key) const;
-    Math::Vector2f GetMousePosition() const
+    CEMath::Vector2f GetMousePosition() const
     {
       return m_MousePosition;
     }
-    Math::Vector2f GetMouseDelta() const
+    CEMath::Vector2f GetMouseDelta() const
     {
       return m_MouseDelta;
     }
@@ -47,11 +46,10 @@ namespace CE
 
     std::unordered_map<int, bool> m_KeyStates;
 
-    Math::Vector2f m_MousePosition{0.0f, 0.0f};
-    Math::Vector2f m_LastMousePosition{0.0f, 0.0f};
-    Math::Vector2f m_MouseDelta{0.0f, 0.0f};
+    CEMath::Vector2f m_MousePosition{0.0f, 0.0f};
+    CEMath::Vector2f m_LastMousePosition{0.0f, 0.0f};
+    CEMath::Vector2f m_MouseDelta{0.0f, 0.0f};
     bool m_FirstMouse = true;
     bool bIsFPS{true};
     static CInputSystem* s_Instance;
   };
-}  // namespace CE

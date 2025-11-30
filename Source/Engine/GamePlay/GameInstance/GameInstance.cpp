@@ -1,22 +1,21 @@
 #include "Engine/GamePlay/GameInstance/GameInstance.h"
 
-namespace CE
-{
+
   CGameInstance::CGameInstance()
       : CObject(nullptr, "GameInstance")
   {
-    CE_CORE_DEBUG("GameInstance created");
+    CORE_DEBUG("GameInstance created");
   }
 
   void CGameInstance::Initialize()
   {
-    CE_CORE_DISPLAY("=== Initializing GameInstance ===");
+    CORE_DISPLAY("=== Initializing GameInstance ===");
     SetupWorlds();  // Настраиваем миры при инициализации
   }
 
   void CGameInstance::Shutdown()
   {
-    CE_CORE_DISPLAY("=== Shutting Down GameInstance ===");
+    CORE_DISPLAY("=== Shutting Down GameInstance ===");
     UnloadCurrentWorld();
     m_Worlds.clear();
   }
@@ -26,7 +25,7 @@ namespace CE
     auto world = std::make_unique<CWorld>(nullptr, WorldName);
     auto* worldPtr = world.get();
     m_Worlds[WorldName] = std::move(world);
-    CE_CORE_DEBUG("Created world: ", WorldName);
+    CORE_DEBUG("Created world: ", WorldName);
     return worldPtr;
   }
 
@@ -38,11 +37,11 @@ namespace CE
       UnloadCurrentWorld();
       m_CurrentWorld = it->second.get();
       m_CurrentWorld->BeginPlay();
-      CE_CORE_DEBUG("Loaded world: ", WorldName);
+      CORE_DEBUG("Loaded world: ", WorldName);
     }
     else
     {
-      CE_CORE_ERROR("World not found: ", WorldName);
+      CORE_ERROR("World not found: ", WorldName);
     }
   }
 
@@ -52,7 +51,7 @@ namespace CE
     {
       m_CurrentWorld->UnloadCurrentLevel();
       m_CurrentWorld = nullptr;
-      CE_CORE_DEBUG("Unloaded current world");
+      CORE_DEBUG("Unloaded current world");
     }
   }
 
@@ -93,4 +92,3 @@ namespace CE
     Update(DeltaTime);
     m_CurrentWorld->Tick(DeltaTime);
   }
-}  // namespace CE

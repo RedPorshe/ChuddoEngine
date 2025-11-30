@@ -17,8 +17,7 @@
 
 struct GLFWwindow;
 
-namespace CE
-{
+
   struct MeshBuffers
   {
     std::string vertexBufferName;
@@ -58,7 +57,7 @@ namespace CE
     {
       m_frameBufferResized = true;
     }
-    void RegisterMesh(const std::string& name, const StaticMesh& mesh);
+    void RegisterMesh(const std::string& name, const FStaticMesh& mesh);
     void UnregisterMesh(const std::string& name);
 
     // Getters for ImGui integration
@@ -125,4 +124,3 @@ namespace CE
     static constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 3;
     const bool bIsValidationEnabled = true;
   };
-}  // namespace CE

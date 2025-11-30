@@ -1,7 +1,7 @@
 #pragma once
 #include "Engine/GamePlay/GameInstance/GameInstance.h"
 
-class MainGameInstance : public CE::CGameInstance
+class MainGameInstance : public CGameInstance
 {
  public:
   MainGameInstance();

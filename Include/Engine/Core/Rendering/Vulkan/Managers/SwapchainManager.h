@@ -10,8 +10,7 @@
 // Forward declare SDL type
 struct SDL_Window;
 
-namespace CE
-{
+
   class SwapchainManager
   {
    public:
@@ -106,4 +105,3 @@ namespace CE
     // Window pointer used to query actual framebuffer size when needed
     SDL_Window* m_window = nullptr;
   };
-}  // namespace CE

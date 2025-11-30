@@ -7,7 +7,7 @@ CSceneComponent::CSceneComponent(CObject* Owner, FString NewName)
   m_TransformMatrix.SetIdentity();
 }
 
-void CSceneComponent::SetPosition(const Math::Vector3f& Position)
+void CSceneComponent::SetPosition(const CEMath::Vector3f& Position)
 {
   m_RelativeLocation = Position;
   UpdateTransformMatrix();
@@ -15,10 +15,10 @@ void CSceneComponent::SetPosition(const Math::Vector3f& Position)
 
 void CSceneComponent::SetPosition(float X, float Y, float Z)
 {
-  SetPosition(Math::Vector3f(X, Y, Z));
+  SetPosition(CEMath::Vector3f(X, Y, Z));
 }
 
-void CSceneComponent::SetRelativePosition(const Math::Vector3f& Position)
+void CSceneComponent::SetRelativePosition(const CEMath::Vector3f& Position)
 {
   m_RelativeLocation = Position;
   UpdateTransformMatrix();
@@ -26,56 +26,56 @@ void CSceneComponent::SetRelativePosition(const Math::Vector3f& Position)
 
 void CSceneComponent::SetRelativePosition(float X, float Y, float Z)
 {
-  SetRelativePosition(Math::Vector3f(X, Y, Z));
+  SetRelativePosition(CEMath::Vector3f(X, Y, Z));
 }
 
-void CSceneComponent::SetRotation(const Math::Vector3f& Rotation)
+void CSceneComponent::SetRotation(const CEMath::Vector3f& Rotation)
 {
   m_WorldRotation = Rotation;
-  m_RotationQuat = Math::Quaternionf::FromEulerAngles(
-      Math::ToRadians(Rotation.x),
-      Math::ToRadians(Rotation.y),
-      Math::ToRadians(Rotation.z)
+  m_RotationQuat = CEMath::Quaternionf::FromEulerAngles(
+      CEMath::ToRadians(Rotation.x),
+      CEMath::ToRadians(Rotation.y),
+      CEMath::ToRadians(Rotation.z)
   );
   UpdateTransformMatrix();
 }
 
 void CSceneComponent::SetRotation(float Pitch, float Yaw, float Roll)
 {
-  SetRotation(Math::Vector3f(Pitch, Yaw, Roll));
+  SetRotation(CEMath::Vector3f(Pitch, Yaw, Roll));
 }
 
-void CSceneComponent::SetRelativeRotation(const Math::Vector3f& Rotation)
+void CSceneComponent::SetRelativeRotation(const CEMath::Vector3f& Rotation)
 {
   m_RelativeRotation = Rotation;
-  m_RotationQuat = Math::Quaternionf::FromEulerAngles(
-      Math::ToRadians(Rotation.x),
-      Math::ToRadians(Rotation.y),
-      Math::ToRadians(Rotation.z)
+  m_RotationQuat = CEMath::Quaternionf::FromEulerAngles(
+      CEMath::ToRadians(Rotation.x),
+      CEMath::ToRadians(Rotation.y),
+      CEMath::ToRadians(Rotation.z)
   );
   UpdateTransformMatrix();
 }
 
 void CSceneComponent::SetRelativeRotation(float Pitch, float Yaw, float Roll)
 {
-  SetRelativeRotation(Math::Vector3f(Pitch, Yaw, Roll));
+  SetRelativeRotation(CEMath::Vector3f(Pitch, Yaw, Roll));
 }
 
-void CSceneComponent::SetRotation(const Math::Quaternionf& Rotation)
+void CSceneComponent::SetRotation(const CEMath::Quaternionf& Rotation)
 {
   m_RotationQuat = Rotation;
   UpdateRotationFromQuat();
   UpdateTransformMatrix();
 }
 
-void CSceneComponent::SetRelativeRotation(const Math::Quaternionf& Rotation)
+void CSceneComponent::SetRelativeRotation(const CEMath::Quaternionf& Rotation)
 {
   m_RotationQuat = Rotation;
   UpdateRotationFromQuat();
   UpdateTransformMatrix();
 }
 
-void CSceneComponent::SetScale(const Math::Vector3f& Scale)
+void CSceneComponent::SetScale(const CEMath::Vector3f& Scale)
 {
   m_WorldScale = Scale;
   UpdateTransformMatrix();
@@ -83,15 +83,15 @@ void CSceneComponent::SetScale(const Math::Vector3f& Scale)
 
 void CSceneComponent::SetScale(float X, float Y, float Z)
 {
-  SetScale(Math::Vector3f(X, Y, Z));
+  SetScale(CEMath::Vector3f(X, Y, Z));
 }
 
 void CSceneComponent::SetScale(float value)
 {
-  SetScale(Math::Vector3f(value, value, value));
+  SetScale(CEMath::Vector3f(value, value, value));
 }
 
-void CSceneComponent::SetRelativeScale(const Math::Vector3f& Scale)
+void CSceneComponent::SetRelativeScale(const CEMath::Vector3f& Scale)
 {
   m_RelativeScale = Scale;
   UpdateTransformMatrix();
@@ -99,61 +99,61 @@ void CSceneComponent::SetRelativeScale(const Math::Vector3f& Scale)
 
 void CSceneComponent::SetRelativeScale(float X, float Y, float Z)
 {
-  SetRelativeScale(Math::Vector3f(X, Y, Z));
+  SetRelativeScale(CEMath::Vector3f(X, Y, Z));
 }
 
 void CSceneComponent::SetRelativeScale(float value)
 {
-  SetRelativeScale(Math::Vector3f(value, value, value));
+  SetRelativeScale(CEMath::Vector3f(value, value, value));
 }
 
-const Math::Vector3f& CSceneComponent::GetPosition() const
+const CEMath::Vector3f& CSceneComponent::GetPosition() const
 {
   return m_WorldLocation;
 }
 
-const Math::Vector3f& CSceneComponent::GetRelativePosition() const
+const CEMath::Vector3f& CSceneComponent::GetRelativePosition() const
 {
   return m_RelativeLocation;
 }
 
-const Math::Vector3f& CSceneComponent::GetRotation() const
+const CEMath::Vector3f& CSceneComponent::GetRotation() const
 {
   return m_WorldRotation;
 }
 
-const Math::Vector3f& CSceneComponent::GetRelativeRotation() const
+const CEMath::Vector3f& CSceneComponent::GetRelativeRotation() const
 {
   return m_RelativeRotation;
 }
 
-const Math::Vector3f& CSceneComponent::GetScale() const
+const CEMath::Vector3f& CSceneComponent::GetScale() const
 {
   return m_WorldScale;
 }
 
-const Math::Vector3f& CSceneComponent::GetRelativeScale() const
+const CEMath::Vector3f& CSceneComponent::GetRelativeScale() const
 {
   return m_RelativeScale;
 }
 
-const Math::Matrix4f& CSceneComponent::GetTransformMatrix() const
+const CEMath::Matrix4f& CSceneComponent::GetTransformMatrix() const
 {
   return m_TransformMatrix;
 }
 
-Math::Matrix4f CSceneComponent::GetWorldTransform() const
+CEMath::Matrix4f CSceneComponent::GetWorldTransform() const
 {
   // Защита от рекурсии
   if (m_IsComputingWorldTransform)
   {
-    CE_CORE_ERROR("Recursive world transform computation detected for component: {}", GetName());
+    CORE_ERROR("Recursive world transform computation detected for component: {}", GetName());
     return m_TransformMatrix;
   }
 
   m_IsComputingWorldTransform = true;
 
-  Math::Matrix4f result;
+  CEMath::Matrix4f result;
 
   try
   {
@@ -168,7 +168,7 @@ Math::Matrix4f CSceneComponent::GetWorldTransform() const
   }
   catch (...)
   {
-    CE_CORE_ERROR("Exception in GetWorldTransform for component: {}", GetName());
+    CORE_ERROR("Exception in GetWorldTransform for component: {}", GetName());
     result = m_TransformMatrix;
   }
 
@@ -176,46 +176,46 @@ Math::Matrix4f CSceneComponent::GetWorldTransform() const
   return result;
 }
 
-Math::Vector3f CSceneComponent::GetWorldLocation() const
+CEMath::Vector3f CSceneComponent::GetWorldLocation() const
 {
   if (m_Parent)
   {
-    Math::Matrix4f parentTransform = m_Parent->GetWorldTransform();
-    return (parentTransform * Math::Vector4f(m_RelativeLocation, 1.0f)).XYZ();
+    CEMath::Matrix4f parentTransform = m_Parent->GetWorldTransform();
+    return (parentTransform * CEMath::Vector4f(m_RelativeLocation, 1.0f)).XYZ();
   }
   return m_WorldLocation;
 }
 
-Math::Vector3f CSceneComponent::GetForwardVector() const
+CEMath::Vector3f CSceneComponent::GetForwardVector() const
 {
-  Math::Vector3f euler = m_RotationQuat.ToEulerAngles();
+  CEMath::Vector3f euler = m_RotationQuat.ToEulerAngles();
   float pitch = euler.x;
   float yaw = euler.y;
 
-  return Math::Vector3f(
+  return CEMath::Vector3f(
       std::sin(yaw) * std::cos(pitch),
       -std::sin(pitch),
       std::cos(yaw) * std::cos(pitch)
   ).Normalized();
 }
 
-Math::Vector3f CSceneComponent::GetRightVector() const
+CEMath::Vector3f CSceneComponent::GetRightVector() const
 {
-  Math::Vector3f forward = GetForwardVector();
-  Math::Vector3f worldUp(0.0f, 1.0f, 0.0f);
+  CEMath::Vector3f forward = GetForwardVector();
+  CEMath::Vector3f worldUp(0.0f, 1.0f, 0.0f);
   return forward.Cross(worldUp).Normalized();
 }
 
-Math::Vector3f CSceneComponent::GetUpVector() const
+CEMath::Vector3f CSceneComponent::GetUpVector() const
 {
-  Math::Vector3f forward = GetForwardVector();
-  Math::Vector3f right = GetRightVector();
+  CEMath::Vector3f forward = GetForwardVector();
+  CEMath::Vector3f right = GetRightVector();
   return right.Cross(forward).Normalized();
 }
 
 void CSceneComponent::AddYawInput(float Value)
 {
-  Math::Quaternionf yawRot = Math::Quaternionf::FromAxisAngle(Math::Vector3f::Up(), Math::ToRadians(Value));
+  CEMath::Quaternionf yawRot = CEMath::Quaternionf::FromAxisAngle(CEMath::Vector3f::Up(), CEMath::ToRadians(Value));
   m_RotationQuat = yawRot * m_RotationQuat;
   UpdateRotationFromQuat();
   UpdateTransformMatrix();
@@ -227,11 +227,11 @@ void CSceneComponent::AddPitchInput(float Value)
 
   if (m_UsePitchLimits)
   {
-    newPitch = Math::Clamp(newPitch, m_MinPitch, m_MaxPitch);
+    newPitch = CEMath::Clamp(newPitch, m_MinPitch, m_MaxPitch);
     Value = newPitch - m_RelativeRotation.x;
   }
 
-  Math::Quaternionf pitchRot = Math::Quaternionf::FromAxisAngle(GetRightVector(), Math::ToRadians(Value));
+  CEMath::Quaternionf pitchRot = CEMath::Quaternionf::FromAxisAngle(GetRightVector(), CEMath::ToRadians(Value));
   m_RotationQuat = m_RotationQuat * pitchRot;
   UpdateRotationFromQuat();
   UpdateTransformMatrix();
@@ -253,7 +253,7 @@ void CSceneComponent::AttachToComponent(CSceneComponent* Parent)
   // Проверка на циклические ссылки
   if (Parent && WouldCreateCycle(Parent))
   {
-    CE_CORE_ERROR("Cannot attach component: would create cyclic dependency");
+    CORE_ERROR("Cannot attach component: would create cyclic dependency");
     return;
   }
 
@@ -277,25 +277,25 @@ void CSceneComponent::DetachFromParent()
   AttachToComponent(nullptr);
 }
 
-void CSceneComponent::Move(const Math::Vector3f& Delta)
+void CSceneComponent::Move(const CEMath::Vector3f& Delta)
 {
   m_RelativeLocation += Delta;
   UpdateTransformMatrix();
 }
 
-void CSceneComponent::Rotate(const Math::Vector3f& Delta)
+void CSceneComponent::Rotate(const CEMath::Vector3f& Delta)
 {
   m_RelativeRotation += Delta;
   ClampPitchRotation();
-  m_RotationQuat = Math::Quaternionf::FromEulerAngles(
-      Math::ToRadians(m_RelativeRotation.x),
-      Math::ToRadians(m_RelativeRotation.y),
-      Math::ToRadians(m_RelativeRotation.z)
+  m_RotationQuat = CEMath::Quaternionf::FromEulerAngles(
+      CEMath::ToRadians(m_RelativeRotation.x),
+      CEMath::ToRadians(m_RelativeRotation.y),
+      CEMath::ToRadians(m_RelativeRotation.z)
   );
   UpdateTransformMatrix();
 }
 
-void CSceneComponent::Rotate(const Math::Quaternionf& Delta)
+void CSceneComponent::Rotate(const CEMath::Quaternionf& Delta)
 {
   m_RotationQuat = Delta * m_RotationQuat;
   UpdateRotationFromQuat();
@@ -330,27 +330,27 @@ void CSceneComponent::UpdateTransformMatrix()
   {
     try
     {
-      Math::Matrix4f parentTransform = m_Parent->GetWorldTransform();
+      CEMath::Matrix4f parentTransform = m_Parent->GetWorldTransform();
 
       // Вычисляем мировую позицию
-      m_WorldLocation = (parentTransform * Math::Vector4f(m_RelativeLocation, 1.0f)).XYZ();
+      m_WorldLocation = (parentTransform * CEMath::Vector4f(m_RelativeLocation, 1.0f)).XYZ();
 
       // Вычисляем мировой масштаб (приблизительно)
-      Math::Vector3f parentScale = m_Parent->GetScale();
-      m_WorldScale = Math::Vector3f(
+      CEMath::Vector3f parentScale = m_Parent->GetScale();
+      m_WorldScale = CEMath::Vector3f(
           m_RelativeScale.x * parentScale.x,
           m_RelativeScale.y * parentScale.y,
           m_RelativeScale.z * parentScale.z
       );
 
       // Вычисляем мировое вращение
-      Math::Quaternionf parentRot = m_Parent->GetRotationQuat();
-      Math::Quaternionf worldRot = parentRot * m_RotationQuat;
-      m_WorldRotation = worldRot.ToEulerAngles() * Math::RAD_TO_DEG;
+      CEMath::Quaternionf parentRot = m_Parent->GetRotationQuat();
+      CEMath::Quaternionf worldRot = parentRot * m_RotationQuat;
+      m_WorldRotation = worldRot.ToEulerAngles() * CEMath::RAD_TO_DEG;
     }
     catch (...)
     {
-      CE_CORE_ERROR("Exception in parent transform computation for component: {}", GetName());
+      CORE_ERROR("Exception in parent transform computation for component: {}", GetName());
       // Fallback to local transforms
       m_WorldLocation = m_RelativeLocation;
       m_WorldScale = m_RelativeScale;
@@ -365,25 +365,25 @@ void CSceneComponent::UpdateTransformMatrix()
   }
 
   // Создаем матрицу трансформации: Scale * Rotation * Translation
-  Math::Matrix4f translation = Math::Matrix4f::Translation(m_RelativeLocation);
-  Math::Matrix4f rotation = m_RotationQuat.ToMatrix();
-  Math::Matrix4f scale = Math::Matrix4f::Scale(m_RelativeScale);
+  CEMath::Matrix4f translation = CEMath::Matrix4f::Translation(m_RelativeLocation);
+  CEMath::Matrix4f rotation = m_RotationQuat.ToMatrix();
+  CEMath::Matrix4f scale = CEMath::Matrix4f::Scale(m_RelativeScale);
 
   m_TransformMatrix = translation * rotation * scale;
 }
 
 void CSceneComponent::UpdateRotationFromQuat()
 {
-  m_RelativeRotation = m_RotationQuat.ToEulerAngles() * Math::RAD_TO_DEG;
+  m_RelativeRotation = m_RotationQuat.ToEulerAngles() * CEMath::RAD_TO_DEG;
   ClampPitchRotation();
 }
 
 void CSceneComponent::UpdateQuatFromRotation()
 {
-  m_RotationQuat = Math::Quaternionf::FromEulerAngles(
-      Math::ToRadians(m_RelativeRotation.x),
-      Math::ToRadians(m_RelativeRotation.y),
-      Math::ToRadians(m_RelativeRotation.z)
+  m_RotationQuat = CEMath::Quaternionf::FromEulerAngles(
+      CEMath::ToRadians(m_RelativeRotation.x),
+      CEMath::ToRadians(m_RelativeRotation.y),
+      CEMath::ToRadians(m_RelativeRotation.z)
   );
 }
 
@@ -395,14 +395,14 @@ void CSceneComponent::AddChild(CSceneComponent* Child)
   // Проверяем, что ребенок еще не добавлен
   if (std::find(m_Children.begin(), m_Children.end(), Child) != m_Children.end())
   {
-    CE_CORE_WARN("Child " , Child->GetName()," already exists in parent ", GetName());
+    CORE_WARN("Child " , Child->GetName()," already exists in parent ", GetName());
     return;
   }
 
   // Проверяем, что у ребенка нет другого родителя
   if (Child->m_Parent && Child->m_Parent != this)
   {
-    CE_CORE_WARN("Child " ,Child->GetName(), "  already has parent " , Child->m_Parent->GetName()," , cannot add to ", GetName());
+    CORE_WARN("Child " ,Child->GetName(), "  already has parent " , Child->m_Parent->GetName()," , cannot add to ", GetName());
     return;
   }
 
@@ -422,7 +422,7 @@ void CSceneComponent::ClampPitchRotation()
 {
   if (m_UsePitchLimits)
   {
-    m_RelativeRotation.x = Math::Clamp(m_RelativeRotation.x, m_MinPitch, m_MaxPitch);
+    m_RelativeRotation.x = CEMath::Clamp(m_RelativeRotation.x, m_MinPitch, m_MaxPitch);
   }
 }
 

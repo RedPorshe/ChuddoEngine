@@ -4,13 +4,11 @@
 
 
 // Forward declaration для ObjLoader
-namespace CE
-{
-  class ObjLoader;
-}
 
-namespace CE
-{
+  class ObjLoader;
+
+
+
   class CMeshComponent : public CSceneComponent
   {
    public:
@@ -24,28 +22,28 @@ namespace CE
     void CreateCubeMesh();
 
     // Установка статического меша напрямую
-    void SetStaticMesh(const StaticMesh& Mesh)
+    void SetStaticMesh(const FStaticMesh& Mesh)
     {
       m_Mesh = Mesh;
     }
 
     // Получение данных для рендеринга
-    const StaticMesh& GetMeshData() const
+    const FStaticMesh& GetMeshData() const
     {
       return m_Mesh;
     }
-    Math::Matrix4f GetRenderTransform() const;
+    CEMath::Matrix4f GetRenderTransform() const;
 
     // Цвет материала (временно)
-    void SetColor(const Math::Vector3f& color)
+    void SetColor(const CEMath::Vector3f& color)
     {
       m_Mesh.color = color;
     }
-    void SetColor(const Math::Vector4f& color)
+    void SetColor(const CEMath::Vector4f& color)
     {
       m_Mesh.color = color.XYZ();
     }
-    const Math::Vector3f& GetColor() const
+    const CEMath::Vector3f& GetColor() const
     {
       return m_Mesh.color;
     }
@@ -55,8 +53,7 @@ namespace CE
    protected:
     std::string m_MeshPath;
     std::string m_MaterialPath;
-    StaticMesh m_Mesh;
+    FStaticMesh m_Mesh;
 
     void UpdateMeshTransform();
   };
-}  // namespace CE

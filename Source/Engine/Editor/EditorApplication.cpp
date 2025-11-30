@@ -7,11 +7,10 @@
 #include "Engine/Core/Rendering/Vulkan/Core/VulkanContext.h"
 #include "Engine/Editor/UI/PropertyEditor.h"
 
-namespace CE
-{
+
   EditorApplication::EditorApplication(AppInfo* info) : Application(info)
   {
-    CE_CORE_DEBUG("EditorApplication created");
+    CORE_DEBUG("EditorApplication created");
   }
 
   EditorApplication::~EditorApplication()
@@ -27,12 +26,12 @@ namespace CE
     // Initialize ImGui
     InitializeImGui();
 
-    CE_CORE_DISPLAY("=== EditorApplication Initialized ===");
+    CORE_DISPLAY("=== EditorApplication Initialized ===");
   }
 
   void EditorApplication::Run()
   {
-    CE_CORE_DEBUG("Starting editor main loop");
+    CORE_DEBUG("Starting editor main loop");
 
     // Initialize game instance for editor
     if (m_GameInstance)
@@ -41,7 +40,7 @@ namespace CE
       if (auto* world = m_GameInstance->GetCurrentWorld())
       {
         m_RenderData.lighting = world->GetDefaultLighting();
-        CE_CORE_DEBUG("RenderData lighting initialized from world default (lights=", m_RenderData.lighting.lightCount, ")");
+        CORE_DEBUG("RenderData lighting initialized from world default (lights=", m_RenderData.lighting.lightCount, ")");
       }
     }
 
@@ -88,13 +87,13 @@ namespace CE
     m_PropertyEditor.Shutdown();
     ShutdownImGui();
     Application::Shutdown();
-    CE_CORE_DISPLAY("=== EditorApplication Shutdown Complete ===");
+    CORE_DISPLAY("=== EditorApplication Shutdown Complete ===");
   }
 
   void EditorApplication::ToggleEditorMode()
   {
     m_EditorMode = (m_EditorMode == EditorMode::Play) ? EditorMode::Edit : EditorMode::Play;
-    CE_CORE_DEBUG("Switched to ", (m_EditorMode == EditorMode::Play ? "Play" : "Edit"), " mode");
+    CORE_DEBUG("Switched to ", (m_EditorMode == EditorMode::Play ? "Play" : "Edit"), " mode");
   }
 
   void EditorApplication::InitializeImGui()
@@ -113,14 +112,14 @@ namespace CE
     VulkanContext* vulkanContext = m_RenderSystem->GetVulkanContext();
     if (!vulkanContext)
     {
-      CE_CORE_ERROR("Failed to get Vulkan context for ImGui initialization");
+      CORE_ERROR("Failed to get Vulkan context for ImGui initialization");
       return;
     }
 
     // Initialize ImGui for SDL2
     if (!ImGui_ImplSDL2_InitForVulkan(m_RenderSystem->GetWindow()))
     {
-      CE_CORE_ERROR("Failed to initialize ImGui SDL2 backend");
+      CORE_ERROR("Failed to initialize ImGui SDL2 backend");
       return;
     }
 
@@ -142,13 +141,13 @@ namespace CE
 
     if (!ImGui_ImplVulkan_Init(&init_info))
     {
-      CE_CORE_ERROR("Failed to initialize ImGui Vulkan backend");
+      CORE_ERROR("Failed to initialize ImGui Vulkan backend");
       return;
     }
 
     // Font texture will be created automatically when first drawing
 
-    CE_CORE_DEBUG("ImGui initialized successfully");
+    CORE_DEBUG("ImGui initialized successfully");
   }
 
   void EditorApplication::ShutdownImGui()
@@ -156,7 +155,7 @@ namespace CE
     ImGui_ImplVulkan_Shutdown();
     ImGui_ImplSDL2_Shutdown();
     ImGui::DestroyContext();
-    CE_CORE_DEBUG("ImGui shutdown");
+    CORE_DEBUG("ImGui shutdown");
   }
 
   void EditorApplication::BeginImGuiFrame()
@@ -331,7 +330,7 @@ namespace CE
     if (m_SelectedObject)
     {
       m_PropertyEditor.SetSelectedObject(m_SelectedObject);
-      m_PropertyEditor.Render();
+      m_PropertyEditor.Render(m_SelectedObject);
     }
     else
     {
@@ -340,4 +339,3 @@ namespace CE
 
     ImGui::End();
   }
-}  // namespace CE

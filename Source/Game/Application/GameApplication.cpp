@@ -2,12 +2,12 @@
 
 #include "Game/GameInstance/GameInstance.h"
 
-GameApp::GameApp(CE::AppInfo* info) : CE::Application(info)
+GameApp::GameApp(AppInfo* info) : Application(info)
 {
 }
 void GameApp::Initialize()
 {
-  CE::Application::Initialize();
+  Application::Initialize();
   InitWorld();
 }
 
