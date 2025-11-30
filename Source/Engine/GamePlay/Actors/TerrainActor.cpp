@@ -4,7 +4,6 @@
 #include <vector>
 
 #include "Engine/GamePlay/Components/MeshComponent.h"
-#include "Engine/GamePlay/CollisionSystem/TerrainCollisionComponent.h"
 #include "Engine/GamePlay/World/World.h"
 #include "Engine/Utils/Logger.h"
 #include "glm/glm.hpp"
@@ -35,18 +34,7 @@ namespace CE
       m_TerrainMesh->SetColor(Math::Vector4f(0.2f, 0.7f, 0.2f, 1.0f));
     }
 
-    // Create terrain collision component
-    m_TerrainCollision = AddDefaultSubObject<CTerrainCollisionComponent>("TerrainCollision");
-    if (m_TerrainCollision)
-    {
-      // Position collision component at same location as mesh
-      m_TerrainCollision->SetRelativePosition(Math::Vector3f(0.0f, -2.0f, 0.0f));
-
-      // Set heightmap data for collision
-      m_TerrainCollision->SetHeightMap(m_HeightMap, m_GridSpacing, m_HeightScale);
-    }
-
-    CE_LOG("[LogTemp] Terrain heightmap collision ready with ", m_GridWidth, "x", m_GridHeight, " heightmap");
+    CE_LOG("[LogTemp] Terrain generated with ", m_GridWidth, "x", m_GridHeight, " heightmap");
   }
 
   void TerrainActor::Update(float DeltaTime)
@@ -188,6 +176,6 @@ namespace CE
     float h1 = h01 * (1.0f - fx) + h11 * fx;
     float height = h0 * (1.0f - fz) + h1 * fz;
 
-    return m_TerrainCollision ? m_TerrainCollision->GetWorldLocation().y + height : GetActorLocation().y + height;
+    return GetActorLocation().y + height;
   }
 }  // namespace CE

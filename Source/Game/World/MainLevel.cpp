@@ -2,11 +2,8 @@
 
 #include "Engine/GamePlay/Actors/SunActor.h"
 #include "Engine/GamePlay/Actors/TerrainActor.h"
-#include "Engine/GamePlay/CollisionSystem/BoxComponent.h"
-#include "Engine/GamePlay/CollisionSystem/SphereComponent.h"
 #include "Engine/Utils/Math/AllMath.h"
 #include "Engine/GamePlay/Components/StaticMeshComponent.h"
-#include "Engine/GamePlay/Components/PhysicsComponent.h"
 
 
 MainLevel::MainLevel(CE::CObject* Owner,
@@ -19,7 +16,7 @@ MainLevel::MainLevel(CE::CObject* Owner,
 
   playerCharacter->SetActorLocation(-2.f, 0.f, -20.f);
  
-  CE_CORE_DEBUG("Player character initial position set to: (", playerCharacter->GetActorLocation().x, ", ", playerCharacter->GetActorLocation().y, ", ", playerCharacter->GetActorLocation().z, ")");
+ 
 
   // === СОЗДАЕМ ЛАНДШАФТ ===
   terrain = SpawnActor<CE::TerrainActor>(this, "Terrain");
@@ -65,17 +62,9 @@ MainLevel::MainLevel(CE::CObject* Owner,
       mesh->SetColor(colors[i]);
     }
 
-    // Add box collision for cubes
-    auto* boxCollision = actor->AddSubObject<CE::CBoxComponent>("BoxCollision", actor, "BoxCollision");
-    boxCollision->SetExtents(CE::Math::Vector3f(0.5f, 0.5f, 0.5f));
 
-    // Add physics component
-    auto* physics = actor->AddSubObject<CE::CPhysicsComponent>("Physics", actor, "Physics");
-    physics->SetUseGravity(true);
-    physics->SetMass(1.0f);
-    physics->SetFriction(0.1f);
 
-    // Physics is handled by PhysicsComponent
+    
 
     if (i == 1)
     {
@@ -104,15 +93,7 @@ MainLevel::MainLevel(CE::CObject* Owner,
       mesh->SetColor(colors[i]);
     }
 
-    // Add sphere collision for spheres
-    auto* sphereCollision = actor->AddSubObject<CE::CSphereComponent>("SphereCollision", actor, "SphereCollision");
-    sphereCollision->SetRadius(0.5f);
 
-    // Add physics component
-    auto* physics = actor->AddSubObject<CE::CPhysicsComponent>("Physics", actor, "Physics");
-    physics->SetUseGravity(true);
-    physics->SetMass(1.0f);
-    physics->SetFriction(0.1f);
 
     if (i == 1)
     {
@@ -160,32 +141,5 @@ void MainLevel::Tick(float DeltaTime)
 }
 void MainLevel::Update(float DeltaTime)
 {
-  CE::CLevel::Update(DeltaTime);
-
-  // static float totalTime = 0.0f;
-  // static float random = 1.0f;
-  // totalTime += DeltaTime;
-
-  // // // Вращение кубов (как было)
-  // float rotationSpeed = 180.0f;
-  // int idx = 0;
-  // for (const auto& actorPtr : GetActors())
-  // {
-  //   CE::CActor* actor = actorPtr.get();
-  //   if (!actor)
-  //     continue;
-
-  //   if (actor == playerController || actor == playerCharacter || actor->GetName() == "Terrain" || actor->GetName() == "Enemy" || actor->GetName() == "SunActor")
-  //   {
-  //     ++idx;
-  //     continue;
-  //   }
-  //   random *= -1.f;
-  //   float speed = rotationSpeed + (idx * 7.5f);
-  //   CE::Math::Vector3f rot = CE::Math::Vector3f(
-  //       totalTime * CE::Math::ToRadians(speed * 1.5f) * random, totalTime * CE::Math::ToRadians(speed * 1.5f) * random, totalTime * CE::Math::ToRadians(speed * 1.5f) * random);
-
-  //   actor->SetActorRotation(rot);
-  //   ++idx;
-  // }
+  CE::CLevel::Update(DeltaTime);  
 }

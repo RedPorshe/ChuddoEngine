@@ -1,7 +1,7 @@
 #include "Engine/GamePlay/Actors/Character.h"
 #include "Engine/GamePlay/Components/StaticMeshComponent.h"
 #include "Engine/GamePlay/World/Levels/Level.h"
-#include "Engine/GamePlay/CollisionSystem/CapsuleComponent.h"
+
 
 namespace CE
 {
@@ -12,18 +12,15 @@ namespace CE
   {
 m_InputComponent = AddSubObject<CInputComponent>("Input", this, "InputComponent");
   }
-    m_Capsule = AddDefaultSubObject<CCapsuleComponent>("capsule", this, "CapsuleComponent");
-    m_Capsule->SetRadius(0.5f);
-    m_Capsule->SetHalfHeight(1.f);
-    SetRootComponent(m_Capsule);
+
     m_Mesh = AddDefaultSubObject<CMeshComponent>("Mesh", this, "Mesh Component");
-    m_Mesh->AttachToComponent(m_Capsule);
+    SetRootComponent(m_Mesh);
     m_Mesh->CreateCubeMesh();
     m_Mesh->SetRelativePosition(Math::Vector3f(0.f, 0.f, 1.f));
     m_Mesh->SetRelativeScale(2.f);
 
     m_SpringArm = AddDefaultSubObject<CSpringArmComponent>("SpringArm", this, "SpringArm Component");
-    m_SpringArm->AttachToComponent(m_Capsule);
+    m_SpringArm->AttachToComponent(m_Mesh);
     m_SpringArm->SetRelativePosition(0.f,0.9f,0.f);
     m_SpringArm->SetArmLength(5.7f);
     m_SpringArm->SetCameraLag(0.5f);
@@ -34,7 +31,7 @@ m_InputComponent = AddSubObject<CInputComponent>("Input", this, "InputComponent"
     m_Camera->SetRelativePosition(0.f,0.f,0.f);
     m_Camera->SetRelativeRotation(Math::Vector3f(0.0f, 0.0f, 0.0f));
 
-      
+
 
     m_IsOnGround = true; // Temporary to test jumping
     m_bUseControllerRotation = true;
@@ -48,44 +45,7 @@ m_InputComponent = AddSubObject<CInputComponent>("Input", this, "InputComponent"
   void CCharacter::Tick(float DeltaTime)
   {
     CPawn::Tick(DeltaTime);
-
-    // Apply gravity if jumping
-    if (bIsJumping)
-    {
-      m_VerticalVelocity += GetLevel()->GetGravity().y * DeltaTime;
-    }
-
-    // Ground check using raycast
-    Math::Vector3f currentLocation = GetActorLocation();
-    Math::Ray groundRay(currentLocation, Math::Vector3f(0.0f, -1.0f, 0.0f));
-    FRaycastHit hit;
-    float groundCheckDistance = 100.0f; // Increased distance to reach terrain
-
-    if (GetLevel()->Raycast(groundRay, hit, groundCheckDistance, this))
-    {
-      // On ground
-      m_IsOnGround = true;
-      if (m_VerticalVelocity >= 0.0f) // Only reset jumping if falling or at peak
-      {
-        bIsJumping = false;
-        m_VerticalVelocity = 0.0f;
-      }
-      // Snap to ground
-      float groundY = hit.Location.y;
-      float newY = groundY + m_Capsule->GetHalfHeight();
-      SetActorLocation(Math::Vector3f(currentLocation.x, newY, currentLocation.z));
-
-    }
-    else
-    {
-      // In air
-      m_IsOnGround = false;
-      // Apply vertical movement
-      Math::Vector3f newLocation = currentLocation;
-      newLocation.y += m_VerticalVelocity * DeltaTime;
-      SetActorLocation(newLocation);
-
-    }
+   
   }
 
   void CCharacter::SetupPlayerInputComponent()

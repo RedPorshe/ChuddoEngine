@@ -1,0 +1,8 @@
+- [x] Delete collision system directories (Include and Source)
+- [x] Delete PhysicsComponent files
+- [x] Edit Actor.h to remove collision and physics references
+- [x] Edit Character.h to remove collision and physics references
+- [x] Edit TerrainActor.h to remove collision and physics references
+- [x] Edit other affected files to remove references
+- [ ] Update CMakeLists.txt to remove deleted files
+- [ ] Test build for basic functions

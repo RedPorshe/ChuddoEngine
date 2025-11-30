@@ -1,11 +1,8 @@
 #include "Engine/GamePlay/Actors/Actor.h"
 #include "Engine/GamePlay/World/Levels/Level.h"
 #include "Engine/GamePlay/Components/MeshComponent.h"
-#include "Engine/GamePlay/CollisionSystem/CollisionComponent.h"
-#include "Engine/GamePlay/CollisionSystem/TerrainCollisionComponent.h"
 #include "Engine/Core/Object.h"
 #include "Engine/Utils/Math/AllMath.h"
-#include "Engine/GamePlay/Components/PhysicsComponent.h"
 #include "Engine/Utils/Logger.h"
 #include <algorithm>
 #include <cfloat>
@@ -17,8 +14,6 @@ namespace CE
   CActor::CActor(CObject* Owner, FString NewName)
       : CObject(Owner, NewName)
   {
-    // Создаем root component
-   
     CE_CORE_DEBUG("CEActor created: ", NewName);
   }
 
@@ -117,17 +112,10 @@ namespace CE
   {
     Update(DeltaTime);
 
-    // Update physics components
-    auto physicsComponents = GetComponents<CPhysicsComponent>();
-    for (auto* physics : physicsComponents)
-    {
-      physics->Update(DeltaTime);
-    }
-
     if (GetActorLocation().y <= -1000.f)
     {
-      this->SetActorLocation(GetActorLocation().x, 100.f, GetActorLocation().z);  // this is stub for destroy actor
-      // need add function to destroy actor...
+      this->SetActorLocation(GetActorLocation().x, 100.f, GetActorLocation().z); 
+     // GetLevel()->DestroyActor(this);
     }
   }
 

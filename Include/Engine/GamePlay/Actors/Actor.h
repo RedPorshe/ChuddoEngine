@@ -8,7 +8,6 @@
 
 namespace CE
 {
-  class CCollisionComponent;
   class CMeshComponent;
 
   class CActor : public CObject
@@ -60,8 +59,6 @@ namespace CE
 
   protected:
     CSceneComponent* m_RootComponent = nullptr;
-
-    bool bIsUsePhysics{false};
 
 
   };

@@ -76,22 +76,16 @@ namespace CE
 
     while (m_IsRunning)
     {
+      
       CalculateDeltaTime();
+      
       ProcessInput();
+     
       Update();
-      Render();
+     
+      Render();    
 
-      // // FPS счетчик
-      // m_FrameCount++;
-      // m_FPSTimer += m_DeltaTime;
-      // if (m_FPSTimer >= 1.0f)
-      // {
-      //   CE_CORE_DISPLAY("FPS: ", m_FrameCount, " DeltaTime: ", m_DeltaTime);
-      //   m_FrameCount = 0;
-      //   m_FPSTimer = 0.0f;
-      // }
-
-      // Проверка закрытия окна
+      
       if (m_RenderSystem->ShouldClose())
       {
         m_IsRunning = false;
@@ -110,7 +104,7 @@ namespace CE
 
   void Application::ProcessInput()
   {
-    // Обработка ввода через GLFW
+    
     if (glfwGetKey(m_RenderSystem->GetWindow(), GLFW_KEY_ESCAPE) == GLFW_PRESS)
     {
       m_IsRunning = false;
@@ -119,7 +113,7 @@ namespace CE
 
   void Application::Update()
   {
-    // Обновление системы ввода
+    
     CInputSystem::Get().Update(m_DeltaTime);
 
    
@@ -131,16 +125,16 @@ namespace CE
 
   void Application::Render()
   {
-    // Очистка данных рендеринга
+    
     m_RenderData.Clear();
 
-    // Сбор данных рендеринга из текущего мира
+    
     if (m_GameInstance && m_GameInstance->GetCurrentWorld())
     {
       m_GameInstance->GetCurrentWorld()->CollectRenderData(m_RenderData);
     }
 
-    // Отрисовка кадра
+    
     if (m_RenderSystem)
     {
       m_RenderSystem->DrawFrame(m_RenderData);
@@ -153,7 +147,7 @@ namespace CE
 
     m_IsRunning = false;
 
-    // Завершение системы ввода
+    
     CInputSystem::Get().Shutdown();
 
     // Завершение игрового инстанса

@@ -10,16 +10,7 @@ namespace CE
 {
 
   class CActor;
-  class CCollisionComponent;
-
-  struct FRaycastHit
-  {
-      CCollisionComponent* Component = nullptr;
-      Math::Vector3f Location;
-      Math::Vector3f Normal;
-      float Distance = 0.0f;
-      bool bBlockingHit = false;
-  };
+ 
 
   class CLevel : public CObject
   {
@@ -32,21 +23,13 @@ namespace CE
 
     void DestroyActor(CActor* Actor);
     CActor* FindActorByName(const FString& Name);
-    Math::Vector3f GetGravity() const
-    {
-      return m_gravity;
-    }
-    void SetGravity(const Math::Vector3f& gravity)
-    {
-      m_gravity = gravity;
-    }
+   
     const std::vector<std::unique_ptr<CActor>>& GetActors() const
     {
       return m_Actors;
     }
 
-    // Raycast method
-    bool Raycast(const Math::Ray& ray, FRaycastHit& outHit, float maxDistance = 1000.0f, CActor* ignoreActor = nullptr);
+   
 
     virtual void BeginPlay() override;
     virtual void Update(float DeltaTime) override;
@@ -54,11 +37,9 @@ namespace CE
 
    protected:
     std::vector<std::unique_ptr<CActor>> m_Actors;
-    Math::Vector3f m_gravity{0.0f, -9.81f, 0.0f};
+   
 
-   private:
-    void PerformCollisionDetection(float DeltaTime);
-    void HandleCollision(CCollisionComponent* compA, CCollisionComponent* compB, float DeltaTime);
+     
   };
 
 }  // namespace CE

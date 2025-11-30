@@ -86,7 +86,7 @@ namespace CE
     if (it != m_InputComponents.end())
     {
       m_InputComponents.erase(it);
-      CE_CORE_DEBUG("InputComponent unregistered from InputSystem");
+      CE_CORE_DEBUG(  "InputComponent unregistered from InputSystem");
     }
   }
 

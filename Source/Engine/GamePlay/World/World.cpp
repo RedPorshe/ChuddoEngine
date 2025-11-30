@@ -228,7 +228,7 @@ namespace CE
 
     if (lighting.lightCount == 0)
     {
-      CE_CORE_DEBUG("Setting up default lighting...");
+      
       lighting.lightCount = 1;
       lighting.lightPositions[0] = Math::Vector4f(5.0f, 5.0f, 5.0f, 1.0f);
       lighting.lightColors[0] = Math::Vector4f(1.0f, 1.0f, 1.0f, 1.0f);

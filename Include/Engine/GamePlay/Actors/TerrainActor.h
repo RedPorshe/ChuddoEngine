@@ -9,7 +9,6 @@
 namespace CE
 {
   class CMeshComponent;
-  class CTerrainCollisionComponent;
 
   class TerrainActor : public CActor
   {
@@ -31,7 +30,6 @@ namespace CE
 
    private:
     CMeshComponent* m_TerrainMesh = nullptr;
-    CTerrainCollisionComponent* m_TerrainCollision = nullptr;
 
     // Terrain properties
     int m_GridWidth = 100;

@@ -64,16 +64,14 @@ namespace CE
 
   void CGameInstance::SetupWorlds()
   {
-    // Базовая реализация - создаем пустой мир
-    // Производные классы переопределят этот метод
+    
     CreateWorld("DefaultWorld");
   }
 
   void CGameInstance::BeginPlay()
   {
     CObject::BeginPlay();
-
-    // Автоматически загружаем первый созданный мир
+    
     if (!m_Worlds.empty())
     {
       LoadWorld(m_Worlds.begin()->first);

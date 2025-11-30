@@ -1,7 +1,6 @@
 #pragma once
 #include "Engine/GamePlay/Actors/Pawn.h"
 #include "Engine/GamePlay/Components/MeshComponent.h"
-#include "Engine/GamePlay/CollisionSystem/CapsuleComponent.h"
 #include "Engine/GamePlay/Components/SpringArmComponent.h"
 
 namespace CE
@@ -31,7 +30,6 @@ namespace CE
     void Turn(float Value);
 
     CMeshComponent* m_Mesh = nullptr;
-    CCapsuleComponent* m_Capsule = nullptr;
     CCameraComponent* m_Camera = nullptr;
     CSpringArmComponent* m_SpringArm = nullptr;
     float m_VerticalVelocity = 0.0f;
