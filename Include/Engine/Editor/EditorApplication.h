@@ -47,5 +47,9 @@ namespace CE
     bool m_ShowOutliner = true;
     bool m_ShowPropertyPanel = true;
     bool m_ShowViewport = true;
+
+    CObject* m_SelectedObject = nullptr;
+
+    PropertyEditor m_PropertyEditor;
   };
 }  // namespace CE

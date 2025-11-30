@@ -3,36 +3,36 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_vulkan.h>
 
-CE::VulkanContext::VulkanContext(AppInfo* info) : m_info{info}
+VulkanContext::VulkanContext(AppInfo* info) : m_info{info}
 {
 }
 
-void CE::VulkanContext::Initialize()
+void VulkanContext::Initialize()
 {
   if (!InitWindow())
   {
-    CE_RENDER_ERROR("Failed to create Window");
+    CORE_ERROR("Failed to create Window");
     Shutdown();
     return;
   }
 
   if (!CreateInstance())
   {
-    CE_RENDER_ERROR("Failed to create Instance");
+    CORE_ERROR("Failed to create Instance");
     Shutdown();
     return;
   }
 
   if (bIsValidationEnabled && !SetupDebugMessenger())
   {
-    CE_RENDER_ERROR("Failed to setup debug messenger");
+    CORE_ERROR("Failed to setup debug messenger");
     Shutdown();
     return;
   }
 
   if (!CreateSurface())
   {
-    CE_RENDER_ERROR("Failed to Create Surface");
+    CORE_ERROR("Failed to Create Surface");
     Shutdown();
     return;
   }
@@ -40,7 +40,7 @@ void CE::VulkanContext::Initialize()
   m_deviceManager = std::make_shared<DeviceManager>();
   if (!m_deviceManager->Initialize(m_instance, m_surface))
   {
-    CE_RENDER_ERROR("Failed to initialize DeviceManager");
+    CORE_ERROR("Failed to initialize DeviceManager");
     Shutdown();
     return;
   }
@@ -48,7 +48,7 @@ void CE::VulkanContext::Initialize()
   m_swapchainManager = std::make_shared<SwapchainManager>(m_instance, m_surface, m_deviceManager, m_window);
   if (!m_swapchainManager->Initialize())
   {
-    CE_RENDER_ERROR("Failed to initialize SwapchainManager");
+    CORE_ERROR("Failed to initialize SwapchainManager");
     Shutdown();
     return;
   }
@@ -56,7 +56,7 @@ void CE::VulkanContext::Initialize()
   m_pipelineManager = std::make_shared<PipelineManager>(m_deviceManager);
   if (!m_pipelineManager->Initialize())
   {
-    CE_RENDER_ERROR("Failed to initialize PipelineManager");
+    CORE_ERROR("Failed to initialize PipelineManager");
     Shutdown();
     return;
   }
@@ -64,7 +64,7 @@ void CE::VulkanContext::Initialize()
   m_bufferManager = std::make_shared<BufferManager>(m_deviceManager);
   if (!m_bufferManager->Initialize())
   {
-    CE_RENDER_ERROR("Failed to initialize BufferManager");
+    CORE_ERROR("Failed to initialize BufferManager");
     Shutdown();
     return;
   }
@@ -72,14 +72,14 @@ void CE::VulkanContext::Initialize()
   // Создаем UBO буферы и проверяем их создание
   if (!m_bufferManager->CreateUniformBuffer(m_sceneUBOBufferName, sizeof(SceneUBO)))
   {
-    CE_RENDER_ERROR("Failed to create scene UBO buffer");
+    CORE_ERROR("Failed to create scene UBO buffer");
     Shutdown();
     return;
   }
 
   if (!m_bufferManager->CreateUniformBuffer(m_lightingUBOBufferName, sizeof(LightingUBO)))
   {
-    CE_RENDER_ERROR("Failed to create lighting UBO buffer");
+    CORE_ERROR("Failed to create lighting UBO buffer");
     Shutdown();
     return;
   }
@@ -88,7 +88,7 @@ void CE::VulkanContext::Initialize()
   if (m_bufferManager->GetBuffer(m_sceneUBOBufferName) == VK_NULL_HANDLE ||
       m_bufferManager->GetBuffer(m_lightingUBOBufferName) == VK_NULL_HANDLE)
   {
-    CE_RENDER_ERROR("UBO buffers are null after creation");
+    CORE_ERROR("UBO buffers are null after creation");
     Shutdown();
     return;
   }
@@ -96,7 +96,7 @@ void CE::VulkanContext::Initialize()
   m_descriptorManager = std::make_shared<DescriptorManager>(m_deviceManager, m_bufferManager);
   if (!m_descriptorManager->Initialize())
   {
-    CE_RENDER_ERROR("Failed to initialize DescriptorManager");
+    CORE_ERROR("Failed to initialize DescriptorManager");
     Shutdown();
     return;
   }
@@ -105,7 +105,7 @@ void CE::VulkanContext::Initialize()
   m_commandBufferManager = std::make_shared<CommandBufferManager>(m_deviceManager);
   if (!m_commandBufferManager->Initialize())
   {
-    CE_RENDER_ERROR("Failed to initialize CommandBufferManager");
+    CORE_ERROR("Failed to initialize CommandBufferManager");
     Shutdown();
     return;
   }
@@ -113,7 +113,7 @@ void CE::VulkanContext::Initialize()
   // Create command buffers for swapchain images
   if (!m_commandBufferManager->CreateCommandBuffers(m_swapchainManager->GetImageCount()))
   {
-    CE_RENDER_ERROR("Failed to create command buffers");
+    CORE_ERROR("Failed to create command buffers");
     Shutdown();
     return;
   }
@@ -121,17 +121,17 @@ void CE::VulkanContext::Initialize()
   // Create default mesh pipeline
   if (!m_pipelineManager->CreateMeshPipeline("mesh", m_swapchainManager->GetRenderPass()))
   {
-    CE_RENDER_ERROR("Failed to create mesh pipeline");
+    CORE_ERROR("Failed to create mesh pipeline");
     Shutdown();
     return;
   }
 
   CreateSyncObjects();
 
-  CE_RENDER_DEBUG("VulkanContext initialized successfully");
+  CORE_DEBUG("VulkanContext initialized successfully");
 }
 
-void CE::VulkanContext::Shutdown()
+void VulkanContext::Shutdown()
 {
   if (m_deviceManager && m_deviceManager->GetDevice() != VK_NULL_HANDLE)
   {
@@ -220,7 +220,7 @@ void CE::VulkanContext::Shutdown()
   CE_RENDER_DEBUG("SDL terminated");
 }
 
-void CE::VulkanContext::DrawFrame(const FrameRenderData& renderData)
+void VulkanContext::DrawFrame(const FrameRenderData& renderData)
 {
   VkDevice device = m_deviceManager->GetDevice();
 
@@ -298,7 +298,7 @@ void CE::VulkanContext::DrawFrame(const FrameRenderData& renderData)
   m_currentFrame = (m_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
-void CE::VulkanContext::RegisterMesh(const std::string& name, const StaticMesh& mesh)
+void VulkanContext::RegisterMesh(const std::string& name, const StaticMesh& mesh)
 {
   std::string vertexBufferName = name + "_vertices";
   if (!m_bufferManager->CreateVertexBuffer(vertexBufferName, mesh.vertices))
@@ -353,7 +353,7 @@ void CE::VulkanContext::RegisterMesh(const std::string& name, const StaticMesh& 
   m_meshBufferMap[name] = buffers;
 }
 
-void CE::VulkanContext::UnregisterMesh(const std::string& name)
+void VulkanContext::UnregisterMesh(const std::string& name)
 {
   auto it = m_meshBufferMap.find(name);
   if (it != m_meshBufferMap.end())
@@ -368,7 +368,7 @@ void CE::VulkanContext::UnregisterMesh(const std::string& name)
   CE_RENDER_DEBUG("Unregistered mesh: ", name);
 }
 
-void CE::VulkanContext::CreateSyncObjects()
+void VulkanContext::CreateSyncObjects()
 {
   uint32_t imageCount = m_swapchainManager->GetImageCount();
 
@@ -407,7 +407,7 @@ void CE::VulkanContext::CreateSyncObjects()
   CE_RENDER_DEBUG("Created synchronization objects for ", imageCount, " swapchain images and ", MAX_FRAMES_IN_FLIGHT, " frames in flight");
 }
 
-void CE::VulkanContext::CleanupSyncObjects()
+void VulkanContext::CleanupSyncObjects()
 {
   VkDevice device = m_deviceManager->GetDevice();
 
@@ -441,7 +441,7 @@ void CE::VulkanContext::CleanupSyncObjects()
   CE_RENDER_DEBUG("Synchronization objects destroyed");
 }
 
-void CE::VulkanContext::RecordCommandBuffer(uint32_t imageIndex, const FrameRenderData& renderData)
+void VulkanContext::RecordCommandBuffer(uint32_t imageIndex, const FrameRenderData& renderData)
 {
   m_commandBufferManager->BeginRecording(imageIndex);
   m_currentCommandBuffer = m_commandBufferManager->GetCommandBuffer(imageIndex);
@@ -523,7 +523,7 @@ void CE::VulkanContext::RecordCommandBuffer(uint32_t imageIndex, const FrameRend
   m_commandBufferManager->EndRecording(imageIndex);
 }
 
-void CE::VulkanContext::UpdateUniformBuffers(const FrameRenderData& renderData)
+void VulkanContext::UpdateUniformBuffers(const FrameRenderData& renderData)
 {
   LightingUBO lightingUBO = renderData.lighting;
 
@@ -533,12 +533,12 @@ void CE::VulkanContext::UpdateUniformBuffers(const FrameRenderData& renderData)
   m_bufferManager->UpdateUniformBuffer(m_sceneUBOBufferName, &sceneUBO, sizeof(SceneUBO));
 }
 
-bool CE::VulkanContext::ShouldClose() const
+bool VulkanContext::ShouldClose() const
 {
   return m_shouldClose;
 }
 
-bool CE::VulkanContext::InitWindow()
+bool VulkanContext::InitWindow()
 {
   if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0)
     return false;

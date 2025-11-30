@@ -285,25 +285,24 @@ namespace CE
   };
 
   // Macros
-#define UCLASS(ClassName, BaseClass) \
-  class ClassName; \
+#define CCLASS(ClassName) \
   static ClassInfo* ClassName##_ClassInfo = nullptr; \
   static void Register##ClassName() { \
-    auto classInfo = std::make_unique<ClassInfo>(#ClassName, []() -> CObject* { return new ClassName(); }); \
-    ClassName##_ClassInfo = classInfo.get(); \
-    ReflectionRegistry::Get().RegisterClass(std::move(classInfo)); \
+    if (!ClassName##_ClassInfo) { \
+      ClassName##_ClassInfo = new ClassInfo(#ClassName); \
+      ReflectionRegistry::Get().RegisterClass(std::unique_ptr<ClassInfo>(ClassName##_ClassInfo)); \
+    } \
   } \
-  static int ClassName##_Dummy = (Register##ClassName(), 0); \
-  class ClassName : public BaseClass
+  static int ClassName##_Dummy = (Register##ClassName(), 0);
 
-#define UPROPERTY(Type, Name, ...) \
+#define CPROPERTY(Class, Type, Name, ...) \
   Type Name; \
-  static int Name##_Dummy = (ClassName##_ClassInfo->AddProperty(std::make_unique<TProperty<Type>>(#Name, \
-    [](void* obj) -> Type& { return static_cast<ClassName*>(obj)->Name; }, \
-    [](void* obj, const Type& val) { static_cast<ClassName*>(obj)->Name = val; }, \
+  static int Name##_Dummy = (Class##_ClassInfo->AddProperty(std::make_unique<TProperty<Type>>(#Name, \
+    [](void* obj) -> Type& { return static_cast<Class*>(obj)->Name; }, \
+    [](void* obj, const Type& val) { static_cast<Class*>(obj)->Name = val; }, \
     PropertyMeta{__VA_ARGS__})), 0)
 
-#define UFUNCTION(Name, Category) \
+#define CFUNCTION(Name, Category) \
   void Name(); \
   static int Name##_Dummy = (ClassName##_ClassInfo->AddFunction(std::make_unique<Function>(#Name, \
     [](void* obj) { static_cast<ClassName*>(obj)->Name(); }, Category)), 0)

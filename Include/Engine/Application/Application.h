@@ -5,9 +5,7 @@
 #include "Engine/Core/Rendering/Vulkan/Integration/RenderSystem.h"
 #include "Engine/GamePlay/GameInstance/GameInstance.h"
 
-namespace CE
-{
-  class Application
+class Application
   {
    public:
     Application(AppInfo* info);
@@ -48,4 +46,3 @@ namespace CE
     uint32_t m_FrameCount = 0;
     float m_FPSTimer = 0.0f;
   };
-}  // namespace CE

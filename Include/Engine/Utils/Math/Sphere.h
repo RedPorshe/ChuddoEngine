@@ -2,7 +2,7 @@
 #include "Vector3.h"
 #include "AABB.h"
 
-namespace CE::Math
+namespace CEMath
 {
     class Sphere
     {

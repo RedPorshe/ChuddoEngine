@@ -13,7 +13,7 @@
 #include "Frustum.h"
 #include "Color.h"
 
-namespace Math
+namespace CEMath
 {
     template<typename T>
     T Min(T a, T b) { return std::min(a, b); }

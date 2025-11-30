@@ -2,7 +2,7 @@
 #include "Vector4.h"
 #include <array>
 
-namespace CE::Math
+namespace CEMath
 {
     template<typename T>
     class Matrix4

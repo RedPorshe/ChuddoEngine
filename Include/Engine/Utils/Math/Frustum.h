@@ -4,7 +4,7 @@
 #include "Sphere.h"
 #include "Matrix4.h"
 
-namespace CE::Math
+namespace CEMath
 {
     class Frustum
     {

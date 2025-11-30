@@ -3,7 +3,7 @@
 #include <iostream>
 #include <vulkan/vulkan.h>
 
-namespace CE::Math
+namespace CEMath
 {
     template<typename T>
     class Vector2

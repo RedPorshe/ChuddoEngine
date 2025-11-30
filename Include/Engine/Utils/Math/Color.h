@@ -2,7 +2,7 @@
 #include "Vector4.h"
 #include <cstdint>
 
-namespace CE::Math
+namespace CEMath
 {
     class Color : public Vector4f
     {

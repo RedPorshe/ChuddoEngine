@@ -5,23 +5,20 @@
 
 #include "Engine/Core/Rendering/Data/Vertex.h"
 
-namespace CE
+/**
+ * @class ObjLoader
+ * @brief Загрузчик OBJ файлов для импорта 3D моделей
+ */
+class ObjLoader
 {
+ public:
   /**
-   * @class ObjLoader
-   * @brief Загрузчик OBJ файлов для импорта 3D моделей
+   * @brief Загружает OBJ файл и возвращает StaticMesh
+   * @param filePath Путь к OBJ файлу
+   * @return StaticMesh с загруженными вершинами и индексами, или пустой меш при ошибке
    */
-  class ObjLoader
-  {
-   public:
-    /**
-     * @brief Загружает OBJ файл и возвращает StaticMesh
-     * @param filePath Путь к OBJ файлу
-     * @return StaticMesh с загруженными вершинами и индексами, или пустой меш при ошибке
-     */
-    static StaticMesh LoadOBJ(const std::string& filePath);
+  static StaticMesh LoadOBJ(const std::string& filePath);
 
-   private:
-    ObjLoader() = default;
-  };
-}  // namespace CE
+ private:
+  ObjLoader() = default;
+};

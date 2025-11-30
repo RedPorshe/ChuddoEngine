@@ -3,7 +3,7 @@
 #include "Engine/GamePlay/Input/InputSystem.h"
 #include "Game/World/MainLevel.h"
 
-MainGameInstance::MainGameInstance() : CE::CGameInstance()
+MainGameInstance::MainGameInstance() : CGameInstance()
 {
 }
 void MainGameInstance::SetupWorlds()
@@ -16,6 +16,6 @@ void MainGameInstance::SetupWorlds()
 
 void MainGameInstance::Update(float DeltaTime)
 {
-  CE::CGameInstance::Update(DeltaTime);
-  CE::CInputSystem::Get().Update(DeltaTime);
+  CGameInstance::Update(DeltaTime);
+  CInputSystem::Get().Update(DeltaTime);
 }

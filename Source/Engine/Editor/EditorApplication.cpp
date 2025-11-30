@@ -5,6 +5,7 @@
 #include <imgui_impl_vulkan.h>
 
 #include "Engine/Core/Rendering/Vulkan/Core/VulkanContext.h"
+#include "Engine/Editor/UI/PropertyEditor.h"
 
 namespace CE
 {
@@ -84,6 +85,7 @@ namespace CE
 
   void EditorApplication::Shutdown()
   {
+    m_PropertyEditor.Shutdown();
     ShutdownImGui();
     Application::Shutdown();
     CE_CORE_DISPLAY("=== EditorApplication Shutdown Complete ===");
@@ -326,8 +328,15 @@ namespace CE
 
     ImGui::Begin("Properties", &m_ShowPropertyPanel);
 
-    // TODO: Show properties of selected actor/component
-    ImGui::Text("No object selected");
+    if (m_SelectedObject)
+    {
+      m_PropertyEditor.SetSelectedObject(m_SelectedObject);
+      m_PropertyEditor.Render();
+    }
+    else
+    {
+      ImGui::Text("No object selected");
+    }
 
     ImGui::End();
   }

@@ -1,16 +1,15 @@
 #pragma once
 
 #include "Engine/Core/Object.h"
+#include "Engine/Core/Reflection.h"
 #include "Engine/GamePlay/Components/Base/Component.h"
 #include "Engine/GamePlay/Components/SceneComponent.h"
 #include "Engine/GamePlay/World/Levels/Level.h"
 #include "Engine/Utils/Math/AllMath.h"
 
-namespace CE
-{
-  class CMeshComponent;
+class CMeshComponent;
 
-  class CActor : public CObject
+class CActor : public CObject
   {
    public:
     CActor(CObject* Owner = nullptr, FString NewName = "Actor");
@@ -54,8 +53,9 @@ namespace CE
     virtual void Update(float DeltaTime) override;
     virtual void Tick(float DeltaTime) override;
 
-
-
+    Math::Vector3f Location = Math::Vector3f(0.0f);
+    Math::Vector3f Rotation = Math::Vector3f(0.0f);
+    Math::Vector3f Scale = Math::Vector3f(1.0f);
 
   protected:
     CSceneComponent* m_RootComponent = nullptr;
@@ -91,4 +91,3 @@ namespace CE
 
     return component;
   }
-}  // namespace CE

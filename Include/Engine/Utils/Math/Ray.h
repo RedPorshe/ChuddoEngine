@@ -5,7 +5,7 @@
 #include "Sphere.h"
 #include "MathConstants.h"
 
-namespace CE::Math
+namespace CEMath
 {
     class Ray
     {

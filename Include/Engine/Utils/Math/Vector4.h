@@ -2,7 +2,7 @@
 #include "Vector3.h"
 #include <iostream>
 
-namespace CE::Math
+namespace CEMath
 {
     template<typename T>
     class Vector4

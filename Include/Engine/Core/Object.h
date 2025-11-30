@@ -9,11 +9,9 @@
 #include "CoreMinimal.h"
 #include "Engine/Core/Reflection.h"
 
-namespace CE
-{
-  class CComponent;
+class CComponent;
 
-  class CObject
+class CObject
   {
    public:
     CObject(CObject* Owner = nullptr, FString NewName = "Object");
@@ -106,4 +104,3 @@ namespace CE
     }
     return nullptr;
   }
-}  // namespace CE

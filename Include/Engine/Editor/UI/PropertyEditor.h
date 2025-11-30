@@ -16,7 +16,7 @@ namespace CE
 
     void Initialize();
     void Shutdown();
-    void Render(CObject* selectedObject);
+    void Render();
     void SetSelectedObject(CObject* object);
 
    private:

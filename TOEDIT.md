@@ -23,10 +23,10 @@ Transform the engine into an Unreal Engine-like system by adding a world editor 
 
 ### Phase 1: Implement Reflection System (like Unreal Engine UPROPERTY, UCLASS)
 
-* \[ ] Create reflection macros (UCLASS, UPROPERTY, UFUNCTION) for runtime type information.
-* \[ ] Implement property system for serialization and editor inspection.
-* \[ ] Add metadata system for editor hints (display names, categories, etc.).
-* \[ ] Support for basic types (int, float, Vector3, FString) and custom types.
+* \[x] Create reflection macros (UCLASS, UPROPERTY, UFUNCTION) for runtime type information.
+* \[x] Implement property system for serialization and editor inspection.
+* \[x] Add metadata system for editor hints (display names, categories, etc.).
+* \[x] Support for basic types (int, float, Vector3, FString) and custom types.
 * \[ ] Integrate reflection with serialization for level/world saving/loading.
 
 ### Phase 2: Integrate GUI Library for Editor UI

@@ -4,7 +4,7 @@
 #include <cstdlib>
 #include <cstdint>  // Добавлено для uint32_t
 
-namespace CE::Math
+namespace CEMath
 {
     constexpr float PI = 3.14159265358979323846f;
     constexpr float TWO_PI = 2.0f * PI;
