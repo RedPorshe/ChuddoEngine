@@ -1,11 +1,12 @@
 #include "Engine/GamePlay/Components/SceneComponent.h"
 #include "Engine/Core/CoreTypes.h"
-#include "Engine/Utils/Math/MathConstants.h"
+#include "Engine/Utils/Math/MathConstants.hpp"
+
 
 CSceneComponent::CSceneComponent(CObject* Owner, FString NewName)
     : CComponent(Owner, NewName)
 {
-  m_TransformMatrix.SetIdentity();
+  m_TransformMatrix= m_TransformMatrix.Identity ;
 }
 
 void CSceneComponent::SetPosition(const FVector& Position)
@@ -30,13 +31,17 @@ void CSceneComponent::SetRelativePosition(float X, float Y, float Z)
   SetRelativePosition(FVector(X, Y, Z));
 }
 
+void CSceneComponent::SetRelativePosition(float val)
+{
+  SetRelativePosition(val, val, val);
+}
 void CSceneComponent::SetRotation(const FVector& Rotation)
 {
   m_WorldRotation = Rotation;
-  m_RotationQuat = FQuat::FromEulerAngles(
-      CEMath::ToRadians(Rotation.x),
-      CEMath::ToRadians(Rotation.y),
-      CEMath::ToRadians(Rotation.z)
+  m_RotationQuat = FQuat::FromEuler(
+      CEMath::DEG_TO_RAD * Rotation.x,
+      CEMath::DEG_TO_RAD *Rotation.y,
+      CEMath::DEG_TO_RAD * Rotation.z
   );
   UpdateTransformMatrix();
 }
@@ -49,10 +54,10 @@ void CSceneComponent::SetRotation(float Pitch, float Yaw, float Roll)
 void CSceneComponent::SetRelativeRotation(const FVector& Rotation)
 {
   m_RelativeRotation = Rotation;
-  m_RotationQuat = FQuat::FromEulerAngles(
-      CEMath::ToRadians(Rotation.x),
-      CEMath::ToRadians(Rotation.y),
-      CEMath::ToRadians(Rotation.z)
+  m_RotationQuat = FQuat::FromEuler(
+      CEMath::DEG_TO_RAD * Rotation.x,
+      CEMath::DEG_TO_RAD *Rotation.y,
+      CEMath::DEG_TO_RAD * Rotation.z
   );
   UpdateTransformMatrix();
 }
@@ -182,14 +187,14 @@ FVector CSceneComponent::GetWorldLocation() const
   if (m_Parent)
   {
     FMatrix parentTransform = m_Parent->GetWorldTransform();
-    return (parentTransform * FVector4(m_RelativeLocation, 1.0f)).XYZ();
+    return (parentTransform * FVector4(m_RelativeLocation, 1.0f)).ToVector3D();
   }
   return m_WorldLocation;
 }
 
 FVector CSceneComponent::GetForwardVector() const
 {
-  FVector euler = m_RotationQuat.ToEulerAngles();
+  FVector euler = m_RotationQuat.ToEuler();
   float pitch = euler.x;
   float yaw = euler.y;
 
@@ -216,7 +221,7 @@ FVector CSceneComponent::GetUpVector() const
 
 void CSceneComponent::AddYawInput(float Value)
 {
-  FQuat yawRot = FQuat::FromAxisAngle(FVector::Up(), CEMath::ToRadians(Value));
+  FQuat yawRot = FQuat::FromAxisAngle(FVector::UnitY, CEMath::DEG_TO_RAD * (Value));
   m_RotationQuat = yawRot * m_RotationQuat;
   UpdateRotationFromQuat();
   UpdateTransformMatrix();
@@ -228,11 +233,11 @@ void CSceneComponent::AddPitchInput(float Value)
 
   if (m_UsePitchLimits)
   {
-    newPitch = CEMath::Clamp(newPitch, m_MinPitch, m_MaxPitch);
+    newPitch = std::clamp(newPitch, m_MinPitch, m_MaxPitch);
     Value = newPitch - m_RelativeRotation.x;
   }
 
-  FQuat pitchRot = FQuat::FromAxisAngle(GetRightVector(), CEMath::ToRadians(Value));
+  FQuat pitchRot = FQuat::FromAxisAngle(GetRightVector(), CEMath::DEG_TO_RAD * (Value));
   m_RotationQuat = m_RotationQuat * pitchRot;
   UpdateRotationFromQuat();
   UpdateTransformMatrix();
@@ -288,10 +293,10 @@ void CSceneComponent::Rotate(const FVector& Delta)
 {
   m_RelativeRotation += Delta;
   ClampPitchRotation();
-  m_RotationQuat = FQuat::FromEulerAngles(
-      CEMath::ToRadians(m_RelativeRotation.x),
-      CEMath::ToRadians(m_RelativeRotation.y),
-      CEMath::ToRadians(m_RelativeRotation.z)
+  m_RotationQuat = FQuat::FromEuler(
+      CEMath::DEG_TO_RAD *(m_RelativeRotation.x),
+      CEMath::DEG_TO_RAD *(m_RelativeRotation.y),
+      CEMath::DEG_TO_RAD *(m_RelativeRotation.z)
   );
   UpdateTransformMatrix();
 }
@@ -327,7 +332,7 @@ void CSceneComponent::UpdateTransformMatrix()
     {
       FMatrix parentTransform = m_Parent->GetWorldTransform();
 
-      m_WorldLocation = (parentTransform * FVector4(m_RelativeLocation, 1.0f)).XYZ();
+      m_WorldLocation = (parentTransform * FVector4(m_RelativeLocation, 1.0f)).ToVector3D();
       
       FVector parentScale = m_Parent->GetScale();
       m_WorldScale = FVector(
@@ -339,7 +344,7 @@ void CSceneComponent::UpdateTransformMatrix()
       // Вычисляем мировое вращение
       FQuat parentRot = m_Parent->GetRotationQuat();
       FQuat worldRot = parentRot * m_RotationQuat;
-      m_WorldRotation = worldRot.ToEulerAngles() * CEMath::RAD_TO_DEG    ;
+      m_WorldRotation = worldRot.ToEuler() * CEMath::RAD_TO_DEG    ;
     }
     catch (...)
     {
@@ -358,8 +363,8 @@ void CSceneComponent::UpdateTransformMatrix()
   }
 
   // Создаем матрицу трансформации: Scale * Rotation * Translation
-  FMatrix translation = FMatrix::Translation(m_RelativeLocation);
-  FMatrix rotation = m_RotationQuat.ToMatrix();
+  FMatrix translation = FMatrix::Translate(m_RelativeLocation);
+  FMatrix rotation = m_RotationQuat.ToMatrix() ;
   FMatrix scale = FMatrix::Scale(m_RelativeScale);
 
   m_TransformMatrix = translation * rotation * scale;
@@ -367,16 +372,16 @@ void CSceneComponent::UpdateTransformMatrix()
 
 void CSceneComponent::UpdateRotationFromQuat()
 {
-  m_RelativeRotation = m_RotationQuat.ToEulerAngles() * CEMath::RAD_TO_DEG;
+  m_RelativeRotation = m_RotationQuat.ToEuler() * CEMath::RAD_TO_DEG;
   ClampPitchRotation();
 }
 
 void CSceneComponent::UpdateQuatFromRotation()
 {
-  m_RotationQuat = FQuat::FromEulerAngles(
-      CEMath::ToRadians(m_RelativeRotation.x),
-      CEMath::ToRadians(m_RelativeRotation.y),
-      CEMath::ToRadians(m_RelativeRotation.z)
+  m_RotationQuat = FQuat::FromEuler(
+      CEMath::DEG_TO_RAD*(m_RelativeRotation.x),
+      CEMath::DEG_TO_RAD*(m_RelativeRotation.y),
+      CEMath::DEG_TO_RAD*(m_RelativeRotation.z)
   );
 }
 
@@ -415,7 +420,7 @@ void CSceneComponent::ClampPitchRotation()
 {
   if (m_UsePitchLimits)
   {
-    m_RelativeRotation.x = CEMath::Clamp(m_RelativeRotation.x, m_MinPitch, m_MaxPitch);
+    m_RelativeRotation.x = std::clamp(m_RelativeRotation.x, m_MinPitch, m_MaxPitch);
   }
 }
 

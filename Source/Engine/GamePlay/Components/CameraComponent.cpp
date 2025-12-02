@@ -69,24 +69,13 @@
 }
 
 
-void CCameraComponent::DebugMatrix(const FMatrix& m, const char* name) const
-{
-    CORE_DEBUG(name," Matrix:");
-    for (int i = 0; i < 4; i++) {
-        CORE_DEBUG("  [",m(i,0), " , ", m(i,1), ",",m(i,2), ",",m(i,3), "]");
-    }
-    CORE_DEBUG("  Determinant: ", m.Determinant());
-}
 
-void CCameraComponent::DebugMatrix(const char* message) const
-{
-    CORE_DEBUG( message);
-}
 
   FMatrix CCameraComponent::GetProjectionMatrix() const
 {
     FMatrix projection = FMatrix::Perspective(
-        CEMath::ToRadians(m_FieldOfView),
+      
+        CEMath::DEG_TO_RAD *m_FieldOfView,
         m_AspectRatio,
         m_NearPlane,
         m_FarPlane);

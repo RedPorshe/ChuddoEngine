@@ -16,6 +16,7 @@
     void SetPosition(float X, float Y, float Z);
     void SetRelativePosition(const FVector& Position);
     void SetRelativePosition(float X, float Y, float Z);
+     void SetRelativePosition(float val);
 
     // rotation methods
     void SetRotation(const FVector& Rotation);

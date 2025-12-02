@@ -39,9 +39,9 @@
     {
       m_Mesh.color = color;
     }
-    void SetColor(const FVector4& color)
+    void SetColor(const FLinearColor& color)
     {
-      m_Mesh.color = color.XYZ();
+      m_Mesh.color = color.toRGB();
     }
     const FVector& GetColor() const
     {

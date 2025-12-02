@@ -33,9 +33,9 @@ Transform the engine into an Unreal Engine-like system by adding a world editor 
 
 ### Phase 2: Integrate GUI Library for Editor UI
 
-* \[ ] Replace GLFW with SDL2 for better cross-platform support and potential for advanced UI (SDL supports more features than GLFW for editors).
+* \[x] Replace GLFW with SDL3 for better cross-platform support and potential for advanced UI (SDL supports more features than GLFW for editors).
 * \[ ] Create custom Slate-like UI framework for editor UI (docking, windows, property editors).
-* \[ ] Modify CMakeLists.txt to include SDL2
+* \[ ] Modify CMakeLists.txt to include SDL3
 ### Phase 3: Add Editor Mode and UI Framework
 
 * \[ ] Create EditorApplication class inheriting from Application, with editor-specific logic.
@@ -96,7 +96,7 @@ Transform the engine into an Unreal Engine-like system by adding a world editor 
 
 ## Risks and Considerations
 
-* \[ ] SDL2 integration may require significant changes to Vulkan surface creation.
+* \[ ] SDL3 integration may require significant changes to Vulkan surface creation.
 * \[ ] Custom Slate-like UI rendering needs to be integrated with Vulkan pipeline.
 * \[ ] Ensure editor doesn't break existing gameplay functionality.
 * \[ ] Performance: Editor UI should not significantly impact frame rates.

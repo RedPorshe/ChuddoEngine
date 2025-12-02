@@ -1,6 +1,5 @@
 #pragma once
-#include "Engine/Utils/Math/Vector3.h"
-#include "Engine/Utils/Math/Ray.h"
+
 #include <memory>
 #include <vector>
 

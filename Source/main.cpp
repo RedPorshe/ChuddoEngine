@@ -13,7 +13,7 @@ int main(int argc, char* argv[])
   CE::CLogger::SetGlobalLogLevel(CE::ELogLevel::Verbose);
   CORE_DISPLAY("=== DEBUG BUILD ===");
 #else
-  CE::CLogger::SetGlobalLogLevel(CE::ELogLevel::Warning);
+  CE::CLogger::SetGlobalLogLevel(CE::ELogLevel::Verbose);
   CORE_DISPLAY("=== RELEASE BUILD ===");
 #endif
 

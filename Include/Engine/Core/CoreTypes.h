@@ -1,19 +1,20 @@
 #pragma once
 
-#include "Engine/Utils/Math/Vector2.h"
-#include "Engine/Utils/Math/Vector3.h"
-#include "Engine/Utils/Math/Vector4.h"
-#include "Engine/Utils/Math/Matrix4.h"
-#include "Engine/Utils/Math/Quaternion.h"
+#include "Math/Vector2D.hpp"
+#include "Math/Vector3D.hpp"
+#include "Math/Vector4D.hpp"
+#include "Math/Matrix4x4.hpp"
+#include "Math/Quaternion.hpp"
+
 #include "Engine/Utils/Math/Color.h"
 #include <cfloat>
 
 // Math type aliases following Unreal Engine naming conventions
-using FVector2D = CEMath::Vector2f;
-using FVector = CEMath::Vector3f;
-using FVector4 = CEMath::Vector4f;
-using FMatrix = CEMath::Matrix4f;
-using FQuat = CEMath::Quaternionf;
+using FVector2D = CEMath::Vector2D;
+using FVector = CEMath::Vector3D;
+using FVector4 = CEMath::Vector4D;
+using FMatrix = CEMath::Matrix4x4;
+using FQuat = CEMath::Quaternion;
 using FLinearColor = CEMath::Color;
 
 // Additional UI-specific types

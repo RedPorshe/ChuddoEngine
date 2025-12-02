@@ -186,13 +186,13 @@
   void CPawn::AddControllerPitchInput(float Value)
   {
     m_ControlRotation.y += Value;
-    m_ControlRotation.y = CEMath::Clamp(m_ControlRotation.y, -89.0f, 89.0f);
+    m_ControlRotation.y = std::clamp(m_ControlRotation.y, -89.0f, 89.0f);
   }
 
   void CPawn::SetControlRotation(const FVector& NewRotation)
   {
     m_ControlRotation = NewRotation;
-    m_ControlRotation.x = CEMath::Clamp(m_ControlRotation.x, -89.0f, 89.0f);
+    m_ControlRotation.x = std::clamp(m_ControlRotation.x, -89.0f, 89.0f);
   }
 
   void CPawn::ConsumeMovementInput()

@@ -261,47 +261,50 @@
     return VulkanUtils::CreateShaderModule(m_deviceManager->GetDevice(), code);
   }
 
+  
   std::vector<char> PipelineManager::ReadShaderFile(const std::string& filename)
-  {
-    std::vector<std::string> candidates;
-    candidates.push_back(filename);
-    candidates.push_back(std::string("build/bin/Debug/") + filename);
-    candidates.push_back(std::string("build/bin/Release/") + filename);
-
-    std::ifstream file;
-    std::string foundPath;
-    for (const auto& p : candidates)
+{
+    // Просто используем относительный путь от текущей директории
+    std::string fullPath = filename;
+    
+    RENDER_DEBUG("Looking for shader at: ", fullPath);
+    
+    if (!std::filesystem::exists(fullPath))
     {
-      if (std::filesystem::exists(p))
-      {
-        file.open(p, std::ios::ate | std::ios::binary);
-        if (file.is_open())
+        // Если не найден, попробуем с Debug/ префиксом
+        std::string debugPath = "Debug/" + filename;
+        if (std::filesystem::exists(debugPath))
         {
-          foundPath = p;
-          break;
+            fullPath = debugPath;
         }
-      }
+        else
+        {
+            // Попробуем с Release/ префиксом
+            std::string releasePath = "Release/" + filename;
+            if (std::filesystem::exists(releasePath))
+            {
+                fullPath = releasePath;
+            }
+        }
     }
-
+    
+    std::ifstream file(fullPath, std::ios::ate | std::ios::binary);
     if (!file.is_open())
     {
-      file.open(filename, std::ios::ate | std::ios::binary);
-      if (!file.is_open())
-      {
-        throw std::runtime_error("Failed to open shader file. Tried: " + filename + ", build/bin/Debug/" + filename + ", build/bin/Release/" + filename);
-      }
-      foundPath = filename;
+        throw std::runtime_error("Failed to open shader file: " + fullPath);
     }
-
+    
+    RENDER_DEBUG("Shader found at: ", fullPath);
+    
     size_t fileSize = static_cast<size_t>(file.tellg());
     std::vector<char> buffer(fileSize);
-
+    
     file.seekg(0);
     file.read(buffer.data(), fileSize);
     file.close();
-
+    
     return buffer;
-  }
+}
 
   void PipelineManager::DefaultPipelineConfigInfo(PipelineConfigInfo& configInfo)
   {

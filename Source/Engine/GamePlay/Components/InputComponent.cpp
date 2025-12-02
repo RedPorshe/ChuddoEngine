@@ -1,20 +1,9 @@
 #include "Engine/GamePlay/Components/InputComponent.h"
 
 #include "Engine/GamePlay/Input/InputSystem.h"
+#include <SDL3/SDL.h>
 
-// Добавим GLFW ключи для совместимости
-#define GLFW_KEY_W 87
-#define GLFW_KEY_S 83
-#define GLFW_KEY_A 65
-#define GLFW_KEY_D 68
-#define GLFW_KEY_SPACE 32
-#define GLFW_KEY_LEFT_SHIFT 340
-#define GLFW_KEY_E 69
-#define GLFW_KEY_ESCAPE 256
 
-#define GLFW_PRESS 1
-#define GLFW_RELEASE 0
-#define GLFW_REPEAT 2
 
 
   CInputComponent::CInputComponent(CObject* Owner, FString NewName)
@@ -47,9 +36,9 @@
   void CInputComponent::ProcessKey(int key, int action, [[maybe_unused]] float deltaTime)
   {
     EInputEvent eventType;
-    if (action == GLFW_PRESS)
+    if (action == SDL_EVENT_KEY_DOWN)
       eventType = EInputEvent::Pressed;
-    else if (action == GLFW_RELEASE)
+    else if (action == SDL_EVENT_KEY_UP)
       eventType = EInputEvent::Released;
     else
       eventType = EInputEvent::Repeat;
@@ -114,11 +103,11 @@
 
           if (axisName == "MoveForward")
           {
-            value = (key == GLFW_KEY_W) ? 1.0f : -1.0f;
+            value = (key == SDLK_W) ? 1.0f : -1.0f;
           }
           else if (axisName == "MoveRight")
           {
-            value = (key == GLFW_KEY_D) ? 1.0f : -1.0f;
+            value = (key == SDLK_D) ? 1.0f : -1.0f;
           }
 
           value *= axisIt->second.Scale;
@@ -131,15 +120,15 @@
 
   void CInputComponent::SetupDefaultKeyMappings()
   {
-    m_KeyToAxisMap[GLFW_KEY_W] = "MoveForward";
-    m_KeyToAxisMap[GLFW_KEY_S] = "MoveForward";
-    m_KeyToAxisMap[GLFW_KEY_A] = "MoveRight";
-    m_KeyToAxisMap[GLFW_KEY_D] = "MoveRight";
+    m_KeyToAxisMap[SDLK_W] = "MoveForward";
+    m_KeyToAxisMap[SDLK_S] = "MoveForward";
+    m_KeyToAxisMap[SDLK_A] = "MoveRight";
+    m_KeyToAxisMap[SDLK_D] = "MoveRight";
 
-    m_KeyToActionMap[GLFW_KEY_SPACE] = "Jump";
-    m_KeyToActionMap[GLFW_KEY_LEFT_SHIFT] = "Sprint";
-    m_KeyToActionMap[GLFW_KEY_E] = "Interact";
-    m_KeyToActionMap[GLFW_KEY_ESCAPE] = "Pause";
+    m_KeyToActionMap[SDLK_SPACE] = "Jump";
+    m_KeyToActionMap[SDLK_LSHIFT] = "Sprint";
+    
+    m_KeyToActionMap[SDLK_ESCAPE] = "Pause";
 
     CORE_DEBUG("Default key mappings setup");
 

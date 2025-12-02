@@ -15,8 +15,6 @@
 #include "Engine/Core/Rendering/Vulkan/Utils/VulkanUtils.h"
 #include "vulkan/vulkan.h"
 
-struct GLFWwindow;
-
 
   struct MeshBuffers
   {

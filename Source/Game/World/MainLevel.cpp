@@ -139,6 +139,11 @@ void MainLevel::BeginPlay()
 void MainLevel::Tick(float DeltaTime)
 {
   CLevel::Tick(DeltaTime);
+  FVector newPos = playerCharacter->GetActorLocation();
+ 
+  
+  newPos.y = newPos.y + DeltaTime*20;
+  playerCharacter->SetActorLocation(newPos);
 }
 void MainLevel::Update(float DeltaTime)
 {

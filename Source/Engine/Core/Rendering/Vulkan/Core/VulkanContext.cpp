@@ -447,7 +447,7 @@ void VulkanContext::RecordCommandBuffer(uint32_t imageIndex, const FrameRenderDa
   m_currentCommandBuffer = m_commandBufferManager->GetCommandBuffer(imageIndex);
 
   std::vector<VkClearValue> clearValues(2);
-  clearValues[0].color = {{.0f, 1.0f, 1.0f, 1.0f}};
+  clearValues[0].color = {{1.0f, 1.0f, 1.0f, 1.0f}};
   clearValues[1].depthStencil = {1.0f, 0};
 
   m_commandBufferManager->BeginRenderPass(imageIndex,
@@ -540,38 +540,9 @@ bool VulkanContext::ShouldClose() const
 
 bool VulkanContext::InitWindow()
 {
-  // Check if SDL video subsystem is already initialized
-  Uint32 initializedSubsystems = SDL_WasInit(0);
-  bool videoAlreadyInit = (initializedSubsystems & SDL_INIT_VIDEO) != 0;
+  
 
-  if (!videoAlreadyInit)
-  {
-    SDL_ClearError();
-    int res = SDL_InitSubSystem(SDL_INIT_VIDEO);
-    if (res != 0)
-    {
-      const char* error = SDL_GetError();
-      std::cout << "SDL_InitSubSystem failed with code: " << res << ", error: '" << (error ? error : "NULL") << "'" << std::endl;
-
-      // Try to get more detailed error info
-      if (!error || strlen(error) == 0)
-      {
-        std::cout << "No SDL error message available. Possible causes:" << std::endl;
-        std::cout << "- Missing SDL3.dll or other dependencies" << std::endl;
-        std::cout << "- SDL already initialized elsewhere" << std::endl;
-        std::cout << "- Environment/configuration issues" << std::endl;
-      }
-
-      RENDER_ERROR("Failed to initialize SDL video subsystem: ", error ? error : "Unknown error");
-      return false;
-    }
-
-    std::cout << "SDL_InitSubSystem successful, version: " << SDL_GetVersion() << std::endl;
-  }
-  else
-  {
-    RENDER_DEBUG("SDL video subsystem already initialized, reusing existing initialization");
-  }
+  
 
   if (m_info->Fullscreen)
   {
@@ -591,7 +562,7 @@ bool VulkanContext::InitWindow()
         m_info->AppName.c_str(),
         m_info->Width,
         m_info->Height,
-        SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN);
+        SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE );
 
     RENDER_DEBUG("Windowed window created (offscreen): ", m_info->Width, "x", m_info->Height);
   }

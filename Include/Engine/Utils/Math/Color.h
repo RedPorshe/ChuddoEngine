@@ -1,10 +1,10 @@
 #pragma once
-#include "Vector4.h"
+#include "CoreMinimal.h"
 #include <cstdint>
-
+#include "AllMath.h"
 namespace CEMath
 {
-    class Color : public Vector4f
+    class Color : public Vector4D
     {
     public:
         float& r = x;
@@ -12,9 +12,9 @@ namespace CEMath
         float& b = z;
         float& a = w;
 
-        Color() : Vector4f(0,0,0,1) {}
-        Color(float r, float g, float b, float a = 1.0f) : Vector4f(r,g,b,a) {}
-        Color(const Vector4f& vec) : Vector4f(vec) {}
+        Color() : Vector4D(0,0,0,1) {}
+        Color(float r, float g, float b, float a = 1.0f) : Vector4D(r,g,b,a) {}
+        Color(const Vector4D& vec) : Vector4D(vec) {}
         
         float GetR() const { return x; }
         float GetG() const { return y; }
@@ -26,6 +26,9 @@ namespace CEMath
         void SetB(float b) { z = b; }
         void SetA(float a) { w = a; }
         
+        Vector3D toRGB() const {
+          return Vector3D(r, g, b);
+        }
         // sRGB преобразования
         Color LinearToSRGB() const
         {
@@ -88,7 +91,7 @@ namespace CEMath
             }
         }
         
-        Vector4f ToHSV() const
+        Vector4D ToHSV() const
         {
             float max = std::max(std::max(x, y), z);
             float min = std::min(std::min(x, y), z);
@@ -112,7 +115,7 @@ namespace CEMath
             float s = (max > 0.0f) ? (delta / max) : 0.0f;
             float v = max;
             
-            return Vector4f(h, s, v, w);
+            return Vector4D(h, s, v, w);
         }
         
         // Статические цвета

@@ -119,14 +119,14 @@
     CORE_LOG("[CE::LogTemp] Terrain generated: ", m_GridWidth, "x", m_GridHeight, " grid with ", static_cast<int>(indices.size() / 3), " triangles");
   }
 
-  float TerrainActor::GetHeightAtPosition(const CEMath::Vector3f& WorldPosition) const
+  float TerrainActor::GetHeightAtPosition(const CEMath::Vector3D& WorldPosition) const
   {
     // Validate heightmap exists and is properly initialized
     if (m_HeightMap.empty() || m_HeightMap[0].empty())
       return 0.0f;
 
     // Convert world position to terrain local position
-    CEMath::Vector3f localPos = WorldPosition - GetActorLocation();
+    CEMath::Vector3D localPos = WorldPosition - GetActorLocation();
 
     // Convert to grid coordinates
     float gridX = (localPos.x + m_TerrainOffsetX) / m_GridSpacing;

@@ -19,7 +19,8 @@
   void CStaticMeshComponent::SetMesh(const std::string& MeshPath)
   {
     m_MeshPath = MeshPath;
-
+    CreateCubeMesh();
+    return;
     if (!MeshPath.empty())
     {
       
