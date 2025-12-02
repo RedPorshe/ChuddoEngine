@@ -3,8 +3,9 @@
 #include <vector>
 
 #include "Engine/Core/Object.h"
+#include "Engine/Core/CoreTypes.h"
 #include "Engine/GamePlay/Actors/Actor.h"
-#include "glm/glm.hpp"
+
 
 
   class CMeshComponent;
@@ -19,7 +20,7 @@
     virtual void Update(float DeltaTime) override;
 
     // Get terrain height at world position (for heightmap collision)
-    float GetHeightAtPosition(const CEMath::Vector3f& WorldPosition) const;
+    float GetHeightAtPosition(const FVector& WorldPosition) const;
 
     // Check if heightmap is initialized and ready
     bool IsHeightmapReady() const

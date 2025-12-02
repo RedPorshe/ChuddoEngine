@@ -1,5 +1,6 @@
 #include "Engine/GamePlay/Components/SpringArmComponent.h"
 
+#include "Engine/Core/CoreTypes.h"
 #include "Engine/GamePlay/Actors/Pawn.h"
 #include "Engine/GamePlay/Components/CameraComponent.h"
 #include "Engine/Utils/Math/AllMath.h"
@@ -11,22 +12,25 @@
     CORE_DEBUG("SpringArmComponent created: ", NewName);
   }
 
-  CEMath::Vector3f CSpringArmComponent::GetCameraWorldLocation() const
+  FVector CSpringArmComponent::GetCameraWorldLocation() const
   {
-    
-    CEMath::Vector3f targetPosition = GetWorldLocation() + m_TargetOffset;
+
+    FVector targetPosition = GetWorldLocation() + m_TargetOffset;
+
+
+FQuat rotationQuat = GetRotationQuat();
+
 
     
-CEMath::Quaternionf rotationQuat = GetRotationQuat();
-    
 
     
-    CEMath::Vector3f cameraOffset = CEMath::Vector3f(0.0f, 0.0f, m_ArmLength);  // Z+ для Vulkan
 
-  
-    CEMath::Vector3f rotatedOffset = rotationQuat * cameraOffset;
+    FVector cameraOffset = FVector(0.0f, 0.0f, m_ArmLength);  // Z+ для Vulkan
 
-    
+
+    FVector rotatedOffset = rotationQuat * cameraOffset;
+
+
     return targetPosition + rotatedOffset;
   }
 
@@ -40,19 +44,20 @@ CEMath::Quaternionf rotationQuat = GetRotationQuat();
       CPawn* pawn = dynamic_cast<CPawn*>(GetOwner());
       if (pawn)
       {
-        CEMath::Vector3f controlRot = pawn->GetControlRotation();
-        
-        SetRotation(CEMath::Vector3f(controlRot.x, controlRot.y, 0.0f));
+        FVector controlRot = pawn->GetControlRotation();
+
+        SetRotation(FVector(controlRot.x, controlRot.y, 0.0f));
       }
     }
 
     
-    CEMath::Vector3f targetCameraPos = GetCameraWorldLocation();
 
-    
-    CEMath::Quaternionf rotationQuat = GetRotationQuat();
-    CEMath::Vector3f cameraOffset = CEMath::Vector3f(0.0f, 0.0f, m_ArmLength);
-    CEMath::Vector3f rotatedOffset = rotationQuat * cameraOffset;
+    FVector targetCameraPos = GetCameraWorldLocation();
+
+
+    FQuat rotationQuat = GetRotationQuat();
+    FVector cameraOffset = FVector(0.0f, 0.0f, m_ArmLength);
+    FVector rotatedOffset = rotationQuat * cameraOffset;
 
     CCameraComponent* camera = nullptr;
     ForEachComponent<CCameraComponent>([&camera](CCameraComponent* comp) {
@@ -67,7 +72,7 @@ CEMath::Quaternionf rotationQuat = GetRotationQuat();
     if (m_CameraLag > 0.0f)
     {
       float alpha = std::min(1.0f, DeltaTime / m_CameraLag);
-      m_CurrentCameraPosition = CEMath::Lerp(m_CurrentCameraPosition, targetCameraPos, alpha);
+      m_CurrentCameraPosition = m_CurrentCameraPosition + (targetCameraPos - m_CurrentCameraPosition) * alpha;
     }
     else
     {

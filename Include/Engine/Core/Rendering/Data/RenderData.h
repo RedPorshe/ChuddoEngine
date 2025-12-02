@@ -3,23 +3,23 @@
 #include <vector>
 
 #include "Engine/Core/Rendering/Data/Vertex.h"
-#include "Engine/Utils/Math/AllMath.h"
+#include "Engine/Core/CoreTypes.h"
 
 
   // Данные для одного рендер-объекта
   struct RenderObject
   {
     const FStaticMesh* mesh;
-    CEMath::Matrix4f transform;
-    CEMath::Vector3f color;
+    FMatrix transform;
+    FVector color;
   };
 
   // Данные камеры для рендеринга
   struct CameraData
   {
-    CEMath::Matrix4f viewMatrix;
-    CEMath::Matrix4f projectionMatrix;
-    CEMath::Vector3f position;
+    FMatrix viewMatrix;
+    FMatrix projectionMatrix;
+    FVector position;
 
     CameraData() : viewMatrix(1.0f), projectionMatrix(1.0f), position(0.0f)
     {
@@ -29,37 +29,37 @@
   // UBO структуры для шейдеров
   struct SceneUBO
   {
-    CEMath::Matrix4f view;
-    CEMath::Matrix4f proj;
-    CEMath::Vector3f cameraPos;
+    FMatrix view;
+    FMatrix proj;
+    FVector cameraPos;
 
     float padding[13];
   };
 
   struct ModelUBO
   {
-    CEMath::Matrix4f model;    
-    CEMath::Vector4f color;
+    FMatrix model;
+    FVector4 color;
     float padding[8];
   };
 
   struct LightingUBO
   {
-    CEMath::Vector4f lightPositions[4];
-    CEMath::Vector4f lightColors[4];
-    
-    CEMath::Vector4f ambientColor;  
+    FVector4 lightPositions[4];
+    FVector4 lightColors[4];
+
+    FVector4 ambientColor;
     int lightCount;
-    float padding[3];  
+    float padding[3];
 
     LightingUBO()
     {
       lightCount = 0;
-      ambientColor = CEMath::Vector4f(0.0f);
+      ambientColor = FVector4(0.0f);
       for (int i = 0; i < 4; i++)
       {
-        lightPositions[i] = CEMath::Vector4f(0.0f);
-        lightColors[i] = CEMath::Vector4f(0.0f);
+        lightPositions[i] = FVector4(0.0f);
+        lightColors[i] = FVector4(0.0f);
       }
       padding[0] = 0.0f;
       padding[1] = 0.0f;
@@ -108,11 +108,11 @@
       return ubo;
     }
 
-    ModelUBO GetModelUBO(const CEMath::Matrix4f& modelMatrix, const CEMath::Vector3f& meshColor) const
+    ModelUBO GetModelUBO(const FMatrix& modelMatrix, const FVector& meshColor) const
     {
       ModelUBO ubo{};
       ubo.model = modelMatrix;
-      ubo.color = CEMath::Vector4f(meshColor, 1.0f);
+      ubo.color = FVector4(meshColor, 1.0f);
       return ubo;
     }
 
@@ -120,9 +120,9 @@
     void SetupDefaultLighting()
     {
       lighting.lightCount = 1;
-      lighting.lightPositions[0] = CEMath::Vector4f(0.0f, 5.0f, 5.0f, 1.0f);  // Точечный свет
-      lighting.lightColors[0] = CEMath::Vector4f(1.0f, 1.0f, 1.0f, 1.0f);     // Белый свет
+      lighting.lightPositions[0] = FVector4(0.0f, 5.0f, 5.0f, 1.0f);  // Точечный свет
+      lighting.lightColors[0] = FVector4(1.0f, 1.0f, 1.0f, 1.0f);     // Белый свет
 
-      lighting.ambientColor = CEMath::Vector4f(0.2f, 0.2f, 0.2f, .3f);  // Слабый ambient
+      lighting.ambientColor = FVector4(0.2f, 0.2f, 0.2f, .3f);  // Слабый ambient
     }
   };

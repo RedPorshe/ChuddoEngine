@@ -13,14 +13,14 @@ class DescriptorManager
   DescriptorManager(std::shared_ptr<DeviceManager> deviceManager, std::shared_ptr<BufferManager> bufferManager);
   ~DescriptorManager();
 
-  // Удаляем копирование
+ 
   DescriptorManager(const DescriptorManager&) = delete;
   DescriptorManager& operator=(const DescriptorManager&) = delete;
 
   bool Initialize();
   void Shutdown();
 
-  // Создание дескрипторных наборов
+ 
   bool CreateDescriptorSets(VkDescriptorSetLayout layout, uint32_t count);
   VkDescriptorSet GetDescriptorSet(uint32_t imageIndex) const;
 

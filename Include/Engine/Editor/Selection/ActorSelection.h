@@ -1,8 +1,9 @@
 #pragma once
 
 #include <vector>
-#include <Engine/Utils/Math/AllMath.h>
 
+#include "CoreMinimal.h"
+#include "Engine/Core/CoreTypes.h"
 
     class CActor;
     class AActor;
@@ -35,13 +36,13 @@
         bool IsSelected(CActor* actor) const;
         CActor* GetPrimarySelectedActor() const;
 
-        bool IsGizmoHovered(const CEMath::Vector3f& rayOrigin, const CEMath::Vector3f& rayDirection, CCameraComponent* camera) const;
-        bool IsGizmoSelected(const CEMath::Vector3f& rayOrigin, const CEMath::Vector3f& rayDirection, CCameraComponent* camera) const;
-        void StartGizmoDrag(const CEMath::Vector3f& initialPosition);
-        void UpdateGizmoDrag(const CEMath::Vector3f& currentPosition, const CEMath::Vector3f& dragDelta);
+        bool IsGizmoHovered(const FVector& rayOrigin, const FVector& rayDirection, CCameraComponent* camera) const;
+        bool IsGizmoSelected(const FVector& rayOrigin, const FVector& rayDirection, CCameraComponent* camera) const;
+        void StartGizmoDrag(const FVector& initialPosition);
+        void UpdateGizmoDrag(const FVector& currentPosition, const FVector& dragDelta);
         void EndGizmoDrag();
 
-        void RenderGizmo(CEMath::Matrix4f viewMatrix, CEMath::Matrix4f projectionMatrix);
+        void RenderGizmo(FMatrix viewMatrix, FMatrix projectionMatrix);
 
     private:
         ActorSelection() = default;
@@ -49,17 +50,17 @@
         ActorSelection(const ActorSelection&) = delete;
         ActorSelection& operator=(const ActorSelection&) = delete;
 
-        void RenderTranslateGizmo(const CEMath::Matrix4f& mvp);
-        void RenderRotateGizmo(const CEMath::Matrix4f& mvp);
-        void RenderScaleGizmo(const CEMath::Matrix4f& mvp);
+        void RenderTranslateGizmo(const FMatrix& mvp);
+        void RenderRotateGizmo(const FMatrix& mvp);
+        void RenderScaleGizmo(const FMatrix& mvp);
 
-        CEMath::Vector3f GetGizmoPosition() const;
-        bool RayIntersectsGizmo(const CEMath::Vector3f& rayOrigin, const CEMath::Vector3f& rayDirection,
+        FVector GetGizmoPosition() const;
+        bool RayIntersectsGizmo(const FVector& rayOrigin, const FVector& rayDirection,
                                EGizmoAxis axis, float& distance) const;
 
         std::vector<CActor*> m_SelectedActors;
         EGizmoAxis m_GizmoAxis = EGizmoAxis::None;
         EGizmoMode m_GizmoMode = EGizmoMode::Translate;
         bool m_IsDragging = false;
-        CEMath::Vector3f m_InitialDragPosition;
+        FVector m_InitialDragPosition;
     };

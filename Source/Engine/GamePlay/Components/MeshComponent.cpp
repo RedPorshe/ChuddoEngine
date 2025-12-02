@@ -49,40 +49,40 @@
     // Вершины куба (позиция, нормаль, цвет (белый), UV)
     std::vector<Vertex> vertices = {
         // Передняя грань (Z+)
-        {CEMath::Vector3f(-0.5f, -0.5f, 0.5f), CEMath::Vector3f(0.0f, 0.0f, 1.0f), CEMath::Vector3f(1.0f), CEMath::Vector2f(0.0f, 0.0f)},
-        {CEMath::Vector3f(0.5f, -0.5f, 0.5f), CEMath::Vector3f(0.0f, 0.0f, 1.0f), CEMath::Vector3f(0.f, 0.f, 1.0f), CEMath::Vector2f(1.0f, 0.0f)},
-        {CEMath::Vector3f(0.5f, 0.5f, 0.5f), CEMath::Vector3f(0.0f, 0.0f, 1.0f), CEMath::Vector3f(0.f, 0.f, 1.0f), CEMath::Vector2f(1.0f, 1.0f)},
-        {CEMath::Vector3f(-0.5f, 0.5f, 0.5f), CEMath::Vector3f(0.0f, 0.0f, 1.0f), CEMath::Vector3f(0.f, 0.f, 1.0f), CEMath::Vector2f(0.0f, 1.0f)},
+        {FVector(-0.5f, -0.5f, 0.5f), FVector(0.0f, 0.0f, 1.0f), FVector(1.0f), FVector2D(0.0f, 0.0f)},
+        {FVector(0.5f, -0.5f, 0.5f), FVector(0.0f, 0.0f, 1.0f), FVector(0.f, 0.f, 1.0f), FVector2D(1.0f, 0.0f)},
+        {FVector(0.5f, 0.5f, 0.5f), FVector(0.0f, 0.0f, 1.0f), FVector(0.f, 0.f, 1.0f), FVector2D(1.0f, 1.0f)},
+        {FVector(-0.5f, 0.5f, 0.5f), FVector(0.0f, 0.0f, 1.0f), FVector(0.f, 0.f, 1.0f), FVector2D(0.0f, 1.0f)},
 
         // Задняя грань (Z-)
-        {CEMath::Vector3f(0.5f, -0.5f, -0.5f), CEMath::Vector3f(0.0f, 0.0f, -1.0f), CEMath::Vector3f(1.0f), CEMath::Vector2f(0.0f, 0.0f)},
-        {CEMath::Vector3f(-0.5f, -0.5f, -0.5f), CEMath::Vector3f(0.0f, 0.0f, -1.0f), CEMath::Vector3f(1.0f), CEMath::Vector2f(1.0f, 0.0f)},
-        {CEMath::Vector3f(-0.5f, 0.5f, -0.5f), CEMath::Vector3f(0.0f, 0.0f, -1.0f), CEMath::Vector3f(0.f, 0.f, 1.0f), CEMath::Vector2f(1.0f, 1.0f)},
-        {CEMath::Vector3f(0.5f, 0.5f, -0.5f), CEMath::Vector3f(0.0f, 0.0f, -1.0f), CEMath::Vector3f(1.0f), CEMath::Vector2f(0.0f, 1.0f)},
+        {FVector(0.5f, -0.5f, -0.5f), FVector(0.0f, 0.0f, -1.0f), FVector(1.0f), FVector2D(0.0f, 0.0f)},
+        {FVector(-0.5f, -0.5f, -0.5f), FVector(0.0f, 0.0f, -1.0f), FVector(1.0f), FVector2D(1.0f, 0.0f)},
+        {FVector(-0.5f, 0.5f, -0.5f), FVector(0.0f, 0.0f, -1.0f), FVector(0.f, 0.f, 1.0f), FVector2D(1.0f, 1.0f)},
+        {FVector(0.5f, 0.5f, -0.5f), FVector(0.0f, 0.0f, -1.0f), FVector(1.0f), FVector2D(0.0f, 1.0f)},
 
         // Верхняя грань (Y+)
-        {CEMath::Vector3f(-0.5f, 0.5f, 0.5f), CEMath::Vector3f(0.0f, 1.0f, 0.0f), CEMath::Vector3f(1.0f), CEMath::Vector2f(0.0f, 0.0f)},
-        {CEMath::Vector3f(0.5f, 0.5f, 0.5f), CEMath::Vector3f(0.0f, 1.0f, 0.0f), CEMath::Vector3f(0.f, 0.f, 1.0f), CEMath::Vector2f(1.0f, 0.0f)},
-        {CEMath::Vector3f(0.5f, 0.5f, -0.5f), CEMath::Vector3f(0.0f, 1.0f, 0.0f), CEMath::Vector3f(0.f, 0.f, 1.0f), CEMath::Vector2f(1.0f, 1.0f)},
-        {CEMath::Vector3f(-0.5f, 0.5f, -0.5f), CEMath::Vector3f(0.0f, 1.0f, 0.0f), CEMath::Vector3f(1.0f), CEMath::Vector2f(0.0f, 1.0f)},
+        {FVector(-0.5f, 0.5f, 0.5f), FVector(0.0f, 1.0f, 0.0f), FVector(1.0f), FVector2D(0.0f, 0.0f)},
+        {FVector(0.5f, 0.5f, 0.5f), FVector(0.0f, 1.0f, 0.0f), FVector(0.f, 0.f, 1.0f), FVector2D(1.0f, 0.0f)},
+        {FVector(0.5f, 0.5f, -0.5f), FVector(0.0f, 1.0f, 0.0f), FVector(0.f, 0.f, 1.0f), FVector2D(1.0f, 1.0f)},
+        {FVector(-0.5f, 0.5f, -0.5f), FVector(0.0f, 1.0f, 0.0f), FVector(1.0f), FVector2D(0.0f, 1.0f)},
 
         // Нижняя грань (Y-)
-        {CEMath::Vector3f(-0.5f, -0.5f, -0.5f), CEMath::Vector3f(0.0f, -1.0f, 0.0f), CEMath::Vector3f(1.0f), CEMath::Vector2f(0.0f, 0.0f)},
-        {CEMath::Vector3f(0.5f, -0.5f, -0.5f), CEMath::Vector3f(0.0f, -1.0f, 0.0f), CEMath::Vector3f(1.0f), CEMath::Vector2f(1.0f, 0.0f)},
-        {CEMath::Vector3f(0.5f, -0.5f, 0.5f), CEMath::Vector3f(0.0f, -1.0f, 0.0f), CEMath::Vector3f(0.f, 0.f, 1.0f), CEMath::Vector2f(1.0f, 1.0f)},
-        {CEMath::Vector3f(-0.5f, -0.5f, 0.5f), CEMath::Vector3f(0.0f, -1.0f, 0.0f), CEMath::Vector3f(0.f, 0.f, 1.0f), CEMath::Vector2f(0.0f, 1.0f)},
+        {FVector(-0.5f, -0.5f, -0.5f), FVector(0.0f, -1.0f, 0.0f), FVector(1.0f), FVector2D(0.0f, 0.0f)},
+        {FVector(0.5f, -0.5f, -0.5f), FVector(0.0f, -1.0f, 0.0f), FVector(1.0f), FVector2D(1.0f, 0.0f)},
+        {FVector(0.5f, -0.5f, 0.5f), FVector(0.0f, -1.0f, 0.0f), FVector(0.f, 0.f, 1.0f), FVector2D(1.0f, 1.0f)},
+        {FVector(-0.5f, -0.5f, 0.5f), FVector(0.0f, -1.0f, 0.0f), FVector(0.f, 0.f, 1.0f), FVector2D(0.0f, 1.0f)},
 
         // Правая грань (X+)
-        {CEMath::Vector3f(0.5f, -0.5f, 0.5f), CEMath::Vector3f(1.0f, 0.0f, 0.0f), CEMath::Vector3f(1.0f), CEMath::Vector2f(0.0f, 0.0f)},
-        {CEMath::Vector3f(0.5f, -0.5f, -0.5f), CEMath::Vector3f(1.0f, 0.0f, 0.0f), CEMath::Vector3f(0.f, 0.f, 1.0f), CEMath::Vector2f(1.0f, 0.0f)},
-        {CEMath::Vector3f(0.5f, 0.5f, -0.5f), CEMath::Vector3f(1.0f, 0.0f, 0.0f), CEMath::Vector3f(0.f, 0.f, 1.0f), CEMath::Vector2f(1.0f, 1.0f)},
-        {CEMath::Vector3f(0.5f, 0.5f, 0.5f), CEMath::Vector3f(1.0f, 0.0f, 0.0f), CEMath::Vector3f(1.0f), CEMath::Vector2f(0.0f, 1.0f)},
+        {FVector(0.5f, -0.5f, 0.5f), FVector(1.0f, 0.0f, 0.0f), FVector(1.0f), FVector2D(0.0f, 0.0f)},
+        {FVector(0.5f, -0.5f, -0.5f), FVector(1.0f, 0.0f, 0.0f), FVector(0.f, 0.f, 1.0f), FVector2D(1.0f, 0.0f)},
+        {FVector(0.5f, 0.5f, -0.5f), FVector(1.0f, 0.0f, 0.0f), FVector(0.f, 0.f, 1.0f), FVector2D(1.0f, 1.0f)},
+        {FVector(0.5f, 0.5f, 0.5f), FVector(1.0f, 0.0f, 0.0f), FVector(1.0f), FVector2D(0.0f, 1.0f)},
 
         // Левая грань (X-)
-        {CEMath::Vector3f(-0.5f, -0.5f, -0.5f), CEMath::Vector3f(-1.0f, 0.0f, 0.0f), CEMath::Vector3f(1.0f), CEMath::Vector2f(0.0f, 0.0f)},
-        {CEMath::Vector3f(-0.5f, -0.5f, 0.5f), CEMath::Vector3f(-1.0f, 0.0f, 0.0f), CEMath::Vector3f(1.0f), CEMath::Vector2f(1.0f, 0.0f)},
-        {CEMath::Vector3f(-0.5f, 0.5f, 0.5f), CEMath::Vector3f(-1.0f, 0.0f, 0.0f), CEMath::Vector3f(0.f, 0.f, 1.0f), CEMath::Vector2f(1.0f, 1.0f)},
-        {CEMath::Vector3f(-0.5f, 0.5f, -0.5f), CEMath::Vector3f(-1.0f, 0.0f, 0.0f), CEMath::Vector3f(0.f, 0.f, 1.0f), CEMath::Vector2f(0.0f, 1.0f)}};
+        {FVector(-0.5f, -0.5f, -0.5f), FVector(-1.0f, 0.0f, 0.0f), FVector(1.0f), FVector2D(0.0f, 0.0f)},
+        {FVector(-0.5f, -0.5f, 0.5f), FVector(-1.0f, 0.0f, 0.0f), FVector(1.0f), FVector2D(1.0f, 0.0f)},
+        {FVector(-0.5f, 0.5f, 0.5f), FVector(-1.0f, 0.0f, 0.0f), FVector(0.f, 0.f, 1.0f), FVector2D(1.0f, 1.0f)},
+        {FVector(-0.5f, 0.5f, -0.5f), FVector(-1.0f, 0.0f, 0.0f), FVector(0.f, 0.f, 1.0f), FVector2D(0.0f, 1.0f)}};
 
     // Индексы куба (против часовой стрелки для лицевой стороны)
     std::vector<uint32_t> indices = {
@@ -101,10 +101,10 @@
 
     m_Mesh.vertices = vertices;
     m_Mesh.indices = indices;
-    m_Mesh.color = CEMath::Vector3f(1.0f);
+    m_Mesh.color = FVector(1.0f);
   }
 
-  CEMath::Matrix4f CMeshComponent::GetRenderTransform() const
+  FMatrix CMeshComponent::GetRenderTransform() const
   {
     return GetWorldTransform();
   }

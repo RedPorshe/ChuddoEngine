@@ -17,7 +17,7 @@ struct SDL_Window;
     SwapchainManager(VkInstance instance, VkSurfaceKHR surface, std::shared_ptr<DeviceManager> deviceManager, SDL_Window* window);
     ~SwapchainManager();
 
-    // Удаляем копирование
+    
     SwapchainManager(const SwapchainManager&) = delete;
     SwapchainManager& operator=(const SwapchainManager&) = delete;
 

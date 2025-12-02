@@ -27,10 +27,10 @@
       GenerateTerrainMesh();
 
       // Position terrain at origin
-      m_TerrainMesh->SetRelativePosition(CEMath::Vector3f(0.0f, -2.0f, 0.0f));
+      m_TerrainMesh->SetRelativePosition(FVector(0.0f, -2.0f, 0.0f));
 
       // Set terrain color to green
-      m_TerrainMesh->SetColor(CEMath::Vector4f(0.2f, 0.7f, 0.2f, 1.0f));
+      m_TerrainMesh->SetColor(FVector4(0.2f, 0.7f, 0.2f, 1.0f));
     }
 
     CORE_LOG("[CE::LogTemp] Terrain generated with ", m_GridWidth, "x", m_GridHeight, " heightmap");
@@ -77,10 +77,10 @@
         m_HeightMap[z][x] = height;
 
         Vertex vertex;
-        vertex.position = CEMath::Vector3f(posX, height, posZ);
-        vertex.normal = CEMath::Vector3f(0.0f, 1.0f, 0.0f);  // Default up normal
-        vertex.texCoord = CEMath::Vector2f(x * 0.1f, z * 0.1f);
-        vertex.color = CEMath::Vector3f(0.2f, 0.7f, 0.2f);
+        vertex.position = FVector(posX, height, posZ);
+        vertex.normal = FVector(0.0f, 1.0f, 0.0f);  // Default up normal
+        vertex.texCoord = FVector2D(x * 0.1f, z * 0.1f);
+        vertex.color = FVector(0.2f, 0.7f, 0.2f);
 
         vertices.push_back(vertex);
       }
@@ -112,7 +112,7 @@
     FStaticMesh terrainMesh;
     terrainMesh.vertices = vertices;
     terrainMesh.indices = indices;
-    terrainMesh.color = CEMath::Vector3f(0.2f, 0.7f, 0.2f);
+    terrainMesh.color = FVector(0.2f, 0.7f, 0.2f);
 
     m_TerrainMesh->SetStaticMesh(terrainMesh);
 

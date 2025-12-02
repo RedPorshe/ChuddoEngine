@@ -35,39 +35,39 @@
     BufferManager(std::shared_ptr<DeviceManager> deviceManager);
     ~BufferManager();
 
-    // Удаляем копирование
+   
     BufferManager(const BufferManager&) = delete;
     BufferManager& operator=(const BufferManager&) = delete;
 
     bool Initialize();
     void Shutdown();
 
-    // Создание буферов
+    
     bool CreateVertexBuffer(const std::string& name, const std::vector<Vertex>& vertices);
     bool CreateIndexBuffer(const std::string& name, const std::vector<uint32_t>& indices);
     bool CreateUniformBuffer(const std::string& name, VkDeviceSize size);
     bool CreateStagingBuffer(const std::string& name, VkDeviceSize size);
 
-    // Обновление данных буферов
+   
     bool UpdateVertexBuffer(const std::string& name, const std::vector<Vertex>& vertices);
     bool UpdateIndexBuffer(const std::string& name, const std::vector<uint32_t>& indices);
     bool UpdateUniformBuffer(const std::string& name, const void* data, VkDeviceSize size);
 
-    // Копирование данных между буферами
+    
     void CopyBuffer(const std::string& srcName, const std::string& dstName, VkDeviceSize size);
-    void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);  // Добавлен перегруженный метод
+    void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size); 
 
-    // Получение буферов
+    
     VkBuffer GetBuffer(const std::string& name) const;
     VkDeviceSize GetBufferSize(const std::string& name) const;
     BufferType GetBufferType(const std::string& name) const;
     VkDescriptorBufferInfo GetBufferInfo(const std::string& name) const;
 
-    // Управление памятью
+    
     void* MapBuffer(const std::string& name);
     void UnmapBuffer(const std::string& name);
 
-    // Удаление буферов
+    
     void DestroyBuffer(const std::string& name);
     void DestroyAllBuffers();
 

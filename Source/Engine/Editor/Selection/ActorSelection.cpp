@@ -3,6 +3,7 @@
 #include "Engine/GamePlay/Actors/Actor.h"
 #include "Engine/GamePlay/Components/CameraComponent.h"
 #include "Engine/Core/Rendering/Vulkan/Core/VulkanContext.h"
+#include "Engine/Core/CoreTypes.h"
 
 
   ActorSelection& ActorSelection::Get()
@@ -60,7 +61,7 @@
     return m_SelectedActors.empty() ? nullptr : m_SelectedActors.front();
   }
 
-  bool ActorSelection::IsGizmoHovered(const CEMath::Vector3f& rayOrigin, const CEMath::Vector3f& rayDirection, CCameraComponent* camera) const
+  bool ActorSelection::IsGizmoHovered(const FVector& rayOrigin, const FVector& rayDirection, CCameraComponent* camera) const
   {
     if (m_SelectedActors.empty()) return false;
 
@@ -86,7 +87,7 @@
     return closestAxis != EGizmoAxis::None;
   }
 
-  bool ActorSelection::IsGizmoSelected(const CEMath::Vector3f& rayOrigin, const CEMath::Vector3f& rayDirection, CCameraComponent* camera) const
+  bool ActorSelection::IsGizmoSelected(const FVector& rayOrigin, const FVector& rayDirection, CCameraComponent* camera) const
   {
     if (m_SelectedActors.empty()) return false;
 
@@ -94,14 +95,14 @@
     return RayIntersectsGizmo(rayOrigin, rayDirection, m_GizmoAxis, distance);
   }
 
-  void ActorSelection::StartGizmoDrag(const CEMath::Vector3f& initialPosition)
+  void ActorSelection::StartGizmoDrag(const FVector& initialPosition)
   {
     m_IsDragging = true;
     m_InitialDragPosition = initialPosition;
     CORE_DEBUG("Started gizmo drag");
   }
 
-  void ActorSelection::UpdateGizmoDrag(const CEMath::Vector3f& currentPosition, const CEMath::Vector3f& dragDelta)
+  void ActorSelection::UpdateGizmoDrag(const FVector& currentPosition, const FVector& dragDelta)
   {
     if (!m_IsDragging || m_SelectedActors.empty()) return;
 
@@ -152,13 +153,13 @@
     CORE_DEBUG("Ended gizmo drag");
   }
 
-  void ActorSelection::RenderGizmo(CEMath::Matrix4f viewMatrix, CEMath::Matrix4f projectionMatrix)
+  void ActorSelection::RenderGizmo(FMatrix viewMatrix, FMatrix projectionMatrix)
   {
     if (m_SelectedActors.empty()) return;
 
-    CEMath::Vector3f gizmoPos = GetGizmoPosition();
-    CEMath::Matrix4f modelMatrix = CEMath::Matrix4f::Translation(gizmoPos);
-    CEMath::Matrix4f mvp = projectionMatrix * viewMatrix * modelMatrix;
+    FVector gizmoPos = GetGizmoPosition();
+    FMatrix modelMatrix = FMatrix::Translation(gizmoPos);
+    FMatrix mvp = projectionMatrix * viewMatrix * modelMatrix;
 
     switch (m_GizmoMode)
     {
@@ -176,33 +177,33 @@
     }
   }
 
-  void ActorSelection::RenderTranslateGizmo(const CEMath::Matrix4f& mvp)
+  void ActorSelection::RenderTranslateGizmo(const FMatrix& mvp)
   {
     // TODO: Implement gizmo rendering using Vulkan
     // This would involve creating vertex buffers for the gizmo geometry
     // and rendering them with appropriate colors based on selection state
   }
 
-  void ActorSelection::RenderRotateGizmo(const CEMath::Matrix4f& mvp)
+  void ActorSelection::RenderRotateGizmo(const FMatrix& mvp)
   {
     // TODO: Implement rotation gizmo rendering
   }
 
-  void ActorSelection::RenderScaleGizmo(const CEMath::Matrix4f& mvp)
+  void ActorSelection::RenderScaleGizmo(const FMatrix& mvp)
   {
     // TODO: Implement scale gizmo rendering
   }
 
-  CEMath::Vector3f ActorSelection::GetGizmoPosition() const
+  FVector ActorSelection::GetGizmoPosition() const
   {
-    if (m_SelectedActors.empty()) return CEMath::Vector3f::Zero();
+    if (m_SelectedActors.empty()) return FVector::Zero();
 
     // For now, use the position of the primary selected actor
     CActor* primary = GetPrimarySelectedActor();
     return primary ? primary->GetActorLocation() : CEMath::Vector3f::Zero();
   }
 
-  bool ActorSelection::RayIntersectsGizmo(const CEMath::Vector3f& rayOrigin, const CEMath::Vector3f& rayDirection,
+  bool ActorSelection::RayIntersectsGizmo(const FVector& rayOrigin, const FVector& rayDirection,
                                          EGizmoAxis axis, float& distance) const
   {
     // TODO: Implement ray-gizmo intersection tests

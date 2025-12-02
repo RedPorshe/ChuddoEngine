@@ -36,5 +36,6 @@ Since the system is inspired by Unreal Engine (inheritance from CObject, like UO
 1. For structs, prefix F (including math: in CoreMinimal.h, include CoreTypes.h, and define using CEMath::Vector2f = FVector2D; etc. Update all files using math to use new types from CoreTypes).
 2. For enums, prefix E.
 3. For interfaces, prefix I.
-4. For main classes (object, actor, pawn, character, controller, etc.), prefix C (like U in Unreal).
+4. For classes (including UI widgets like buttons, panels, windows), prefix C (like U in Unreal for UObject-derived classes).
 - When writing C++ code, classes cannot be named without these prefixes.
+- Examples: CSlateWidget, CButton, CTextBlock, CPanel, CWindow, etc.

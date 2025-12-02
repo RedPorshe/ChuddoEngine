@@ -29,26 +29,26 @@ CLevel* CActor::GetLevel() const
   return nullptr;
 }
 
-CEMath::Vector3f CActor::GetActorForwardVector() const
+FVector CActor::GetActorForwardVector() const
 {
-  return m_RootComponent ? m_RootComponent->GetForwardVector() : CEMath::Vector3f(0.0f, 0.0f, 1.0f);
+  return m_RootComponent ? m_RootComponent->GetForwardVector() : FVector(0.0f, 0.0f, 1.0f);
 }
-CEMath::Vector3f CActor::GetActorRightVector() const
+FVector CActor::GetActorRightVector() const
 {
-  return m_RootComponent ? m_RootComponent->GetRightVector() : CEMath::Vector3f(1.0f, 0.0f, 0.0f);
+  return m_RootComponent ? m_RootComponent->GetRightVector() : FVector(1.0f, 0.0f, 0.0f);
 }
 
-CEMath::Vector3f CActor::GetActorUpVector() const
+FVector CActor::GetActorUpVector() const
 {
-  return m_RootComponent ? m_RootComponent->GetUpVector() : CEMath::Vector3f(0.0f, 1.0f, 0.0f);
+  return m_RootComponent ? m_RootComponent->GetUpVector() : FVector(0.0f, 1.0f, 0.0f);
 }
 
 void CActor::SetActorLocation(const float x, const float y, const float z)
 {
-  SetActorLocation(CEMath::Vector3f(x, y, z));
+  SetActorLocation(FVector(x, y, z));
 }
 
-void CActor::SetActorLocation(const CEMath::Vector3f& NewLocation)
+void CActor::SetActorLocation(const FVector& NewLocation)
 {
   if (m_RootComponent && !m_RootComponent->GetParent())
   {
@@ -56,7 +56,7 @@ void CActor::SetActorLocation(const CEMath::Vector3f& NewLocation)
   }
 }
 
-void CActor::SetActorRotation(const CEMath::Vector3f& NewRotation)
+void CActor::SetActorRotation(const FVector& NewRotation)
 {
   if (m_RootComponent && !m_RootComponent->GetParent())
   {
@@ -66,10 +66,10 @@ void CActor::SetActorRotation(const CEMath::Vector3f& NewRotation)
 
 void CActor::SetActorScale(const float& NewScale)
 {
-  SetActorScale(CEMath::Vector3f(NewScale, NewScale, NewScale));
+  SetActorScale(FVector(NewScale, NewScale, NewScale));
 }
 
-void CActor::SetActorScale(const CEMath::Vector3f& NewScale)
+void CActor::SetActorScale(const FVector& NewScale)
 {
   if (m_RootComponent && !m_RootComponent->GetParent())
   {
@@ -77,19 +77,19 @@ void CActor::SetActorScale(const CEMath::Vector3f& NewScale)
   }
 }
 
-CEMath::Vector3f CActor::GetActorLocation() const
+FVector CActor::GetActorLocation() const
 {
-  return m_RootComponent ? m_RootComponent->GetWorldLocation() : CEMath::Vector3f(0.0f);
+  return m_RootComponent ? m_RootComponent->GetWorldLocation() : FVector(0.0f);
 }
 
-CEMath::Vector3f CActor::GetActorRotation() const
+FVector CActor::GetActorRotation() const
 {
-  return m_RootComponent ? m_RootComponent->GetRotation() : CEMath::Vector3f(0.0f);
+  return m_RootComponent ? m_RootComponent->GetRotation() : FVector(0.0f);
 }
 
-CEMath::Vector3f CActor::GetActorScale() const
+FVector CActor::GetActorScale() const
 {
-  return m_RootComponent ? m_RootComponent->GetScale() : CEMath::Vector3f(1.0f);
+  return m_RootComponent ? m_RootComponent->GetScale() : FVector(1.0f);
 }
 
 void CActor::BeginPlay()

@@ -540,35 +540,65 @@ bool VulkanContext::ShouldClose() const
 
 bool VulkanContext::InitWindow()
 {
-  if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0)
-    return false;
+  // Check if SDL video subsystem is already initialized
+  Uint32 initializedSubsystems = SDL_WasInit(0);
+  bool videoAlreadyInit = (initializedSubsystems & SDL_INIT_VIDEO) != 0;
+
+  if (!videoAlreadyInit)
+  {
+    SDL_ClearError();
+    int res = SDL_InitSubSystem(SDL_INIT_VIDEO);
+    if (res != 0)
+    {
+      const char* error = SDL_GetError();
+      std::cout << "SDL_InitSubSystem failed with code: " << res << ", error: '" << (error ? error : "NULL") << "'" << std::endl;
+
+      // Try to get more detailed error info
+      if (!error || strlen(error) == 0)
+      {
+        std::cout << "No SDL error message available. Possible causes:" << std::endl;
+        std::cout << "- Missing SDL3.dll or other dependencies" << std::endl;
+        std::cout << "- SDL already initialized elsewhere" << std::endl;
+        std::cout << "- Environment/configuration issues" << std::endl;
+      }
+
+      RENDER_ERROR("Failed to initialize SDL video subsystem: ", error ? error : "Unknown error");
+      return false;
+    }
+
+    std::cout << "SDL_InitSubSystem successful, version: " << SDL_GetVersion() << std::endl;
+  }
+  else
+  {
+    RENDER_DEBUG("SDL video subsystem already initialized, reusing existing initialization");
+  }
 
   if (m_info->Fullscreen)
   {
-    
+
     m_window = SDL_CreateWindow(
         m_info->AppName.c_str(),
         0,
         0,
-        SDL_WINDOW_VULKAN | SDL_WINDOW_FULLSCREEN);
+        SDL_WINDOW_VULKAN | SDL_WINDOW_FULLSCREEN | SDL_WINDOW_HIDDEN);
 
-    RENDER_DEBUG("Borderless fullscreen window created");
+    RENDER_DEBUG("Borderless fullscreen window created (offscreen)");
   }
   else
   {
-   
+
     m_window = SDL_CreateWindow(
         m_info->AppName.c_str(),
         m_info->Width,
         m_info->Height,
-        SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
+        SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN);
 
-    RENDER_DEBUG("Windowed window created : ", m_info->Width, "x", m_info->Height);
+    RENDER_DEBUG("Windowed window created (offscreen): ", m_info->Width, "x", m_info->Height);
   }
 
   if (!m_window)
   {
-    RENDER_DEBUG("Failed to Create window");
+    RENDER_ERROR("Failed to Create window: ", SDL_GetError());
     SDL_Quit();
     return false;
   }

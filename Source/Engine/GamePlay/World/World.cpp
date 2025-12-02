@@ -1,5 +1,6 @@
 #include "Engine/GamePlay/World/World.h"
 
+#include "Engine/Core/CoreTypes.h"
 #include "Engine/Core/Rendering/Data/RenderData.h"
 #include "Engine/GamePlay/Actors/Actor.h"
 #include "Engine/GamePlay/Components/CameraComponent.h"
@@ -187,15 +188,15 @@ void CWorld::CollectRenderData(FrameRenderData& renderData)
   else
   {
     CameraData defaultCam;
-    CEMath::Vector3f defaultCamPosition = CEMath::Vector3f(0.0f, 2.0f, 10.0f);
-    CEMath::Vector3f defaultCameraUp = CEMath::Vector3f(0.0f, 1.0f, 0.0f);
-    CEMath::Vector3f defaultCameraTarget = CEMath::Vector3f(0.0f, 0.0f, 0.0f);
+    FVector defaultCamPosition = FVector(0.0f, 2.0f, 10.0f);
+    FVector defaultCameraUp = FVector(0.0f, 1.0f, 0.0f);
+    FVector defaultCameraTarget = FVector(0.0f, 0.0f, 0.0f);
 
-    defaultCam.viewMatrix = CEMath::Matrix4f::LookAt(
+    defaultCam.viewMatrix = FMatrix::LookAt(
         defaultCamPosition,
         defaultCameraTarget,
         defaultCameraUp);
-    defaultCam.projectionMatrix = CEMath::Matrix4f::Perspective (
+    defaultCam.projectionMatrix = FMatrix::Perspective (
         CEMath::ToRadians(45.0f), 16.0f / 9.0f, 0.1f, 1000.0f);
     defaultCam.position = defaultCamPosition;
 
@@ -228,10 +229,10 @@ void CWorld::CollectRenderData(FrameRenderData& renderData)
   {
 
     lighting.lightCount = 1;
-    lighting.lightPositions[0] = CEMath::Vector4f(5.0f, 5.0f, 5.0f, 1.0f);
-    lighting.lightColors[0] = CEMath::Vector4f(1.0f, 1.0f, 1.0f, 1.0f);
+    lighting.lightPositions[0] = FVector4(5.0f, 5.0f, 5.0f, 1.0f);
+    lighting.lightColors[0] = FVector4(1.0f, 1.0f, 1.0f, 1.0f);
     lighting.lightColors[0].w = 2.0f;
-    lighting.ambientColor = CEMath::Vector4f(0.2f, 0.2f, 0.2f, .2f);
+    lighting.ambientColor = FVector4(0.2f, 0.2f, 0.2f, .2f);
   }
 }
 

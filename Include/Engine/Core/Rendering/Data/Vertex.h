@@ -4,24 +4,24 @@
 #include <array>
 #include <glm/glm.hpp>
 #include <vector>
-#include "Engine/Utils/Math/AllMath.h"
+#include "Engine/Core/CoreTypes.h"
 
 
   struct Vertex
   {
-    CEMath::Vector3f position;
-    CEMath::Vector3f  normal;
-    CEMath::Vector3f  color;
-    CEMath::Vector2f  texCoord;
+    FVector position;
+    FVector  normal;
+    FVector  color;
+    FVector2D  texCoord;
     Vertex()
     {
     }
-    Vertex(const CEMath::Vector3f& pos, const CEMath::Vector3f& norm = CEMath::Vector3f(0.0f), const CEMath::Vector2f& uv = CEMath::Vector2f(0.0f))
+    Vertex(const FVector& pos, const FVector& norm = FVector(0.0f), const FVector2D& uv = FVector2D(0.0f))
         : position(pos), normal(norm), texCoord(uv)
     {
     }
-    Vertex(const CEMath::Vector3f& pos, const CEMath::Vector3f& norm = CEMath::Vector3f(0.0f),
-           const CEMath::Vector3f& col = CEMath::Vector3f(1.0f), const CEMath::Vector2f& uv = CEMath::Vector2f(0.0f))
+    Vertex(const FVector& pos, const FVector& norm = FVector(0.0f),
+           const FVector& col = FVector(1.0f), const FVector2D& uv = FVector2D(0.0f))
         : position(pos), normal(norm), color(col), texCoord(uv)
     {
     }
@@ -38,17 +38,17 @@
     }
   };
 
-  // Простой меш - массив вершин и индексов
+  
   struct FStaticMesh
   {
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;
 
-    // Матрица трансформации для рендеринга
-    CEMath::Matrix4f transform{1.0f};
+    
+    FMatrix transform{1.0f};
 
-    // Материал (пока базовый)
-    CEMath::Vector3f color{1.0f, 1.0f, 1.0f};
+   
+    FVector color{1.0f, 1.0f, 1.0f};
 
     FStaticMesh() = default;
     FStaticMesh(const std::vector<Vertex>& verts, const std::vector<uint32_t>& inds)

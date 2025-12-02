@@ -3,7 +3,7 @@
 #include <unordered_map>
 #include <SDL3/SDL.h>
 #include "CoreMinimal.h"
-#include "Engine/Utils/Math/AllMath.h"
+#include "Engine/Core/CoreTypes.h"
 
 typedef struct GLFWwindow GLFWwindow;
 
@@ -23,11 +23,11 @@ typedef struct GLFWwindow GLFWwindow;
     void Update(float DeltaTime);
 
     bool IsKeyPressed(int key) const;
-    CEMath::Vector2f GetMousePosition() const
+    FVector2D GetMousePosition() const
     {
       return m_MousePosition;
     }
-    CEMath::Vector2f GetMouseDelta() const
+    FVector2D GetMouseDelta() const
     {
       return m_MouseDelta;
     }
@@ -46,9 +46,9 @@ typedef struct GLFWwindow GLFWwindow;
 
     std::unordered_map<int, bool> m_KeyStates;
 
-    CEMath::Vector2f m_MousePosition{0.0f, 0.0f};
-    CEMath::Vector2f m_LastMousePosition{0.0f, 0.0f};
-    CEMath::Vector2f m_MouseDelta{0.0f, 0.0f};
+    FVector2D m_MousePosition{0.0f, 0.0f};
+    FVector2D m_LastMousePosition{0.0f, 0.0f};
+    FVector2D m_MouseDelta{0.0f, 0.0f};
     bool m_FirstMouse = true;
     bool bIsFPS{true};
     static CInputSystem* s_Instance;

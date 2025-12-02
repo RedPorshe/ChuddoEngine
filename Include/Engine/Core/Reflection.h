@@ -134,11 +134,11 @@
       else if constexpr (std::is_same_v<T, float>) return EPropertyType::Float;
       else if constexpr (std::is_same_v<T, double>) return EPropertyType::Double;
       else if constexpr (std::is_same_v<T, FString>) return EPropertyType::String;
-      else if constexpr (std::is_same_v<T, CEMath::Vector2f>) return EPropertyType::Vector2;
-      else if constexpr (std::is_same_v<T, CEMath::Vector3f>) return EPropertyType::Vector3;
-      else if constexpr (std::is_same_v<T, CEMath::Vector4f>) return EPropertyType::Vector4;
-      else if constexpr (std::is_same_v<T, CEMath::Quaternionf>) return EPropertyType::Quaternion;
-      else if constexpr (std::is_same_v<T, CEMath::Color>) return EPropertyType::Color;
+      else if constexpr (std::is_same_v<T, FVector2D>) return EPropertyType::Vector2;
+      else if constexpr (std::is_same_v<T, FVector>) return EPropertyType::Vector3;
+      else if constexpr (std::is_same_v<T, FVector4>) return EPropertyType::Vector4;
+      else if constexpr (std::is_same_v<T, FQuat>) return EPropertyType::Quaternion;
+      else if constexpr (std::is_same_v<T, FLinearColor>) return EPropertyType::Color;
       else return EPropertyType::Custom;
     }
 
@@ -149,34 +149,34 @@
       else if constexpr (std::is_same_v<T, float>) return std::stof(str);
       else if constexpr (std::is_same_v<T, double>) return std::stod(str);
       else if constexpr (std::is_same_v<T, FString>) return FString(str.c_str());
-      else if constexpr (std::is_same_v<T, CEMath::Vector2f>)
+      else if constexpr (std::is_same_v<T, FVector2D>)
       {
-        CEMath::Vector2f v;
+        FVector2D v;
         sscanf(str.c_str(), "%f,%f", &v.x, &v.y);
         return v;
       }
-      else if constexpr (std::is_same_v<T, CEMath::Vector3f>)
+      else if constexpr (std::is_same_v<T, FVector>)
       {
-        CEMath::Vector3f v;
+        FVector v;
         sscanf(str.c_str(), "%f,%f,%f", &v.x, &v.y, &v.z);
         return v;
       }
-      else if constexpr (std::is_same_v<T, CEMath::Vector4f>)
+      else if constexpr (std::is_same_v<T, FVector4>)
       {
-        CEMath::Vector4f v;
+        FVector4 v;
         sscanf(str.c_str(), "%f,%f,%f,%f", &v.x, &v.y, &v.z, &v.w);
         return v;
       }
-      else if constexpr (std::is_same_v<T, CEMath::Quaternionf>)
+      else if constexpr (std::is_same_v<T, FQuat>)
       {
-        CEMath::Quaternionf q;
+        FQuat q;
         sscanf(str.c_str(), "%f,%f,%f,%f", &q.x, &q.y, &q.z, &q.w);
         return q;
       }
-      else if constexpr (std::is_same_v<T, CEMath::Color>)
+      else if constexpr (std::is_same_v<T, FLinearColor>)
       {
-        CEMath::Color c;
-        sscanf(str.c_str(), "%f,%f,%f,%f", &c.x, &c.y, &c.z, &c.w);
+        FLinearColor c;
+        sscanf(str.c_str(), "%f,%f,%f,%f", &c.r, &c.g, &c.b, &c.a);
         return c;
       }
       else
@@ -193,11 +193,11 @@
       else if constexpr (std::is_same_v<T, float>) return std::to_string(val);
       else if constexpr (std::is_same_v<T, double>) return std::to_string(val);
       else if constexpr (std::is_same_v<T, FString>) return std::string(val.c_str());
-      else if constexpr (std::is_same_v<T, CEMath::Vector2f>) return std::to_string(val.x) + "," + std::to_string(val.y);
-      else if constexpr (std::is_same_v<T, CEMath::Vector3f>) return std::to_string(val.x) + "," + std::to_string(val.y) + "," + std::to_string(val.z);
-      else if constexpr (std::is_same_v<T, CEMath::Vector4f>) return std::to_string(val.x) + "," + std::to_string(val.y) + "," + std::to_string(val.z) + "," + std::to_string(val.w);
-      else if constexpr (std::is_same_v<T, CEMath::Quaternionf>) return std::to_string(val.x) + "," + std::to_string(val.y) + "," + std::to_string(val.z) + "," + std::to_string(val.w);
-      else if constexpr (std::is_same_v<T, CEMath::Color>) return std::to_string(val.GetR()) + "," + std::to_string(val.GetG()) + "," + std::to_string(val.GetB()) + "," + std::to_string(val.GetA());
+      else if constexpr (std::is_same_v<T, FVector2D>) return std::to_string(val.x) + "," + std::to_string(val.y);
+      else if constexpr (std::is_same_v<T, FVector>) return std::to_string(val.x) + "," + std::to_string(val.y) + "," + std::to_string(val.z);
+      else if constexpr (std::is_same_v<T, FVector4>) return std::to_string(val.x) + "," + std::to_string(val.y) + "," + std::to_string(val.z) + "," + std::to_string(val.w);
+      else if constexpr (std::is_same_v<T, FQuat>) return std::to_string(val.x) + "," + std::to_string(val.y) + "," + std::to_string(val.z) + "," + std::to_string(val.w);
+      else if constexpr (std::is_same_v<T, FLinearColor>) return std::to_string(val.GetR()) + "," + std::to_string(val.GetG()) + "," + std::to_string(val.GetB()) + "," + std::to_string(val.GetA());
       else return "custom";
     }
   };

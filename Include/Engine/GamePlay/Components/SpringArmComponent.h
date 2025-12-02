@@ -10,7 +10,7 @@
     virtual ~CSpringArmComponent() = default;
 
     // Настройки spring arm
-    void SetTargetOffset(const CEMath::Vector3f& Offset)
+    void SetTargetOffset(const FVector& Offset)
     {
       m_TargetOffset = Offset;
     }
@@ -27,7 +27,7 @@
       m_bUsePawnControlRotation = bUse;
     }
 
-    const CEMath::Vector3f& GetTargetOffset() const
+    const FVector& GetTargetOffset() const
     {
       return m_TargetOffset;
     }
@@ -45,15 +45,15 @@
     }
 
     // Получение конечной позиции камеры
-    CEMath::Vector3f GetCameraWorldLocation() const;
+    FVector GetCameraWorldLocation() const;
 
     virtual void Update(float DeltaTime) override;
 
    private:
-    CEMath::Vector3f m_TargetOffset{0.0f, -0.9f, 1.0f};  // Смещение от цели (Vulkan: Y+ вверх)
+    FVector m_TargetOffset{0.0f, -0.9f, 1.0f};  // Смещение от цели (Vulkan: Y+ вверх)
     float m_ArmLength = 5.0f;                    // Длина "руки" камеры
     float m_CameraLag = 0.05f;                   // Задержка движения камеры
     bool m_bUsePawnControlRotation = true;       // Использовать вращение от Pawn
 
-    CEMath::Vector3f m_CurrentCameraPosition{0.0f, 0.0f, 0.0f};
+    FVector m_CurrentCameraPosition{0.0f, 0.0f, 0.0f};
   };

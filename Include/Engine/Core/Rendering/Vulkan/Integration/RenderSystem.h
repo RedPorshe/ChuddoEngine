@@ -9,7 +9,7 @@ class RenderSystem
     RenderSystem(AppInfo* info);
     ~RenderSystem();
 
-    // Public API для Application
+    
     void Initialize();
     void Shutdown();
     void DrawFrame(const FrameRenderData& renderData);
@@ -19,7 +19,7 @@ class RenderSystem
     {
       return m_vulkanContext->GetWindow();
     }
-    // Геттеры состояния
+   
     bool IsInitialized() const
     {
       return m_initialized;

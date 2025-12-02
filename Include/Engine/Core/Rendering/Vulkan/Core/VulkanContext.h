@@ -47,12 +47,10 @@ struct GLFWwindow;
         if (event.type == SDL_EVENT_QUIT)
         {
           m_shouldClose = true;
-        }
-        // Handle other events if needed
+        }      
       }
     }
-    // Called by the GLFW framebuffer-size callback when the window changes
-    // size so the rendering code can recreate the swapchain on next frame.
+  
     void OnFramebufferResized()
     {
       m_frameBufferResized = true;
@@ -60,7 +58,7 @@ struct GLFWwindow;
     void RegisterMesh(const std::string& name, const FStaticMesh& mesh);
     void UnregisterMesh(const std::string& name);
 
-    // Getters for ImGui integration
+    
     VkInstance GetInstance() const { return m_instance; }
     VkPhysicalDevice GetPhysicalDevice() const { return m_deviceManager->GetPhysicalDevice(); }
     VkDevice GetDevice() const { return m_deviceManager->GetDevice(); }
@@ -104,7 +102,7 @@ struct GLFWwindow;
     std::shared_ptr<DescriptorManager> m_descriptorManager;
     std::shared_ptr<CommandBufferManager> m_commandBufferManager;
 
-    // Sync objects
+    
     std::vector<VkSemaphore> m_imageAvailableSemaphores;
     std::vector<VkSemaphore> m_renderFinishedSemaphores;
     std::vector<VkFence> m_inFlightFences;
@@ -113,12 +111,12 @@ struct GLFWwindow;
     bool m_frameBufferResized = false;
     bool m_shouldClose = false;
 
-    // Buffers
+    
     std::unordered_map<std::string, MeshBuffers> m_meshBufferMap;
     const std::string m_sceneUBOBufferName = "scene_ubo";
     const std::string m_lightingUBOBufferName = "lighting_ubo";
 
-    // Current command buffer for ImGui
+    
     VkCommandBuffer m_currentCommandBuffer = VK_NULL_HANDLE;
 
     static constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 3;

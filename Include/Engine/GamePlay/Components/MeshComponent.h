@@ -32,18 +32,18 @@
     {
       return m_Mesh;
     }
-    CEMath::Matrix4f GetRenderTransform() const;
+    FMatrix GetRenderTransform() const;
 
     // Цвет материала (временно)
-    void SetColor(const CEMath::Vector3f& color)
+    void SetColor(const FVector& color)
     {
       m_Mesh.color = color;
     }
-    void SetColor(const CEMath::Vector4f& color)
+    void SetColor(const FVector4& color)
     {
       m_Mesh.color = color.XYZ();
     }
-    const CEMath::Vector3f& GetColor() const
+    const FVector& GetColor() const
     {
       return m_Mesh.color;
     }

@@ -7,7 +7,7 @@
 #include "CoreMinimal.h"
 #include "vulkan/vulkan.h"
 
-// Queue family indices
+
 struct QueueFamilyIndices
 {
   uint32_t graphicsFamily = UINT32_MAX;
@@ -25,14 +25,14 @@ class DeviceManager
   DeviceManager() = default;
   ~DeviceManager() = default;
 
-  // Удаляем копирование
+  
   DeviceManager(const DeviceManager&) = delete;
   DeviceManager& operator=(const DeviceManager&) = delete;
 
   bool Initialize(VkInstance instance, VkSurfaceKHR surface);
   void Shutdown();
 
-  // Getters
+  
   VkPhysicalDevice GetPhysicalDevice() const
   {
     return m_physicalDevice;

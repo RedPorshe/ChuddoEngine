@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Engine/Core/CoreTypes.h"
 #include "Engine/GamePlay/Actors/Actor.h"
 #include "Engine/GamePlay/World/World.h"
 #include "Engine/Utils/Math/AllMath.h"
@@ -16,7 +17,7 @@
     virtual void BeginPlay() override;
     virtual void Update(float DeltaTime) override;
 
-    void SetColor(const CEMath::Vector3f& color)
+    void SetColor(const FVector& color)
     {
       m_Color = color;
     }
@@ -34,7 +35,7 @@
     }
 
    private:
-    CEMath::Vector3f m_Color = CEMath::Vector3f(1.0f);
+    FVector m_Color = FVector(1.0f);
     float m_Intensity = 1.0f;
     float m_AngularSpeed = 0.00f;  // radians per second
     float m_Angle = 0.0f;

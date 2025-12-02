@@ -15,7 +15,6 @@ class Application
     virtual void Run();
     virtual void Shutdown();
 
-    // Геттеры для доступа извне
     CGameInstance* GetGameInstance() const
     {
       return m_GameInstance.get();

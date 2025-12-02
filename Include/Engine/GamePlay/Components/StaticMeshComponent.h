@@ -3,6 +3,7 @@
 #include <unordered_map>
 
 #include "Engine/GamePlay/Components/MeshComponent.h"
+#include "Engine/Core/CoreTypes.h"
 
 
   class CStaticMeshComponent : public CMeshComponent
@@ -17,9 +18,9 @@
    private:
     bool LoadOBJFile(const std::string& filename);
     void ProcessOBJFace(const std::string& faceLine,
-                        const std::vector<CEMath::Vector3f>& positions,
-                        const std::vector<CEMath::Vector2f>& texCoords,
-                        const std::vector<CEMath::Vector3f>& normals,
+                        const std::vector<FVector>& positions,
+                        const std::vector<FVector2D>& texCoords,
+                        const std::vector<FVector>& normals,
                         std::unordered_map<std::string, uint32_t>& vertexMap,
                         std::vector<Vertex>& outVertices,
                         std::vector<uint32_t>& outIndices);

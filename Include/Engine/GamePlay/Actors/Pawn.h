@@ -25,25 +25,25 @@
     }
 
     // Аналог AddMovementInput из UE
-    void AddMovementInput(const CEMath::Vector3f& WorldDirection, float ScaleValue = 1.0f, bool bForce = false);
+    void AddMovementInput(const FVector& WorldDirection, float ScaleValue = 1.0f, bool bForce = false);
     void AddControllerYawInput(float Value);
     void AddControllerPitchInput(float Value);
 
     // Управление вращением
-    void SetControlRotation(const CEMath::Vector3f& NewRotation);
-    const CEMath::Vector3f& GetControlRotation() const
+    void SetControlRotation(const FVector& NewRotation);
+    const FVector& GetControlRotation() const
     {
       return m_ControlRotation;
     }
 
     // Получение векторов движения (аналогично камере)
-    CEMath::Vector3f GetPawnViewLocation() const;
-    CEMath::Vector3f GetViewForwardVector() const;
-    CEMath::Vector3f GetViewRightVector() const;
-    CEMath::Vector3f GetViewUpVector() const;
+    FVector GetPawnViewLocation() const;
+    FVector GetViewForwardVector() const;
+    FVector GetViewRightVector() const;
+    FVector GetViewUpVector() const;
 
     // Получение векторов движения
-    CEMath::Vector3f GetMovementDirection() const
+    FVector GetMovementDirection() const
     {
       return m_MovementInput;
     }
@@ -61,8 +61,8 @@
 
    protected:
     CInputComponent* m_InputComponent = nullptr;
-    CEMath::Vector3f m_MovementInput{0.0f, 0.0f, 0.0f};
-    CEMath::Vector3f m_ControlRotation{0.0f, 0.0f, 0.0f};  // Pitch, Yaw, Roll
+    FVector m_MovementInput{0.0f, 0.0f, 0.0f};
+    FVector m_ControlRotation{0.0f, 0.0f, 0.0f};  // Pitch, Yaw, Roll
     bool m_bMovementInputConsumed = false;
     bool m_bUseControllerRotation = false;
 

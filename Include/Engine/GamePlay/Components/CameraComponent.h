@@ -1,4 +1,5 @@
 #pragma once
+#include "Engine/Core/CoreTypes.h"
 #include "Engine/GamePlay/Components/SceneComponent.h"
 
 
@@ -26,15 +27,15 @@
       m_FarPlane = Far;
     }
 
-    void DebugMatrix(const CEMath::Matrix4f& m, const char* name) const;
+    void DebugMatrix(const FMatrix& m, const char* name) const;
     void DebugMatrix(const char* message) const;
     // Получение матриц
-    CEMath::Matrix4f GetViewMatrix() const;
-    CEMath::Matrix4f GetProjectionMatrix() const;
+    FMatrix GetViewMatrix() const;
+    FMatrix GetProjectionMatrix() const;
 
-    CEMath::Vector3f GetCameraForwardVector() const;
-    CEMath::Vector3f GetCameraRightVector() const;
-    CEMath::Vector3f GetCameraUpVector() const;
+    FVector GetCameraForwardVector() const;
+    FVector GetCameraRightVector() const;
+    FVector GetCameraUpVector() const;
 
     virtual void Update(float DeltaTime) override;
 

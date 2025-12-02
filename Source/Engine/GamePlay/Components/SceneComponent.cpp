@@ -1,4 +1,5 @@
 #include "Engine/GamePlay/Components/SceneComponent.h"
+#include "Engine/Core/CoreTypes.h"
 #include "Engine/Utils/Math/MathConstants.h"
 
 CSceneComponent::CSceneComponent(CObject* Owner, FString NewName)
@@ -7,7 +8,7 @@ CSceneComponent::CSceneComponent(CObject* Owner, FString NewName)
   m_TransformMatrix.SetIdentity();
 }
 
-void CSceneComponent::SetPosition(const CEMath::Vector3f& Position)
+void CSceneComponent::SetPosition(const FVector& Position)
 {
   m_RelativeLocation = Position;
   UpdateTransformMatrix();
@@ -15,10 +16,10 @@ void CSceneComponent::SetPosition(const CEMath::Vector3f& Position)
 
 void CSceneComponent::SetPosition(float X, float Y, float Z)
 {
-  SetPosition(CEMath::Vector3f(X, Y, Z));
+  SetPosition(FVector(X, Y, Z));
 }
 
-void CSceneComponent::SetRelativePosition(const CEMath::Vector3f& Position)
+void CSceneComponent::SetRelativePosition(const FVector& Position)
 {
   m_RelativeLocation = Position;
   UpdateTransformMatrix();
@@ -26,13 +27,13 @@ void CSceneComponent::SetRelativePosition(const CEMath::Vector3f& Position)
 
 void CSceneComponent::SetRelativePosition(float X, float Y, float Z)
 {
-  SetRelativePosition(CEMath::Vector3f(X, Y, Z));
+  SetRelativePosition(FVector(X, Y, Z));
 }
 
-void CSceneComponent::SetRotation(const CEMath::Vector3f& Rotation)
+void CSceneComponent::SetRotation(const FVector& Rotation)
 {
   m_WorldRotation = Rotation;
-  m_RotationQuat = CEMath::Quaternionf::FromEulerAngles(
+  m_RotationQuat = FQuat::FromEulerAngles(
       CEMath::ToRadians(Rotation.x),
       CEMath::ToRadians(Rotation.y),
       CEMath::ToRadians(Rotation.z)
@@ -42,13 +43,13 @@ void CSceneComponent::SetRotation(const CEMath::Vector3f& Rotation)
 
 void CSceneComponent::SetRotation(float Pitch, float Yaw, float Roll)
 {
-  SetRotation(CEMath::Vector3f(Pitch, Yaw, Roll));
+  SetRotation(FVector(Pitch, Yaw, Roll));
 }
 
-void CSceneComponent::SetRelativeRotation(const CEMath::Vector3f& Rotation)
+void CSceneComponent::SetRelativeRotation(const FVector& Rotation)
 {
   m_RelativeRotation = Rotation;
-  m_RotationQuat = CEMath::Quaternionf::FromEulerAngles(
+  m_RotationQuat = FQuat::FromEulerAngles(
       CEMath::ToRadians(Rotation.x),
       CEMath::ToRadians(Rotation.y),
       CEMath::ToRadians(Rotation.z)
@@ -58,24 +59,24 @@ void CSceneComponent::SetRelativeRotation(const CEMath::Vector3f& Rotation)
 
 void CSceneComponent::SetRelativeRotation(float Pitch, float Yaw, float Roll)
 {
-  SetRelativeRotation(CEMath::Vector3f(Pitch, Yaw, Roll));
+  SetRelativeRotation(FVector(Pitch, Yaw, Roll));
 }
 
-void CSceneComponent::SetRotation(const CEMath::Quaternionf& Rotation)
+void CSceneComponent::SetRotation(const FQuat& Rotation)
 {
   m_RotationQuat = Rotation;
   UpdateRotationFromQuat();
   UpdateTransformMatrix();
 }
 
-void CSceneComponent::SetRelativeRotation(const CEMath::Quaternionf& Rotation)
+void CSceneComponent::SetRelativeRotation(const FQuat& Rotation)
 {
   m_RotationQuat = Rotation;
   UpdateRotationFromQuat();
   UpdateTransformMatrix();
 }
 
-void CSceneComponent::SetScale(const CEMath::Vector3f& Scale)
+void CSceneComponent::SetScale(const FVector& Scale)
 {
   m_WorldScale = Scale;
   UpdateTransformMatrix();
@@ -83,15 +84,15 @@ void CSceneComponent::SetScale(const CEMath::Vector3f& Scale)
 
 void CSceneComponent::SetScale(float X, float Y, float Z)
 {
-  SetScale(CEMath::Vector3f(X, Y, Z));
+  SetScale(FVector(X, Y, Z));
 }
 
 void CSceneComponent::SetScale(float value)
 {
-  SetScale(CEMath::Vector3f(value, value, value));
+  SetScale(FVector(value, value, value));
 }
 
-void CSceneComponent::SetRelativeScale(const CEMath::Vector3f& Scale)
+void CSceneComponent::SetRelativeScale(const FVector& Scale)
 {
   m_RelativeScale = Scale;
   UpdateTransformMatrix();
@@ -99,50 +100,50 @@ void CSceneComponent::SetRelativeScale(const CEMath::Vector3f& Scale)
 
 void CSceneComponent::SetRelativeScale(float X, float Y, float Z)
 {
-  SetRelativeScale(CEMath::Vector3f(X, Y, Z));
+  SetRelativeScale(FVector(X, Y, Z));
 }
 
 void CSceneComponent::SetRelativeScale(float value)
 {
-  SetRelativeScale(CEMath::Vector3f(value, value, value));
+  SetRelativeScale(FVector(value, value, value));
 }
 
-const CEMath::Vector3f& CSceneComponent::GetPosition() const
+const FVector& CSceneComponent::GetPosition() const
 {
   return m_WorldLocation;
 }
 
-const CEMath::Vector3f& CSceneComponent::GetRelativePosition() const
+const FVector& CSceneComponent::GetRelativePosition() const
 {
   return m_RelativeLocation;
 }
 
-const CEMath::Vector3f& CSceneComponent::GetRotation() const
+const FVector& CSceneComponent::GetRotation() const
 {
   return m_WorldRotation;
 }
 
-const CEMath::Vector3f& CSceneComponent::GetRelativeRotation() const
+const FVector& CSceneComponent::GetRelativeRotation() const
 {
   return m_RelativeRotation;
 }
 
-const CEMath::Vector3f& CSceneComponent::GetScale() const
+const FVector& CSceneComponent::GetScale() const
 {
   return m_WorldScale;
 }
 
-const CEMath::Vector3f& CSceneComponent::GetRelativeScale() const
+const FVector& CSceneComponent::GetRelativeScale() const
 {
   return m_RelativeScale;
 }
 
-const CEMath::Matrix4f& CSceneComponent::GetTransformMatrix() const
+const FMatrix& CSceneComponent::GetTransformMatrix() const
 {
   return m_TransformMatrix;
 }
 
-CEMath::Matrix4f CSceneComponent::GetWorldTransform() const
+FMatrix CSceneComponent::GetWorldTransform() const
 {
   // Защита от рекурсии
   if (m_IsComputingWorldTransform)
@@ -153,7 +154,7 @@ CEMath::Matrix4f CSceneComponent::GetWorldTransform() const
 
   m_IsComputingWorldTransform = true;
 
-  CEMath::Matrix4f result;
+  FMatrix result;
 
   try
   {
@@ -176,46 +177,46 @@ CEMath::Matrix4f CSceneComponent::GetWorldTransform() const
   return result;
 }
 
-CEMath::Vector3f CSceneComponent::GetWorldLocation() const
+FVector CSceneComponent::GetWorldLocation() const
 {
   if (m_Parent)
   {
-    CEMath::Matrix4f parentTransform = m_Parent->GetWorldTransform();
-    return (parentTransform * CEMath::Vector4f(m_RelativeLocation, 1.0f)).XYZ();
+    FMatrix parentTransform = m_Parent->GetWorldTransform();
+    return (parentTransform * FVector4(m_RelativeLocation, 1.0f)).XYZ();
   }
   return m_WorldLocation;
 }
 
-CEMath::Vector3f CSceneComponent::GetForwardVector() const
+FVector CSceneComponent::GetForwardVector() const
 {
-  CEMath::Vector3f euler = m_RotationQuat.ToEulerAngles();
+  FVector euler = m_RotationQuat.ToEulerAngles();
   float pitch = euler.x;
   float yaw = euler.y;
 
-  return CEMath::Vector3f(
+  return FVector(
       std::sin(yaw) * std::cos(pitch),
       -std::sin(pitch),
       std::cos(yaw) * std::cos(pitch)
   ).Normalized();
 }
 
-CEMath::Vector3f CSceneComponent::GetRightVector() const
+FVector CSceneComponent::GetRightVector() const
 {
-  CEMath::Vector3f forward = GetForwardVector();
-  CEMath::Vector3f worldUp(0.0f, 1.0f, 0.0f);
+  FVector forward = GetForwardVector();
+  FVector worldUp(0.0f, 1.0f, 0.0f);
   return forward.Cross(worldUp).Normalized();
 }
 
-CEMath::Vector3f CSceneComponent::GetUpVector() const
+FVector CSceneComponent::GetUpVector() const
 {
-  CEMath::Vector3f forward = GetForwardVector();
-  CEMath::Vector3f right = GetRightVector();
+  FVector forward = GetForwardVector();
+  FVector right = GetRightVector();
   return right.Cross(forward).Normalized();
 }
 
 void CSceneComponent::AddYawInput(float Value)
 {
-  CEMath::Quaternionf yawRot = CEMath::Quaternionf::FromAxisAngle(CEMath::Vector3f::Up(), CEMath::ToRadians(Value));
+  FQuat yawRot = FQuat::FromAxisAngle(FVector::Up(), CEMath::ToRadians(Value));
   m_RotationQuat = yawRot * m_RotationQuat;
   UpdateRotationFromQuat();
   UpdateTransformMatrix();
@@ -231,7 +232,7 @@ void CSceneComponent::AddPitchInput(float Value)
     Value = newPitch - m_RelativeRotation.x;
   }
 
-  CEMath::Quaternionf pitchRot = CEMath::Quaternionf::FromAxisAngle(GetRightVector(), CEMath::ToRadians(Value));
+  FQuat pitchRot = FQuat::FromAxisAngle(GetRightVector(), CEMath::ToRadians(Value));
   m_RotationQuat = m_RotationQuat * pitchRot;
   UpdateRotationFromQuat();
   UpdateTransformMatrix();
@@ -277,17 +278,17 @@ void CSceneComponent::DetachFromParent()
   AttachToComponent(nullptr);
 }
 
-void CSceneComponent::Move(const CEMath::Vector3f& Delta)
+void CSceneComponent::Move(const FVector& Delta)
 {
   m_RelativeLocation += Delta;
   UpdateTransformMatrix();
 }
 
-void CSceneComponent::Rotate(const CEMath::Vector3f& Delta)
+void CSceneComponent::Rotate(const FVector& Delta)
 {
   m_RelativeRotation += Delta;
   ClampPitchRotation();
-  m_RotationQuat = CEMath::Quaternionf::FromEulerAngles(
+  m_RotationQuat = FQuat::FromEulerAngles(
       CEMath::ToRadians(m_RelativeRotation.x),
       CEMath::ToRadians(m_RelativeRotation.y),
       CEMath::ToRadians(m_RelativeRotation.z)
@@ -295,7 +296,7 @@ void CSceneComponent::Rotate(const CEMath::Vector3f& Delta)
   UpdateTransformMatrix();
 }
 
-void CSceneComponent::Rotate(const CEMath::Quaternionf& Delta)
+void CSceneComponent::Rotate(const FQuat& Delta)
 {
   m_RotationQuat = Delta * m_RotationQuat;
   UpdateRotationFromQuat();
@@ -304,13 +305,7 @@ void CSceneComponent::Rotate(const CEMath::Quaternionf& Delta)
 
 void CSceneComponent::Update(float DeltaTime)
 {
-
-
-
   UpdateTransformMatrix();
-
-
-
   for (size_t i = 0; i < m_Children.size(); i++)
   {
     auto child = m_Children[i];
@@ -325,28 +320,26 @@ void CSceneComponent::Update(float DeltaTime)
 
 void CSceneComponent::UpdateTransformMatrix()
 {
-  // Вычисляем мировые трансформации
+ 
   if (m_Parent && m_Parent != this)
   {
     try
     {
-      CEMath::Matrix4f parentTransform = m_Parent->GetWorldTransform();
+      FMatrix parentTransform = m_Parent->GetWorldTransform();
 
-      // Вычисляем мировую позицию
-      m_WorldLocation = (parentTransform * CEMath::Vector4f(m_RelativeLocation, 1.0f)).XYZ();
-
-      // Вычисляем мировой масштаб (приблизительно)
-      CEMath::Vector3f parentScale = m_Parent->GetScale();
-      m_WorldScale = CEMath::Vector3f(
+      m_WorldLocation = (parentTransform * FVector4(m_RelativeLocation, 1.0f)).XYZ();
+      
+      FVector parentScale = m_Parent->GetScale();
+      m_WorldScale = FVector(
           m_RelativeScale.x * parentScale.x,
           m_RelativeScale.y * parentScale.y,
           m_RelativeScale.z * parentScale.z
       );
 
       // Вычисляем мировое вращение
-      CEMath::Quaternionf parentRot = m_Parent->GetRotationQuat();
-      CEMath::Quaternionf worldRot = parentRot * m_RotationQuat;
-      m_WorldRotation = worldRot.ToEulerAngles() * CEMath::RAD_TO_DEG;
+      FQuat parentRot = m_Parent->GetRotationQuat();
+      FQuat worldRot = parentRot * m_RotationQuat;
+      m_WorldRotation = worldRot.ToEulerAngles() * CEMath::RAD_TO_DEG    ;
     }
     catch (...)
     {
@@ -365,9 +358,9 @@ void CSceneComponent::UpdateTransformMatrix()
   }
 
   // Создаем матрицу трансформации: Scale * Rotation * Translation
-  CEMath::Matrix4f translation = CEMath::Matrix4f::Translation(m_RelativeLocation);
-  CEMath::Matrix4f rotation = m_RotationQuat.ToMatrix();
-  CEMath::Matrix4f scale = CEMath::Matrix4f::Scale(m_RelativeScale);
+  FMatrix translation = FMatrix::Translation(m_RelativeLocation);
+  FMatrix rotation = m_RotationQuat.ToMatrix();
+  FMatrix scale = FMatrix::Scale(m_RelativeScale);
 
   m_TransformMatrix = translation * rotation * scale;
 }
@@ -380,7 +373,7 @@ void CSceneComponent::UpdateRotationFromQuat()
 
 void CSceneComponent::UpdateQuatFromRotation()
 {
-  m_RotationQuat = CEMath::Quaternionf::FromEulerAngles(
+  m_RotationQuat = FQuat::FromEulerAngles(
       CEMath::ToRadians(m_RelativeRotation.x),
       CEMath::ToRadians(m_RelativeRotation.y),
       CEMath::ToRadians(m_RelativeRotation.z)

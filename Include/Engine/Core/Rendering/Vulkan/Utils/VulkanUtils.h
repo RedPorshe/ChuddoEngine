@@ -5,7 +5,7 @@
 #include "vulkan/vulkan.h"
 
 
-// Макрос для проверки результатов Vulkan
+
 #define VK_CHECK(result, message)                                \
   do                                                             \
   {                                                              \
@@ -17,7 +17,7 @@
     }                                                            \
   } while (0)
 
-  // Вспомогательные функции для Vulkan
+ 
   class VulkanUtils
   {
    public:

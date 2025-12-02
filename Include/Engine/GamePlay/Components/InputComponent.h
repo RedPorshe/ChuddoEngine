@@ -37,9 +37,9 @@
 
     void BindAxis(const FString& AxisName, std::function<void(float)> Callback, float Scale = 1.0f);
 
-    void ProcessKey(int key, int action, float deltaTime);
-    void ProcessMouseMovement(float xOffset, float yOffset, float deltaTime);
-    void ProcessMouseScroll(float yOffset);
+    virtual void ProcessKey(int key, int action, float deltaTime);
+    virtual void ProcessMouseMovement(float xOffset, float yOffset, float deltaTime);
+    virtual void ProcessMouseScroll(float yOffset);
 
     bool IsKeyPressed(int key) const;
 

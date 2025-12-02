@@ -1,5 +1,6 @@
 #include "Game/World/MainLevel.h"
 
+#include "Engine/Core/CoreTypes.h"
 #include "Engine/GamePlay/Actors/SunActor.h"
 #include "Engine/GamePlay/Actors/TerrainActor.h"
 #include "Engine/Utils/Math/AllMath.h"
@@ -22,7 +23,7 @@ MainLevel::MainLevel(CObject* Owner,
   terrain = SpawnActor<TerrainActor>(this, "Terrain");
   if (terrain)
   {
-    terrain->SetActorLocation(CEMath::Vector3f(-2.0f, -11.0f, -25.0f));
+    terrain->SetActorLocation(FVector(-2.0f, -11.0f, -25.0f));
   }
 
  
@@ -30,24 +31,24 @@ MainLevel::MainLevel(CObject* Owner,
   // Спавним меш-акторы
   enemy = SpawnActor<CActor>(this, "Enemy");
   enemy->SetRootComponent(enemy->AddSubObject<CStaticMeshComponent>("EnemyMesh", enemy, "EnemyMesh"));
-  enemy->SetActorLocation(CEMath::Vector3f(.0f, 0.f, -5.0f));
+  enemy->SetActorLocation(FVector(.0f, 0.f, -5.0f));
   enemy->SetActorScale(5.f);
-  enemy->SetActorRotation(CEMath::Vector3f(-90.0f, -90.0f, 0.0f));
+  enemy->SetActorRotation(FVector(-90.0f, -90.0f, 0.0f));
 
  
-  std::vector<CEMath::Vector3f> positions = {
-      CEMath::Vector3f(-3.0f, 15.5f, 0.0f),  
-      CEMath::Vector3f(0.0f, 15.5f, 0.0f),   
-      CEMath::Vector3f(3.0f, 15.5f, 0.0f),   
-      CEMath::Vector3f(-1.5f, 15.0f, 0.0f),
-      CEMath::Vector3f(1.5f, 15.0f, 0.0f)};
+  std::vector<FVector> positions = {
+      FVector(-3.0f, 15.5f, 0.0f),
+      FVector(0.0f, 15.5f, 0.0f),
+      FVector(3.0f, 15.5f, 0.0f),
+      FVector(-1.5f, 15.0f, 0.0f),
+      FVector(1.5f, 15.0f, 0.0f)};
 
-  std::vector<CEMath::Vector3f> colors = {
-      CEMath::Vector3f(1.0f, 0.0f, 0.0f),
-      CEMath::Vector3f(0.0f, 1.0f, 0.0f),
-      CEMath::Vector3f(0.0f, 0.0f, 1.0f),
-      CEMath::Vector3f(1.0f, 1.0f, 0.0f),
-      CEMath::Vector3f(1.0f, 0.0f, 1.0f)};
+  std::vector<FVector> colors = {
+      FVector(1.0f, 0.0f, 0.0f),
+      FVector(0.0f, 1.0f, 0.0f),
+      FVector(0.0f, 0.0f, 1.0f),
+      FVector(1.0f, 1.0f, 0.0f),
+      FVector(1.0f, 0.0f, 1.0f)};
 
   for (int i = 0; i < (int)positions.size(); i++)
   {
@@ -113,18 +114,18 @@ MainLevel::MainLevel(CObject* Owner,
   if (enemyMesh)
   {
     enemyMesh->SetMesh("Assets/Meshes/VikingRoom.obj");
-    enemyMesh->SetColor(CEMath::Vector3f(0.8f, 0.2f, 0.2f));
+    enemyMesh->SetColor(FVector(0.8f, 0.2f, 0.2f));
   }
 
   // Spawn a SunActor to control world's directional/positional "sun" light
   auto* sun = SpawnActor<SunActor>(this, "SunActor");
   if (sun)
   {
-    sun->SetColor(CEMath::Vector3f(1.0f, 1.f, 1.f));
+    sun->SetColor(FVector(1.0f, 1.f, 1.f));
     sun->SetIntensity(2.0f);
     sun->SetRadius(100.0f);
     sun->SetAngularSpeed(0.025f);
-    sun->SetActorLocation(CEMath::Vector3f(0.0f, 1000.0f, 0.0f));
+    sun->SetActorLocation(FVector(0.0f, 1000.0f, 0.0f));
   }
 
  

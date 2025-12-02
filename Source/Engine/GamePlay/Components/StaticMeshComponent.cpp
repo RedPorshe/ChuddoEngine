@@ -1,6 +1,7 @@
 // CEStaticMeshComponent.cpp
 #include "Engine/GamePlay/Components/StaticMeshComponent.h"
 
+#include "Engine/Core/CoreTypes.h"
 #include <fstream>
 #include <sstream>
 #include <unordered_map>
@@ -58,9 +59,9 @@
     }
     CORE_DEBUG("Loading OBJ file: ", filename);
 
-    std::vector<CEMath::Vector3f> positions;
-    std::vector<CEMath::Vector2f> texCoords;
-    std::vector<CEMath::Vector3f> normals;
+    std::vector<FVector> positions;
+    std::vector<FVector2D> texCoords;
+    std::vector<FVector> normals;
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;
 
@@ -75,19 +76,19 @@
 
       if (prefix == "v")  // Vertex position
       {
-        CEMath::Vector3f pos;
+        FVector pos;
         iss >> pos.x >> pos.y >> pos.z;
         positions.push_back(pos);
       }
       else if (prefix == "vt")  // Texture coordinate
       {
-        CEMath::Vector2f tex;
+        FVector2D tex;
         iss >> tex.x >> tex.y;
         texCoords.push_back(tex);
       }
       else if (prefix == "vn")  // Normal
       {
-        CEMath::Vector3f normal;
+        FVector normal;
         iss >> normal.x >> normal.y >> normal.z;
         normals.push_back(normal);
       }
@@ -104,7 +105,7 @@
     {
       m_Mesh.vertices = vertices;
       m_Mesh.indices = indices;
-      m_Mesh.color = CEMath::Vector3f(1.0f);  // Белый цвет по умолчанию
+      m_Mesh.color = FVector(1.0f);  // Белый цвет по умолчанию
       return true;
     }
 
@@ -112,9 +113,9 @@
   }
 
   void CStaticMeshComponent::ProcessOBJFace(const std::string& faceLine,
-                                             const std::vector<CEMath::Vector3f>& positions,
-                                             const std::vector<CEMath::Vector2f>& texCoords,
-                                             const std::vector<CEMath::Vector3f>& normals,
+                                             const std::vector<FVector>& positions,
+                                             const std::vector<FVector2D>& texCoords,
+                                             const std::vector<FVector>& normals,
                                              std::unordered_map<std::string, uint32_t>& vertexMap,
                                              std::vector<Vertex>& outVertices,
                                              std::vector<uint32_t>& outIndices)
@@ -176,7 +177,7 @@
       }
 
       
-      vertex.color = CEMath::Vector3f(1.0f);
+      vertex.color = FVector(1.0f);
 
       
       outVertices.push_back(vertex);

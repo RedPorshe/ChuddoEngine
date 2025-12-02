@@ -15,7 +15,7 @@ m_InputComponent = AddSubObject<CInputComponent>("Input", this, "InputComponent"
     m_Mesh = AddDefaultSubObject<CMeshComponent>("Mesh", this, "Mesh Component");
     SetRootComponent(m_Mesh);
     m_Mesh->CreateCubeMesh();
-    m_Mesh->SetRelativePosition(CEMath::Vector3f(0.f, 0.f, 1.f));
+    m_Mesh->SetRelativePosition(FVector(0.f, 0.f, 1.f));
     m_Mesh->SetRelativeScale(2.f);
 
     m_SpringArm = AddDefaultSubObject<CSpringArmComponent>("SpringArm", this, "SpringArm Component");
@@ -28,7 +28,7 @@ m_InputComponent = AddSubObject<CInputComponent>("Input", this, "InputComponent"
     m_Camera->AttachToComponent(m_SpringArm);
     m_Camera->SetFieldOfView(60.f);
     m_Camera->SetRelativePosition(0.f,0.f,0.f);
-    m_Camera->SetRelativeRotation(CEMath::Vector3f(0.0f, 0.0f, 0.0f));
+    m_Camera->SetRelativeRotation(FVector(0.0f, 0.0f, 0.0f));
 
 
 
@@ -71,12 +71,12 @@ m_InputComponent = AddSubObject<CInputComponent>("Input", this, "InputComponent"
     if (Value != 0.0f)
     {
 
-      CEMath::Vector3f forward = GetViewForwardVector();
+      FVector forward = GetViewForwardVector();
       forward.y = 0.0f; // Keep movement on horizontal plane
       forward = forward.Normalized();
-      CEMath::Vector3f delta = forward * Value * 5.0f * 0.016f; // Increased speed for testing
-      CEMath::Vector3f currentLoc = GetActorLocation();
-      CEMath::Vector3f newLocation = currentLoc + delta;
+      FVector delta = forward * Value * 5.0f * 0.016f; // Increased speed for testing
+      FVector currentLoc = GetActorLocation();
+      FVector newLocation = currentLoc + delta;
 
       SetActorLocation(newLocation);
 
@@ -88,12 +88,12 @@ m_InputComponent = AddSubObject<CInputComponent>("Input", this, "InputComponent"
     if (Value != 0.0f)
     {
 
-      CEMath::Vector3f right = -GetViewRightVector();
+      FVector right = -GetViewRightVector();
       right.y = 0.0f; // Keep movement on horizontal plane
       right = right.Normalized();
-      CEMath::Vector3f delta = right * Value * 5.0f * 0.016f; // Increased speed for testing
-      CEMath::Vector3f currentLoc = GetActorLocation();
-      CEMath::Vector3f newLocation = currentLoc + delta;
+      FVector delta = right * Value * 5.0f * 0.016f; // Increased speed for testing
+      FVector currentLoc = GetActorLocation();
+      FVector newLocation = currentLoc + delta;
 
       SetActorLocation(newLocation);
     }
@@ -104,7 +104,7 @@ m_InputComponent = AddSubObject<CInputComponent>("Input", this, "InputComponent"
     if (m_IsOnGround && !bIsJumping)
     {
       bIsJumping = true;
-      m_VerticalVelocity = -10.0f; // Jump impulse
+      m_VerticalVelocity = 10.0f; // Jump impulse
       m_IsOnGround = false;
 
     }

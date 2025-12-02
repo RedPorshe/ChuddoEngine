@@ -1,5 +1,6 @@
 #include "Engine/GamePlay/Input/InputSystem.h"
 
+#include "Engine/Core/CoreTypes.h"
 #include <SDL3/SDL.h>
 
 #include "Engine/GamePlay/Components/InputComponent.h"
@@ -31,8 +32,8 @@
 
       float x, y;
       SDL_GetMouseState(&x, &y);
-      m_LastMousePosition = CEMath::Vector2f(x, y);
-      m_MousePosition = CEMath::Vector2f(x, y);
+      m_LastMousePosition = FVector2D(x, y);
+      m_MousePosition = FVector2D(x, y);
 
       CORE_DEBUG("InputSystem initialized with SDL window");
     }
@@ -121,7 +122,7 @@
       }
     }
 
-    m_MouseDelta = CEMath::Vector2f(0.0f, 0.0f);
+    m_MouseDelta = FVector2D(0.0f, 0.0f);
   }
 
   void CInputSystem::ProcessKeyInput(int key, int scancode, bool down, int mods)
@@ -146,7 +147,7 @@
 
     if (m_FirstMouse)
     {
-      m_LastMousePosition = CEMath::Vector2f(x, y);
+      m_LastMousePosition = FVector2D(x, y);
       m_FirstMouse = false;
       return;
     }
@@ -154,9 +155,9 @@
     float xOffset = x - m_LastMousePosition.x;
     float yOffset = m_LastMousePosition.y - y;
 
-    m_LastMousePosition = CEMath::Vector2f(x, y);
-    m_MousePosition = CEMath::Vector2f(x, y);
-    m_MouseDelta = CEMath::Vector2f(xOffset, yOffset);
+    m_LastMousePosition = FVector2D(x, y);
+    m_MousePosition = FVector2D(x, y);
+    m_MouseDelta = FVector2D(xOffset, yOffset);
 
     for (auto* component : m_InputComponents)
     {

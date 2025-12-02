@@ -16,24 +16,24 @@
     bool Load(const std::string& filename = "engine.cfg");
     bool Save(const std::string& filename = "engine.cfg");
 
-    // Геттеры с значениями по умолчанию
+    
     std::string GetString(const std::string& key, const std::string& defaultValue = "");
     int GetInt(const std::string& key, int defaultValue = 0);
     float GetFloat(const std::string& key, float defaultValue = 0.0f);
     bool GetBool(const std::string& key, bool defaultValue = false);
 
-    // Сеттеры
+    
     void SetString(const std::string& key, const std::string& value);
     void SetInt(const std::string& key, int value);
     void SetFloat(const std::string& key, float value);
     void SetBool(const std::string& key, bool value);
 
-    // Методы для редактора
+    
     std::vector<std::string> GetAllKeys() const;
     bool HasKey(const std::string& key) const;
     void RemoveKey(const std::string& key);
 
-    // Заполнение конфига значениями по умолчанию
+    
     void SetupDefaults();
 
    private:
@@ -42,7 +42,7 @@
 
     std::unordered_map<std::string, std::string> m_Data;
 
-    // Простая "защита" - XOR шифрование
+    
     std::string Encrypt(const std::string& data) const;
     std::string Decrypt(const std::string& data) const;
   };

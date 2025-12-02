@@ -46,7 +46,7 @@
       float y = std::sin(m_Angle) * (m_Radius * 0.5f) + (m_Radius * 0.2f);
       float z = std::sin(m_Angle * 0.5f) * (m_Radius * 0.3f);
 
-      CEMath::Vector3f sunPos = CEMath::Vector3f(x, y, z);
+      FVector sunPos = FVector(x, y, z);
 
       // Update sun marker position
       if (m_SunMarkerMesh)
@@ -69,8 +69,8 @@
 
       LightingUBO lighting = world->GetDefaultLighting();
       lighting.lightCount = 1;
-      lighting.lightPositions[0] = CEMath::Vector4f(sunPos, 1.0f);
-      lighting.lightColors[0] = CEMath::Vector4f(m_Color, m_Intensity);
+      lighting.lightPositions[0] = FVector4(sunPos, 1.0f);
+      lighting.lightColors[0] = FVector4(m_Color, m_Intensity);
 
       world->SetDefaultLighting(lighting);
     }
@@ -90,8 +90,8 @@
       auto sunPos = GetActorLocation();
       LightingUBO lighting = world->GetDefaultLighting();
       lighting.lightCount = 1;
-      lighting.lightPositions[0] = CEMath::Vector4f(sunPos, 1.0f);
-      lighting.lightColors[0] = CEMath::Vector4f(m_Color, m_Intensity);
+      lighting.lightPositions[0] = FVector4(sunPos, 1.0f);
+      lighting.lightColors[0] = FVector4(m_Color, m_Intensity);
 
       world->SetDefaultLighting(lighting);
     }

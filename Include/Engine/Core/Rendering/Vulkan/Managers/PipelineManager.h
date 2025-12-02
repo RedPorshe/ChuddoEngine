@@ -33,17 +33,17 @@
     PipelineManager(std::shared_ptr<DeviceManager> deviceManager);
     ~PipelineManager();
 
-    // Удаляем копирование
+    
     PipelineManager(const PipelineManager&) = delete;
     PipelineManager& operator=(const PipelineManager&) = delete;
 
     bool Initialize();
     void Shutdown();
 
-    // Создание пайплайна для мешей
+   
     VkPipeline CreateMeshPipeline(const std::string& name, VkRenderPass renderPass);
 
-    // Получение пайплайна по имени
+    
     VkPipeline GetPipeline(const std::string& name) const;
     VkPipelineLayout GetPipelineLayout() const
     {
@@ -53,7 +53,7 @@
     {
       return m_descriptorSetLayout;
     }
-    // Статические методы для конфигурации
+    
     static void DefaultPipelineConfigInfo(PipelineConfigInfo& configInfo);
     static void EnableAlphaBlending(PipelineConfigInfo& configInfo);
 
@@ -74,10 +74,10 @@
     VkPipelineLayout m_pipelineLayout = VK_NULL_HANDLE;
     std::unordered_map<std::string, VkPipeline> m_pipelines;
 
-    // Дескрипторные наборы для UBO
+    
     VkDescriptorSetLayout m_descriptorSetLayout = VK_NULL_HANDLE;
 
-    // Стандартные шейдеры для мешей
+    // 
     // Use the same casing the build copies shaders to (Assets/Shaders)
     static constexpr const char* VERTEX_SHADER_PATH = "Assets/Shaders/mesh_vert.spv";
     static constexpr const char* FRAGMENT_SHADER_PATH = "Assets/Shaders/mesh_frag.spv";

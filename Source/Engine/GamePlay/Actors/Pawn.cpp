@@ -24,7 +24,7 @@
     {
       auto currentRotation = this->GetActorRotation();
       float newYaw = m_ControlRotation.y;
-      this->SetActorRotation(CEMath::Vector3f(currentRotation.x, newYaw, currentRotation.z));
+      this->SetActorRotation(FVector(currentRotation.x, newYaw, currentRotation.z));
       // Pitch handled by SpringArm
     }
     else
@@ -67,37 +67,37 @@
     return camera;
   }
 
-  CEMath::Vector3f CPawn::GetPawnViewLocation() const
+  FVector CPawn::GetPawnViewLocation() const
   {
     if (CCameraComponent* camera = FindCameraComponent())
     {
-      CEMath::Vector3f pos = camera->GetWorldLocation();
+      FVector pos = camera->GetWorldLocation();
       return pos;
     }
 
-    CEMath::Vector3f pos = GetActorLocation() + CEMath::Vector3f(0.0f, -0.1f, 0.0f);
+    FVector pos = GetActorLocation() + FVector(0.0f, -0.1f, 0.0f);
     return pos;
   }
 
-  CEMath::Vector3f CPawn::GetViewForwardVector() const
+  FVector CPawn::GetViewForwardVector() const
   {
     if (CCameraComponent* camera = FindCameraComponent())
     {
-      CEMath::Vector3f forward = camera->GetCameraForwardVector();
+      FVector forward = camera->GetCameraForwardVector();
       return forward;
     }
 
-    return CEMath::Vector3f(0.0f, 0.0f, -1.0f);
+    return FVector(0.0f, 0.0f, -1.0f);
   }
 
-  CEMath::Vector3f CPawn::GetViewRightVector() const
+  FVector CPawn::GetViewRightVector() const
   {
     if (CCameraComponent* camera = FindCameraComponent())
     {
-      CEMath::Vector3f right = camera->GetCameraRightVector();
+      FVector right = camera->GetCameraRightVector();
       return right;
     }
-    return CEMath::Vector3f(1.0f, 0.0f, 0.0f);
+    return FVector(1.0f, 0.0f, 0.0f);
   }
 
   void CPawn::MoveForward(float Value)
@@ -105,12 +105,12 @@
     if (Value != 0.0f)
     {
       CORE_DEBUG("MoveForward called with value: ", Value);
-      CEMath::Vector3f forward = GetViewForwardVector();
+      FVector forward = GetViewForwardVector();
       forward.y = 0.0f; // Keep movement on horizontal plane
       forward = forward.Normalized();
-      CEMath::Vector3f delta = forward * Value * 5.0f * 0.016f; // Increased speed for testing
-      CEMath::Vector3f currentLoc = GetActorLocation();
-      CEMath::Vector3f newLocation = currentLoc + delta;
+      FVector delta = forward * Value * 5.0f * 0.016f; // Increased speed for testing
+      FVector currentLoc = GetActorLocation();
+      FVector newLocation = currentLoc + delta;
       CORE_DEBUG("Moving pawn forward from (", currentLoc.x, ", ", currentLoc.y, ", ", currentLoc.z, ") to (", newLocation.x, ", ", newLocation.y, ", ", newLocation.z, ")");
       SetActorLocation(newLocation);
       CORE_DEBUG("Pawn location after move: (", GetActorLocation().x, ", ", GetActorLocation().y, ", ", GetActorLocation().z, ")");
@@ -133,25 +133,25 @@
     if (Value != 0.0f)
     {
       CORE_DEBUG("MoveRight called with value: ", Value);
-      CEMath::Vector3f right = -GetViewRightVector();
+      FVector right = -GetViewRightVector();
       right.y = 0.0f; // Keep movement on horizontal plane
       right = right.Normalized();
-      CEMath::Vector3f delta = right * Value * 5.0f * 0.016f; // Increased speed for testing
-      CEMath::Vector3f currentLoc = GetActorLocation();
-      CEMath::Vector3f newLocation = currentLoc + delta;
+      FVector delta = right * Value * 5.0f * 0.016f; // Increased speed for testing
+      FVector currentLoc = GetActorLocation();
+      FVector newLocation = currentLoc + delta;
       CORE_DEBUG("Moving pawn right from (", currentLoc.x, ", ", currentLoc.y, ", ", currentLoc.z, ") to (", newLocation.x, ", ", newLocation.y, ", ", newLocation.z, ")");
       SetActorLocation(newLocation);
     }
   }
 
-  CEMath::Vector3f CPawn::GetViewUpVector() const
+  FVector CPawn::GetViewUpVector() const
   {
     if (CCameraComponent* camera = FindCameraComponent())
     {
       return camera->GetCameraUpVector();
     }
 
-    return CEMath::Vector3f(0.0f, 1.0f, 0.0f);
+    return FVector(0.0f, 1.0f, 0.0f);
   }
 
   void CPawn::OnPossess()
@@ -164,7 +164,7 @@
     // Empty implementation, logic moved to CCharacter
   }
 
-  void CPawn::AddMovementInput(const CEMath::Vector3f& WorldDirection, float ScaleValue, bool bForce)
+  void CPawn::AddMovementInput(const FVector& WorldDirection, float ScaleValue, bool bForce)
   {
     if (ScaleValue != 0.0f && (bForce || m_RootComponent != nullptr))
     {
@@ -189,7 +189,7 @@
     m_ControlRotation.y = CEMath::Clamp(m_ControlRotation.y, -89.0f, 89.0f);
   }
 
-  void CPawn::SetControlRotation(const CEMath::Vector3f& NewRotation)
+  void CPawn::SetControlRotation(const FVector& NewRotation)
   {
     m_ControlRotation = NewRotation;
     m_ControlRotation.x = CEMath::Clamp(m_ControlRotation.x, -89.0f, 89.0f);
@@ -197,6 +197,6 @@
 
   void CPawn::ConsumeMovementInput()
   {
-    m_MovementInput = CEMath::Vector3f(0.0f);
+    m_MovementInput = FVector(0.0f);
     m_bMovementInputConsumed = true;
   }

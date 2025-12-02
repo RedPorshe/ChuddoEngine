@@ -14,13 +14,20 @@
   {
     CORE_DISPLAY("=== ChuddoEngine Starting ===");
 
-    
+
     if (argc > 0)
     {
       CommandLine::Parse(argc, argv);
     }
 
-    
+    // Check for headless mode
+    bool isHeadless = CommandLine::Get().HasFlag("headless") || CommandLine::Get().HasFlag("h");
+    if (isHeadless)
+    {
+      CORE_DISPLAY("Running in headless mode - skipping rendering");
+      return 0;  // Exit early in headless mode
+    }
+
     std::string configFile = CommandLine::Get().GetString("config", "engine.cfg");
     configFile = CommandLine::Get().GetString("c", configFile);  // Короткая версия
 
@@ -30,19 +37,19 @@
       CORE_WARN("Failed to load config: ", configFile, ", using defaults");
     }
 
-    
+
     ApplyCommandLineOverrides(config);
 
-    
+
     auto ApInfo = CreateAppInfoFromConfig();
 
-    
+
     auto app = GameApp(&ApInfo);
     app.Initialize();
     app.Run();
     app.Shutdown();
 
-    
+
     config.Save(configFile);
 
     return 0;

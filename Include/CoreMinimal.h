@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <functional>
 
 // Platform detection
 #if defined(_WIN32) || defined(_WIN64)
@@ -60,3 +61,4 @@ class CComponent;
 class CWorld;
 #include "Engine/Core/AppInfo.h"
 #include "Engine/Utils/Logger.h"
+#include "Engine/Core/CoreTypes.h"

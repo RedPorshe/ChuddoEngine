@@ -5,13 +5,14 @@
 #include <sstream>
 
 #include "Engine/Utils/Logger.h"
+#include "Engine/Core/CoreTypes.h"
 
 FStaticMesh ObjLoader::LoadOBJ(const std::string& filePath)
 {
   FStaticMesh mesh;
-  std::vector<CEMath::Vector3f> positions;
-  std::vector<CEMath::Vector3f> normals;
-  std::vector<CEMath::Vector2f> texCoords;
+  std::vector<FVector> positions;
+  std::vector<FVector> normals;
+  std::vector<FVector2D> texCoords;
   std::vector<Vertex> vertices;
   std::vector<uint32_t> indices;
 
@@ -40,7 +41,7 @@ FStaticMesh ObjLoader::LoadOBJ(const std::string& filePath)
       float x, y, z;
       if (iss >> x >> y >> z)
       {
-        positions.push_back(CEMath::Vector3f(x, y, z));
+        positions.push_back(FVector(x, y, z));
       }
       else
       {
@@ -52,7 +53,7 @@ FStaticMesh ObjLoader::LoadOBJ(const std::string& filePath)
       float x, y, z;
       if (iss >> x >> y >> z)
       {
-        normals.push_back(CEMath::Vector3f(x, y, z));
+        normals.push_back(FVector(x, y, z));
       }
     }
     else if (token == "vt")
@@ -60,7 +61,7 @@ FStaticMesh ObjLoader::LoadOBJ(const std::string& filePath)
       float u, v;
       if (iss >> u >> v)
       {
-        texCoords.push_back(CEMath::Vector2f(u, v));
+        texCoords.push_back(FVector2D(u, v));
       }
     }
     else if (token == "f")
@@ -110,13 +111,13 @@ FStaticMesh ObjLoader::LoadOBJ(const std::string& filePath)
           }
           else
           {
-            vertex.normal = CEMath::Vector3f(0.0f, 1.0f, 0.0f);  // Дефолтная нормаль
+            vertex.normal = FVector(0.0f, 1.0f, 0.0f);  // Дефолтная нормаль
           }
           if (texIdx < texCoords.size())
           {
             vertex.texCoord = texCoords[texIdx];
           }
-          vertex.color = CEMath::Vector3f(1.0f);
+          vertex.color = FVector(1.0f);
 
           vertices.push_back(vertex);
           faceIndices.push_back(static_cast<uint32_t>(vertices.size()) - 1);
@@ -146,7 +147,7 @@ FStaticMesh ObjLoader::LoadOBJ(const std::string& filePath)
 
   mesh.vertices = vertices;
   mesh.indices = indices;
-  mesh.color = CEMath::Vector3f(1.0f);
+  mesh.color = FVector(1.0f);
 
   CORE_LOG("Successfully loaded OBJ: ", filePath.c_str(), " (vertices: ", vertices.size(), ", indices: ", indices.size(),
          ")");

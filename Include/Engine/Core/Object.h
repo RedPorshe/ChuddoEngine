@@ -53,7 +53,7 @@ class CObject
       return result;
     }
 
-    // НОВАЯ ФУНКЦИЯ: Итерация по всем компонентам определенного типа
+    
     template <typename T>
     void ForEachComponent(std::function<void(T*)> callback) const
     {
@@ -66,7 +66,7 @@ class CObject
       }
     }
 
-    // НОВАЯ ФУНКЦИЯ: Итерация по всем компонентам (без типа)
+    
     void ForEachComponent(std::function<void(CComponent*)> callback) const
     {
       for (const auto& [name, component] : m_Components)

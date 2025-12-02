@@ -5,7 +5,7 @@
 #include "Engine/GamePlay/Components/Base/Component.h"
 #include "Engine/GamePlay/Components/SceneComponent.h"
 #include "Engine/GamePlay/World/Levels/Level.h"
-#include "Engine/Utils/Math/AllMath.h"
+#include "Engine/Core/CoreTypes.h"
 
 class CMeshComponent;
 
@@ -33,19 +33,19 @@ class CActor : public CObject
     }
 
     // World transform
-    void SetActorLocation(const CEMath::Vector3f& NewLocation);
+    void SetActorLocation(const FVector& NewLocation);
     void SetActorLocation(const float x, const float y, const float z);
-    void SetActorRotation(const CEMath::Vector3f& NewRotation);
+    void SetActorRotation(const FVector& NewRotation);
     void SetActorScale(const float& NewScale);
-    void SetActorScale(const CEMath::Vector3f& NewScale);
+    void SetActorScale(const FVector& NewScale);
 
-    CEMath::Vector3f GetActorLocation() const;
-    CEMath::Vector3f GetActorRotation() const;
-    CEMath::Vector3f GetActorScale() const;
+    FVector GetActorLocation() const;
+    FVector GetActorRotation() const;
+    FVector GetActorScale() const;
 
-    CEMath::Vector3f GetActorForwardVector() const;
-    CEMath::Vector3f GetActorRightVector() const;
-    CEMath::Vector3f GetActorUpVector() const;
+    FVector GetActorForwardVector() const;
+    FVector GetActorRightVector() const;
+    FVector GetActorUpVector() const;
     // Получение уровня
     CLevel* GetLevel() const;
 
@@ -53,9 +53,9 @@ class CActor : public CObject
     virtual void Update(float DeltaTime) override;
     virtual void Tick(float DeltaTime) override;
 
-    CEMath::Vector3f Location = CEMath::Vector3f(0.0f);
-    CEMath::Vector3f Rotation = CEMath::Vector3f(0.0f);
-    CEMath::Vector3f Scale = CEMath::Vector3f(1.0f);
+    FVector Location = FVector(0.0f);
+    FVector Rotation = FVector(0.0f);
+    FVector Scale = FVector(1.0f);
 
   protected:
     CSceneComponent* m_RootComponent = nullptr;
