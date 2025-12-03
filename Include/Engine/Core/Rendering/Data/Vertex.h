@@ -36,6 +36,14 @@
              color == other.color &&
              texCoord == other.texCoord;
     }
+
+    bool operator<(const Vertex& other) const
+    {
+      if (position != other.position) return position < other.position;
+      if (normal != other.normal) return normal < other.normal;
+      if (color != other.color) return color < other.color;
+      return texCoord < other.texCoord;
+    }
   };
 
   

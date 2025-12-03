@@ -261,6 +261,43 @@ namespace CE
       filename = "game.log";
     }
 
-    return (logDir / filename).string();
+  return (logDir / filename).string();
+  }
+
+
+
+  void CLogger::LogFatal(const CLogCategory& category, const std::string& message)
+  {
+    Log(category, ELogLevel::Fatal, message);
+  }
+
+  void CLogger::LogError(const CLogCategory& category, const std::string& message)
+  {
+    Log(category, ELogLevel::Error, message);
+  }
+
+  void CLogger::LogWarning(const CLogCategory& category, const std::string& message)
+  {
+    Log(category, ELogLevel::Warning, message);
+  }
+
+  void CLogger::LogDisplay(const CLogCategory& category, const std::string& message)
+  {
+    Log(category, ELogLevel::Display, message);
+  }
+
+  void CLogger::LogMsg(const CLogCategory& category, const std::string& message)
+  {
+    Log(category, ELogLevel::Log, message);
+  }
+
+  void CLogger::LogVerbose(const CLogCategory& category, const std::string& message)
+  {
+    Log(category, ELogLevel::Verbose, message);
+  }
+
+  void CLogger::LogVeryVerbose(const CLogCategory& category, const std::string& message)
+  {
+    Log(category, ELogLevel::VeryVerbose, message);
   }
 }  // namespace CE

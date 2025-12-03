@@ -10,7 +10,7 @@
 MainLevel::MainLevel(CObject* Owner,
                      FString NewName) : CLevel(Owner, NewName)
 {
-  GAMEPLAY_DEBUG(this->GetName(), " Created ");
+  GAMEPLAY_DEBUG(this->GetName().c_str(), " Created ");
   playerController = SpawnActor<CPlayerController>(this, "Player Controller");
   playerCharacter = SpawnActor<CCharacter>(this, "Player Character");
   playerController->Possess(playerCharacter);
@@ -21,10 +21,11 @@ MainLevel::MainLevel(CObject* Owner,
 
   // === СОЗДАЕМ ЛАНДШАФТ ===
   terrain = SpawnActor<TerrainActor>(this, "Terrain");
-  if (terrain)
-  {
-    terrain->SetActorLocation(FVector(-2.0f, -11.0f, -25.0f));
-  }
+   if (terrain)
+   {
+     terrain->SetActorLocation(FVector(-2.0f, -11.0f, -25.0f));
+    
+   } 
 
  
 
@@ -32,92 +33,62 @@ MainLevel::MainLevel(CObject* Owner,
   enemy = SpawnActor<CActor>(this, "Enemy");
   enemy->SetRootComponent(enemy->AddSubObject<CStaticMeshComponent>("EnemyMesh", enemy, "EnemyMesh"));
   enemy->SetActorLocation(FVector(.0f, 0.f, -5.0f));
-  enemy->SetActorScale(5.f);
+  enemy->SetActorScale(50.f);
   enemy->SetActorRotation(FVector(-90.0f, -90.0f, 0.0f));
 
  
-  std::vector<FVector> positions = {
-      FVector(-3.0f, 15.5f, 0.0f),
-      FVector(0.0f, 15.5f, 0.0f),
-      FVector(3.0f, 15.5f, 0.0f),
-      FVector(-1.5f, 15.0f, 0.0f),
-      FVector(1.5f, 15.0f, 0.0f)};
+  // std::vector<FVector> positions = {
+  //     FVector(-3.0f, 15.5f, 0.0f),
+  //     FVector(0.0f, 15.5f, 0.0f),
+  //     FVector(3.0f, 15.5f, 0.0f),
+  //     FVector(-1.5f, 15.0f, 0.0f),
+  //     FVector(1.5f, 15.0f, 0.0f)};
 
-  std::vector<FVector> colors = {
-      FVector(1.0f, 0.0f, 0.0f),
-      FVector(0.0f, 1.0f, 0.0f),
-      FVector(0.0f, 0.0f, 1.0f),
-      FVector(1.0f, 1.0f, 0.0f),
-      FVector(1.0f, 0.0f, 1.0f)};
+  // std::vector<FVector> colors = {
+  //     FVector(1.0f, 0.0f, 0.0f),
+  //     FVector(0.0f, 1.0f, 0.0f),
+  //     FVector(0.0f, 0.0f, 1.0f),
+  //     FVector(1.0f, 1.0f, 0.0f),
+  //     FVector(1.0f, 0.0f, 1.0f)};
 
-  for (int i = 0; i < (int)positions.size(); i++)
-  {
-    auto* actor = SpawnActor<CActor>(this, "Cube_" + std::to_string(i));
-    actor->SetRootComponent(actor->AddSubObject<CStaticMeshComponent>("Mesh", actor, "Mesh"));
-    actor->SetActorLocation(positions[i]);
+  // for (int i = 0; i < (int)positions.size(); i++)
+  // {
+  //   auto* actor = SpawnActor<CActor>(this, "Cube_" + std::to_string(i));
+  //   actor->SetRootComponent(actor->AddSubObject<CStaticMeshComponent>("Mesh", actor, "Mesh"));
+  //   actor->SetActorLocation(positions[i]);
+  //   actor->SetActorScale(50.f);
 
-    auto* mesh = dynamic_cast<CStaticMeshComponent*>(actor->GetRootComponent());
-    if (mesh)
-    {
-      mesh->CreateCubeMesh();
-      mesh->SetColor(colors[i]);
-    }
+  //   auto* mesh = dynamic_cast<CStaticMeshComponent*>(actor->GetRootComponent());
+  //   if (mesh)
+  //   {
+  //     mesh->SetMesh("Assets/Meshes/VikingRoom.obj");
+  //     mesh->SetColor(colors[i]);
+  //   }
+  // }
 
+  // for (int i = 0; i < (int)positions.size(); i++)
+  // {
+  //   auto* actor = SpawnActor<CActor>(this, "Sphere_" + std::to_string(i));
+  //   actor->SetRootComponent(actor->AddSubObject<CStaticMeshComponent>("Mesh", actor, "Mesh"));
+  //   actor->SetActorLocation(positions[i]*static_cast<float>(i));
+  //   actor->SetActorScale(5.f);
 
-
-    
-
-    if (i == 1)
-    {
-      mesh->SetMesh("Assets/Meshes/test_cube.obj");
-    }
-    if (i == 2)
-    {
-      mesh->SetMesh("Assets/Meshes/Sphere.obj");
-    }
-    if (i == 4)
-    {
-      mesh->SetMesh("Assets/Meshes/Icosahedron.obj");
-    }
-  }
-
-  for (int i = 0; i < (int)positions.size(); i++)
-  {
-    auto* actor = SpawnActor<CActor>(this, "Sphere_" + std::to_string(i));
-    actor->SetRootComponent(actor->AddSubObject<CStaticMeshComponent>("Mesh", actor, "Mesh"));
-    actor->SetActorLocation(positions[i]*static_cast<float>(i));
-
-    auto* mesh = dynamic_cast<CStaticMeshComponent*>(actor->GetRootComponent());
-    if (mesh)
-    {
-      mesh->CreateCubeMesh();
-      mesh->SetColor(colors[i]);
-    }
-
-
-
-    if (i == 1)
-    {
-      mesh->SetMesh("Assets/Meshes/test_cube.obj");
-    }
-    if (i == 2)
-    {
-      mesh->SetMesh("Assets/Meshes/Sphere.obj");
-    }
-    if (i == 4)
-    {
-      mesh->SetMesh("Assets/Meshes/Icosahedron.obj");
-    }
-  }
+  //   auto* mesh = dynamic_cast<CStaticMeshComponent*>(actor->GetRootComponent());
+  //   if (mesh)
+  //   {
+  //     mesh->SetMesh("Assets/Meshes/VikingRoom.obj");
+  //     mesh->SetColor(colors[i]);
+  //   }
+  // }
 
   auto* enemyMesh = dynamic_cast<CStaticMeshComponent*>(enemy->GetRootComponent());
   if (enemyMesh)
   {
     enemyMesh->SetMesh("Assets/Meshes/VikingRoom.obj");
-    enemyMesh->SetColor(FVector(0.8f, 0.2f, 0.2f));
+    enemyMesh->SetColor(FLinearColor::Gray());
   }
 
-  // Spawn a SunActor to control world's directional/positional "sun" light
+ // Spawn a SunActor to control world's directional/positional "sun" light
   auto* sun = SpawnActor<SunActor>(this, "SunActor");
   if (sun)
   {
@@ -139,11 +110,6 @@ void MainLevel::BeginPlay()
 void MainLevel::Tick(float DeltaTime)
 {
   CLevel::Tick(DeltaTime);
-  FVector newPos = playerCharacter->GetActorLocation();
- 
-  
-  newPos.y = newPos.y + DeltaTime*20;
-  playerCharacter->SetActorLocation(newPos);
 }
 void MainLevel::Update(float DeltaTime)
 {

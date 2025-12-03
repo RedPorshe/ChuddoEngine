@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+#include <cstdarg>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
@@ -68,50 +69,58 @@ namespace CE
   static void SetConsoleOutput(bool enable);
   static void SetFileOutput(bool enable);
 
-  template <typename... Args>
-  static void Log(const CLogCategory& category, ELogLevel level, const Args&... args);
-
-  template <typename... Args>
-  static void LogFatal(const CLogCategory& category, const Args&... args)
+  static std::string FormatString(const char* format, ...)
   {
-    Log(category, ELogLevel::Fatal, args...);
+    va_list args;
+    va_start(args, format);
+    char buffer[1024];
+    vsnprintf(buffer, sizeof(buffer), format, args);
+    va_end(args);
+    return std::string(buffer);
   }
 
-  template <typename... Args>
-  static void LogError(const CLogCategory& category, const Args&... args)
+  static void Log(const CLogCategory& category, ELogLevel level, const std::string& message)
   {
-    Log(category, ELogLevel::Error, args...);
+    if (!s_initialized)
+      return;
+
+    ELogLevel categoryLevel = s_globalLevel;
+    auto it = s_categoryLevels.find(&category);
+    if (it != s_categoryLevels.end())
+    {
+      categoryLevel = it->second;
+    }
+
+    if (static_cast<int>(level) > static_cast<int>(categoryLevel))
+      return;
+
+    std::string fullMessage = GetCurrentTimeStamp() + " " + GetLevelDisplayName(level) +
+                              ": [" + category.GetName() + "] " + message;
+
+    if (s_consoleOutput)
+    {
+      WriteToConsole(level, category, fullMessage);
+    }
+
+    if (s_fileOutput)
+    {
+      WriteToFile(fullMessage);
+    }
+
+    if (level == ELogLevel::Fatal)
+    {
+      Shutdown();
+      std::exit(1);
+    }
   }
 
-  template <typename... Args>
-  static void LogWarning(const CLogCategory& category, const Args&... args)
-  {
-    Log(category, ELogLevel::Warning, args...);
-  }
-
-  template <typename... Args>
-  static void LogDisplay(const CLogCategory& category, const Args&... args)
-  {
-    Log(category, ELogLevel::Display, args...);
-  }
-
-  template <typename... Args>
-  static void LogMsg(const CLogCategory& category, const Args&... args)
-  {
-    Log(category, ELogLevel::Log, args...);
-  }
-
-  template <typename... Args>
-  static void LogVerbose(const CLogCategory& category, const Args&... args)
-  {
-    Log(category, ELogLevel::Verbose, args...);
-  }
-
-  template <typename... Args>
-  static void LogVeryVerbose(const CLogCategory& category, const Args&... args)
-  {
-    Log(category, ELogLevel::VeryVerbose, args...);
-  }
+  static void LogFatal(const CLogCategory& category, const std::string& message);
+  static void LogError(const CLogCategory& category, const std::string& message);
+  static void LogWarning(const CLogCategory& category, const std::string& message);
+  static void LogDisplay(const CLogCategory& category, const std::string& message);
+  static void LogMsg(const CLogCategory& category, const std::string& message);
+  static void LogVerbose(const CLogCategory& category, const std::string& message);
+  static void LogVeryVerbose(const CLogCategory& category, const std::string& message);
 
  private:
   static void WriteToConsole(ELogLevel level, const CLogCategory& category, const std::string& message);
@@ -131,44 +140,7 @@ namespace CE
   static std::unordered_map<const CLogCategory*, ELogLevel> s_categoryLevels;
 };
 
-template <typename... Args>
-void CLogger::Log(const CLogCategory& category, ELogLevel level, const Args&... args)
-{
-  if (!s_initialized)
-    return;
 
-  ELogLevel categoryLevel = s_globalLevel;
-  auto it = s_categoryLevels.find(&category);
-  if (it != s_categoryLevels.end())
-  {
-    categoryLevel = it->second;
-  }
-
-  if (static_cast<int>(level) > static_cast<int>(categoryLevel))
-    return;
-
-  std::ostringstream stream;
-  ((stream << args), ...);
-
-  std::string message = GetCurrentTimeStamp() + " " + GetLevelDisplayName(level) +
-                        ": [" + category.GetName() + "] " + stream.str();
-
-  if (s_consoleOutput)
-  {
-    WriteToConsole(level, category, message);
-  }
-
-  if (s_fileOutput)
-  {
-    WriteToFile(message);
-  }
-
-  if (level == ELogLevel::Fatal)
-  {
-    Shutdown();
-    std::exit(1);
-  }
-}
 }
 
 using CE::CLogCategory;
@@ -181,79 +153,76 @@ using CE::LogGameplay;
 using CE::LogEditor;
 using CE::LogSystem;
 
-#define LOG_CATEGORY(Category, Level, ...) CE::CLogger::Log##Level(Category, __VA_ARGS__)
+#define CORE_FATAL(...) CE::CLogger::LogFatal(LogCore, CE::CLogger::FormatString(__VA_ARGS__))
+#define CORE_ERROR(...) CE::CLogger::LogError(LogCore, CE::CLogger::FormatString(__VA_ARGS__))
+#define CORE_WARN(...) CE::CLogger::LogWarning(LogCore, CE::CLogger::FormatString(__VA_ARGS__))
+#define CORE_DISPLAY(...) CE::CLogger::LogDisplay(LogCore, CE::CLogger::FormatString(__VA_ARGS__))
+#define CORE_LOG(...) CE::CLogger::LogMsg(LogCore, CE::CLogger::FormatString(__VA_ARGS__))
+#define CORE_DEBUG(...) CE::CLogger::LogVerbose(LogCore, CE::CLogger::FormatString(__VA_ARGS__))
+#define CORE_TRACE(...) CE::CLogger::LogVeryVerbose(LogCore, CE::CLogger::FormatString(__VA_ARGS__))
 
 
-#define CORE_FATAL(...) LOG_CATEGORY(LogCore, Fatal, __VA_ARGS__)
-#define CORE_ERROR(...) LOG_CATEGORY(LogCore, Error, __VA_ARGS__)
-#define CORE_WARN(...) LOG_CATEGORY(LogCore, Warning, __VA_ARGS__)
-#define CORE_DISPLAY(...) LOG_CATEGORY(LogCore, Display, __VA_ARGS__)
-#define CORE_LOG(...) LOG_CATEGORY(LogCore, Msg, __VA_ARGS__)
-#define CORE_DEBUG(...) LOG_CATEGORY(LogCore, Verbose, __VA_ARGS__)
-#define CORE_TRACE(...) LOG_CATEGORY(LogCore, VeryVerbose, __VA_ARGS__)
+#define RENDER_FATAL(...) CE::CLogger::LogFatal(LogRender, CE::CLogger::FormatString(__VA_ARGS__))
+#define RENDER_ERROR(...) CE::CLogger::LogError(LogRender, CE::CLogger::FormatString(__VA_ARGS__))
+#define RENDER_WARN(...) CE::CLogger::LogWarning(LogRender, CE::CLogger::FormatString(__VA_ARGS__))
+#define RENDER_DISPLAY(...) CE::CLogger::LogDisplay(LogRender, CE::CLogger::FormatString(__VA_ARGS__))
+#define RENDER_LOG(...) CE::CLogger::LogMsg(LogRender, CE::CLogger::FormatString(__VA_ARGS__))
+#define RENDER_DEBUG(...) CE::CLogger::LogVerbose(LogRender, CE::CLogger::FormatString(__VA_ARGS__))
+#define RENDER_TRACE(...) CE::CLogger::LogVeryVerbose(LogRender, CE::CLogger::FormatString(__VA_ARGS__))
 
 
-#define RENDER_FATAL(...) LOG_CATEGORY(LogRender, Fatal, __VA_ARGS__)
-#define RENDER_ERROR(...) LOG_CATEGORY(LogRender, Error, __VA_ARGS__)
-#define RENDER_WARN(...) LOG_CATEGORY(LogRender, Warning, __VA_ARGS__)
-#define RENDER_DISPLAY(...) LOG_CATEGORY(LogRender, Display, __VA_ARGS__)
-#define RENDER_LOG(...) LOG_CATEGORY(LogRender, Msg, __VA_ARGS__)
-#define RENDER_DEBUG(...) LOG_CATEGORY(LogRender, Verbose, __VA_ARGS__)
-#define RENDER_TRACE(...) LOG_CATEGORY(LogRender, VeryVerbose, __VA_ARGS__)
+#define INPUT_FATAL(...) CE::CLogger::LogFatal(LogInput, CE::CLogger::FormatString(__VA_ARGS__))
+#define INPUT_ERROR(...) CE::CLogger::LogError(LogInput, CE::CLogger::FormatString(__VA_ARGS__))
+#define INPUT_WARN(...) CE::CLogger::LogWarning(LogInput, CE::CLogger::FormatString(__VA_ARGS__))
+#define INPUT_DISPLAY(...) CE::CLogger::LogDisplay(LogInput, CE::CLogger::FormatString(__VA_ARGS__))
+#define INPUT_LOG(...) CE::CLogger::LogMsg(LogInput, CE::CLogger::FormatString(__VA_ARGS__))
+#define INPUT_DEBUG(...) CE::CLogger::LogVerbose(LogInput, CE::CLogger::FormatString(__VA_ARGS__))
+#define INPUT_TRACE(...) CE::CLogger::LogVeryVerbose(LogInput, CE::CLogger::FormatString(__VA_ARGS__))
 
 
-#define INPUT_FATAL(...) LOG_CATEGORY(LogInput, Fatal, __VA_ARGS__)
-#define INPUT_ERROR(...) LOG_CATEGORY(LogInput, Error, __VA_ARGS__)
-#define INPUT_WARN(...) LOG_CATEGORY(LogInput, Warning, __VA_ARGS__)
-#define INPUT_DISPLAY(...) LOG_CATEGORY(LogInput, Display, __VA_ARGS__)
-#define INPUT_LOG(...) LOG_CATEGORY(LogInput, Msg, __VA_ARGS__)
-#define INPUT_DEBUG(...) LOG_CATEGORY(LogInput, Verbose, __VA_ARGS__)
-#define INPUT_TRACE(...) LOG_CATEGORY(LogInput, VeryVerbose, __VA_ARGS__)
+#define AUDIO_FATAL(...) CE::CLogger::LogFatal(LogAudio, CE::CLogger::FormatString(__VA_ARGS__))
+#define AUDIO_ERROR(...) CE::CLogger::LogError(LogAudio, CE::CLogger::FormatString(__VA_ARGS__))
+#define AUDIO_WARN(...) CE::CLogger::LogWarning(LogAudio, CE::CLogger::FormatString(__VA_ARGS__))
+#define AUDIO_DISPLAY(...) CE::CLogger::LogDisplay(LogAudio, CE::CLogger::FormatString(__VA_ARGS__))
+#define AUDIO_LOG(...) CE::CLogger::LogMsg(LogAudio, CE::CLogger::FormatString(__VA_ARGS__))
+#define AUDIO_DEBUG(...) CE::CLogger::LogVerbose(LogAudio, CE::CLogger::FormatString(__VA_ARGS__))
+#define AUDIO_TRACE(...) CE::CLogger::LogVeryVerbose(LogAudio, CE::CLogger::FormatString(__VA_ARGS__))
 
 
-#define AUDIO_FATAL(...) LOG_CATEGORY(LogAudio, Fatal, __VA_ARGS__)
-#define AUDIO_ERROR(...) LOG_CATEGORY(LogAudio, Error, __VA_ARGS__)
-#define AUDIO_WARN(...) LOG_CATEGORY(LogAudio, Warning, __VA_ARGS__)
-#define AUDIO_DISPLAY(...) LOG_CATEGORY(LogAudio, Display, __VA_ARGS__)
-#define AUDIO_LOG(...) LOG_CATEGORY(LogAudio, Msg, __VA_ARGS__)
-#define AUDIO_DEBUG(...) LOG_CATEGORY(LogAudio, Verbose, __VA_ARGS__)
-#define AUDIO_TRACE(...) LOG_CATEGORY(LogAudio, VeryVerbose, __VA_ARGS__)
+#define GAMEPLAY_FATAL(...) CE::CLogger::LogFatal(LogGameplay, CE::CLogger::FormatString(__VA_ARGS__))
+#define GAMEPLAY_ERROR(...) CE::CLogger::LogError(LogGameplay, CE::CLogger::FormatString(__VA_ARGS__))
+#define GAMEPLAY_WARN(...) CE::CLogger::LogWarning(LogGameplay, CE::CLogger::FormatString(__VA_ARGS__))
+#define GAMEPLAY_DISPLAY(...) CE::CLogger::LogDisplay(LogGameplay, CE::CLogger::FormatString(__VA_ARGS__))
+#define GAMEPLAY_LOG(...) CE::CLogger::LogMsg(LogGameplay, CE::CLogger::FormatString(__VA_ARGS__))
+#define GAMEPLAY_DEBUG(...) CE::CLogger::LogVerbose(LogGameplay, CE::CLogger::FormatString(__VA_ARGS__))
+#define GAMEPLAY_TRACE(...) CE::CLogger::LogVeryVerbose(LogGameplay, CE::CLogger::FormatString(__VA_ARGS__))
 
 
-#define GAMEPLAY_FATAL(...) LOG_CATEGORY(LogGameplay, Fatal, __VA_ARGS__)
-#define GAMEPLAY_ERROR(...) LOG_CATEGORY(LogGameplay, Error, __VA_ARGS__)
-#define GAMEPLAY_WARN(...) LOG_CATEGORY(LogGameplay, Warning, __VA_ARGS__)
-#define GAMEPLAY_DISPLAY(...) LOG_CATEGORY(LogGameplay, Display, __VA_ARGS__)
-#define GAMEPLAY_LOG(...) LOG_CATEGORY(LogGameplay, Msg, __VA_ARGS__)
-#define GAMEPLAY_DEBUG(...) LOG_CATEGORY(LogGameplay, Verbose, __VA_ARGS__)
-#define GAMEPLAY_TRACE(...) LOG_CATEGORY(LogGameplay, VeryVerbose, __VA_ARGS__)
+#define EDITOR_FATAL(...) CE::CLogger::LogFatal(LogEditor, CE::CLogger::FormatString(__VA_ARGS__))
+#define EDITOR_ERROR(...) CE::CLogger::LogError(LogEditor, CE::CLogger::FormatString(__VA_ARGS__))
+#define EDITOR_WARN(...) CE::CLogger::LogWarning(LogEditor, CE::CLogger::FormatString(__VA_ARGS__))
+#define EDITOR_DISPLAY(...) CE::CLogger::LogDisplay(LogEditor, CE::CLogger::FormatString(__VA_ARGS__))
+#define EDITOR_LOG(...) CE::CLogger::LogMsg(LogEditor, CE::CLogger::FormatString(__VA_ARGS__))
+#define EDITOR_DEBUG(...) CE::CLogger::LogVerbose(LogEditor, CE::CLogger::FormatString(__VA_ARGS__))
+#define EDITOR_TRACE(...) CE::CLogger::LogVeryVerbose(LogEditor, CE::CLogger::FormatString(__VA_ARGS__))
 
 
-#define EDITOR_FATAL(...) LOG_CATEGORY(LogEditor, Fatal, __VA_ARGS__)
-#define EDITOR_ERROR(...) LOG_CATEGORY(LogEditor, Error, __VA_ARGS__)
-#define EDITOR_WARN(...) LOG_CATEGORY(LogEditor, Warning, __VA_ARGS__)
-#define EDITOR_DISPLAY(...) LOG_CATEGORY(LogEditor, Display, __VA_ARGS__)
-#define EDITOR_LOG(...) LOG_CATEGORY(LogEditor, Msg, __VA_ARGS__)
-#define EDITOR_DEBUG(...) LOG_CATEGORY(LogEditor, Verbose, __VA_ARGS__)
-#define EDITOR_TRACE(...) LOG_CATEGORY(LogEditor, VeryVerbose, __VA_ARGS__)
+#define SYSTEM_FATAL(...) CE::CLogger::LogFatal(LogSystem, CE::CLogger::FormatString(__VA_ARGS__))
+#define SYSTEM_ERROR(...) CE::CLogger::LogError(LogSystem, CE::CLogger::FormatString(__VA_ARGS__))
+#define SYSTEM_WARN(...) CE::CLogger::LogWarning(LogSystem, CE::CLogger::FormatString(__VA_ARGS__))
+#define SYSTEM_DISPLAY(...) CE::CLogger::LogDisplay(LogSystem, CE::CLogger::FormatString(__VA_ARGS__))
+#define SYSTEM_LOG(...) CE::CLogger::LogMsg(LogSystem, CE::CLogger::FormatString(__VA_ARGS__))
+#define SYSTEM_DEBUG(...) CE::CLogger::LogVerbose(LogSystem, CE::CLogger::FormatString(__VA_ARGS__))
+#define SYSTEM_TRACE(...) CE::CLogger::LogVeryVerbose(LogSystem, CE::CLogger::FormatString(__VA_ARGS__))
 
 
-#define SYSTEM_FATAL(...) LOG_CATEGORY(LogSystem, Fatal, __VA_ARGS__)
-#define SYSTEM_ERROR(...) LOG_CATEGORY(LogSystem, Error, __VA_ARGS__)
-#define SYSTEM_WARN(...) LOG_CATEGORY(LogSystem, Warning, __VA_ARGS__)
-#define SYSTEM_DISPLAY(...) LOG_CATEGORY(LogSystem, Display, __VA_ARGS__)
-#define SYSTEM_LOG(...) LOG_CATEGORY(LogSystem, Msg, __VA_ARGS__)
-#define SYSTEM_DEBUG(...) LOG_CATEGORY(LogSystem, Verbose, __VA_ARGS__)
-#define SYSTEM_TRACE(...) LOG_CATEGORY(LogSystem, VeryVerbose, __VA_ARGS__)
-
-
-#define CFATAL(...) LOG_CATEGORY(LogTemp, Fatal, __VA_ARGS__)
-#define CERROR(...) LOG_CATEGORY(LogTemp, Error, __VA_ARGS__)
-#define CWARN(...) LOG_CATEGORY(LogTemp, Warning, __VA_ARGS__)
-#define CDISPLAY(...) LOG_CATEGORY(LogTemp, Display, __VA_ARGS__)
-#define CLOG(...) LOG_CATEGORY(LogTemp, Msg, __VA_ARGS__)
-#define CDEBUG(...) LOG_CATEGORY(LogTemp, Verbose, __VA_ARGS__)
-#define CTRACE(...) LOG_CATEGORY(LogTemp, VeryVerbose, __VA_ARGS__)
+#define CFATAL(...) CE::CLogger::LogFatal(LogTemp, CE::CLogger::FormatString(__VA_ARGS__))
+#define CERROR(...) CE::CLogger::LogError(LogTemp, CE::CLogger::FormatString(__VA_ARGS__))
+#define CWARN(...) CE::CLogger::LogWarning(LogTemp, CE::CLogger::FormatString(__VA_ARGS__))
+#define CDISPLAY(...) CE::CLogger::LogDisplay(LogTemp, CE::CLogger::FormatString(__VA_ARGS__))
+#define CLOG(...) CE::CLogger::LogMsg(LogTemp, CE::CLogger::FormatString(__VA_ARGS__))
+#define CDEBUG(...) CE::CLogger::LogVerbose(LogTemp, CE::CLogger::FormatString(__VA_ARGS__))
+#define CTRACE(...) CE::CLogger::LogVeryVerbose(LogTemp, CE::CLogger::FormatString(__VA_ARGS__))
 
 
 #define CHECK(Expression, ...)                            \
@@ -261,7 +230,7 @@ using CE::LogSystem;
   {                                                          \
     if (!(Expression))                                       \
     {                                                        \
-      FATAL("Check failed: " #Expression, ##__VA_ARGS__); \
+      CFATAL("Check failed: " #Expression, ##__VA_ARGS__); \
     }                                                        \
   } while (0)
 
@@ -270,7 +239,7 @@ using CE::LogSystem;
   {                                                              \
     if (!(Expression))                                           \
     {                                                            \
-      ERROR("Assertion failed: " #Expression, ##__VA_ARGS__); \
+      CERROR("Assertion failed: " #Expression, ##__VA_ARGS__); \
     }                                                            \
   } while (0)
 

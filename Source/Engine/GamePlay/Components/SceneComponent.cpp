@@ -362,7 +362,7 @@ void CSceneComponent::UpdateTransformMatrix()
     m_WorldRotation = m_RelativeRotation;
   }
 
-  // Создаем матрицу трансформации: Scale * Rotation * Translation
+  // Создаем матрицу трансформации: Translation * Rotation * Scale
   FMatrix translation = FMatrix::Translate(m_RelativeLocation);
   FMatrix rotation = m_RotationQuat.ToMatrix() ;
   FMatrix scale = FMatrix::Scale(m_RelativeScale);

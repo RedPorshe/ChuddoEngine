@@ -1,5 +1,6 @@
 #include "Math/Vector2D.hpp"
 
+
 namespace CEMath
 {
     float& Vector2D::operator[](uint32_t index) noexcept
@@ -85,7 +86,17 @@ namespace CEMath
         y *= invScalar;
         return *this;
     }
-    
+
+    bool Vector2D::operator>(const Vector2D& other) const
+    {
+      if (x != other.x) return x > other.x;
+      return y > other.y;
+    }
+    bool Vector2D::operator<(const Vector2D& other) const
+    {
+      if (x != other.x) return x < other.x;
+      return y < other.y;
+    }
     Vector2D Vector2D::operator-() const noexcept
     {
         return Vector2D(-x, -y);

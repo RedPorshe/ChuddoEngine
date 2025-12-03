@@ -95,7 +95,7 @@
       configInfo.depthStencilInfo.depthCompareOp = VK_COMPARE_OP_LESS;
 
       // НАПРАВЛЕНИЕ ОБХОДА ГРАНЕЙ ПО УМОЛЧАНИЮ
-      configInfo.rasterizationInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
+      configInfo.rasterizationInfo.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 
       // ВЫКЛЮЧАЕМ BIAS ГЛУБИНЫ ДЛЯ ГЛАДКИХ ПОВЕРХНОСТЕЙ
       configInfo.rasterizationInfo.depthBiasEnable = VK_FALSE;
@@ -262,47 +262,39 @@
   }
 
   
+
   std::vector<char> PipelineManager::ReadShaderFile(const std::string& filename)
 {
-    // Просто используем относительный путь от текущей директории
-    std::string fullPath = filename;
-    
-    RENDER_DEBUG("Looking for shader at: ", fullPath);
-    
-    if (!std::filesystem::exists(fullPath))
+    // Получаем путь к исполняемому файлу
+    char exePath[MAX_PATH];
+    GetModuleFileNameA(NULL, exePath, MAX_PATH);
+    std::filesystem::path exeDir = std::filesystem::path(exePath).parent_path();
+
+    // Строим путь к шейдеру относительно директории исполняемого файла
+    std::filesystem::path shaderPath = exeDir / filename;
+
+    RENDER_DEBUG("Looking for shader at: ", shaderPath.string());
+
+    if (!std::filesystem::exists(shaderPath))
     {
-        // Если не найден, попробуем с Debug/ префиксом
-        std::string debugPath = "Debug/" + filename;
-        if (std::filesystem::exists(debugPath))
-        {
-            fullPath = debugPath;
-        }
-        else
-        {
-            // Попробуем с Release/ префиксом
-            std::string releasePath = "Release/" + filename;
-            if (std::filesystem::exists(releasePath))
-            {
-                fullPath = releasePath;
-            }
-        }
+        throw std::runtime_error("Failed to open shader file: " + shaderPath.string());
     }
-    
-    std::ifstream file(fullPath, std::ios::ate | std::ios::binary);
+
+    RENDER_DEBUG("Shader found at: ", shaderPath.string());
+
+    std::ifstream file(shaderPath, std::ios::ate | std::ios::binary);
     if (!file.is_open())
     {
-        throw std::runtime_error("Failed to open shader file: " + fullPath);
+        throw std::runtime_error("Failed to open shader file: " + shaderPath.string());
     }
-    
-    RENDER_DEBUG("Shader found at: ", fullPath);
-    
+
     size_t fileSize = static_cast<size_t>(file.tellg());
     std::vector<char> buffer(fileSize);
-    
+
     file.seekg(0);
     file.read(buffer.data(), fileSize);
     file.close();
-    
+
     return buffer;
 }
 
@@ -320,7 +312,7 @@
     configInfo.rasterizationInfo.polygonMode = VK_POLYGON_MODE_FILL;
     configInfo.rasterizationInfo.lineWidth = 1.0f;
     configInfo.rasterizationInfo.cullMode = VK_CULL_MODE_BACK_BIT;
-    configInfo.rasterizationInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
+    configInfo.rasterizationInfo.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
     configInfo.rasterizationInfo.depthBiasEnable = VK_TRUE;
     configInfo.rasterizationInfo.depthBiasConstantFactor = 0.0f;
     configInfo.rasterizationInfo.depthBiasClamp = 0.0f;

@@ -5,6 +5,7 @@
 
 
   class CWorld;
+  class CInputComponent;
 
   class CPlayerController : public CActor
   {
@@ -23,17 +24,11 @@
       return m_PossessedPawn;
     }
 
-    // Система ввода
-    virtual void SetupInputComponent();
-    CInputComponent* GetInputComponent() const
-    {
-      return m_InputComponent;
-    }
-
     // Получение контроллера из мира
     static CPlayerController* GetFirstPlayerController(CWorld* World);
 
    protected:
     CPawn* m_PossessedPawn = nullptr;
     CInputComponent* m_InputComponent = nullptr;
+
   };

@@ -106,6 +106,9 @@ namespace CEMath
     int32_t MinComponentIndex() const noexcept;
     int32_t MaxComponentIndex() const noexcept;
 
+    bool operator<(const Vector3D& other) const;
+    bool operator>(const Vector3D& other) const;
+
     friend std::ostream& operator<<(std::ostream& os, const Vector3D& vec);
     std::string ToString() const;
 

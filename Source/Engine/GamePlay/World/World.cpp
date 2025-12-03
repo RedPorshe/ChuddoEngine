@@ -187,6 +187,7 @@ void CWorld::CollectRenderData(FrameRenderData& renderData)
   }
   else
   {
+    CORE_WARN("Active camera not found, use default camera");
     CameraData defaultCam;
     FVector defaultCamPosition = FVector(0.0f, 2.0f, 10.0f);
     FVector defaultCameraUp = FVector(0.0f, 1.0f, 0.0f);
@@ -196,7 +197,7 @@ void CWorld::CollectRenderData(FrameRenderData& renderData)
         defaultCamPosition,
         defaultCameraTarget,
         defaultCameraUp);
-    defaultCam.projectionMatrix = FMatrix::Perspective (
+    defaultCam.projectionMatrix = FMatrix::VulkanPerspective (
         CEMath::DEG_TO_RAD *(45.0f), 16.0f / 9.0f, 0.1f, 1000.0f);
     defaultCam.position = defaultCamPosition;
 

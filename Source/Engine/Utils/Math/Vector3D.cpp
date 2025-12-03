@@ -1,6 +1,7 @@
 #include "Math/Vector3D.hpp"
 #include "Math/Quaternion.hpp"
 
+
 namespace CEMath
 {
     float& Vector3D::operator[](uint32_t index) noexcept
@@ -26,11 +27,6 @@ namespace CEMath
     Vector3D Vector3D::operator*(const Vector3D& other) const noexcept
     {
         return Vector3D(x * other.x, y * other.y, z * other.z);
-    }
-
-    Vector3D Vector3D::operator*(const Quaternion& other) const noexcept
-    {
-      return Vector3D(x * other.x, y * other.y, z * other.z);
     }
     Vector3D Vector3D::operator/(const Vector3D& other) const noexcept
     {
@@ -326,7 +322,19 @@ namespace CEMath
         if (y >= x && y >= z) return 1;
         return 2;
     }
-    
+
+    bool Vector3D::operator<(const Vector3D& other) const
+    {
+      if (x != other.x) return x < other.x;
+      if (y != other.y) return y < other.y;
+      return z < other.z;
+    }
+    bool Vector3D::operator>(const Vector3D& other) const
+    {
+      if (x != other.x) return x > other.x;
+      if (y != other.y) return y > other.y;
+      return z > other.z;
+    }
     std::string Vector3D::ToString() const
     {
         std::ostringstream oss;

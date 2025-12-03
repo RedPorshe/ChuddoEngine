@@ -2,60 +2,45 @@
 
 #include <functional>
 #include <unordered_map>
-
+#include <vector>
+#include <SDL3/SDL.h>
 #include "Engine/GamePlay/Components/Base/Component.h"
+#include "Engine/Core/CoreTypes.h"
+#include "Engine/GamePlay/Input/InputSystem.h"
 
-
-
-  enum class EInputEvent
-  {
-    Pressed,
-    Released,
-    Repeat,
-    Axis
-  };
-
-  struct FInputActionBinding
-  {
-    std::function<void()> Callback;
-    EInputEvent EventType;
-  };
-
-  struct InputAxisBinding
-  {
-    std::function<void(float)> Callback;
-    float Scale = 1.0f;
-  };
-
-  class CInputComponent : public CComponent
-  {
-   public:
+class CInputComponent : public CComponent
+{
+public:
     CInputComponent(CObject* Owner = nullptr, FString NewName = "InputComponent");
     virtual ~CInputComponent();
 
+    // Action bindings
     void BindAction(const FString& ActionName, EInputEvent EventType, std::function<void()> Callback);
 
+    // Axis bindings
     void BindAxis(const FString& AxisName, std::function<void(float)> Callback, float Scale = 1.0f);
 
-    virtual void ProcessKey(int key, int action, float deltaTime);
-    virtual void ProcessMouseMovement(float xOffset, float yOffset, float deltaTime);
-    virtual void ProcessMouseScroll(float yOffset);
+    // Trigger methods called by InputSystem
+    void TriggerAction(const FString& ActionName, EInputEvent EventType);
+    void TriggerAxis(const FString& AxisName, float Value);
 
-    bool IsKeyPressed(int key) const;
+    // State queries
+    bool IsKeyDown(SDL_Keycode Key) const;
+    bool IsMouseButtonDown(Uint8 Button) const;
+    FVector2D GetMousePosition() const;
+    FVector2D GetMouseDelta() const;
 
-    void Update(float DeltaTime) override;
+    // Update
+    virtual void Update(float DeltaTime) override;
 
-   private:
+    // Setup default mappings
+    virtual void SetupDefaultMappings();
+
+protected:
+    // Bindings
     std::unordered_map<FString, std::vector<FInputActionBinding>> m_ActionBindings;
-    std::unordered_map<FString, InputAxisBinding> m_AxisBindings;
-    std::unordered_map<int, bool> m_KeyStates;
+    std::unordered_map<FString, FInputAxisBinding> m_AxisBindings;
 
-    std::unordered_map<int, FString> m_KeyToActionMap;
-    std::unordered_map<int, FString> m_KeyToAxisMap;
-
-    float m_LastMouseX = 0.0f;
-    float m_LastMouseY = 0.0f;
-    bool m_FirstMouse = true;
-
-    void SetupDefaultKeyMappings();
-  };
+    // Sensitivity
+    float m_MouseSensitivity = 0.1f;
+};

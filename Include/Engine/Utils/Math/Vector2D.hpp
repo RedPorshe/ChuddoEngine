@@ -39,7 +39,11 @@ namespace CEMath
         
         Vector2D& operator*=(float scalar) noexcept;
         Vector2D& operator/=(float scalar) noexcept;
+
+        bool operator>(const Vector2D& other) const;
+        bool operator<(const Vector2D& other) const;
         
+
         // Unary operators
         Vector2D operator-() const noexcept;
         

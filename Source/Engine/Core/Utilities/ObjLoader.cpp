@@ -2,6 +2,7 @@
 
 #include <fstream>
 #include <glm/glm.hpp>
+#include <map>
 #include <sstream>
 
 #include "Engine/Utils/Logger.h"
@@ -15,8 +16,14 @@ FStaticMesh ObjLoader::LoadOBJ(const std::string& filePath)
   std::vector<FVector2D> texCoords;
   std::vector<Vertex> vertices;
   std::vector<uint32_t> indices;
+  std::map<Vertex, uint32_t> vertexMap;
 
-  std::ifstream file(filePath);
+  std::string fullPath = filePath;
+  std::ifstream file(fullPath);
+  if (!file.is_open() && fullPath.find("Assets/") == 0) {
+    fullPath = "../" + fullPath;
+    file.open(fullPath);
+  }
   if (!file.is_open())
   {
     CORE_ERROR("Failed to open OBJ file: ", filePath.c_str());
@@ -74,38 +81,43 @@ FStaticMesh ObjLoader::LoadOBJ(const std::string& filePath)
       while (iss >> vertexStr)
       {
         std::istringstream vertexStream(vertexStr);
-        uint32_t posIdx = 0, texIdx = 0, normIdx = 0;
+        int posIdx = 0, texIdx = 0, normIdx = 0;
         char slash;
 
         // v
         if (vertexStream >> posIdx)
         {
-          posIdx--;  
+          // Adjust for negative indices
+          if (posIdx > 0) posIdx--;
+          else if (posIdx < 0) posIdx += positions.size();
+
           if (vertexStream.peek() == '/')
           {
             vertexStream >> slash;
 
-            
+
             if (vertexStream.peek() != '/')
             {
               vertexStream >> texIdx;
-              texIdx--;
+              if (texIdx > 0) texIdx--;
+              else if (texIdx < 0) texIdx += texCoords.size();
             }
 
             if (vertexStream.peek() == '/')
             {
               vertexStream >> slash >> normIdx;
-              normIdx--;
+              if (normIdx > 0) normIdx--;
+              else if (normIdx < 0) normIdx += normals.size();
             }
           }
 
          
           Vertex vertex;
-          if (posIdx < positions.size())
+          if (posIdx >= 0 && static_cast<size_t>(posIdx) < positions.size())
           {
             vertex.position = positions[posIdx];
           }
-          if (normIdx < normals.size())
+          if (normIdx >= 0 && static_cast<size_t>(normIdx) < normals.size())
           {
             vertex.normal = normals[normIdx];
           }
@@ -113,20 +125,40 @@ FStaticMesh ObjLoader::LoadOBJ(const std::string& filePath)
           {
             vertex.normal = FVector(0.0f, 1.0f, 0.0f);  // Дефолтная нормаль
           }
-          if (texIdx < texCoords.size())
+          if (texIdx >= 0 && static_cast<size_t>(texIdx) < texCoords.size())
           {
             vertex.texCoord = texCoords[texIdx];
           }
           vertex.color = FVector(1.0f);
 
-          vertices.push_back(vertex);
-          faceIndices.push_back(static_cast<uint32_t>(vertices.size()) - 1);
+          // Deduplicate vertices
+          auto it = vertexMap.find(vertex);
+          if (it == vertexMap.end())
+          {
+            uint32_t index = static_cast<uint32_t>(vertices.size());
+            vertices.push_back(vertex);
+            vertexMap[vertex] = index;
+            faceIndices.push_back(index);
+          }
+          else
+          {
+            faceIndices.push_back(it->second);
+          }
         }
       }
 
       
-      if (faceIndices.size() >= 3)
+
+      if (faceIndices.size() == 3)
       {
+        // Already triangulated, add directly
+        indices.push_back(faceIndices[0]);
+        indices.push_back(faceIndices[1]);
+        indices.push_back(faceIndices[2]);
+      }
+      else if (faceIndices.size() > 3)
+      {
+        // Triangulate polygon using fan triangulation
         for (size_t i = 1; i + 1 < faceIndices.size(); ++i)
         {
           indices.push_back(faceIndices[0]);

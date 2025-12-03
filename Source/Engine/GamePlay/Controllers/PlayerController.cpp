@@ -2,20 +2,18 @@
 
 #include "Engine/GamePlay/World/World.h"
 #include "Engine/GamePlay/World/Levels/Level.h"
+#include "Engine/GamePlay/Components/InputComponent.h"
 
 
   CPlayerController::CPlayerController(CObject* Owner, FString NewName)
       : CActor(Owner, NewName)
   {
-   
-    m_InputComponent = AddSubObject<CInputComponent>("Input", this, "InputComponent");
     CORE_DEBUG("PlayerController created: ", NewName);
   }
 
   void CPlayerController::BeginPlay()
   {
     CActor::BeginPlay();
-    SetupInputComponent();
     CORE_DEBUG("PlayerController BeginPlay: ", GetName());
   }
 
@@ -43,11 +41,44 @@
     if (m_PossessedPawn)
     {
       CORE_DEBUG("PlayerController possessed pawn: ", Pawn->GetName());
+      m_PossessedPawn->OnPossess();
 
-      
-      if (m_InputComponent && m_PossessedPawn->GetInputComponent())
+      // Setup input
+      m_InputComponent = m_PossessedPawn->GetInputComponent();
+      if (m_InputComponent)
       {
-        m_PossessedPawn->OnPossess();
+        // Movement axes
+        m_InputComponent->BindAxis("MoveForward", [this](float value) {
+          if (m_PossessedPawn) m_PossessedPawn->MoveForward(value);
+        }, 1.0f);
+
+        m_InputComponent->BindAxis("MoveRight", [this](float value) {
+          if (m_PossessedPawn) m_PossessedPawn->MoveRight(value);
+        }, 1.0f);
+
+        m_InputComponent->BindAxis("MoveUp", [this](float value) {
+          // Implement move up if needed
+        }, 1.0f);
+
+        // Look axes
+        m_InputComponent->BindAxis("MouseX", [this](float value) {
+          if (m_PossessedPawn) m_PossessedPawn->turn(value);
+        }, 1.0f);
+
+        m_InputComponent->BindAxis("MouseY", [this](float value) {
+          if (m_PossessedPawn) m_PossessedPawn->lookUp(value);
+        }, 1.0f);
+
+        // Actions
+        m_InputComponent->BindAction("Jump", EInputEvent::Pressed, [this]() {
+          if (m_PossessedPawn) m_PossessedPawn->jump();
+        });
+
+        m_InputComponent->BindAction("Fire", EInputEvent::Pressed, [this]() {
+          // Implement fire action if needed
+        });
+
+        CORE_DEBUG("PlayerController input bindings set up");
       }
     }
   }
@@ -61,18 +92,7 @@
     }
   }
 
-  void CPlayerController::SetupInputComponent()
-  {
-    if (m_InputComponent)
-    {
-     
-      m_InputComponent->BindAction("ToggleInputMode", EInputEvent::Pressed,
-                                   [this]()
-                                   {
-                                     CORE_DEBUG("Toggle input mode pressed");
-                                   });
-    }
-  }
+
 
   CPlayerController* CPlayerController::GetFirstPlayerController(CWorld* World)
   {

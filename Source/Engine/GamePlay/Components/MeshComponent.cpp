@@ -101,7 +101,7 @@
 
     m_Mesh.vertices = vertices;
     m_Mesh.indices = indices;
-    m_Mesh.color = FVector(1.0f);
+    m_Mesh.color = FVector(1.0f, 0.0f, 0.0f); // Red color for visibility
   }
 
   FMatrix CMeshComponent::GetRenderTransform() const

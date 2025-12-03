@@ -103,7 +103,7 @@
     {
       SceneUBO ubo{};
       ubo.view = camera.viewMatrix;
-      ubo.proj = camera.projectionMatrix;
+      ubo.proj = camera.projectionMatrix.Transposed();
       ubo.cameraPos = camera.position;
       return ubo;
     }
@@ -111,7 +111,7 @@
     ModelUBO GetModelUBO(const FMatrix& modelMatrix, const FVector& meshColor) const
     {
       ModelUBO ubo{};
-      ubo.model = modelMatrix;
+      ubo.model = modelMatrix.Transposed();
       ubo.color = FVector4(meshColor, 1.0f);
       return ubo;
     }

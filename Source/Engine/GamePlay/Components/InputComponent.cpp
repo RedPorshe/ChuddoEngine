@@ -1,144 +1,123 @@
 #include "Engine/GamePlay/Components/InputComponent.h"
-
 #include "Engine/GamePlay/Input/InputSystem.h"
 #include <SDL3/SDL.h>
 
+CInputComponent::CInputComponent(CObject* Owner, FString NewName)
+    : CComponent(Owner, NewName)
+    , m_MouseSensitivity(0.1f)
+{
+    // Setup default mappings
+    SetupDefaultMappings();
 
-
-
-  CInputComponent::CInputComponent(CObject* Owner, FString NewName)
-      : CComponent(Owner, NewName)
-  {
-    SetupDefaultKeyMappings();
-
+    // Register with input system
     CInputSystem::Get().RegisterInputComponent(this);
 
-    CORE_DEBUG("InputComponent created: ", NewName);
-  }
+    CORE_DEBUG("InputComponent created: %s", NewName.c_str());
+}
 
-  CInputComponent::~CInputComponent()
-  {
+CInputComponent::~CInputComponent()
+{
+    // Unregister from input system
     CInputSystem::Get().UnregisterInputComponent(this);
 
-    CORE_DEBUG("InputComponent destroyed: ", GetName());
-  }
+    CORE_DEBUG("InputComponent destroyed: %s", GetName().c_str());
+}
 
-  void CInputComponent::BindAction(const FString& ActionName, EInputEvent EventType, std::function<void()> Callback)
-  {
+// Bind action
+void CInputComponent::BindAction(const FString& ActionName, EInputEvent EventType, std::function<void()> Callback)
+{
     m_ActionBindings[ActionName].push_back({Callback, EventType});
-  }
+    CORE_DEBUG("Action bound: %s (event type: %d)", ActionName.c_str(), static_cast<int>(EventType));
+}
 
-  void CInputComponent::BindAxis(const FString& AxisName, std::function<void(float)> Callback, float Scale)
-  {
+// Bind axis
+void CInputComponent::BindAxis(const FString& AxisName, std::function<void(float)> Callback, float Scale)
+{
     m_AxisBindings[AxisName] = {Callback, Scale};
-  }
+    CORE_DEBUG("Axis bound: %s (scale: %.2f)", AxisName.c_str(), Scale);
+}
 
-  void CInputComponent::ProcessKey(int key, int action, [[maybe_unused]] float deltaTime)
-  {
-    EInputEvent eventType;
-    if (action == SDL_EVENT_KEY_DOWN)
-      eventType = EInputEvent::Pressed;
-    else if (action == SDL_EVENT_KEY_UP)
-      eventType = EInputEvent::Released;
-    else
-      eventType = EInputEvent::Repeat;
-
-    auto actionIt = m_KeyToActionMap.find(key);
-    if (actionIt != m_KeyToActionMap.end())
+// Trigger action
+void CInputComponent::TriggerAction(const FString& ActionName, EInputEvent EventType)
+{
+    auto it = m_ActionBindings.find(ActionName);
+    if (it != m_ActionBindings.end())
     {
-      const FString& actionName = actionIt->second;
-
-      auto bindingsIt = m_ActionBindings.find(actionName);
-      if (bindingsIt != m_ActionBindings.end())
-      {
-        for (const auto& binding : bindingsIt->second)
+        for (const auto& binding : it->second)
         {
-          if (binding.EventType == eventType)
-          {
-            binding.Callback();
-          }
+            if (binding.EventType == EventType)
+            {
+                binding.Callback();
+            }
         }
-      }
     }
-  }
+}
 
-  void CInputComponent::ProcessMouseMovement(float xOffset, float yOffset, float deltaTime)
-  {
-    float scaledX = (xOffset * 10.1f) * deltaTime;
-    float scaledY = (yOffset * 10.1f) * deltaTime;
-    auto lookHorizontalIt = m_AxisBindings.find("LookHorizontal");
-    if (lookHorizontalIt != m_AxisBindings.end())
+// Trigger axis
+void CInputComponent::TriggerAxis(const FString& AxisName, float Value)
+{
+    auto it = m_AxisBindings.find(AxisName);
+    if (it != m_AxisBindings.end())
     {
-      lookHorizontalIt->second.Callback(scaledX);
+        float scaledValue = Value * it->second.Scale;
+        it->second.Callback(scaledValue);
     }
+}
 
-    auto lookVerticalIt = m_AxisBindings.find("LookVertical");
-    if (lookVerticalIt != m_AxisBindings.end())
-    {
-      lookVerticalIt->second.Callback(scaledY);
-    }
-  }
+// State queries
+bool CInputComponent::IsKeyDown(SDL_Keycode Key) const
+{
+    return CInputSystem::Get().IsKeyDown(Key);
+}
 
-  void CInputComponent::ProcessMouseScroll([[maybe_unused]] float yOffset)
-  {
-  }
+bool CInputComponent::IsMouseButtonDown(Uint8 Button) const
+{
+    return CInputSystem::Get().IsMouseButtonDown(Button);
+}
 
-  bool CInputComponent::IsKeyPressed(int key) const
-  {
-    return CInputSystem::Get().IsKeyPressed(key);
-  }
+FVector2D CInputComponent::GetMousePosition() const
+{
+    return CInputSystem::Get().GetMousePosition();
+}
 
-  void CInputComponent::Update(float DeltaTime)
-  {
+FVector2D CInputComponent::GetMouseDelta() const
+{
+    return CInputSystem::Get().GetMouseDelta();
+}
+
+// Update
+void CInputComponent::Update(float DeltaTime)
+{
     CComponent::Update(DeltaTime);
+}
 
-    for (const auto& [key, axisName] : m_KeyToAxisMap)
-    {
-      if (IsKeyPressed(key))
-      {
-        auto axisIt = m_AxisBindings.find(axisName);
-        if (axisIt != m_AxisBindings.end())
-        {
-          float value = 1.0f;
+// Setup default mappings
+void CInputComponent::SetupDefaultMappings()
+{
+    // Movement axes
+    CInputSystem::Get().AddKeyAxisMapping(SDLK_W, "MoveForward", 1.0f);
+    CInputSystem::Get().AddKeyAxisMapping(SDLK_S, "MoveForward", -1.0f);
+    CInputSystem::Get().AddKeyAxisMapping(SDLK_D, "MoveRight", 1.0f);
+    CInputSystem::Get().AddKeyAxisMapping(SDLK_A, "MoveRight", -1.0f);
+    CInputSystem::Get().AddKeyAxisMapping(SDLK_SPACE, "MoveUp", 1.0f);
+    CInputSystem::Get().AddKeyAxisMapping(SDLK_LCTRL, "MoveUp", -1.0f);
 
-          if (axisName == "MoveForward")
-          {
-            value = (key == SDLK_W) ? 1.0f : -1.0f;
-          }
-          else if (axisName == "MoveRight")
-          {
-            value = (key == SDLK_D) ? 1.0f : -1.0f;
-          }
+    // Actions
+    CInputSystem::Get().AddKeyActionMapping(SDLK_SPACE, "Jump", EInputEvent::Pressed);
+    CInputSystem::Get().AddKeyActionMapping(SDLK_LSHIFT, "Sprint", EInputEvent::Pressed);
+    CInputSystem::Get().AddKeyActionMapping(SDLK_ESCAPE, "Pause", EInputEvent::Pressed);
+    CInputSystem::Get().AddKeyActionMapping(SDLK_F, "Interact", EInputEvent::Pressed);
+    CInputSystem::Get().AddKeyActionMapping(SDLK_R, "Reload", EInputEvent::Pressed);
+    CInputSystem::Get().AddKeyActionMapping(SDLK_E, "Use", EInputEvent::Pressed);
 
-          value *= axisIt->second.Scale;
+    // Mouse
+    CInputSystem::Get().AddMouseActionMapping(SDL_BUTTON_LEFT, "Fire", EInputEvent::Pressed);
+    CInputSystem::Get().AddMouseActionMapping(SDL_BUTTON_RIGHT, "Aim", EInputEvent::Pressed);
 
-          axisIt->second.Callback(value);
-        }
-      }
-    }
-  }
+    // Mouse axes
+    CInputSystem::Get().AddMouseAxisMapping("MouseX", m_MouseSensitivity);
+    CInputSystem::Get().AddMouseAxisMapping("MouseY", m_MouseSensitivity);
+    CInputSystem::Get().AddMouseAxisMapping("MouseWheel", 1.0f);
 
-  void CInputComponent::SetupDefaultKeyMappings()
-  {
-    m_KeyToAxisMap[SDLK_W] = "MoveForward";
-    m_KeyToAxisMap[SDLK_S] = "MoveForward";
-    m_KeyToAxisMap[SDLK_A] = "MoveRight";
-    m_KeyToAxisMap[SDLK_D] = "MoveRight";
-
-    m_KeyToActionMap[SDLK_SPACE] = "Jump";
-    m_KeyToActionMap[SDLK_LSHIFT] = "Sprint";
-    
-    m_KeyToActionMap[SDLK_ESCAPE] = "Pause";
-
-    CORE_DEBUG("Default key mappings setup");
-
-    // Отладочный вывод маппинга
-    for (const auto& [key, axis] : m_KeyToAxisMap)
-    {
-      INPUT_DEBUG("Axis mapping: key=", key, " -> ", axis);
-    }
-    for (const auto& [key, action] : m_KeyToActionMap)
-    {
-      INPUT_DEBUG("Action mapping: key=", key, " -> ", action);
-    }
-  }
+    CORE_DEBUG("Default mappings setup complete");
+}

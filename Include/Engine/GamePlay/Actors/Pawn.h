@@ -5,8 +5,12 @@
 #include "Engine/GamePlay/Components/InputComponent.h"
 
 
+  class CPlayerController;
+
   class CPawn : public CActor
   {
+    friend class CPlayerController;
+
    public:
     CPawn(CObject* Owner = nullptr, FString NewName = "Pawn");
     virtual ~CPawn() = default;
@@ -59,6 +63,13 @@
       return m_bUseControllerRotation;
     }
 
+    // Movement functions
+    void MoveForward(float Value);
+    void MoveRight(float Value);
+    void lookUp(float Value);
+    void turn(float Value);
+    void jump();
+
    protected:
     CInputComponent* m_InputComponent = nullptr;
     FVector m_MovementInput{0.0f, 0.0f, 0.0f};
@@ -72,9 +83,5 @@
     void ApplyRotationToActor();
     void ApplyMovementInputToActor();
 
-    void MoveForward(float Value);
-    void MoveRight(float Value);
-    void lookUp(float Value);
-    void turn(float Value);
-    void jump();
+    
   };

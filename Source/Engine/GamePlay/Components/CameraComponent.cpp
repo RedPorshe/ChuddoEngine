@@ -73,15 +73,15 @@
 
   FMatrix CCameraComponent::GetProjectionMatrix() const
 {
-    FMatrix projection = FMatrix::Perspective(
-      
+    FMatrix projection = FMatrix::VulkanPerspective(
+
         CEMath::DEG_TO_RAD *m_FieldOfView,
         m_AspectRatio,
         m_NearPlane,
         m_FarPlane);
 
-  
-    
+
+
     return projection;
 }
 

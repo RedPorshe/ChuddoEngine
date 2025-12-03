@@ -26,6 +26,9 @@ void Application::Initialize()
 {
   CORE_DISPLAY("=== Initializing Application ===");
 
+  // Force SDL to use windows video driver
+  SDL_SetHint(SDL_HINT_VIDEO_DRIVER, "windows");
+
   // 1. Инициализация рендер-системы
   m_RenderSystem = std::make_unique<RenderSystem>(m_info);
   m_RenderSystem->Initialize();
@@ -76,7 +79,7 @@ void Application::Run()
   {
 
     CalculateDeltaTime();
-
+    
     ProcessInput();
 
     Update();
@@ -103,7 +106,7 @@ void Application::CalculateDeltaTime()
 void Application::ProcessInput()
 {
   const bool* state = SDL_GetKeyboardState(NULL);
-  if (state[SDL_SCANCODE_ESCAPE])
+  if (state[SDL_SCANCODE_ESCAPE] )
   {
     m_IsRunning = false;
   }

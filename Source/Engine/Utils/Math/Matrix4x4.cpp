@@ -418,24 +418,24 @@ namespace CEMath
         Vector3D f = (center - eye).Normalized();
         Vector3D s = f.Cross(up).Normalized();
         Vector3D u = s.Cross(f);
-        
+
         Matrix4x4 result;
         result.m[0][0] = s.x;
         result.m[1][0] = s.y;
         result.m[2][0] = s.z;
-        
+
         result.m[0][1] = u.x;
         result.m[1][1] = u.y;
         result.m[2][1] = u.z;
-        
+
         result.m[0][2] = -f.x;
         result.m[1][2] = -f.y;
         result.m[2][2] = -f.z;
-        
+
         result.m[0][3] = -s.Dot(eye);
         result.m[1][3] = -u.Dot(eye);
         result.m[2][3] = f.Dot(eye);
-        
+
         return result;
     }
     

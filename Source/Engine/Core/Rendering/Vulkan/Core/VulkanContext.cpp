@@ -487,6 +487,11 @@ void VulkanContext::RecordCommandBuffer(uint32_t imageIndex, const FrameRenderDa
         RegisterMesh(meshName, *renderObject.mesh);
       }
 
+      if (m_meshBufferMap.find(meshName) == m_meshBufferMap.end())
+      {
+        continue;  // Skip this mesh if registration failed
+      }
+
       const auto& meshBuffers = m_meshBufferMap[meshName];
 
       ModelUBO modelUBO = renderData.GetModelUBO(renderObject.transform, renderObject.color);
@@ -551,9 +556,9 @@ bool VulkanContext::InitWindow()
         m_info->AppName.c_str(),
         0,
         0,
-        SDL_WINDOW_VULKAN | SDL_WINDOW_FULLSCREEN | SDL_WINDOW_HIDDEN);
+        SDL_WINDOW_VULKAN | SDL_WINDOW_FULLSCREEN);
 
-    RENDER_DEBUG("Borderless fullscreen window created (offscreen)");
+    RENDER_DEBUG("Borderless fullscreen window created");
   }
   else
   {
@@ -562,9 +567,9 @@ bool VulkanContext::InitWindow()
         m_info->AppName.c_str(),
         m_info->Width,
         m_info->Height,
-        SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE );
+        SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
 
-    RENDER_DEBUG("Windowed window created (offscreen): ", m_info->Width, "x", m_info->Height);
+    RENDER_DEBUG("Windowed window created: ", m_info->Width, "x", m_info->Height);
   }
 
   if (!m_window)
@@ -574,7 +579,9 @@ bool VulkanContext::InitWindow()
     return false;
   }
 
-  RENDER_DEBUG("Window Created : ", m_window);
+  SDL_ShowWindow(m_window);
+  SDL_RaiseWindow(m_window);
+  RENDER_DEBUG("Window Created and shown: ", m_window);
   return true;
 }
 
