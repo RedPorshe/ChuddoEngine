@@ -14,37 +14,39 @@ namespace CEMath
 {
     struct Matrix4x4
     {
-        // 4x4 матрица, хранится как column-major для OpenGL
-        // m[col][row] или m[column * 4 + row]
+		//4x4 matrix, stored in column-major order for OpenGL compatibility
+		// m[col][row] or m[column * 4 + row]
+        
         float m[16];
-
-        // Конструкторы
+        //constructors
+        
         Matrix4x4();
         Matrix4x4(float diagonal);
-        Matrix4x4(const float data[16]); // Массив в column-major порядке
+        Matrix4x4(const float data[16]); // array in column-major order
         Matrix4x4(const Matrix4x4& other);
 
-        // Конструкторы из отдельных компонентов (column-major)
+		// constructors from components (row-major)
+        
         Matrix4x4(float m00, float m10, float m20, float m30,
             float m01, float m11, float m21, float m31,
             float m02, float m12, float m22, float m32,
             float m03, float m13, float m23, float m33);
 
-        // Операторы присваивания
+        //operators 
         Matrix4x4& operator=(const Matrix4x4& other);
 
-        // Операторы доступа
+		// operators for accessing elements
         float& operator()(int row, int col);
         float operator()(int row, int col) const;
 
         float& operator[](int index);
         float operator[](int index) const;
 
-        // Операторы сравнения
+		// operators '==' and '!='
         bool operator==(const Matrix4x4& other) const;
         bool operator!=(const Matrix4x4& other) const;
 
-        // Арифметические операторы
+		// arithmetic operators
         Matrix4x4 operator+(const Matrix4x4& other) const;
         Matrix4x4 operator-(const Matrix4x4& other) const;
         Matrix4x4 operator*(const Matrix4x4& other) const;
@@ -54,17 +56,17 @@ namespace CEMath
         Vector4D operator*(const Vector4D& vec) const;
         Vector3D operator*(const Vector3D& vec) const;
 
-        // Составные операторы присваивания
+		// arithmetic assignment operators
         Matrix4x4& operator+=(const Matrix4x4& other);
         Matrix4x4& operator-=(const Matrix4x4& other);
         Matrix4x4& operator*=(const Matrix4x4& other);
         Matrix4x4& operator*=(float scalar);
         Matrix4x4& operator/=(float scalar);
 
-        // Унарные операторы
+		// unary operators
         Matrix4x4 operator-() const;
 
-        // Базовые математические функции
+		// base math functions
         Matrix4x4 Transposed() const;
         Matrix4x4& Transpose();
 
@@ -75,12 +77,12 @@ namespace CEMath
         Matrix4x4& Identity();
         bool IsIdentity() const;
 
-        // Проверки
+		// checking properties
         bool IsInvertible() const;
         bool IsOrthogonal() const;
         bool IsAffine() const;
 
-        // Извлечение компонентов
+		// getters for transformation components
         Vector3D GetTranslation() const;
         Vector3D GetScale() const;
         Matrix4x4 GetRotation() const;
@@ -88,7 +90,7 @@ namespace CEMath
         void SetTranslation(const Vector3D& translation);
         void SetScale(const Vector3D& scale);
 
-        // Преобразования
+		// transformation methods
         Matrix4x4& Translate(const Vector3D& translation);
         Matrix4x4& Translate(float x, float y, float z);
 
@@ -106,7 +108,7 @@ namespace CEMath
         Matrix4x4& Orthographic(float left, float right, float bottom, float top,
             float zNear, float zFar);
 
-        // Статические фабричные методы
+		// static factory methods
         static Matrix4x4 Zero();
         static Matrix4x4 IdentityMatrix();
 
@@ -127,7 +129,7 @@ namespace CEMath
         static Matrix4x4 OrthographicMatrix(float left, float right, float bottom, float top,
             float zNear, float zFar);
 
-        // Утилиты
+		// utility methods
         void ToArray(float out[16]) const;
         std::array<float, 16> ToStdArray() const;
 
@@ -135,7 +137,7 @@ namespace CEMath
        friend std::istream& operator>>(std::istream& is, Matrix4x4& mat);
     };
 
-    // Внешние операторы
+    // 
     Vector4D operator*(const Vector4D& vec, const Matrix4x4& mat);
     Vector3D operator*(const Vector3D& vec, const Matrix4x4& mat);
     Matrix4x4 operator*(float scalar, const Matrix4x4& mat);

@@ -2,7 +2,7 @@
 
 namespace CEMath
 {
-    // Конструкторы
+   
     Matrix4x4::Matrix4x4()
     {
         Identity();
@@ -33,14 +33,14 @@ namespace CEMath
         float m02, float m12, float m22, float m32,
         float m03, float m13, float m23, float m33)
     {
-        // Column-major порядок
+        
         m[0] = m00; m[4] = m01; m[8] = m02;  m[12] = m03;
         m[1] = m10; m[5] = m11; m[9] = m12;  m[13] = m13;
         m[2] = m20; m[6] = m21; m[10] = m22; m[14] = m23;
         m[3] = m30; m[7] = m31; m[11] = m32; m[15] = m33;
     }
 
-    // Операторы присваивания
+    
     Matrix4x4& Matrix4x4::operator=(const Matrix4x4& other)
     {
         if (this != &other)
@@ -51,7 +51,7 @@ namespace CEMath
         return *this;
     }
 
-    // Операторы доступа
+    
     float& Matrix4x4::operator()(int row, int col)
     {
         if (row < 0 || row > 3 || col < 0 || col > 3)
@@ -84,7 +84,7 @@ namespace CEMath
         return m[index];
     }
 
-    // Операторы сравнения
+    
     bool Matrix4x4::operator==(const Matrix4x4& other) const
     {
         for (int i = 0; i < 16; ++i)
@@ -100,7 +100,7 @@ namespace CEMath
         return !(*this == other);
     }
 
-    // Арифметические операторы
+    
     Matrix4x4 Matrix4x4::operator+(const Matrix4x4& other) const
     {
         Matrix4x4 result;
@@ -154,7 +154,7 @@ namespace CEMath
         return *this * invScalar;
     }
 
-    // Умножение матрицы на вектор (column-major: M * v)
+    
     Vector4D Matrix4x4::operator*(const Vector4D& vec) const
     {
         return Vector4D(
@@ -182,7 +182,7 @@ namespace CEMath
 
         return Vector3D(x, y, z);
     }
-    // Составные операторы присваивания
+   
     Matrix4x4& Matrix4x4::operator+=(const Matrix4x4& other)
     {
         for (int i = 0; i < 16; ++i)
@@ -219,7 +219,7 @@ namespace CEMath
         return *this *= invScalar;
     }
 
-    // Унарные операторы
+    
     Matrix4x4 Matrix4x4::operator-() const
     {
         Matrix4x4 result;
@@ -228,7 +228,7 @@ namespace CEMath
         return result;
     }
 
-    // Базовые математические функции
+    
     Matrix4x4 Matrix4x4::Transposed() const
     {
         Matrix4x4 result;
@@ -441,7 +441,7 @@ namespace CEMath
         }
         return true;
     }
-    // Проверки
+    
     bool Matrix4x4::IsInvertible() const
     {
         return !IsZero(Determinant());
@@ -460,7 +460,7 @@ namespace CEMath
             IsEqual(m[11], 0.0f) && IsEqual(m[15], 1.0f);
     }
 
-    // Извлечение компонентов
+    
     Vector3D Matrix4x4::GetTranslation() const
     {
         return Vector3D(m[12], m[13], m[14]);
@@ -483,7 +483,7 @@ namespace CEMath
         if (IsZero(scale.x) || IsZero(scale.y) || IsZero(scale.z))
             return IdentityMatrix();
 
-        // Извлекаем вращение, удаляя масштаб
+        
         for (int i = 0; i < 3; ++i)
         {
             rotation.m[i] = m[i] / scale.x;
@@ -518,8 +518,7 @@ namespace CEMath
         m[4] = currentY.x * scale.y; m[5] = currentY.y * scale.y; m[6] = currentY.z * scale.y;
         m[8] = currentZ.x * scale.z; m[9] = currentZ.y * scale.z; m[10] = currentZ.z * scale.z;
     }
-    // Преобразования
-   // Преобразования - должны умножаться СПРАВА для правильного порядка
+   
     Matrix4x4& Matrix4x4::Translate(const Vector3D& translation)
     {
         return Translate(translation.x, translation.y, translation.z);
@@ -528,7 +527,7 @@ namespace CEMath
     Matrix4x4& Matrix4x4::Translate(float x, float y, float z)
     {
         Matrix4x4 translationMat = Translation(x, y, z);
-        *this = *this * translationMat;  // Умножение СПРАВА
+        *this = *this * translationMat;  
         return *this;
     }
 
@@ -540,35 +539,42 @@ namespace CEMath
     Matrix4x4& Matrix4x4::Scale(float x, float y, float z)
     {
         Matrix4x4 scaleMat = Scaling(x, y, z);
-        *this = *this * scaleMat;  // Умножение СПРАВА
+        *this = *this * scaleMat;  
         return *this;
+    }
+
+    Matrix4x4& Matrix4x4::Scale(float uniformScale)
+    {
+		*this *= Scaling(uniformScale, uniformScale, uniformScale);
+		
+        return *this; // TODO:
     }
 
     Matrix4x4& Matrix4x4::RotateX(float radians)
     {
         Matrix4x4 rotationMat = RotationX(radians);
-        *this = *this * rotationMat;  // Умножение СПРАВА
+        *this = *this * rotationMat;  
         return *this;
     }
 
     Matrix4x4& Matrix4x4::RotateY(float radians)
     {
         Matrix4x4 rotationMat = RotationY(radians);
-        *this = *this * rotationMat;  // Умножение СПРАВА
+        *this = *this * rotationMat;  
         return *this;
     }
 
     Matrix4x4& Matrix4x4::RotateZ(float radians)
     {
         Matrix4x4 rotationMat = RotationZ(radians);
-        *this = *this * rotationMat;  // Умножение СПРАВА
+        *this = *this * rotationMat;  
         return *this;
     }
 
     Matrix4x4& Matrix4x4::Rotate(const Vector3D& axis, float radians)
     {
         Matrix4x4 rotationMat = Rotation(axis, radians);
-        *this = *this * rotationMat;  // Умножение СПРАВА
+        *this = *this * rotationMat;  
         return *this;
     }
 
@@ -590,7 +596,7 @@ namespace CEMath
         *this = OrthographicMatrix(left, right, bottom, top, zNear, zFar);
         return *this;
     }
-    // Статические фабричные методы
+   
     Matrix4x4 Matrix4x4::Zero()
     {
         Matrix4x4 mat;
@@ -699,14 +705,12 @@ namespace CEMath
 
     Matrix4x4 Matrix4x4::LookAtMatrix(const Vector3D& eye, const Vector3D& target, const Vector3D& up)
     {
-        // Стандартная реализация LookAt для OpenGL
-        Vector3D zAxis = (eye - target).Normalized();  // Направление от цели к глазу
+        
+        Vector3D zAxis = (eye - target).Normalized();  
         Vector3D xAxis = up.Cross(zAxis).Normalized();
         Vector3D yAxis = zAxis.Cross(xAxis);
 
-        // Обычная view матрица перемещает глаз в (0,0,0)
-        // Но тест ожидает, что глаз перемещается в (0,0,-dist)
-        // Значит, нам нужно добавить дополнительное смещение по Z
+        
         return Matrix4x4(
             xAxis.x, yAxis.x, zAxis.x, 0.0f,
             xAxis.y, yAxis.y, zAxis.y, 0.0f,
@@ -742,7 +746,7 @@ namespace CEMath
             -(right + left) / width, -(top + bottom) / height, -(zFar + zNear) / depth, 1.0f
         );
     }
-    // Утилиты
+   
     void Matrix4x4::ToArray(float out[16]) const
     {
         for (int i = 0; i < 16; ++i)
@@ -757,7 +761,7 @@ namespace CEMath
         return arr;
     }
 
-    // Внешние операторы
+   
     Vector4D operator*(const Vector4D& vec, const Matrix4x4& mat)
     {
         return Vector4D(
@@ -770,8 +774,7 @@ namespace CEMath
 
     Vector3D operator*(const Vector3D& vec, const Matrix4x4& mat)
     {
-        // Для row-вектора: v' = v * M
-        // Учитываем w=1 для позиций
+        
         float x = vec.x * mat[0] + vec.y * mat[4] + vec.z * mat[8] + mat[12];
         float y = vec.x * mat[1] + vec.y * mat[5] + vec.z * mat[9] + mat[13];
         float z = vec.x * mat[2] + vec.y * mat[6] + vec.z * mat[10] + mat[14];
@@ -818,7 +821,7 @@ namespace CEMath
     {
         std::string line;
 
-        // Пропускаем возможные пробелы и название
+        
         while (is && (is.peek() == ' ' || is.peek() == '\t' || is.peek() == '\n' ||
             is.peek() == 'M' || is.peek() == '['))
         {
@@ -826,7 +829,7 @@ namespace CEMath
             if (c == '[') break;
         }
 
-        // Читаем 16 чисел
+        
         float values[16];
         int count = 0;
 
@@ -834,13 +837,13 @@ namespace CEMath
         {
             if (!(is >> values[i]))
             {
-                // Если не удалось прочитать число, пробуем пропустить запятые и скобки
+                
                 is.clear();
                 char c;
                 is >> c;
                 if (c == ',' || c == ']' || c == '[' || c == '(' || c == ')')
                 {
-                    --i; // Попробуем снова
+                    --i; 
                     continue;
                 }
                 else
@@ -851,11 +854,11 @@ namespace CEMath
             }
             count++;
 
-            // Пропускаем запятые между числами
+           
             if (is.peek() == ',') is.ignore();
         }
 
-        // Если прочитали 16 чисел, заполняем матрицу
+        
         if (count == 16)
         {
             for (int i = 0; i < 16; ++i)
@@ -864,7 +867,7 @@ namespace CEMath
             }
         }
 
-        // Пропускаем закрывающую скобку
+        
         while (is && (is.peek() == ' ' || is.peek() == '\t' || is.peek() == '\n' ||
             is.peek() == ']' || is.peek() == ')'))
         {

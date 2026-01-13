@@ -7,27 +7,24 @@ bool CGameInstance::bInstanceCreated = false;
 void CGameInstance::Tick(float DeltaTime)
 {
 	(void)  DeltaTime;
-	std::cout << "CGameInstance '" << GetName() << "' Tick called with DeltaTime: " << DeltaTime << std::endl;
-    /*need add subsystem and update here*/
-	std::cout << "CGameInstance '" << GetName() << "' processing Tick... update subsystems ..." << std::endl;
-	std::cout << "CGameInstance '" << GetName() << "' Tick processing complete." << std::endl;
+	
 }
 
 CGameInstance::CGameInstance(const std::string& inName)
     : CObject(inName)
 {
-    std::cout << "CGameInstance '" << this->GetName() << "' constructor called." << std::endl;
+    
 }
 
 CGameInstance::CGameInstance(const CObject* Owner, const std::string& inName)
     : CObject(Owner, inName)
 {
-    std::cout << "CGameInstance '" << this->GetName() << "' constructor with owner called." << std::endl;
+   
 }
 
 CGameInstance::~CGameInstance()
 {
-    std::cout << "CGameInstance '" << this->GetName() << "' destructor called." << std::endl;
+  
 }
 
 CGameInstance& CGameInstance::GetInstance()
@@ -60,8 +57,7 @@ bool CGameInstance::CreateInstance(const std::string& Name)
         Instance = std::unique_ptr<CGameInstance>(new CGameInstance(Name));
         bInstanceCreated = true;
 
-        std::cout << "GameInstance created successfully with name: '"
-            << Name << "'" << std::endl;
+        
         return true;
     }
     catch (const std::exception& e)
@@ -83,10 +79,7 @@ void CGameInstance::DestroyInstance()
         std::cout << "GameInstance already destroyed or never created." << std::endl;
         return;
     }
-
-    std::cout << "Destroying GameInstance '" << Instance->GetName() << "'..." << std::endl;
-
-    
+         
     if (Instance->bIsInitialized)
     {
         Instance->Shutdown();
@@ -96,7 +89,7 @@ void CGameInstance::DestroyInstance()
     Instance.reset();
     bInstanceCreated = false;
 
-    std::cout << "GameInstance destroyed successfully." << std::endl;
+    
 }
 
 bool CGameInstance::Init()

@@ -7,7 +7,7 @@
 
 namespace CEMath
 {
-    // Базовые математические функции
+	// math helpers
     inline bool IsZero(float value, float epsilon = EPSILON)
     {
         return std::fabs(value) < epsilon;
@@ -198,7 +198,7 @@ namespace CEMath
 
     inline float CopySign(float magnitude, float sign)
     {
-        return std::copysign(magnitude, sign); // C++11 и выше
+		return std::copysign(magnitude, sign); // C++11 and later
     }
 
     inline int NextPowerOfTwo(int value)

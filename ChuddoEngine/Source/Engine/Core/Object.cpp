@@ -9,7 +9,7 @@ CObject::CObject(const CObject* Owner, const std::string& inName)
     if (Owner)
     {
         std::cout << " with owner '" << Owner->GetName() << "'." << std::endl;
-        // Добавляем себя в список owned объектов родителя
+        
         const_cast<CObject*>(Owner)->AddOwnedObject(this);
     }
     else
@@ -26,15 +26,15 @@ CObject::CObject(const std::string& inName)
 
 CObject::~CObject()
 {
-    std::cout << "Object '" << m_Name << "' destroyed." << std::endl;
+    
 
-    // Уведомляем владельца о нашем уничтожении
+    
     if (OwnerObject)
     {
         const_cast<CObject*>(OwnerObject)->RemoveOwnedObject(this, false);
     }
 
-    // Удаляем все дочерние объекты
+   
     ClearOwnedObjects(true);
 }
 
@@ -49,23 +49,23 @@ void CObject::SetOwner(const CObject* NewOwner)
         return;
     }
 
-    // Проверка циклических зависимостей
+    
     if (NewOwner && const_cast<CObject*>(NewOwner)->IsOwnerOf(this))
     {
         std::cerr << "Error: Circular ownership detected. Owner not changed." << std::endl;
         return;
     }
 
-    // Удаляем себя из списка старого владельца
+    
     if (OwnerObject)
     {
         const_cast<CObject*>(OwnerObject)->RemoveOwnedObject(this, false);
     }
 
-    // Устанавливаем нового владельца
+    
     OwnerObject = NewOwner;
 
-    // Добавляем себя в список нового владельца
+   
     if (OwnerObject)
     {
         const_cast<CObject*>(OwnerObject)->AddOwnedObject(this);
@@ -77,18 +77,18 @@ void CObject::AddOwnedObject(CObject* Obj)
     if (!Obj || Obj == this)
         return;
 
-    // Проверяем, не добавляем ли мы уже существующий объект
+    
     if (std::find(OwnedObjects.begin(), OwnedObjects.end(), Obj) != OwnedObjects.end())
         return;
 
-    // Проверяем циклические зависимости
+    
     if (Obj->IsOwnerOf(this))
     {
         std::cerr << "Error: Circular ownership detected!" << std::endl;
         return;
     }
 
-    // Если у объекта уже есть другой владелец
+    
     if (Obj->OwnerObject && Obj->OwnerObject != this)
     {
         const_cast<CObject*>(Obj->OwnerObject)->RemoveOwnedObject(Obj, false);
