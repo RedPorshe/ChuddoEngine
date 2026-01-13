@@ -142,7 +142,7 @@
     <ClCompile Include="Source\Engine\Core\GameInstance.cpp" />
     <ClCompile Include="Source\Engine\Core\Object.cpp" />
     <ClCompile Include="Source\Engine\Core\EngineLoop.cpp" />
-    <ClCompile Include="main.cpp" />
+    <ClCompile Include="Source\main.cpp" />
     <ClCompile Include="Source\Utils\Math\MathConstants.cpp" />
     <ClCompile Include="Source\Utils\Math\MathHelpers.cpp" />
     <ClCompile Include="Source\Utils\Math\Matrix4.cpp" />
