@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="ChuddoEngine/ChuddoEngine.vcxproj" Id="f19629e4-6272-424e-93a4-3d0d80b5dcb5" />
+</Solution>
