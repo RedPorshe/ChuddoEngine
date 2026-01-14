@@ -22,3 +22,18 @@ using FVector = CEMath::Vec3;
 using FVector4D = CEMath::Vec4;
 using FMat4 = CEMath::Mat4;
 using FQuat = CEMath::Quat;
+
+struct FTransform 
+{
+	FVector Location;
+	FQuat Rotation;
+	FVector Scale;
+	FTransform()
+		: Location(FVector::Zero()), Rotation(FQuat::Identity()), Scale(FVector::One()) {}
+	FTransform(const FVector& InLocation, const FQuat& InRotation, const FVector& InScale)
+		: Location(InLocation), Rotation(InRotation), Scale(InScale) {}
+	static FTransform Identity()
+	{
+		return FTransform(FVector::Zero(), FQuat::Identity(), FVector::One());
+	}
+};

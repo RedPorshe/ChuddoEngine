@@ -1,6 +1,7 @@
 #include "Core/EngineLoop.h"
 #include <chrono>
 #include "Core/GameInstance.h"
+#include "Core/World.h"
 
 #include "Tests/Test.h"
 
@@ -42,7 +43,18 @@ void FEngineLoop::Start()
 		CGameInstance::DestroyInstance();
 		return;
 	}
-
+	if (GameInstance.IsCreated())
+	{
+		// Create TestWorld as unique_ptr and transfer ownership to GameInstance.
+		// Construct with no owner (nullptr) so AddOwnedObject will set proper OwnerObject.
+		auto worldUP = std::make_unique<TestWorld>(nullptr, "MainTestWorld");
+		TestWorld* gameworld = static_cast<TestWorld*>(GameInstance.AddOwnedObject(std::move(worldUP)));
+		GameInstance.SetWorld(gameworld);
+	}
+	else
+	{
+		throw std::runtime_error("GameInstance not created!");
+	}
 	std::cout << "Engine Started" << std::endl;
 	bIsRunning = true;
 
@@ -65,6 +77,11 @@ void FEngineLoop::Shutdown()
 void FEngineLoop::MainLoop()
 {
 	std::cout << "Entering Main Loop" << std::endl;
+	auto& GameInstance = CGameInstance::GetInstance();
+	if (auto GameWorld = GameInstance.GetWorld()) 
+	{
+	GameWorld->BeginPlay();
+	}
 	while (!GIsRequestingExit && bIsRunning)
 	{
 		
@@ -89,7 +106,8 @@ void FEngineLoop::Tick(float DT)
 {
 	(void)DT;
 	auto GI = CGameInstance::GetInstancePtr();
-	GI->Tick(DT);
+	auto world = GI->GetWorld();
+	world->Tick(DT);
 	static int TickCount = 0;
 	TickCount++;
 	if (TickCount >= 10) 

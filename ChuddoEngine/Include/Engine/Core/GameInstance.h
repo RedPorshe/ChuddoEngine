@@ -5,6 +5,9 @@
 #include <iostream>
 #include <cassert>
 
+// Forward declarations (if any)
+class CWorld;
+
 class CGameInstance : public CObject
 {
 public:
@@ -24,11 +27,13 @@ public:
     virtual bool Init();
     virtual void Shutdown();
 
+    CWorld* GetWorld() const {        return CurrentWorld;    }
+	void SetWorld(CWorld* NewWorld) { CurrentWorld = NewWorld; }
     
     bool IsInitialized() const { return bIsInitialized; }
     bool IsCreated() const { return bInstanceCreated; }
 
-	void Tick(float DeltaTime);
+	
 
 protected:
     
@@ -40,7 +45,7 @@ private:
     static std::unique_ptr<CGameInstance> Instance;
     static bool bInstanceCreated;
     bool bIsInitialized = false;
-
+	CWorld* CurrentWorld = nullptr;
     friend struct std::default_delete<CGameInstance>;
 };
 

@@ -4,11 +4,7 @@
 std::unique_ptr<CGameInstance> CGameInstance::Instance = nullptr;
 bool CGameInstance::bInstanceCreated = false;
 
-void CGameInstance::Tick(float DeltaTime)
-{
-	(void)  DeltaTime;
-	
-}
+
 
 CGameInstance::CGameInstance(const std::string& inName)
     : CObject(inName)

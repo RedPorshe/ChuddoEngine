@@ -1,0 +1,144 @@
+﻿Engine Initialized
+Object 'MainGameInstance' created with no owner.
+Initializing GameInstance 'MainGameInstance'...
+GameInstance 'MainGameInstance' initialized successfully.
+Object 'MainTestWorld' created with owner 'MainGameInstance'.
+TestWorld 'MainTestWorld' created.
+Object 'TestLevel1' created with owner 'MainTestWorld'.
+Object 'TestLevel2' created with owner 'MainTestWorld'.
+Level '' not found in Loaded Levels.
+Current Level set to 'TestLevel2' in World 'MainTestWorld'.
+Object 'TestLevel3' created with owner 'MainTestWorld'.
+Level 'TestLevel2' not found in Loaded Levels.
+Current Level set to 'TestLevel3' in World 'MainTestWorld'.
+Level 'MainTestWorld' created.
+Loading level data for 'MainTestWorld'...
+Object 'Player' created with owner 'MainTestWorld'.
+Actor 'Player' created.
+Spawning Actor 'Player' at location ((0, 0, 0)) whith Rotation (Quaternion [angle: 269.347595░, axis: (-0.403480, -0.540117, 0.738564)]) and Scale ((1.000000, 1.000000, 1.000000)) in Level 'TestLevel1'.
+Object 'Enemy1' created with owner 'MainTestWorld'.
+Actor 'Enemy1' created.
+Spawning Actor 'Enemy1' at location ((100.000000, 0.000000, 0.000000)) whith Rotation (Quaternion [angle: 195.914337░, axis: (-0.753896, 0.236703, 0.612872)]) and Scale ((1.000000, 21.000000, 1.000000)) in Level 'TestLevel1'.
+Object 'Enemy2' created with owner 'MainTestWorld'.
+Actor 'Enemy2' created.
+Spawning Actor 'Enemy2' at location ((-100.000000, 0.000000, 0.000000)) whith Rotation (Quaternion [angle: 100.143013░, axis: (-0.467067, -0.625239, -0.625239)]) and Scale ((11.000000, 1.000000, 1.000000)) in Level 'TestLevel1'.
+Object 'NPC1' created with owner 'MainTestWorld'.
+Actor 'NPC1' created.
+Spawning Actor 'NPC1' at location ((50.000000, 50.000000, 0.000000)) whith Rotation (Quaternion [angle: 280.062836░, axis: (0.363599, -0.651784, -0.665563)]) and Scale ((1.000000, 31.000000, 1.000000)) in Level 'TestLevel1'.
+Engine Started
+Entering Main Loop
+Begin Play on TestWorld: MainTestWorld
+Begin Play on World: MainTestWorld
+Starting BeginPlay on Persistent Level: TestLevel1
+Begin Play on Level: TestLevel1
+Begin Play on Actor: Player
+Begin Play on Actor: Enemy1
+Begin Play on Actor: Enemy2
+Begin Play on Actor: NPC1
+Tick on TestWorld: MainTestWorld with DeltaTime: 0.001125
+Tick on World: MainTestWorld with DeltaTime: 0.001125
+Ticking Persistent Level: TestLevel1
+Tick on Level: TestLevel1 with DeltaTime: 0.001125
+Ticking Actors in Level: TestLevel1
+Tick on Actor: Player with DeltaTime: 0.001125
+Tick on Actor: Enemy1 with DeltaTime: 0.001125
+Tick on Actor: Enemy2 with DeltaTime: 0.001125
+Tick on Actor: NPC1 with DeltaTime: 0.001125
+Tick on TestWorld: MainTestWorld with DeltaTime: 0.000122
+Tick on World: MainTestWorld with DeltaTime: 0.000122
+Ticking Persistent Level: TestLevel1
+Tick on Level: TestLevel1 with DeltaTime: 0.000122
+Ticking Actors in Level: TestLevel1
+Tick on Actor: Player with DeltaTime: 0.000122
+Tick on Actor: Enemy1 with DeltaTime: 0.000122
+Tick on Actor: Enemy2 with DeltaTime: 0.000122
+Tick on Actor: NPC1 with DeltaTime: 0.000122
+Tick on TestWorld: MainTestWorld with DeltaTime: 0.000118
+Tick on World: MainTestWorld with DeltaTime: 0.000118
+Ticking Persistent Level: TestLevel1
+Tick on Level: TestLevel1 with DeltaTime: 0.000118
+Ticking Actors in Level: TestLevel1
+Tick on Actor: Player with DeltaTime: 0.000118
+Tick on Actor: Enemy1 with DeltaTime: 0.000118
+Tick on Actor: Enemy2 with DeltaTime: 0.000118
+Tick on Actor: NPC1 with DeltaTime: 0.000118
+Tick on TestWorld: MainTestWorld with DeltaTime: 0.000118
+Tick on World: MainTestWorld with DeltaTime: 0.000118
+Ticking Persistent Level: TestLevel1
+Tick on Level: TestLevel1 with DeltaTime: 0.000118
+Ticking Actors in Level: TestLevel1
+Tick on Actor: Player with DeltaTime: 0.000118
+Tick on Actor: Enemy1 with DeltaTime: 0.000118
+Tick on Actor: Enemy2 with DeltaTime: 0.000118
+Tick on Actor: NPC1 with DeltaTime: 0.000118
+Tick on TestWorld: MainTestWorld with DeltaTime: 0.000117
+Tick on World: MainTestWorld with DeltaTime: 0.000117
+Ticking Persistent Level: TestLevel1
+Tick on Level: TestLevel1 with DeltaTime: 0.000117
+Ticking Actors in Level: TestLevel1
+Tick on Actor: Player with DeltaTime: 0.000117
+Tick on Actor: Enemy1 with DeltaTime: 0.000117
+Tick on Actor: Enemy2 with DeltaTime: 0.000117
+Tick on Actor: NPC1 with DeltaTime: 0.000117
+Tick on TestWorld: MainTestWorld with DeltaTime: 0.000117
+Tick on World: MainTestWorld with DeltaTime: 0.000117
+Ticking Persistent Level: TestLevel1
+Tick on Level: TestLevel1 with DeltaTime: 0.000117
+Ticking Actors in Level: TestLevel1
+Tick on Actor: Player with DeltaTime: 0.000117
+Tick on Actor: Enemy1 with DeltaTime: 0.000117
+Tick on Actor: Enemy2 with DeltaTime: 0.000117
+Tick on Actor: NPC1 with DeltaTime: 0.000117
+Tick on TestWorld: MainTestWorld with DeltaTime: 0.000118
+Tick on World: MainTestWorld with DeltaTime: 0.000118
+Ticking Persistent Level: TestLevel1
+Tick on Level: TestLevel1 with DeltaTime: 0.000118
+Ticking Actors in Level: TestLevel1
+Tick on Actor: Player with DeltaTime: 0.000118
+Tick on Actor: Enemy1 with DeltaTime: 0.000118
+Tick on Actor: Enemy2 with DeltaTime: 0.000118
+Tick on Actor: NPC1 with DeltaTime: 0.000118
+Tick on TestWorld: MainTestWorld with DeltaTime: 0.000114
+Tick on World: MainTestWorld with DeltaTime: 0.000114
+Ticking Persistent Level: TestLevel1
+Tick on Level: TestLevel1 with DeltaTime: 0.000114
+Ticking Actors in Level: TestLevel1
+Tick on Actor: Player with DeltaTime: 0.000114
+Tick on Actor: Enemy1 with DeltaTime: 0.000114
+Tick on Actor: Enemy2 with DeltaTime: 0.000114
+Tick on Actor: NPC1 with DeltaTime: 0.000114
+Tick on TestWorld: MainTestWorld with DeltaTime: 0.000117
+Tick on World: MainTestWorld with DeltaTime: 0.000117
+Ticking Persistent Level: TestLevel1
+Tick on Level: TestLevel1 with DeltaTime: 0.000117
+Ticking Actors in Level: TestLevel1
+Tick on Actor: Player with DeltaTime: 0.000117
+Tick on Actor: Enemy1 with DeltaTime: 0.000117
+Tick on Actor: Enemy2 with DeltaTime: 0.000117
+Tick on Actor: NPC1 with DeltaTime: 0.000117
+Tick on TestWorld: MainTestWorld with DeltaTime: 0.000117
+Tick on World: MainTestWorld with DeltaTime: 0.000117
+Ticking Persistent Level: TestLevel1
+Tick on Level: TestLevel1 with DeltaTime: 0.000117
+Ticking Actors in Level: TestLevel1
+Tick on Actor: Player with DeltaTime: 0.000117
+Tick on Actor: Enemy1 with DeltaTime: 0.000117
+Tick on Actor: Enemy2 with DeltaTime: 0.000117
+Tick on Actor: NPC1 with DeltaTime: 0.000117
+Tick in Stub mode:  10 ticks
+Exiting Main Loop
+Shutting down GameInstance 'MainGameInstance'...
+GameInstance 'MainGameInstance' shutdown complete.
+TestWorld 'MainTestWorld' destroyed.
+World 'MainTestWorld' destroyed.
+Marked Actor 'Player' for destruction in Level 'TestLevel1'.
+Marked Actor 'Enemy1' for destruction in Level 'TestLevel1'.
+Marked Actor 'Enemy2' for destruction in Level 'TestLevel1'.
+Marked Actor 'NPC1' for destruction in Level 'TestLevel1'.
+Actor 'Player' destroyed.
+Actor 'Enemy1' destroyed.
+Actor 'Enemy2' destroyed.
+Actor 'NPC1' destroyed.
+Level 'TestLevel1' destroyed.
+Level 'TestLevel2' destroyed.
+Level 'TestLevel3' destroyed.
