@@ -1,5 +1,6 @@
 #include "CoreMinimal.h"
-#include "Utils/Math/Matrix4.h"
+
+
 
 bool GIsRequestingExit = false;
 FEngineLoop GEngine;
@@ -8,6 +9,7 @@ FEngineLoop GEngine;
 
 int main()
 {
+	setlocale(LC_ALL, "ru");
 	int result = 0;
 	try
 	{
@@ -27,6 +29,9 @@ int main()
 		std::cout << "Unhandled unknown exception.";
 		result = EXIT_FAILURE;
 	}
+	
+	// Run test for CCharacter movement
+	
 
 	return result;
 }

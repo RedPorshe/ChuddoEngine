@@ -3,7 +3,6 @@
 #include "Core/GameInstance.h"
 #include "Core/World.h"
 
-#include "Tests/Test.h"
 
 
 FEngineLoop::FEngineLoop()
@@ -47,8 +46,8 @@ void FEngineLoop::Start()
 	{
 		// Create TestWorld as unique_ptr and transfer ownership to GameInstance.
 		// Construct with no owner (nullptr) so AddOwnedObject will set proper OwnerObject.
-		auto worldUP = std::make_unique<TestWorld>(nullptr, "MainTestWorld");
-		TestWorld* gameworld = static_cast<TestWorld*>(GameInstance.AddOwnedObject(std::move(worldUP)));
+		auto worldUP = std::make_unique<CWorld>(nullptr, "MainTestWorld");
+		CWorld* gameworld = static_cast<CWorld*>(GameInstance.AddOwnedObject(std::move(worldUP)));
 		GameInstance.SetWorld(gameworld);
 	}
 	else

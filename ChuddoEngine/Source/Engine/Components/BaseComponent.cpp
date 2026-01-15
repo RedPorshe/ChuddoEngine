@@ -4,7 +4,7 @@ CBaseComponent::CBaseComponent(const CObject* Owner, const std::string& inName)
 {
 	std::cout << "BaseComponent '" << GetName() << "' created." << std::endl;
 	SetCanTick(true);
-	bIsInitialized = true;
+	
 	SetActive(true);
 }
 CBaseComponent::~CBaseComponent()
@@ -13,6 +13,7 @@ CBaseComponent::~CBaseComponent()
 }
 void CBaseComponent::BeginPlay()
 {
+	InitializeComponent();
 	if (bIsActive && bIsInitialized)
 	{
 		std::cout << "Begin Play on BaseComponent: " << GetName() << std::endl;

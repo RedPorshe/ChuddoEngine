@@ -1,6 +1,8 @@
 #include "Actors/Actor.h"
 #include "Components/BaseComponent.h"
 
+#include "Utils/Math/CE_MathHelpers.h"
+
 CActor::CActor(const CObject* Owner, const std::string& inName) : CObject(Owner, inName)
 {
 	std::cout << "Actor '" << GetName() << "' created." << std::endl;
@@ -9,6 +11,8 @@ CActor::CActor(const CObject* Owner, const std::string& inName) : CObject(Owner,
 }
 CActor::CActor(const std::string& inName) : CObject(inName)
 {
+	std::cout << "Actor '" << GetName() << "' created. Without Owner" << std::endl;
+	SetCanTick(true);
 }
 CActor::~CActor()
 {
@@ -60,24 +64,190 @@ void CActor::Tick(float DeltaTime)
 	}
 }
 
+void CActor::SetActorTransform(const FTransform& NewTransform)
+{
+	ActorTransform = NewTransform;
+}
+
+void CActor::SetActorTransform(const FVector& NewLocation, const FQuat& NewRotation, const FVector& NewScale)
+{
+	ActorTransform.Location = NewLocation;
+	ActorTransform.Rotation = NewRotation;
+	ActorTransform.Scale = NewScale;
+}
+
+void CActor::SetActorTransform(const FVector& NewLocation, const FVector& NewRotationEulerDegrees, const FVector& NewScale)
+{
+	ActorTransform.Location = NewLocation;
+	FVector eulerRad(
+		CEMath::DegreesToRadians(NewRotationEulerDegrees.x),
+		CEMath::DegreesToRadians(NewRotationEulerDegrees.y),
+		CEMath::DegreesToRadians(NewRotationEulerDegrees.z)
+	);
+	ActorTransform.Rotation = FQuat::FromEulerAngles(eulerRad.x, eulerRad.y, eulerRad.z);
+	ActorTransform.Scale = NewScale;
+}
+
+void CActor::SetActorLocation(const FVector& NewLocation)
+{
+	ActorTransform.Location = NewLocation;
+}
+
+void CActor::SetActorLocation(float X, float Y, float Z)
+{	
+	ActorTransform.Location = FVector(X, Y, Z);
+}
+
+void CActor::SetActorRotation(const FQuat& RotationQuaternion)
+{
+	ActorTransform.Rotation = RotationQuaternion;
+}
+
+void CActor::SetActorRotation(const FMat4& RotationMatrix)
+{
+	ActorTransform.Rotation = FQuat(RotationMatrix);
+}
+
 void CActor::SetActorRotation(float Pitch, float Yaw, float Roll)
 {
-	// Convert degrees to radians
-	float RadPitch = Pitch * (3.14159265f / 180.0f);
-	float RadYaw = Yaw * (3.14159265f / 180.0f);
-	float RadRoll = Roll * (3.14159265f / 180.0f);
-	// Calculate quaternion components
-	float cy = cos(RadYaw * 0.5f);
-	float sy = sin(RadYaw * 0.5f);
-	float cp = cos(RadPitch * 0.5f);
-	float sp = sin(RadPitch * 0.5f);
-	float cr = cos(RadRoll * 0.5f);
-	float sr = sin(RadRoll * 0.5f);
-	FQuat NewRotation;
-	NewRotation.w = cr * cp * cy + sr * sp * sy;
-	NewRotation.x = sr * cp * cy - cr * sp * sy;
-	NewRotation.y = cr * sp * cy + sr * cp * sy;
-	NewRotation.z = cr * cp * sy - sr * sp * cy;
-	SetActorRotation(NewRotation);
+	// Convert Euler angles from degrees to radians
+	FVector eulerRad(
+		CEMath::DegreesToRadians(Pitch),
+		CEMath::DegreesToRadians(Yaw),
+		CEMath::DegreesToRadians(Roll)
+	);
+	ActorTransform.Rotation = FQuat::FromEulerAngles(eulerRad.x, eulerRad.y, eulerRad.z);
+}
+
+void CActor::SetActorScale(const FVector& NewScale)
+{
+	ActorTransform.Scale = NewScale;
+}
+
+void CActor::SetActorScale(float ScaleX, float ScaleY, float ScaleZ)
+{
+	ActorTransform.Scale = FVector(ScaleX, ScaleY, ScaleZ);
+}
+
+void CActor::SetActorScale(float UniformScale)
+{
+	ActorTransform.Scale = FVector(UniformScale, UniformScale, UniformScale);
+}
+
+FTransform CActor::GetActorTransform() const
+{
+	return ActorTransform;
+}
+
+FVector CActor::GetActorLocation() const
+{
+	 return ActorTransform.Location; 
+}
+
+FVector CActor::GetActorRotationEuler() const
+{
+	return ActorTransform.GetRotationEulerDegrees();
+}
+
+FQuat CActor::GetActorRotationQuat() const
+{
+	return ActorTransform.Rotation;
+}
+
+FVector CActor::GetActorScale() const
+{
+	 return ActorTransform.Scale; 
+}
+
+bool CActor::IsActive() const
+{
+	return bIsActive;
+}
+
+bool CActor::IsVisible() const
+{
+	return bIsVisible;
+}
+
+bool CActor::IsCanTick() const
+{
+	return bIsCanTick;
+}
+
+bool CActor::IsPendingDestroy() const
+{
+	return bIsPendingDestroy;
+}
+
+void CActor::MoveActor(const FVector& DeltaLocation)
+{
+	ActorTransform.Location += DeltaLocation;
+}
+
+void CActor::MoveActor(float DeltaX, float DeltaY, float DeltaZ)
+{
+	ActorTransform.Location += FVector(DeltaX, DeltaY, DeltaZ);
+}
+
+void CActor::RotateActor(float DeltaPitch, float DeltaYaw, float DeltaRoll)
+{
+	RotateActor(FVector(DeltaPitch, DeltaYaw, DeltaRoll));
+}
+
+void CActor::RotateActor(const FVector& DeltaRotationEuler)
+{
+	// Convert Euler delta angles from degrees to radians
+	FVector deltaRad(
+		CEMath::DegreesToRadians(DeltaRotationEuler.x),
+		CEMath::DegreesToRadians(DeltaRotationEuler.y),
+		CEMath::DegreesToRadians(DeltaRotationEuler.z)
+	);
+
+	// Create quaternion from delta angles
+	FQuat deltaQuat = FQuat::FromEulerAngles(deltaRad.x, deltaRad.y, deltaRad.z);
+
+	// Apply rotation: new rotation = delta * current
+	ActorTransform.Rotation = deltaQuat * ActorTransform.Rotation;
+}
+
+void CActor::RotateActor(const FMat4& DeltaRotationMatrix)
+{
+	FQuat deltaRotationQuat(DeltaRotationMatrix);
+	ActorTransform.Rotation = deltaRotationQuat * ActorTransform.Rotation;
+}
+
+void CActor::RotateActor(const FQuat& DeltaRotationQuaternion)
+{
+	ActorTransform.Rotation = DeltaRotationQuaternion * ActorTransform.Rotation;
+}
+
+void CActor::ScaleActor(const FVector& DeltaScale)
+{
+	ActorTransform.Scale += DeltaScale;
+}
+
+void CActor::ScaleActor(float DeltaScaleX, float DeltaScaleY, float DeltaScaleZ)
+{
+	ActorTransform.Scale += FVector(DeltaScaleX, DeltaScaleY, DeltaScaleZ);
+}
+
+void CActor::ScaleActor(float UniformDeltaScale)
+{
+	ActorTransform.Scale += FVector(UniformDeltaScale, UniformDeltaScale, UniformDeltaScale);
+}
+
+FVector CActor::GetActorForwardVector() const
+{
+	return GetActorRotationQuat()* FVector::Forward();
+}
+
+FVector CActor::GetActorRightVector() const
+{
+	return GetActorRotationQuat()* FVector::Right();
+}
+
+FVector CActor::GetActorUpVector() const
+{
+	return GetActorRotationQuat() * FVector::Up();
 }
 

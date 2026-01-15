@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <stdexcept>
+#include <iostream>
 #include "Utils/Math/CE_MathConstants.h"
 #include "Utils/Math/CE_MathHelpers.h"
 #include "Vector2D.h"
@@ -153,11 +154,41 @@ namespace CEMath
         const float& U() const { return x; }
         const float& V() const { return y; }
         const float& W() const { return z; }
+
+       
+        
+
     };
     std::ostream& operator<<(std::ostream& os, const Vector3D& vec);
     std::istream& operator>>(std::istream& is, Vector3D& vec);
     inline bool IsEqual(const Vector3D& a, const Vector3D& b, float epsilon = EPSILON)
     {
         return a.IsEqual(b, epsilon);
+    }
+
+    // Vector3D-dependent helper function from CE_MathHelpers
+    inline Vector3D NormalizeAnglesDegrees(const Vector3D& angles)
+    {
+        auto NormalizeDeg = [](float degrees) -> float {
+            degrees = std::fmod(degrees, 360.0f);
+            if (degrees < 0.0f)
+                degrees += 360.0f;
+            
+            // Snap to exact values if very close (within epsilon)
+            // Using larger epsilon (0.1°) to catch floating-point rounding errors
+            const float EPSILON = 0.1f;
+            if (std::fabs(degrees - 90.0f) < EPSILON) degrees = 90.0f;
+            if (std::fabs(degrees - 180.0f) < EPSILON) degrees = 180.0f;
+            if (std::fabs(degrees - 270.0f) < EPSILON) degrees = 270.0f;
+            if (std::fabs(degrees - 360.0f) < EPSILON) degrees = 0.0f;
+            if (std::fabs(degrees) < EPSILON) degrees = 0.0f;
+            
+            return degrees;
+        };
+        return Vector3D(
+            NormalizeDeg(angles.x),
+            NormalizeDeg(angles.y),
+            NormalizeDeg(angles.z)
+        );
     }
 }

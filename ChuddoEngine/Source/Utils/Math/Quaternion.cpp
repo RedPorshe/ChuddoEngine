@@ -52,7 +52,7 @@ namespace CEMath
 
     Quaternion::Quaternion(float pitch, float yaw, float roll)
     {
-        // XYZ порядок (pitch = X, yaw = Y, roll = Z)
+        // Правильный порядок: Z * Y * X (Roll * Yaw * Pitch)
         float halfPitch = pitch * 0.5f;
         float halfYaw = yaw * 0.5f;
         float halfRoll = roll * 0.5f;
@@ -65,10 +65,10 @@ namespace CEMath
         float cosRoll = Cos(halfRoll);
 
         // Порядок умножения: Z * Y * X
-        x = cosRoll * cosYaw * sinPitch - sinRoll * sinYaw * cosPitch;
-        y = sinRoll * cosYaw * sinPitch + cosRoll * sinYaw * cosPitch;
-        z = sinRoll * cosYaw * cosPitch - cosRoll * sinYaw * sinPitch;
-        w = cosRoll * cosYaw * cosPitch + sinRoll * sinYaw * sinPitch;
+        x = sinPitch * cosYaw * cosRoll - cosPitch * sinYaw * sinRoll;
+        y = cosPitch * sinYaw * cosRoll + sinPitch * cosYaw * sinRoll;
+        z = cosPitch * cosYaw * sinRoll - sinPitch * sinYaw * cosRoll;
+        w = cosPitch * cosYaw * cosRoll + sinPitch * sinYaw * sinRoll;
     }
 
     Quaternion::Quaternion(const Quaternion& other)
@@ -321,23 +321,20 @@ namespace CEMath
 
     Vector3D Quaternion::GetEulerAngles() const
     {
-        // Преобразование кватерниона в углы Эйлера (XYZ порядок)
         Quaternion q = Normalized();
 
-        // pitch (вращение вокруг X)
+        // Преобразование кватерниона в углы Эйлера (ZYX порядок - Yaw, Pitch, Roll)
         float sinPitch = 2.0f * (q.w * q.x + q.y * q.z);
         float cosPitch = 1.0f - 2.0f * (q.x * q.x + q.y * q.y);
         float pitch = Atan2(sinPitch, cosPitch);
 
-        // yaw (вращение вокруг Y)
         float sinYaw = 2.0f * (q.w * q.y - q.z * q.x);
         float yaw = 0.0f;
         if (Abs(sinYaw) >= 1.0f)
-            yaw = CopySign(HALF_PI, sinYaw); // 90 градусов
+            yaw = CopySign(HALF_PI, sinYaw);
         else
             yaw = Asin(sinYaw);
 
-        // roll (вращение вокруг Z)
         float sinRoll = 2.0f * (q.w * q.z + q.x * q.y);
         float cosRoll = 1.0f - 2.0f * (q.y * q.y + q.z * q.z);
         float roll = Atan2(sinRoll, cosRoll);

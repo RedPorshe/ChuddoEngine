@@ -7,7 +7,8 @@
 
 namespace CEMath
 {
-	// math helpers
+    struct Vector3D;  // Forward declaration
+    // math helpers
     inline bool IsZero(float value, float epsilon = EPSILON)
     {
         return std::fabs(value) < epsilon;
@@ -63,6 +64,22 @@ namespace CEMath
     inline float RadiansToDegrees(float radians)
     {
         return radians * RAD_TO_DEG;
+    }
+
+    inline float WrapAngle(float angle)
+    {
+        angle = std::fmod(angle + PI, TWO_PI);
+        if (angle < 0.0f)
+            angle += TWO_PI;
+        return angle - PI;
+    }
+
+    inline float WrapAngleDegrees(float degrees)
+    {
+        degrees = std::fmod(degrees + 180.0f, 360.0f);
+        if (degrees < 0.0f)
+            degrees += 360.0f;
+        return degrees - 180.0f;
     }
 
     inline float Sin(float radians)
@@ -198,8 +215,18 @@ namespace CEMath
 
     inline float CopySign(float magnitude, float sign)
     {
-		return std::copysign(magnitude, sign); // C++11 and later
+        return std::copysign(magnitude, sign); // C++11 and later
     }
+
+    inline float NormalizeAngleDegrees(float degrees)
+    {
+        degrees = std::fmod(degrees, 360.0f);
+        if (degrees < 0.0f)
+            degrees += 360.0f;
+        return degrees;
+    }
+
+    // Vector3D-dependent functions are moved to the end after Vector3D inclusion
 
     inline int NextPowerOfTwo(int value)
     {

@@ -140,6 +140,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Source\Engine\Actors\Actor.cpp" />
+    <ClCompile Include="Source\Engine\Controllers\Controller.cpp" />
+    <ClCompile Include="Source\Engine\Pawns\Character.cpp" />
+    <ClCompile Include="Source\Engine\Pawns\Pawn.cpp" />
     <ClCompile Include="Source\Engine\Components\BaseComponent.cpp" />
     <ClCompile Include="Source\Engine\Core\Level.cpp" />
     <ClCompile Include="Source\Engine\Core\World.cpp" />
@@ -157,14 +160,16 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\Engine\Actors\Actor.h" />
+    <ClInclude Include="Include\Engine\Pawns\Character.h" />
+    <ClInclude Include="Include\Engine\Pawns\Pawn.h" />
     <ClInclude Include="Include\Engine\Components\BaseComponent.h" />
+    <ClInclude Include="Include\Engine\Controllers\Controller.h" />
     <ClInclude Include="Include\Engine\Core\GameInstance.h" />
     <ClInclude Include="Include\Engine\Core\EngineLoop.h" />
     <ClInclude Include="Include\CoreMinimal.h" />
     <ClInclude Include="Include\Engine\Core\Level.h" />
     <ClInclude Include="Include\Engine\Core\Object.h" />
     <ClInclude Include="Include\Engine\Core\World.h" />
-    <ClInclude Include="Include\Tests\Test.h" />
     <ClInclude Include="Include\Utils\Math\CE_MathConstants.h" />
     <ClInclude Include="Include\Utils\Math\CE_MathHelpers.h" />
     <ClInclude Include="Include\Utils\Math\MathTypes.h" />
