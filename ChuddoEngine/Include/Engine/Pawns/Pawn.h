@@ -25,7 +25,7 @@ public:
 	virtual void OnUnPossessed();
 
 	// Input handling
-	virtual void SetupPlayerInputComponent() {}
+	virtual void SetupPlayerInputComponent();
 
 	// Movement input from controller
 	virtual void AddMovementInput(const FVector& InputDirection, float Scale = 1.0f);
@@ -44,7 +44,7 @@ protected:
 	float AccumulatedPitchInput = 0.0f;
 	float AccumulatedYawInput = 0.0f;
 
-	// Process accumulated input
-	virtual void ProcessMovementInput(float DeltaTime) {}
-	virtual void ProcessRotationInput(float DeltaTime) {}
+	
+	void ProcessMovementInput(float DeltaTime);
+	void ProcessRotationInput(float DeltaTime);
 };

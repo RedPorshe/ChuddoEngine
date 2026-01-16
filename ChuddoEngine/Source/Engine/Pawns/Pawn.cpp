@@ -71,7 +71,7 @@ void CPawn::SetController(CController* NewController)
 			// Настраиваем ввод только если контроллер назначен
 			if (bIsInitialized)
 			{
-				SetupPlayerInputComponent();
+				OnPossessed();
 			}
 		}
 		else
@@ -114,6 +114,11 @@ void CPawn::OnUnPossessed()
 	std::cout << "Pawn '" << GetName() << "' was unpossessed." << std::endl;
 }
 
+void CPawn::SetupPlayerInputComponent()
+{
+	std::cout << "Setting up player input component for Pawn: " << GetName() << std::endl;
+}
+
 void CPawn::AddMovementInput(const FVector& InputDirection, float Scale)
 {
 	if (!bCanBeControlled || !HasController())
@@ -129,4 +134,25 @@ void CPawn::AddRotationInput(float Pitch, float Yaw)
 
 	AccumulatedPitchInput += Pitch;
 	AccumulatedYawInput += Yaw;
+}
+
+void CPawn::ProcessMovementInput(float DeltaTime)
+{
+	if (!AccumulatedMovementInput.IsZero())
+	{
+		FVector Movement = AccumulatedMovementInput * DeltaTime;
+		MoveActor(Movement);
+		std::cout << "Pawn '" << GetName() << "' moved by " << Movement.x << ", " << Movement.y << ", " << Movement.z << std::endl;
+	}
+}
+
+void CPawn::ProcessRotationInput(float DeltaTime)
+{
+	if (AccumulatedPitchInput != 0.0f || AccumulatedYawInput != 0.0f)
+	{
+		float PitchDelta = AccumulatedPitchInput * DeltaTime;
+		float YawDelta = AccumulatedYawInput * DeltaTime;
+		RotateActor(PitchDelta, YawDelta, 0.0f);
+		std::cout << "Pawn '" << GetName() << "' rotated by Pitch: " << PitchDelta << ", Yaw: " << YawDelta << std::endl;
+	}
 }

@@ -17,7 +17,7 @@ CController::~CController()
 void CController::BeginPlay()
 {
 	CActor::BeginPlay();
-} 
+}
 
 void CController::Tick(float DeltaTime)
 {
@@ -35,33 +35,77 @@ CPawn* CController::GetControlledPawn() const
 
 void CController::SetControlledPawn(CPawn* NewPawn)
 {
-	if (ControlledPawn != NewPawn)
+	if (NewPawn == nullptr)
 	{
 		UnPossess();
-		if (NewPawn && NewPawn->CanBeControlled())
+		return;
+	}
+	if (ControlledPawn == NewPawn)
+	{
+		return;
+	}
+	if (!NewPawn->CanBeControlled())
+	{
+		return;
+	}
+	if (ControlledPawn != nullptr)
+	{
+		CPawn* OldPawn = ControlledPawn;
+
+		UnPossess();
+
+		if (NewPawn->GetController() != nullptr)
 		{
-			ControlledPawn = NewPawn;
-			NewPawn->SetController(this);
-			NewPawn->OnPossessed();
+			if (NewPawn->GetController() != this)
+			{
+				NewPawn->GetController()->UnPossess();
+			}
+			else
+			{
+				ControlledPawn = OldPawn;
+				OldPawn->SetController(this);
+				OldPawn->OnPossessed();
+				return;
+			}
 		}
+		ControlledPawn = NewPawn;
+		NewPawn->SetController(this);
+		NewPawn->OnPossessed();
+
+		if (ControlledPawn == nullptr)
+		{
+
+			if (OldPawn && OldPawn->CanBeControlled())
+			{
+				ControlledPawn = OldPawn;
+
+				CController* oldController = OldPawn->GetController();
+				if (oldController && oldController != this)
+				{
+					oldController->UnPossess();
+				}
+
+				OldPawn->SetController(this);
+				OldPawn->OnPossessed();
+			}
+		}
+	}
+	else
+	{
+		ControlledPawn = NewPawn;
+		NewPawn->SetController(this);
+		NewPawn->OnPossessed();
 	}
 }
 
 bool CController::Possess(CPawn* PawnToPossess)
 {
 	if (!PawnToPossess || !PawnToPossess->CanBeControlled())
-		return false;
-
-	// Отписываемся от текущего павна
-	UnPossess();
-
-	// Устанавливаем двустороннюю связь
+		return false;	
+	UnPossess();	
 	ControlledPawn = PawnToPossess;
-	PawnToPossess->SetController(this);
-
-	// Вызываем соответствующие события
+	PawnToPossess->SetController(this);	
 	PawnToPossess->OnPossessed();
-
 	return true;
 }
 
