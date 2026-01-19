@@ -61,7 +61,4 @@ protected:
 	float DesiredRotationPitch = 0.0f;
 	float DesiredRotationYaw = 0.0f;
 
-	// Input processing (from CPawn)
-	virtual void ProcessMovementInput(float DeltaTime) override;
-	virtual void ProcessRotationInput(float DeltaTime) override;
 };

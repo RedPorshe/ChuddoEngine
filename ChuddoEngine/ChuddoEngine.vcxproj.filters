@@ -128,5 +128,8 @@
     <ClInclude Include="Include\Engine\Controllers\Controller.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
+    <ClInclude Include="Include\Tests\test.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

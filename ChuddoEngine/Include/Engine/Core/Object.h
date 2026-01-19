@@ -51,7 +51,7 @@ public:
 
     // check ownership
     bool IsOwnerOf(const CObject* Obj) const;
-
+    void SetName(const std::string& NewName);
 protected:
     const CObject* OwnerObject = nullptr;
     std::string m_Name;

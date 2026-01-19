@@ -227,6 +227,11 @@ bool CObject::IsOwnerOf(const CObject* Obj) const
     return false;
 }
 
+void CObject::SetName(const std::string& NewName)
+{
+    m_Name = NewName;
+}
+
 void CObject::PrintInfo() const
 {
     std::cout << "This is object named '" << m_Name << "'. ";
