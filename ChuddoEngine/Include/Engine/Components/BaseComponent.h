@@ -18,8 +18,8 @@ public:
 	void SetCanTick(bool bNewCanTick) { bIsCanTick = bNewCanTick; }
 	bool IsCanTick() const { return bIsCanTick; }
 
-	void InitializeComponent();
-private:
+	virtual void InitializeComponent();
+protected:
 	bool bIsInitialized = false;
 	bool bIsActive = true;
 	bool bisVisible = true;

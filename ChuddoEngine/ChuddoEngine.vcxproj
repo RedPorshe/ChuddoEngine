@@ -151,6 +151,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Source\Engine\Components\SceneComponent.cpp" />
     <ClCompile Include="Source\Engine\Actors\Actor.cpp" />
     <ClCompile Include="Source\Engine\Controllers\Controller.cpp" />
     <ClCompile Include="Source\Engine\Pawns\Character.cpp" />
@@ -191,6 +192,7 @@
     <ClInclude Include="Include\Utils\Math\Vector2D.h" />
     <ClInclude Include="Include\Utils\Math\Vector3D.h" />
     <ClInclude Include="Include\Utils\Math\Vector4.h" />
+    <ClInclude Include="Include\Engine\Components\SceneComponent.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

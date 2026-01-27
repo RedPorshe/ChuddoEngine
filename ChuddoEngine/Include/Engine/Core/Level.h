@@ -5,66 +5,73 @@
 
 class CActor;
 
-
 class CLevel : public CObject
-{
-	public:
-	CLevel(const CObject* Owner, const std::string& inName = "Level");
-	
-	virtual ~CLevel();
+    {
+    public:
+        CLevel ( const CObject * Owner, const std::string & inName = "Level" );
 
-	// Level-specific methods can be added here
-	virtual void  BeginPlay() ;
-	virtual void  Tick(float DeltaTime);
-	/*CActor* SpawnActor(const std::string& inName = "Actor" , const FTransform& SpawnTransworm = FTransform::Identity());
-	void SpawnActor(CActor* NewActor, FTransform& SpawnTransform);*/
-	
-	// Template-based SpawnActor for spawning specific actor classes
-	// Primary implementation with both transform and name
-	template<typename ActorClass>
-	ActorClass* SpawnActor(const std::string& inName, const FTransform& SpawnTransform = FTransform::Identity())
-	{
-		static_assert(std::is_base_of<CActor, ActorClass>::value, "ActorClass must be derived from CActor");
-		
-		auto NewActorUP = std::make_unique<ActorClass>(nullptr, inName);
-		ActorClass* NewActor = NewActorUP.get();
+        virtual ~CLevel ();
 
-		std::cout << "Spawning Actor '" << NewActor->GetName() << "' at location (" << SpawnTransform.Location << ") with Rotation ("
-			<< SpawnTransform.Rotation << ") and Scale (" << SpawnTransform.Scale << ") in Level '"
-			<< GetName() << "'." << std::endl;
-		
-		NewActor->SetActorTransform(SpawnTransform);
-		AddOwnedObject(std::move(NewActorUP));
-		RegisterActor(NewActor);
+        // Level-specific methods
+        virtual void BeginPlay ();
+        virtual void Tick ( float DeltaTime );
 
-		return NewActor;
-	}
+        // Spawn actor methods
+        template<typename ActorClass>
+        ActorClass * SpawnActor ()
+            {
+            return SpawnActor<ActorClass> ( std::string ( "Actor" ), FTransform::Identity () );
+            }
 
-	// Template-based SpawnActor with no arguments (default name and transform)
-	template<typename ActorClass>
-	ActorClass* SpawnActor()
-	{
-		return SpawnActor<ActorClass>(std::string("Actor"), FTransform::Identity());
-	}
+        template<typename ActorClass>
+        ActorClass * SpawnActorAt ( const FTransform & SpawnTransform )
+            {
+            return SpawnActor<ActorClass> ( std::string ( "Actor" ), SpawnTransform );
+            }
 
-	// Template-based SpawnActor with only transform (default name)
-	template<typename ActorClass>
-	ActorClass* SpawnActorAt(const FTransform& SpawnTransform)
-	{
-		return SpawnActor<ActorClass>(std::string("Actor"), SpawnTransform);
-	}
-	
-	void DestroyActor(CActor* ActorToDestroy);
-	
-	void DestroyActor(const std::string& ActorName);
+            // Actor management
+        void DestroyActor ( CActor * ActorToDestroy );
+        void DestroyActor ( const std::string & ActorName );
+        std::vector<CActor *> GetAllActors () const { return Actors; }
 
-	std::vector<CActor*> GetAllActors() const { return Actors; }
+    private:
+        void RegisterActor ( CActor * Actor );
+        void UnregisterActor ( CActor * Actor );
+        void ProcessPendingDestroyActors ();
 
-private:
-	void RegisterActor(CActor* Actor);
-	void ProcessPendingDestroyActors();
-	std::vector<CActor*> Actors;
-	std::unordered_map<std::string, CActor*> ActorNameMap;
-	std::vector<CActor*> PendingDestroyActors;
-	bool bIsTraveling = false;
-};
+        template<typename ActorClass>
+        ActorClass * SpawnActor ( const std::string & inName, const FTransform & SpawnTransform = FTransform::Identity () )
+            {
+            static_assert( std::is_base_of<CActor, ActorClass>::value, "ActorClass must be derived from CActor" );
+
+            // Создаем актора
+            std::unique_ptr<ActorClass> NewActorUP = std::make_unique<ActorClass> ( this, inName );
+            ActorClass * NewActor = NewActorUP.get ();
+
+            std::cout << "Spawning Actor '" << NewActor->GetName ()
+                << "' at location (" << SpawnTransform.Location
+                << ") with Rotation (" << SpawnTransform.Rotation
+                << ") and Scale (" << SpawnTransform.Scale
+                << ") in Level '" << GetName () << "'." << std::endl;
+
+      // Устанавливаем трансформацию
+            NewActor->SetActorTransform ( SpawnTransform );
+
+            // Сохраняем unique_ptr в m_UniqActors
+            m_UniqActors.push_back ( std::move ( NewActorUP ) );
+
+            // Регистрируем актора
+            RegisterActor ( NewActor );
+
+            return NewActor;
+            }
+
+    private:
+        std::vector<CActor *> Actors;  // Raw pointers для быстрого доступа
+        std::unordered_map<std::string, CActor *> ActorNameMap;
+        std::vector<std::unique_ptr<CActor>> m_UniqActors;  // Владение акторами
+        std::vector<std::unique_ptr<CActor>> m_UniqPendingDestroyActors;  // Акторы на уничтожение
+
+        // Тестовый указатель (удалить в финальной версии)
+        CActor * testActor = nullptr;
+    };

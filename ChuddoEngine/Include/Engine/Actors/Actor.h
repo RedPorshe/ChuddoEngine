@@ -1,7 +1,8 @@
 #pragma once
 #include "Core/Object.h"
 
-
+class CSceneComponent;
+class CBaseComponent;
 
 class CActor : public CObject
 {
@@ -82,4 +83,6 @@ protected:
 	bool bIsVisible = true;
 	bool bIsCanTick = true;
 	bool bIsPendingDestroy = false;
+	CSceneComponent * rootComponent;
+	std::vector<CBaseComponent *> m_components;
 };

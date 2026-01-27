@@ -1,5 +1,6 @@
 #include "Core/GameInstance.h"
 #include "Core/World.h"
+#include "Core/Level.h"
 
 #include <memory>
 #include <fstream> 
@@ -17,6 +18,8 @@ void CGameInstance::DefaultInitialization()
 {
 	auto WorldUP = std::make_unique<CWorld>(this, "default World");
 	auto word = static_cast<CWorld*>(this->AddOwnedObject(std::move(WorldUP)));
+	word->LoadLevel ( "Default init level" );
+	word->SetCurrentLevel ( word->GetPersistentLevel () );
 	SetWorld(word);
 }
 
@@ -386,6 +389,13 @@ bool CGameInstance::Init()
 			std::cout << "GameInstance '" << GetName() << "' initialized successfully." << std::endl;
 			return true;
 		}
+		else //stub
+			{
+			DefaultInitialization ();
+			bIsInitialized = true;
+			std::cout << "GameInstance '" << GetName () << "' initialized successfully." << std::endl;
+			return true;
+			}
 		// Здесь должна быть ваша логика инициализации при наличии файла конфигурации:
 		// 1. Загрузка конфигурации
 		if (!LoadFromConfig())

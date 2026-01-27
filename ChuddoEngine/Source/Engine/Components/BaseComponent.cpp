@@ -15,8 +15,7 @@ void CBaseComponent::BeginPlay()
 {
 	InitializeComponent();
 	if (bIsActive && bIsInitialized)
-	{
-		std::cout << "Begin Play on BaseComponent: " << GetName() << std::endl;
+	{		
 		if (HasOwnedObjects())
 		{
 			for (size_t i = 0; i < GetOwnedObjectsCount(); ++i)
@@ -38,8 +37,7 @@ void CBaseComponent::BeginPlay()
 void CBaseComponent::Tick(float DeltaTime)
 {
 	if(bIsCanTick && bIsInitialized)
-	{
-		std::cout << "Tick on BaseComponent: " << GetName() << " with DeltaTime: " << DeltaTime << std::endl;
+	{		
 		if (HasOwnedObjects())
 		{
 			for (size_t i = 0; i < GetOwnedObjectsCount(); ++i)
@@ -56,12 +54,11 @@ void CBaseComponent::Tick(float DeltaTime)
 				}
 			}
 		}
-	}
+	}	
 }
 
 void CBaseComponent::InitializeComponent()
-{
-	std::cout << "Initializing Component: " << GetName() << std::endl;
+{	
 	// Initialization logic here
 	bIsInitialized = true;
 }

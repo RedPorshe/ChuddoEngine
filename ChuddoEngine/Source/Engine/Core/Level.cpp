@@ -1,177 +1,227 @@
 #include "Core/Level.h"
 #include "Actors/Actor.h"
 
-CLevel::CLevel(const CObject* Owner, const std::string& inName) : CObject(Owner, inName)
-{
+CLevel::CLevel ( const CObject * Owner, const std::string & inName )
+    : CObject ( Owner, inName )
+    {
+        // Создаем тестового актора
+    testActor = SpawnActor<CActor> ( "Test Actor" );
+    }
 
-	
-}
+CLevel::~CLevel ()
+    {
+    std::cout << "Level '" << GetName () << "' starting destruction." << std::endl;
 
+    // Уничтожаем всех акторов
+    for (auto & actorUP : m_UniqActors)
+        {
+        if (actorUP)
+            {
+            CActor * actor = actorUP.get ();
+            std::cout << "Destroying actor '" << actor->GetName ()
+                << "' during level destruction." << std::endl;
+            }
+        }
 
+        // Очищаем векторы
+    m_UniqActors.clear ();
+    m_UniqPendingDestroyActors.clear ();
+    Actors.clear ();
+    ActorNameMap.clear ();
 
-CLevel::~CLevel()
-{
-	// Destroy all actors in this level before destroying sublevels
-	for (auto act : Actors)
-	{
-		DestroyActor(act);
-	}
-	ProcessPendingDestroyActors();
+    std::cout << "Level '" << GetName () << "' destroyed." << std::endl;
+    }
 
-	// Now destroy sublevels - they will be destroyed by ClearOwnedObjects when this destructor finishes
-	
-	std::cout << "Level '" << GetName() << "' destroyed." << std::endl;
+void CLevel::BeginPlay ()
+    {
+    std::cout << "Level '" << GetName () << "' BeginPlay." << std::endl;
 
-}
+    // Начинаем игру для подуровней
+    if (HasOwnedObjects ())
+        {
+        for (size_t i = 0; i < GetOwnedObjectsCount (); ++i)
+            {
+            CObject * Obj = OwnedObjects[ i ].get ();
+            if (Obj)
+                {
+                CLevel * LevelObj = dynamic_cast< CLevel * > ( Obj );
+                if (LevelObj)
+                    {
+                    std::cout << "Starting BeginPlay on sublevel: "
+                        << LevelObj->GetName () << std::endl;
+                    LevelObj->BeginPlay ();
+                    }
+                }
+            }
+        }
 
-void CLevel::BeginPlay()
-{
-	std::cout << "Begin Play on Level: " << GetName() << std::endl;
+        // Начинаем игру для акторов
+    for (CActor * Actor : Actors)
+        {
+        if (Actor && !Actor->IsPendingDestroy ())
+            {
+            Actor->BeginPlay ();
+            }
+        }
+    }
 
-	if (HasOwnedObjects())
-	{
-		for (size_t i = 0; i < GetOwnedObjectsCount(); ++i)
-		{
-			CObject* Obj = OwnedObjects[i].get();
-			if (Obj)
-			{
-				CLevel* LevelObj = dynamic_cast<CLevel*>(Obj);
-				if (LevelObj)
-				{
-					std::cout << "Starting BeginPlay on owned Level as sublevel: " << LevelObj->GetName() << " Owner is : " << GetName() << std::endl;
-					LevelObj->BeginPlay();
-				}				
-			}
-		}
-	}
-	if (!Actors.empty())
-	{
-		for (CActor* Actor : Actors)
-		{
-			if (Actor && !Actor->IsPendingDestroy())
-			{
-				Actor->BeginPlay();
-			}			
-		}
-	}
-}
+void CLevel::Tick ( float DeltaTime )
+    {
+    static int countTick = 0;
 
-void CLevel::Tick(float DeltaTime)
-{
-	std::cout << "Tick on Level: " << GetName() << " with DeltaTime: " << DeltaTime << std::endl;
-	if (HasOwnedObjects())
-	{
-		for (size_t i = 0; i < GetOwnedObjectsCount(); ++i)
-		{
-			CObject* Obj = OwnedObjects[i].get();
-			if (Obj)
-			{
-				CLevel* LevelObj = dynamic_cast<CLevel*>(Obj);
-				if (LevelObj)
-				{
-					std::cout << "Ticking owned Level as sublevel : " << LevelObj->GetName() << " Owner is : " << GetName() << std::endl;
-					LevelObj->Tick(DeltaTime);
-				}				
-			}
-		}
-	}
-	if (!Actors.empty())
-	{
-		std::cout << "Ticking Actors in Level: " << GetName() << std::endl;
-		for (CActor* Actor : Actors)
-		{
-			if (Actor)
-			{
-				Actor->Tick(DeltaTime);
-			}
-			
-		}
-	}
-	ProcessPendingDestroyActors();
-}
+    // Обрабатываем уничтожение акторов в начале кадра
+    ProcessPendingDestroyActors ();
 
-//void CLevel::SpawnActor(CActor* NewActor, FTransform& SpawnTransform)
-//{
-//	auto NewActorUP = std::make_unique<CActor>(this,NewActor->GetName());
-//	auto NewActors = NewActorUP.get();
-//	
-//	NewActors->SetActorTransform(SpawnTransform);
-//	AddOwnedObject(std::move(NewActorUP));
-//	RegisterActor(NewActors);
-//}
-//
-//CActor* CLevel::SpawnActor(const std::string& inName, const FTransform& SpawnTransform)
-//{
-//	// create actor with no owner (nullptr) - ownership will be transferred to this level via AddOwnedObject
-//	auto NewActorUP = std::make_unique<CActor>(nullptr, inName);
-//	CActor* NewActor = NewActorUP.get();
-//
-//	std::cout << "Spawning Actor '" << NewActor->GetName() << "' at location (" << SpawnTransform.Location << ") whith Rotation ("<< SpawnTransform.Rotation <<") and Scale ("<<SpawnTransform.Scale <<") in Level '"
-//		<< GetName() << "'." << std::endl;
-//	NewActor->SetActorTransform(SpawnTransform);
-//	// Additional initialization for the actor can be added here
-//
-//	// register and take ownership - this will set the correct OwnerObject
-//	AddOwnedObject(std::move(NewActorUP));
-//	RegisterActor(NewActor);
-//
-//	return NewActor;
-//}
+    // Тикаем подуровни
+    if (HasOwnedObjects ())
+        {
+        for (size_t i = 0; i < GetOwnedObjectsCount (); ++i)
+            {
+            CObject * Obj = OwnedObjects[ i ].get ();
+            if (Obj)
+                {
+                CLevel * LevelObj = dynamic_cast< CLevel * > ( Obj );
+                if (LevelObj)
+                    {
+                    LevelObj->Tick ( DeltaTime );
+                    }
+                }
+            }
+        }
 
-void CLevel::DestroyActor(CActor* ActorToDestroy)
-{
-	if (ActorToDestroy)
-	{
-		ActorToDestroy->SetPendingDestroy(true);
-		PendingDestroyActors.push_back(ActorToDestroy);
-		std::cout << "Marked Actor '" << ActorToDestroy->GetName() << "' for destruction in Level '"
-			<< GetName() << "'." << std::endl;		
-	}
-}
+        // Тикаем акторы
+    if (!Actors.empty ())
+        {
+        for (CActor * Actor : Actors)
+            {
+            if (Actor && !Actor->IsPendingDestroy ())
+                {
+                Actor->Tick ( DeltaTime );
+                }
+            }
+        }
+    else
+        {
+        std::cout << "Level '" << GetName () << "': no actors for tick\n";
+        }
 
-void CLevel::DestroyActor(const std::string& ActorName)
-{
-	CActor* ActorToDestroy = nullptr;
-	auto it = ActorNameMap.find(ActorName);
-	if (it != ActorNameMap.end())
-	{
-		ActorToDestroy = it->second;
-		if (ActorToDestroy)
-		{
-			DestroyActor(ActorToDestroy);
-		}
-	}
-	
-}
+        // Тест: уничтожаем актора после 5 тиков
+    countTick++;
+    if (countTick == 5 && testActor)
+        {
+        std::cout << "\n=== Level '" << GetName ()
+            << "': Destroying test actor after 5 ticks ===\n";
+        DestroyActor ( testActor );
+        testActor = nullptr;
+        }
+    }
 
-void CLevel::RegisterActor(CActor* Actor)
-{
-	Actors.push_back(Actor);
-	ActorNameMap[Actor->GetName()] = Actor;
-}
+void CLevel::DestroyActor ( CActor * ActorToDestroy )
+    {
+    if (ActorToDestroy && !ActorToDestroy->IsPendingDestroy ())
+        {
+        std::cout << "DestroyActor: Marking actor '"
+            << ActorToDestroy->GetName ()
+            << "' for destruction in level '"
+            << GetName () << "'." << std::endl;
 
-void CLevel::ProcessPendingDestroyActors()
-{
-	for (CActor* Actor : PendingDestroyActors)
-	{
-		auto it = std::find(Actors.begin(), Actors.end(), Actor);
-		if (it != Actors.end())
-		{		
-			Actors.erase(it);
-			ActorNameMap.erase(Actor->GetName());
+        ActorToDestroy->SetPendingDestroy ( true );
 
-			// Prefer owner-managed deletion to avoid double-delete: if owner holds unique_ptr, ask it to delete
-			const CObject* Owner = Actor->GetOwner();
-			if (Owner && CObject::s_AliveObjects.find(Owner) != CObject::s_AliveObjects.end())
-			{
-				const_cast<CObject*>(Owner)->RemoveOwnedObject(Actor, true);
-			}
-			else
-			{
-				// fallback: no owner or owner already dead
-				delete Actor;
-			}
-		}
-	}
-	PendingDestroyActors.clear();
-}
+        // Находим unique_ptr этого актора в m_UniqActors
+        for (auto it = m_UniqActors.begin (); it != m_UniqActors.end (); ++it)
+            {
+            if (it->get () == ActorToDestroy)
+                {
+                    // Перемещаем владение в pending destroy вектор
+                m_UniqPendingDestroyActors.push_back ( std::move ( *it ) );
+                m_UniqActors.erase ( it );
+
+                // Удаляем из быстрых векторов
+                UnregisterActor ( ActorToDestroy );
+
+                std::cout << "DestroyActor: Actor '"
+                    << ActorToDestroy->GetName ()
+                    << "' moved to pending destruction." << std::endl;
+                return;
+                }
+            }
+
+        std::cerr << "DestroyActor: ERROR - Actor '"
+            << ActorToDestroy->GetName ()
+            << "' not found in m_UniqActors!" << std::endl;
+        }
+    }
+
+void CLevel::DestroyActor ( const std::string & ActorName )
+    {
+    CActor * ActorToDestroy = nullptr;
+    auto it = ActorNameMap.find ( ActorName );
+    if (it != ActorNameMap.end ())
+        {
+        ActorToDestroy = it->second;
+        if (ActorToDestroy)
+            {
+            DestroyActor ( ActorToDestroy );
+            }
+        }
+    else
+        {
+        std::cerr << "DestroyActor: ERROR - Actor with name '"
+            << ActorName << "' not found!" << std::endl;
+        }
+    }
+
+void CLevel::RegisterActor ( CActor * Actor )
+    {
+    if (!Actor) return;
+
+    // Проверяем, не зарегистрирован ли уже
+    auto it = std::find ( Actors.begin (), Actors.end (), Actor );
+    if (it == Actors.end ())
+        {
+        Actors.push_back ( Actor );
+        ActorNameMap[ Actor->GetName () ] = Actor;
+        std::cout << "RegisterActor: Actor '"
+            << Actor->GetName () << "' registered in level '"
+            << GetName () << "'." << std::endl;
+        }
+    }
+
+void CLevel::UnregisterActor ( CActor * Actor )
+    {
+    if (!Actor) return;
+
+    // Удаляем из вектора Actors
+    auto it = std::find ( Actors.begin (), Actors.end (), Actor );
+    if (it != Actors.end ())
+        {
+        Actors.erase ( it );
+        }
+
+        // Удаляем из map
+    ActorNameMap.erase ( Actor->GetName () );
+
+    std::cout << "UnregisterActor: Actor '"
+        << Actor->GetName () << "' unregistered from level '"
+        << GetName () << "'." << std::endl;
+    }
+
+void CLevel::ProcessPendingDestroyActors ()
+    {
+    for (auto & actorUP : m_UniqPendingDestroyActors)
+        {
+        if (actorUP)
+            {
+            CActor * actor = actorUP.get ();
+            std::cout << "ProcessPendingDestroyActors: Destroying actor '"
+                << actor->GetName () << "'" << std::endl;
+
+      // Вызываем деструктор актора
+            actorUP.reset ();
+            }
+        }
+
+    m_UniqPendingDestroyActors.clear ();
+    std::cout << "ProcessPendingDestroyActors: Cleared pending destroy list. "
+        << "Remaining actors: " << Actors.size () << std::endl;
+    }
