@@ -48,7 +48,7 @@ void CSceneComponent::BeginPlay ()
 void CSceneComponent::Tick ( float DeltaTime )
 	{
 	CBaseComponent::Tick ( DeltaTime );
-	
+	//std::cout << typeid( this ).name () << "with name '" << this->GetName () << "'\n";
 	if (this->HasOwnedObjects ())
 		{
 		for (int i {}; i < OwnedObjects.size (); i++)

@@ -11,7 +11,7 @@ namespace fs = std::filesystem;
 
 std::unique_ptr<CGameInstance> CGameInstance::Instance = nullptr;
 bool CGameInstance::bInstanceCreated = false;
-std::string CGameInstance::m_ConfigFilePath = "GameInstanceConfig.ini";
+std::string CGameInstance::m_ConfigFilePath = "GameConfig.ini";
 std::string CGameInstance::MyKey = "Chuddo";
 
 void CGameInstance::DefaultInitialization()

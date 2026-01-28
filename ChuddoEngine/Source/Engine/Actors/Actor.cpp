@@ -28,6 +28,7 @@ CActor::~CActor ()
 	}
 void CActor::BeginPlay ()
 	{
+	std::cout << typeid( *this ).name () << " with name '" << this->GetName () << "' is  Begin play.\n";
 	if (HasOwnedObjects ()) // for consistency
 		{
 		for (size_t i = 0; i < GetOwnedObjectsCount (); ++i)
@@ -56,6 +57,7 @@ void CActor::BeginPlay ()
 	}
 void CActor::Tick ( float DeltaTime )
 	{
+	std::cout << typeid( *this ).name () << " with name '" << this->GetName () << "' is tick with delta time : " << DeltaTime << "\n";
 	if (bIsCanTick && bIsInitialized)
 		{		
 		if (HasOwnedObjects ())
@@ -69,7 +71,10 @@ void CActor::Tick ( float DeltaTime )
 					if (ActorObj)
 						{
 						std::cout << "Ticking owned Component: " << ActorObj->GetName () << " Owner is : " << GetName () << std::endl;
-						ActorObj->Tick ( DeltaTime );
+						if(ActorObj->IsCanTick())
+							{
+							ActorObj->Tick ( DeltaTime );
+							}
 						}
 					}
 				}
@@ -77,7 +82,7 @@ void CActor::Tick ( float DeltaTime )
 			}		
 		for (auto comp : m_components)
 			{
-			if (comp != nullptr)
+			if (comp != nullptr && comp->IsCanTick())
 				{
 				comp->Tick ( DeltaTime );
 				}

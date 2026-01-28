@@ -16,6 +16,7 @@ void CBaseComponent::BeginPlay()
 	InitializeComponent();
 	if (bIsActive && bIsInitialized)
 	{		
+		std::cout << typeid( *this ).name () << " with name '" << this->GetName () << "' is  Begin play.\n";
 		if (HasOwnedObjects())
 		{
 			for (size_t i = 0; i < GetOwnedObjectsCount(); ++i)
@@ -38,6 +39,7 @@ void CBaseComponent::Tick(float DeltaTime)
 {
 	if(bIsCanTick && bIsInitialized)
 	{		
+		std::cout << typeid( *this ).name () << " with name '" << this->GetName () << "' is tick with delta time : " << DeltaTime<<"\n";
 		if (HasOwnedObjects())
 		{
 			for (size_t i = 0; i < GetOwnedObjectsCount(); ++i)

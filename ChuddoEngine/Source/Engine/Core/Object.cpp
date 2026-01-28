@@ -159,7 +159,7 @@ void CObject::RemoveOwnedObject(CObject* Obj, bool bDeleteObject)
     }
     else
     {
-        std::cerr << "RemoveOwnedObject: object not found among owned objects." << std::endl;
+        std::cerr << "RemoveOwnedObject: object not found among owned objects.just ignore. created whithot owner or allready removed from owning list" << std::endl;
     }
 }
 

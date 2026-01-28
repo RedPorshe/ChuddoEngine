@@ -105,7 +105,7 @@ void CLevel::Tick ( float DeltaTime )
         std::cout << "Level '" << GetName () << "': no actors for tick\n";
         }
 
-        // Тест: уничтожаем актора после 5 тиков
+      
     countTick++;
     if (countTick == 5 && testActor)
         {
@@ -126,17 +126,14 @@ void CLevel::DestroyActor ( CActor * ActorToDestroy )
             << GetName () << "'." << std::endl;
 
         ActorToDestroy->SetPendingDestroy ( true );
-
-        // Находим unique_ptr этого актора в m_UniqActors
+      
         for (auto it = m_UniqActors.begin (); it != m_UniqActors.end (); ++it)
             {
             if (it->get () == ActorToDestroy)
                 {
-                    // Перемещаем владение в pending destroy вектор
                 m_UniqPendingDestroyActors.push_back ( std::move ( *it ) );
                 m_UniqActors.erase ( it );
 
-                // Удаляем из быстрых векторов
                 UnregisterActor ( ActorToDestroy );
 
                 std::cout << "DestroyActor: Actor '"
@@ -175,7 +172,6 @@ void CLevel::RegisterActor ( CActor * Actor )
     {
     if (!Actor) return;
 
-    // Проверяем, не зарегистрирован ли уже
     auto it = std::find ( Actors.begin (), Actors.end (), Actor );
     if (it == Actors.end ())
         {
@@ -191,14 +187,13 @@ void CLevel::UnregisterActor ( CActor * Actor )
     {
     if (!Actor) return;
 
-    // Удаляем из вектора Actors
+   
     auto it = std::find ( Actors.begin (), Actors.end (), Actor );
     if (it != Actors.end ())
         {
         Actors.erase ( it );
         }
 
-        // Удаляем из map
     ActorNameMap.erase ( Actor->GetName () );
 
     std::cout << "UnregisterActor: Actor '"
@@ -208,6 +203,7 @@ void CLevel::UnregisterActor ( CActor * Actor )
 
 void CLevel::ProcessPendingDestroyActors ()
     {
+    std::string DestroyingActorName {};
     for (auto & actorUP : m_UniqPendingDestroyActors)
         {
         if (actorUP)
@@ -215,13 +211,9 @@ void CLevel::ProcessPendingDestroyActors ()
             CActor * actor = actorUP.get ();
             std::cout << "ProcessPendingDestroyActors: Destroying actor '"
                 << actor->GetName () << "'" << std::endl;
-
-      // Вызываем деструктор актора
+           
             actorUP.reset ();
             }
         }
-
-    m_UniqPendingDestroyActors.clear ();
-    std::cout << "ProcessPendingDestroyActors: Cleared pending destroy list. "
-        << "Remaining actors: " << Actors.size () << std::endl;
+    m_UniqPendingDestroyActors.clear ();   
     }
