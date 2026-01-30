@@ -1,62 +1,97 @@
 #pragma once
-#include <CoreMinimal.h>
-#include <vector>
-#include <string>
-#include <memory>
-#include <unordered_set>
+#include "CoreMinimal.h"
 
 class CObject
-{
-public:
-    CObject(const CObject* Owner = nullptr, const std::string& inName = "Object");
-    explicit CObject(const std::string& inName);
+    {
+    public:
+        CObject ( CObject * inOwner = nullptr, const std::string & inName = "Object" );
+        virtual ~CObject ();
 
-    virtual ~CObject();
+        CObject * GetOwner () const { return ObjectOwner; }
+        bool HasOwner () const { return GetOwner () != nullptr; } // ИСПРАВЛЕНО: != nullptr
+        std::string GetName () const { return ObjectName; }
 
-    CObject(const CObject&) = delete;
-    CObject& operator=(const CObject&) = delete;
+        CObject * FindOwned ( const std::string & name ) const;
+        const std::vector<std::unique_ptr<CObject>> & GetOwnedObjects () const { return OwnedObjects; }
+        size_t GetNumOwnedObjects () const { return OwnedObjects.size (); }
+        bool RemoveOwnedObject ( const std::string & name );
 
-    CObject(CObject&&) = default;
-    CObject& operator=(CObject&&) = default;
+        void AddOwnedObject ( std::unique_ptr<CObject> object );
+        void AddOwnedObject ( CObject * object );
+        bool TransferOwnership ( CObject * obj, CObject * newOwner );
 
-    // ownership
-    void SetOwner(const CObject* NewOwner);
-    void ClearOwner() { OwnerObject = nullptr; }
-    const CObject* GetOwner() const { return OwnerObject; }
+        template<typename ClassName, typename... Args>
+        ClassName * AddSubObject ( const std::string & name = "SubObject", Args&&... args )
+            {
+            static_assert( std::is_base_of<CObject, ClassName>::value,
+                           "Class must be derived from CObject" );
 
-    // name
-    void Rename(const std::string& NewName) { m_Name = NewName; }
-    const std::string& GetName() const { return m_Name; }
+              // 1. Проверка на пустое имя
+            if (name.empty ())
+                {
+                std::cerr << "Error: Object name cannot be empty!\n";
+                return nullptr;
+                }
 
-    // manage owned objects
-    // New API: caller passes ownership via unique_ptr; function returns raw pointer for convenience
-    CObject* AddOwnedObject(std::unique_ptr<CObject> Obj);
-    // convenience overload: take raw pointer and assume ownership
-    CObject* AddOwnedObject(CObject* Obj) { return AddOwnedObject(std::unique_ptr<CObject>(Obj)); }
+                // 2. Проверка на дублирование имени
+            if (FindOwned ( name ))
+                {
+                std::cerr << "Error: Object with name '" << name
+                    << "' already exists!" << std::endl;
+                return nullptr;
+                }
 
-    void RemoveOwnedObject(CObject* Obj, bool bDeleteObject = false);
-    void ClearOwnedObjects(bool bDeleteObjects = true);
+                // 3. Проверка на циклическую ссылку (нельзя добавить себя)
+            if (name == GetName ())
+                {
+                std::cerr << "Error: Cannot create object with same name as parent!\n";
+                return nullptr;
+                }
 
-    // find owned objects
-    CObject* FindOwnedObject(const std::string& Name) const;
-    CObject* FindOwnedObject(const CObject* Obj) const;
+                // 4. Проверка на добавление предка (циклическая ссылка)
+            CObject * current = GetOwner ();
+            while (current)
+                {
+                if (current->GetName () == name)
+                    {
+                    std::cerr << "Error: Would create cyclic reference with ancestor '"
+                        << name << "'!\n";
+                    return nullptr;
+                    }
+                current = current->GetOwner ();
+                }
 
-    // debugging info and hierarchy /* delete later */
-    void PrintInfo() const;
-    void PrintHierarchy(int Depth = 0) const;
+                // Создаем объект
+            auto newObj = std::make_unique<ClassName> ( this, name, std::forward<Args> ( args )... );
+            ClassName * rawPtr = newObj.get ();
 
-    // counting owned objects
-    size_t GetOwnedObjectsCount() const { return OwnedObjects.size(); }
-    bool HasOwnedObjects() const { return !OwnedObjects.empty(); }
+            // Сохраняем владение
+            AddOwnedObject ( std::move ( newObj ) );
 
-    // check ownership
-    bool IsOwnerOf(const CObject* Obj) const;
-    void SetName(const std::string& NewName);
-protected:
-    const CObject* OwnerObject = nullptr;
-    std::string m_Name;
-    std::vector<std::unique_ptr<CObject>> OwnedObjects;
+            return rawPtr;
+            }
 
-    // registry of live objects to avoid dereferencing destroyed owners
-    static std::unordered_set<const CObject*> s_AliveObjects;
-};
+        bool RenameOwnedObject ( const std::string & oldName, const std::string & newName );
+
+        template<typename T>
+        T * FindOwnedAs ( const std::string & name ) const
+            {
+            CObject * obj = FindOwned ( name );
+            if (obj)
+                {
+                return dynamic_cast< T * >( obj );
+                }
+            return nullptr;
+            }
+
+        std::unique_ptr<CObject> Clone () const;
+
+        // Новый метод: переименовать себя
+        bool Rename ( const std::string & newName );
+        
+
+    protected:
+        CObject * ObjectOwner = nullptr;
+        std::string ObjectName {};
+        std::vector<std::unique_ptr<CObject>> OwnedObjects;
+    };

@@ -11,10 +11,12 @@
 
 //engine
 #include "Utils/Math/MathTypes.h"
-#include "Core/EngineLoop.h"
+
+#define EDITOR_MODE 0
 
 
-class CObject;
-
-class FEngineLoop;
-extern FEngineLoop GEngine;
+#ifdef EDITOR_MODE
+#define IN_EDITOR 1
+#else
+#define IN_EDITOR 0
+#endif // EDITOR_MODE

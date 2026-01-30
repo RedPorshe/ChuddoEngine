@@ -151,17 +151,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Source\Engine\Components\SceneComponent.cpp" />
-    <ClCompile Include="Source\Engine\Actors\Actor.cpp" />
-    <ClCompile Include="Source\Engine\Controllers\Controller.cpp" />
-    <ClCompile Include="Source\Engine\Pawns\Character.cpp" />
-    <ClCompile Include="Source\Engine\Pawns\Pawn.cpp" />
-    <ClCompile Include="Source\Engine\Components\BaseComponent.cpp" />
-    <ClCompile Include="Source\Engine\Core\Level.cpp" />
-    <ClCompile Include="Source\Engine\Core\World.cpp" />
-    <ClCompile Include="Source\Engine\Core\GameInstance.cpp" />
     <ClCompile Include="Source\Engine\Core\Object.cpp" />
-    <ClCompile Include="Source\Engine\Core\EngineLoop.cpp" />
     <ClCompile Include="Source\main.cpp" />
     <ClCompile Include="Source\Utils\Math\MathConstants.cpp" />
     <ClCompile Include="Source\Utils\Math\MathHelpers.cpp" />
@@ -172,18 +162,7 @@
     <ClCompile Include="Source\Utils\Math\Vector4.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Include\Engine\Actors\Actor.h" />
-    <ClInclude Include="Include\Engine\Pawns\Character.h" />
-    <ClInclude Include="Include\Engine\Pawns\Pawn.h" />
-    <ClInclude Include="Include\Engine\Components\BaseComponent.h" />
-    <ClInclude Include="Include\Engine\Controllers\Controller.h" />
-    <ClInclude Include="Include\Engine\Core\GameInstance.h" />
-    <ClInclude Include="Include\Engine\Core\EngineLoop.h" />
     <ClInclude Include="Include\CoreMinimal.h" />
-    <ClInclude Include="Include\Engine\Core\Level.h" />
-    <ClInclude Include="Include\Engine\Core\Object.h" />
-    <ClInclude Include="Include\Engine\Core\World.h" />
-    <ClInclude Include="Include\Tests\test.h" />
     <ClInclude Include="Include\Utils\Math\CE_MathConstants.h" />
     <ClInclude Include="Include\Utils\Math\CE_MathHelpers.h" />
     <ClInclude Include="Include\Utils\Math\MathTypes.h" />
@@ -192,7 +171,7 @@
     <ClInclude Include="Include\Utils\Math\Vector2D.h" />
     <ClInclude Include="Include\Utils\Math\Vector3D.h" />
     <ClInclude Include="Include\Utils\Math\Vector4.h" />
-    <ClInclude Include="Include\Engine\Components\SceneComponent.h" />
+    <ClInclude Include="Include\Engine\Core\Object.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
