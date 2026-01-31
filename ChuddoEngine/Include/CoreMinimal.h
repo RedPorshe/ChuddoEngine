@@ -8,12 +8,16 @@
 #include <unordered_map>
 #include <algorithm>
 #include <iostream>
+#include <locale>
 
 //engine
 #include "Utils/Math/MathTypes.h"
 
-#define EDITOR_MODE 0
+// Вместо включения ObjectFactory.h - только forward declaration
+class CObjectFactory;
+#define OBJECT_FACTORY CObjectFactory::GetInstance()
 
+#define EDITOR_MODE 0
 
 #ifdef EDITOR_MODE
 #define IN_EDITOR 1
