@@ -68,7 +68,12 @@ void CEngine::Shutdown ()
         return;
 
     std::cout << "Engine shutting down...\n";
-
+    // сохраняем состояние если нужно
+    if (CGameInstance::Get ().IsMustSaveState ())
+        {
+        std::cout << "saving gameInstance state\n";
+        CGameInstance::Get ().SaveGameInstanceState ();
+        }
     // Уничтожаем GameInstance
     CGameInstance::Destroy ();
 
@@ -80,7 +85,7 @@ void CEngine::Shutdown ()
 
 void CEngine::Start ()
     {
- 
+   
     CreateTestWorld ();
     
     MainLoop ();

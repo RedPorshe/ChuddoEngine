@@ -29,3 +29,14 @@ class CEngine
 
         void CreateTestWorld ();
     };
+
+#include "Core/Object.h"
+#include "GameFramework/GameInstance.h"
+#include "GameFramework/World/World.h"
+#include "GameFramework/World/Level.h"
+#include "GameFramework/Actors/Actor.h"
+#include <iostream>
+#include <fstream>
+
+
+   

@@ -153,6 +153,7 @@
   <ItemGroup>
     <ClCompile Include="Source\Engine\Core\Engine.cpp" />
     <ClCompile Include="Source\Engine\Core\Object.cpp" />
+    <ClCompile Include="Source\Engine\Core\ObjectFactory.cpp" />
     <ClCompile Include="Source\Engine\GameFramework\Actors\Actor.cpp" />
     <ClCompile Include="Source\Engine\GameFramework\GameInstance.cpp" />
     <ClCompile Include="Source\Engine\GameFramework\World\Level.cpp" />

@@ -184,6 +184,7 @@ void CLevel::DumpState () const
 
     // ========== FACTORY REGISTRATION ==========
 
+
 namespace
     {
     struct CLevelRegistrar

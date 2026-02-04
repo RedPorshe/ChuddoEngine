@@ -20,7 +20,7 @@ class CGameInstance : public CObject
         static bool Create ();
         static void Destroy ();
         static bool IsCreated () { return Instance != nullptr; }
-
+        bool IsMustSaveState () const { return bIsMustSaveState; }
         // ========== WORLD MANAGEMENT ==========
         CWorld * GetWorld () const { return CurrentWorld; }
         CWorld * CreateWorld ( const std::string & worldName = "World" );
@@ -30,7 +30,7 @@ class CGameInstance : public CObject
         virtual void Init ();
         virtual void Tick ( float deltaTime );
         virtual void Shutdown ();
-
+        void SaveGameInstanceState ();
         // ========== UTILITIES ==========
         float GetGameTime () const { return GameTime; }
         float GetDeltaTime () const { return DeltaTime; }
@@ -46,4 +46,5 @@ class CGameInstance : public CObject
         // Запрещаем копирование
         CGameInstance ( const CGameInstance & ) = delete;
         CGameInstance & operator=( const CGameInstance & ) = delete;
+        bool bIsMustSaveState { true };
 	};

@@ -1,7 +1,9 @@
 // GameInstance.cpp
 #include "GameInstance.h"
 #include "World/World.h"
+#include <filesystem>
 #include <iostream>
+#include <rapidjson/rapidjson.h>
 
 // Статический член
 CGameInstance * CGameInstance::Instance = nullptr;
@@ -133,6 +135,12 @@ void CGameInstance::Shutdown ()
         }
     }
 
+void CGameInstance::SaveGameInstanceState ()
+    {
+    std::cout << "Proccessing save gameinstance '" << GetName () << "' state \n";
+    
+    }
+
 void CGameInstance::DumpState () const
     {
     std::cout << "\n=== GAME INSTANCE STATE ===\n";
@@ -150,6 +158,7 @@ void CGameInstance::DumpState () const
     std::cout << "Child Objects: " << GetNumOwnedObjects () << "\n";
     std::cout << "===========================\n";
     }
+
 namespace
     {
     struct CGameInstanceRegistrar

@@ -1,24 +1,30 @@
 #pragma once
+#include "CoreMinimal.h"
 #include <unordered_map>
 #include <functional>
 #include <memory>
 #include <string>
 #include <iostream>
 #include <sstream>
+#include <vector>
+#include <type_traits>
+#include <mutex>
+#include <unordered_set>
 
 // Forward declaration
 class CObject;
 
 // Simple registration macro
 #define REGISTER_CLASS_FACTORY(ClassName) \
-    namespace { \
-        struct ClassName##Registrar { \
-            ClassName##Registrar() { \
-                CObjectFactory::GetInstance().RegisterClass<ClassName>(); \
-            } \
-        }; \
-        static ClassName##Registrar ClassName##_AutoReg; \
-    }
+    static bool Register##ClassName() { \
+        static bool bRegistered = false; \
+        if (!bRegistered) { \
+            CObjectFactory::GetInstance().RegisterClass<ClassName>(); \
+            bRegistered = true; \
+        } \
+        return bRegistered; \
+    } \
+    static bool ClassName##_Registered = Register##ClassName();
 
 class CObjectFactory
     {
@@ -40,14 +46,26 @@ class CObjectFactory
         template<typename T>
         void RegisterClass ()
             {
-            static_assert( std::is_base_of_v<CObject, T>,
+            static_assert( std::is_base_of<CObject, T>::value,
                            "CObjectFactory: Class must derive from CObject" );
 
             std::string className = T::StaticClassName ();
 
-            if (IsClassRegistered ( className ))
+            // Используем статическую локальную переменную для потокобезопасной однократной регистрации
+            static std::mutex registrationMutex;
+            std::lock_guard<std::mutex> lock ( registrationMutex );
+
+            static std::unordered_set<std::string> registeredClasses;
+
+            if (registeredClasses.find ( className ) != registeredClasses.end ())
                 {
-                std::cerr << "Warning: Class '" << className << "' is already registered!\n";
+                return; // Уже зарегистрирован в этой сессии
+                }
+
+            if (ClassCreators.find ( className ) != ClassCreators.end ())
+                {
+                    // Уже зарегистрирован глобально, просто запоминаем
+                registeredClasses.insert ( className );
                 return;
                 }
 
@@ -63,6 +81,9 @@ class CObjectFactory
             // Store class hierarchy info
             ClassHierarchy[ className ] = T::StaticBaseClassName ();
 
+            // Запоминаем
+            registeredClasses.insert ( className );
+
             std::cout << "[FACTORY] Registered class '" << className
                 << "' (base: '" << T::StaticBaseClassName () << "')\n";
             }
@@ -71,12 +92,22 @@ class CObjectFactory
         template<typename T>
         void RegisterClass ( const std::string & className )
             {
-            static_assert( std::is_base_of_v<CObject, T>,
+            static_assert( std::is_base_of<CObject, T>::value,
                            "CObjectFactory: Class must derive from CObject" );
 
-            if (IsClassRegistered ( className ))
+            static std::mutex registrationMutex;
+            std::lock_guard<std::mutex> lock ( registrationMutex );
+
+            static std::unordered_set<std::string> registeredClasses;
+
+            if (registeredClasses.find ( className ) != registeredClasses.end ())
                 {
-                std::cerr << "Warning: Class '" << className << "' is already registered!\n";
+                return;
+                }
+
+            if (ClassCreators.find ( className ) != ClassCreators.end ())
+                {
+                registeredClasses.insert ( className );
                 return;
                 }
 
@@ -85,70 +116,14 @@ class CObjectFactory
                 return new T ( owner, displayName );
                 };
 
+            registeredClasses.insert ( className );
             std::cout << "[FACTORY] Registered class '" << className << "'\n";
             }
 
-      // Create object by class name and automatically add to owner
+            // Create object by class name and automatically add to owner
         CObject * Create ( const std::string & className,
                            CObject * owner = nullptr,
-                           const std::string & displayName = "Object" )
-            {
-            // Проверка валидности имени
-            if (displayName.empty ())
-                {
-                std::cerr << "[FACTORY] ERROR: Display name cannot be empty!\n";
-                return nullptr;
-                }
-
-            // Проверить уникальность имени в иерархии owner
-            std::string finalDisplayName = displayName;
-            if (owner)
-                {
-                CObject * root = owner->GetRoot ();
-                if (root->FindRecursive ( finalDisplayName ))
-                    {
-                    // Генерируем уникальное имя
-                    finalDisplayName = CObject::GenerateUniqueDisplayNameVariant ( finalDisplayName, root );
-                    std::cout << "[FACTORY] Note: Display name '" << displayName
-                        << "' already exists, using '" << finalDisplayName << "' instead\n";
-                    }
-                }
-
-            auto it = ClassCreators.find ( className );
-            if (it != ClassCreators.end ())
-                {
-                CObject * obj = it->second ( owner, finalDisplayName );
-                if (obj)
-                    {
-                    // АВТОМАТИЧЕСКИ добавляем к владельцу, если он указан
-                    if (owner)
-                        {
-                        owner->AddOwnedObject ( obj );
-                        }
-
-                    std::cout << "[FACTORY] Created '" << finalDisplayName
-                        << "' of type '" << className << "'\n";
-                    }
-                return obj;
-                }
-
-                // Try to find in parent classes (for backward compatibility)
-            std::string parentClass = FindParentClass ( className );
-            if (!parentClass.empty ())
-                {
-                std::cout << "[FACTORY] Class '" << className
-                    << "' not found, using parent '" << parentClass << "'\n";
-                return Create ( parentClass, owner, finalDisplayName );
-                }
-
-            std::cerr << "[FACTORY] ERROR - Unknown class type: '" << className << "'\n";
-            std::cerr << "[FACTORY] Available classes: ";
-            for (const auto & [name, _] : ClassCreators)
-                std::cerr << name << " ";
-            std::cerr << "\n";
-
-            return nullptr;
-            }
+                           const std::string & displayName = "Object" );
 
             // Check if class is registered
         bool IsClassRegistered ( const std::string & className ) const

@@ -13,9 +13,12 @@
 //engine
 #include "Utils/Math/MathTypes.h"
 
-// Вместо включения ObjectFactory.h - только forward declaration
+// Forward declarations
+class CObject;
 class CObjectFactory;
-#define OBJECT_FACTORY CObjectFactory::GetInstance()
+
+// Global factory access
+extern CObjectFactory & OBJECT_FACTORY;
 
 #define EDITOR_MODE 0
 

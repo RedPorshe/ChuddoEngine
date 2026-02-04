@@ -57,3 +57,5 @@ class CWorld : public CObject
     protected:
         bool bIsPlaying = false;
     };
+
+REGISTER_CLASS_FACTORY ( CWorld );

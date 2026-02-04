@@ -267,14 +267,14 @@ void CWorld::DumpState () const
 
     // ========== FACTORY REGISTRATION ==========
 
-namespace
-    {
-    struct CWorldRegistrar
-        {
-        CWorldRegistrar ()
-            {
-            CObjectFactory::GetInstance ().RegisterClass<CWorld> ();
-            }
-        };
-    static CWorldRegistrar CWorld_AutoReg;
-    }
+//namespace
+//    {
+//    struct CWorldRegistrar
+//        {
+//        CWorldRegistrar ()
+//            {
+//            CObjectFactory::GetInstance ().RegisterClass<CWorld> ();
+//            }
+//        };
+//    static CWorldRegistrar CWorld_AutoReg;
+//    }
