@@ -1,264 +1,742 @@
 #include "Core/Object.h"
-#include <iostream>
+#include "Core/ObjectFactory.h"
+#include <functional>
+#include <sstream>
+#include <cctype>
 #include <algorithm>
+#include <fstream>
+#include <rapidjson/error/en.h>
 
-std::unordered_set<const CObject*> CObject::s_AliveObjects;
+// Регистрируем CObject в фабрике
+//namespace
+//    {
+//    struct CObjectRegistrar
+//        {
+//        CObjectRegistrar ()
+//            {
+//            CObjectFactory::GetInstance ().RegisterClass<CObject> ();
+//            }
+//        };
+//    static CObjectRegistrar CObject_AutoReg;
+//    }
 
-CObject::CObject(const CObject* Owner, const std::string& inName)
-    : OwnerObject(nullptr), m_Name(inName)
-{
-    s_AliveObjects.insert(this);
-
-    std::cout << "Object '" << m_Name << "' (this=" << this << ") created";
-    if (Owner)
+CObject::CObject ( CObject * inOwner, const std::string & inDisplayName )
+    : ObjectOwner ( inOwner ), DisplayName ( inDisplayName )
     {
-        if (s_AliveObjects.find(Owner) != s_AliveObjects.end())
+        // Generate unique UUID
+    ObjectUUID = GenerateUUID ();
+
+    std::cout << "Created object: " << DisplayName
+        << " [UUID: " << GetShortUUID ( ObjectUUID ) << "]\n";
+    }
+
+CObject::~CObject ()
+    {
+    std::cout << GetObjectClassName () << " named '"
+        << DisplayName << "' [UUID: " << GetShortUUID ( ObjectUUID )
+        << "] Destruction started\n";
+    }
+
+void CObject::UpdateDebugIdentifier ()
+    {
+        // Already handled in GetUniqName()
+    }
+
+CObject * CObject::FindOwned ( const std::string & displayName ) const
+    {
+    for (const auto & obj : OwnedObjects)
         {
-            // Record owner pointer but do NOT transfer ownership here. Ownership must be explicit via AddOwnedObject.
-            OwnerObject = Owner;
-            std::cout << " with owner '" << Owner->GetName() << "' (owner=" << Owner << ")." << std::endl;
-        }
-        else
-        {
-            std::cout << " with owner <dead object> (owner=" << Owner << ")." << std::endl;
-            // Do not set owner to a dead object
-            OwnerObject = nullptr;
-        }
-    }
-    else
-    {
-        std::cout << " with no owner." << std::endl;
-    }
-}
-
-CObject::CObject(const std::string& inName)
-    : OwnerObject(nullptr), m_Name(inName)
-{
-    s_AliveObjects.insert(this);
-    std::cout << "Object '" << m_Name << "' (this=" << this << ") created with no owner." << std::endl;
-}
-
-CObject::~CObject()
-{
-    std::cout << "~CObject: '" << GetName() << "' (this=" << this << ") starting destruction." << std::endl;
-
-    // remove from alive registry first to prevent others from dereferencing us while we clean up
-    s_AliveObjects.erase(this);
-
-    // Safely clear owned objects first so their destructors do not
-    // try to access this parent while it's in the process of being destroyed.
-    if (HasOwnedObjects())
-    {
-        ClearOwnedObjects(true);
-    }
-
-    // Then notify owner that this object is gone, only if owner is still alive
-    if (OwnerObject && s_AliveObjects.find(OwnerObject) != s_AliveObjects.end())
-    {
-        std::cout << "~CObject: notifying owner (owner=" << OwnerObject << ") to remove this." << std::endl;
-        const_cast<CObject*>(OwnerObject)->RemoveOwnedObject(this, false);
-    }
-
-    std::cout << "Object '" << GetName() << "' (this=" << this << ") destroyed." << std::endl;
-}
-
-void CObject::SetOwner(const CObject* NewOwner)
-{
-    std::cout << "SetOwner: object=" << this << " newOwner=" << NewOwner << std::endl;
-
-    if (OwnerObject == NewOwner)
-        return;
-
-    if (NewOwner == this)
-    {
-        std::cerr << "Warning: An object cannot own itself. Owner not changed." << std::endl;
-        return;
-    }
-
-    if (NewOwner && s_AliveObjects.find(NewOwner) == s_AliveObjects.end())
-    {
-        std::cerr << "Warning: Attempt to set owner to dead object. Owner not changed." << std::endl;
-        return;
-    }
-
-    if (NewOwner && const_cast<CObject*>(NewOwner)->IsOwnerOf(this))
-    {
-        std::cerr << "Error: Circular ownership detected. Owner not changed." << std::endl;
-        return;
-    }
-
-    // Do not implicitly remove/add ownership from OwnedObjects here; ownership must be managed explicitly
-    OwnerObject = NewOwner;
-}
-
-CObject* CObject::AddOwnedObject(std::unique_ptr<CObject> Obj)
-{
-    CObject* raw = Obj.get();
-    std::cout << "AddOwnedObject: owner=" << this << " obj=" << raw << std::endl;
-
-    if (!raw || raw == this)
-        return nullptr;
-
-    if (s_AliveObjects.find(raw) == s_AliveObjects.end())
-    {
-        std::cerr << "AddOwnedObject: attempt to add dead object (" << raw << ")" << std::endl;
-        return nullptr;
-    }
-
-    // check duplicate
-    auto itExisting = std::find_if(OwnedObjects.begin(), OwnedObjects.end(),
-        [raw](const std::unique_ptr<CObject>& Up) { return Up.get() == raw; });
-    if (itExisting != OwnedObjects.end())
-        return raw;
-
-    // circular ownership
-    if (raw->IsOwnerOf(this))
-    {
-        std::cerr << "Error: Circular ownership detected!" << std::endl;
-        return nullptr;
-    }
-
-    // detach from previous owner if any
-    if (raw->OwnerObject && raw->OwnerObject != this)
-    {
-        if (s_AliveObjects.find(raw->OwnerObject) != s_AliveObjects.end())
-            const_cast<CObject*>(raw->OwnerObject)->RemoveOwnedObject(raw, false);
-    }
-
-    // take ownership
-    OwnedObjects.emplace_back(std::move(Obj));
-    raw->OwnerObject = this;
-    return raw;
-}
-
-void CObject::RemoveOwnedObject(CObject* Obj, bool bDeleteObject)
-{
-    std::cout << "RemoveOwnedObject: owner=" << this << " obj=" << Obj << " delete=" << bDeleteObject << std::endl;
-
-    auto it = std::find_if(OwnedObjects.begin(), OwnedObjects.end(),
-        [Obj](const std::unique_ptr<CObject>& Up) { return Up.get() == Obj; });
-    if (it != OwnedObjects.end())
-    {
-        CObject* raw = it->get();
-        if (raw->OwnerObject == this)
-        {
-            raw->OwnerObject = nullptr;
-        }
-
-        if (!bDeleteObject)
-        {
-            // release ownership without deleting
-            it->release();
-            OwnedObjects.erase(it);
-        }
-        else
-        {
-            // erase will destroy unique_ptr and delete the object
-            OwnedObjects.erase(it);
-        }
-    }
-    else
-    {
-        std::cerr << "RemoveOwnedObject: object not found among owned objects.just ignore. created whithot owner or allready removed from owning list" << std::endl;
-    }
-}
-
-void CObject::ClearOwnedObjects(bool bDeleteObjects)
-{
-    std::cout << "ClearOwnedObjects: owner=" << this << " delete=" << bDeleteObjects << " count=" << OwnedObjects.size() << std::endl;
-
-    // move ownership out so nested destructors cannot modify OwnedObjects
-    std::vector<std::unique_ptr<CObject>> Temp = std::move(OwnedObjects);
-    OwnedObjects.clear();
-
-    if (bDeleteObjects)
-    {
-        for (auto& Up : Temp)
-        {
-            if (Up)
+        if (obj->GetName () == displayName)
             {
-                std::cout << " ClearOwnedObjects: destroying child=" << Up.get() << std::endl;
-                Up->OwnerObject = nullptr;
-                // unique_ptr will delete when Temp is destroyed
+            return obj.get ();
             }
         }
-        // Temp goes out of scope and deletes owned objects
+    return nullptr;
     }
-    else
+
+bool CObject::FindRecursive ( const std::string & displayName )
     {
-        for (auto& Up : Temp)
+    if (GetName () == displayName)
         {
-            if (Up)
+        std::cout << "[DEBUG] FindRecursive: FOUND '" << displayName
+            << "' at '" << GetName () << "'\n";
+        return true;
+        }
+
+    for (const auto & child : OwnedObjects)
+        {
+        if (child->FindRecursive ( displayName ))
             {
-                std::cout << " ClearOwnedObjects: releasing child=" << Up.get() << std::endl;
-                Up->OwnerObject = nullptr;
-                Up.release(); // release ownership, do not delete
+            return true;
             }
         }
-        // Temp destructs, but released pointers remain allocated
-    }
-}
 
-
-CObject* CObject::FindOwnedObject(const std::string& Name) const
-{
-    auto it = std::find_if(OwnedObjects.begin(), OwnedObjects.end(),
-        [&Name](const std::unique_ptr<CObject>& Up) {
-            return Up && Up->GetName() == Name;
-        });
-
-    return (it != OwnedObjects.end()) ? it->get() : nullptr;
-}
-
-CObject* CObject::FindOwnedObject(const CObject* Obj) const
-{
-    auto it = std::find_if(OwnedObjects.begin(), OwnedObjects.end(),
-        [Obj](const std::unique_ptr<CObject>& Up) { return Up.get() == Obj; });
-    return (it != OwnedObjects.end()) ? it->get() : nullptr;
-}
-
-bool CObject::IsOwnerOf(const CObject* Obj) const
-{
-    while (Obj)
-    {
-        if (Obj == this) return true;
-        Obj = Obj->OwnerObject;
-    }
     return false;
-}
-
-void CObject::SetName(const std::string& NewName)
-{
-    m_Name = NewName;
-}
-
-void CObject::PrintInfo() const
-{
-    std::cout << "This is object named '" << m_Name << "'. ";
-    if (OwnerObject && s_AliveObjects.find(OwnerObject) != s_AliveObjects.end())
-    {
-        std::cout << "It is owned by '" << OwnerObject->GetName() << "'.";
     }
-    else
-    {
-        std::cout << "It has no owner.";
-    }
-    std::cout << " Owns " << OwnedObjects.size() << " object(s)." << std::endl;
-}
 
-void CObject::PrintHierarchy(int Depth) const
-{
-    std::string indent(Depth * 2, ' ');
-    std::cout << indent << "- " << m_Name;
-    if (OwnerObject && s_AliveObjects.find(OwnerObject) != s_AliveObjects.end())
-        std::cout << " [Owner: " << OwnerObject->GetName() << "]";
-    std::cout << std::endl;
-
-    for (const auto& childUp : OwnedObjects)
+CObject * CObject::FindObjectByDisplayNameRecursive ( const std::string & displayName )
     {
-        if (childUp)
+    auto FoundChild = FindOwned ( displayName );
+    if (FoundChild)
         {
-            childUp->PrintHierarchy(Depth + 1);
+        return FoundChild;
+        }
+
+        // Search up the hierarchy
+    auto root = this;
+    while (root->GetOwner ())
+        {
+        root = root->GetOwner ();
+        FoundChild = root->FindOwned ( displayName );
+        if (FoundChild)
+            return FoundChild;
+        }
+
+    return nullptr;
+    }
+
+CObject * CObject::FindByUUID ( const std::string & uuid ) const
+    {
+    if (ObjectUUID == uuid)
+        return const_cast< CObject * >( this );
+
+    return nullptr;
+    }
+
+CObject * CObject::FindByUUIDRecursive ( const std::string & uuid )
+    {
+    if (ObjectUUID == uuid)
+        return this;
+
+    for (const auto & child : OwnedObjects)
+        {
+        CObject * found = child->FindByUUIDRecursive ( uuid );
+        if (found)
+            return found;
+        }
+
+    return nullptr;
+    }
+
+bool CObject::RemoveOwnedObject ( const std::string & displayName )
+    {
+    auto it = std::find_if ( OwnedObjects.begin (), OwnedObjects.end (),
+                             [ &displayName ] ( const std::unique_ptr<CObject> & obj )
+                             {
+                             return obj && obj->GetName () == displayName;
+                             } );
+
+    if (it != OwnedObjects.end ())
+        {
+        std::cout << ( *it )->GetName () << " [UUID: "
+            << GetShortUUID ( ( *it )->ObjectUUID )
+            << "] removed from " << GetName () << "\n";
+        OwnedObjects.erase ( it );
+        return true;
+        }
+    return false;
+    }
+
+void CObject::AddOwnedObject ( std::unique_ptr<CObject> object )
+    {
+    if (!object || object.get () == this)
+        return;
+
+    object->ObjectOwner = this;
+    OwnedObjects.push_back ( std::move ( object ) );
+    }
+
+void CObject::AddOwnedObject ( CObject * object )
+    {
+    if (!object || object == this)
+        return;
+
+    auto uniquePtr = std::unique_ptr<CObject> ( object );
+    AddOwnedObject ( std::move ( uniquePtr ) );
+    }
+
+CObject * CObject::AddSubObjectByClass ( const std::string & className,
+                                         const std::string & desiredDisplayName )
+    {
+    if (desiredDisplayName.empty ())
+        {
+        std::cerr << "Error: Object display name cannot be empty!\n";
+        return nullptr;
+        }
+
+        // Find hierarchy root for global check
+    CObject * root = this;
+    while (root->GetOwner ())
+        {
+        root = root->GetOwner ();
+        }
+
+    std::string finalDisplayName = desiredDisplayName;
+
+    // Check if display name already exists globally
+    if (root->FindRecursive ( desiredDisplayName ))
+        {
+            // Display name exists in hierarchy, generate unique variant
+        finalDisplayName = GenerateUniqueDisplayNameVariant ( desiredDisplayName, root );
+        std::cout << "Note: Display name '" << desiredDisplayName
+            << "' already exists, using '" << finalDisplayName << "' instead\n";
+        }
+
+        // Use factory to create object
+    CObject * newObj = OBJECT_FACTORY.Create ( className, this, finalDisplayName );
+
+    return newObj;
+    }
+
+bool CObject::TransferOwnership ( CObject * obj, CObject * newOwner )
+    {
+    if (!obj || !newOwner || obj == newOwner || obj == this)
+        return false;
+
+    auto it = std::find_if ( OwnedObjects.begin (), OwnedObjects.end (),
+                             [ obj ] ( const std::unique_ptr<CObject> & owned )
+                             {
+                             return owned.get () == obj;
+                             } );
+
+    if (it != OwnedObjects.end ())
+        {
+        std::unique_ptr<CObject> temp = std::move ( *it );
+        OwnedObjects.erase ( it );
+
+        temp->ObjectOwner = newOwner;
+        newOwner->AddOwnedObject ( std::move ( temp ) );
+
+        std::cout << "Transferred '" << obj->GetName ()
+            << "' [UUID: " << GetShortUUID ( obj->ObjectUUID )
+            << "] from '" << GetName ()
+            << "' to '" << newOwner->GetName () << "'\n";
+        return true;
+        }
+    return false;
+    }
+
+    // Helper function to collect similar display names
+void CObject::CollectSimilarDisplayNames ( CObject * node, const std::string & baseDisplayName,
+                                           std::vector<std::string> & result )
+    {
+    if (!node) return;
+
+    std::string name = node->GetName ();
+
+    // Check if name starts with baseDisplayName
+    if (name.find ( baseDisplayName ) == 0)
+        {
+            // Exact match
+        if (name == baseDisplayName)
+            {
+            result.push_back ( name );
+            }
+            // Name in format "baseDisplayName_number"
+        else if (name.size () > baseDisplayName.size () && name[ baseDisplayName.size () ] == '_')
+            {
+            std::string suffix = name.substr ( baseDisplayName.size () + 1 );
+
+            // Check if suffix is a number
+            bool isNumber = !suffix.empty ();
+            for (char c : suffix)
+                {
+                if (!std::isdigit ( static_cast< unsigned char >( c ) ))
+                    {
+                    isNumber = false;
+                    break;
+                    }
+                }
+
+            if (isNumber)
+                {
+                result.push_back ( name );
+                }
+            }
+        }
+
+        // Recursively check children
+    for (const auto & child : node->GetOwnedObjects ())
+        {
+        CollectSimilarDisplayNames ( child.get (), baseDisplayName, result );
         }
     }
-}
+
+    // Generate unique display name variant
+std::string CObject::GenerateUniqueDisplayNameVariant ( const std::string & baseDisplayName, CObject * root )
+    {
+    std::vector<std::string> similarNames;
+    CollectSimilarDisplayNames ( root, baseDisplayName, similarNames );
+
+    // If no similar names, baseDisplayName is available
+    if (similarNames.empty ())
+        {
+        return baseDisplayName;
+        }
+
+        // Extract numbers from names
+    std::vector<int> usedNumbers;
+    bool baseNameExists = false;
+
+    for (const auto & name : similarNames)
+        {
+        if (name == baseDisplayName)
+            {
+            baseNameExists = true;
+            usedNumbers.push_back ( 0 ); // Base name is number 0
+            }
+        else
+            {
+            std::string suffix = name.substr ( baseDisplayName.size () + 1 );
+            try
+                {
+                int num = std::stoi ( suffix );
+                usedNumbers.push_back ( num );
+                }
+                catch (...)
+                    {
+                        // Not a number, ignore
+                    }
+            }
+        }
+
+        // Sort numbers
+    std::sort ( usedNumbers.begin (), usedNumbers.end () );
+
+    // Find first available number
+    int nextNumber = baseNameExists ? 1 : 0;
+    for (int num : usedNumbers)
+        {
+        if (num == nextNumber)
+            {
+            nextNumber++;
+            }
+        else if (num > nextNumber)
+            {
+            break; // Found a gap
+            }
+        }
+
+        // If nextNumber is 0, return baseDisplayName (shouldn't happen here)
+    if (nextNumber == 0)
+        {
+        return baseDisplayName;
+        }
+
+    return baseDisplayName + "_" + std::to_string ( nextNumber );
+    }
+
+bool CObject::RenameOwnedObject ( const std::string & oldDisplayName, const std::string & newDisplayName )
+    {
+    if (oldDisplayName.empty ())
+        {
+        std::cerr << "Error: Old display name cannot be empty!\n";
+        return false;
+        }
+
+    if (newDisplayName.empty ())
+        {
+        std::cerr << "Error: New display name cannot be empty!\n";
+        return false;
+        }
+
+        // Check if new display name is already used among children
+    if (FindOwned ( newDisplayName ))
+        {
+        std::cerr << "Error: Display name '" << newDisplayName << "' already in use among children!\n";
+        return false;
+        }
+
+    CObject * obj = FindOwned ( oldDisplayName );
+    if (obj)
+        {
+        return obj->Rename ( newDisplayName );
+        }
+
+    std::cerr << "Error: Object '" << oldDisplayName << "' not found!\n";
+    return false;
+    }
+
+std::unique_ptr<CObject> CObject::Clone () const
+    {
+    auto clone = std::make_unique<CObject> ( nullptr, GetName () + "_Copy" );
+
+    for (const auto & child : OwnedObjects)
+        {
+        auto childClone = child->Clone ();
+        clone->AddOwnedObject ( std::move ( childClone ) );
+        }
+
+    return clone;
+    }
+
+bool CObject::Rename ( const std::string & newDisplayName )
+    {
+    if (newDisplayName.empty ())
+        {
+        std::cerr << "Error: New display name cannot be empty!\n";
+        return false;
+        }
+
+        // If display name hasn't changed
+    if (newDisplayName == DisplayName)
+        {
+        return true;
+        }
+
+        // Get hierarchy root
+    CObject * root = GetRoot ();
+
+    // Global uniqueness check
+    if (root->FindRecursive ( newDisplayName ))
+        {
+        std::cout << "Error: can't Rename to '" << newDisplayName
+            << "'. This display name already exists in world.\n";
+
+        auto existingObj = FindObjectByDisplayNameRecursive ( newDisplayName );
+        if (existingObj && typeid( *existingObj ) == typeid( *this ))
+            {
+            std::cout << "Objects have same type, generating unique display name...\n";
+            std::cout << typeid( *existingObj ).name () << " found '"
+                << existingObj->GetUniqName () << "' -> this '"
+                << typeid( *this ).name () << "' " << this->GetUniqName () << "\n";
+
+      // Generate unique display name
+            std::string uniqueDisplayName = GenerateUniqueDisplayNameVariant ( newDisplayName, root );
+            std::cout << "Auto-generating unique display name: '" << uniqueDisplayName << "'\n";
+
+            // Apply new display name
+            std::string oldDisplayName = DisplayName;
+            DisplayName = uniqueDisplayName;
+            std::cout << "Renamed '" << oldDisplayName << "' to '" << uniqueDisplayName
+                << "' new unique name '" << GetUniqName () << "'\n";
+            return true;
+            }
+        return false;
+        }
+
+        // Display name is unique, rename
+    std::string oldDisplayName = DisplayName;
+    DisplayName = newDisplayName;
+    std::cout << "Renamed '" << oldDisplayName << "' to '" << newDisplayName
+        << "' new unique name '" << GetUniqName () << "'\n";
+    return true;
+    }
+
+    // ========== JSON Serialization Implementation ==========
+
+void CObject::Serialize ( rapidjson::Value & jsonValue, rapidjson::Document::AllocatorType & allocator ) const
+    {
+        // Basic object properties
+    jsonValue.AddMember ( "ClassName", rapidjson::StringRef ( GetObjectClassName () ), allocator );
+    jsonValue.AddMember ( "DisplayName", rapidjson::StringRef ( DisplayName.c_str () ), allocator );
+    jsonValue.AddMember ( "UUID", rapidjson::StringRef ( ObjectUUID.c_str () ), allocator );
+
+    // Serialize custom properties from derived classes
+    SerializeProperties ( jsonValue, allocator );
+
+    // Serialize children recursively
+    if (!OwnedObjects.empty ())
+        {
+        rapidjson::Value childrenArray ( rapidjson::kArrayType );
+        for (const auto & child : OwnedObjects)
+            {
+            rapidjson::Value childValue ( rapidjson::kObjectType );
+            child->Serialize ( childValue, allocator );
+            childrenArray.PushBack ( childValue, allocator );
+            }
+        jsonValue.AddMember ( "Children", childrenArray, allocator );
+        }
+    }
+
+void CObject::Deserialize ( const rapidjson::Value & jsonValue )
+    {
+        // Load basic properties
+    if (jsonValue.HasMember ( "DisplayName" ) && jsonValue[ "DisplayName" ].IsString ())
+        {
+        DisplayName = jsonValue[ "DisplayName" ].GetString ();
+        }
+
+    if (jsonValue.HasMember ( "UUID" ) && jsonValue[ "UUID" ].IsString ())
+        {
+        ObjectUUID = jsonValue[ "UUID" ].GetString ();
+        }
+
+        // Deserialize custom properties
+    DeserializeProperties ( jsonValue );
+
+    // Deserialize children
+    if (jsonValue.HasMember ( "Children" ) && jsonValue[ "Children" ].IsArray ())
+        {
+        const rapidjson::Value & childrenArray = jsonValue[ "Children" ];
+        for (rapidjson::SizeType i = 0; i < childrenArray.Size (); i++)
+            {
+            const rapidjson::Value & childValue = childrenArray[ i ];
+            if (childValue.HasMember ( "ClassName" ) && childValue[ "ClassName" ].IsString ())
+                {
+                std::string className = childValue[ "ClassName" ].GetString ();
+                std::string displayName = "LoadedObject";
+
+                if (childValue.HasMember ( "DisplayName" ) && childValue[ "DisplayName" ].IsString ())
+                    {
+                    displayName = childValue[ "DisplayName" ].GetString ();
+                    }
+
+                    // Create object through factory
+                CObject * childObj = AddSubObjectByClass ( className, displayName );
+                if (childObj)
+                    {
+                    childObj->Deserialize ( childValue );
+                    }
+                }
+            }
+        }
+    }
+
+void CObject::SerializeProperties ( rapidjson::Value & jsonValue, rapidjson::Document::AllocatorType & allocator ) const
+    {
+        // Base class has no custom properties
+        // Override in derived classes
+    }
+
+void CObject::DeserializeProperties ( const rapidjson::Value & jsonValue )
+    {
+        // Base class has no custom properties
+        // Override in derived classes
+    }
+
+std::string CObject::ToJSON ( bool pretty ) const
+    {
+    rapidjson::Document doc;
+    doc.SetObject ();
+    rapidjson::Document::AllocatorType & allocator = doc.GetAllocator ();
+
+    // Serialize to root object
+    Serialize ( doc, allocator );
+
+    // Convert to string
+    rapidjson::StringBuffer buffer;
+    if (pretty)
+        {
+        rapidjson::PrettyWriter<rapidjson::StringBuffer> writer ( buffer );
+        doc.Accept ( writer );
+        }
+    else
+        {
+        rapidjson::Writer<rapidjson::StringBuffer> writer ( buffer );
+        doc.Accept ( writer );
+        }
+
+    return buffer.GetString ();
+    }
+
+bool CObject::FromJSON ( const std::string & jsonString )
+    {
+    rapidjson::Document doc;
+    doc.Parse ( jsonString.c_str () );
+
+    if (doc.HasParseError ())
+        {
+        std::cerr << "JSON parse error: " << rapidjson::GetParseError_En ( doc.GetParseError () )
+            << " at offset " << doc.GetErrorOffset () << std::endl;
+        return false;
+        }
+
+    Deserialize ( doc );
+    return true;
+    }
+
+bool CObject::SaveToFile ( const std::string & filename, bool pretty ) const
+    {
+    std::ofstream file ( filename );
+    if (!file.is_open ())
+        {
+        std::cerr << "Failed to open file for writing: " << filename << std::endl;
+        return false;
+        }
+
+    std::string json = ToJSON ( pretty );
+    file << json;
+    file.close ();
+
+    std::cout << "Saved object '" << DisplayName << "' to file: " << filename << std::endl;
+    return true;
+    }
+
+bool CObject::LoadFromFile ( const std::string & filename )
+    {
+    std::ifstream file ( filename );
+    if (!file.is_open ())
+        {
+        std::cerr << "Failed to open file for reading: " << filename << std::endl;
+        return false;
+        }
+
+        // Read entire file
+    std::stringstream buffer;
+    buffer << file.rdbuf ();
+    file.close ();
+
+    return FromJSON ( buffer.str () );
+    }
+
+std::unique_ptr<CObject> CObject::CreateFromJSON ( const std::string & jsonString )
+    {
+    rapidjson::Document doc;
+    doc.Parse ( jsonString.c_str () );
+
+    if (doc.HasParseError ())
+        {
+        std::cerr << "JSON parse error: " << rapidjson::GetParseError_En ( doc.GetParseError () )
+            << " at offset " << doc.GetErrorOffset () << std::endl;
+        return nullptr;
+        }
+
+    if (!doc.HasMember ( "ClassName" ) || !doc[ "ClassName" ].IsString ())
+        {
+        std::cerr << "JSON missing ClassName field" << std::endl;
+        return nullptr;
+        }
+
+    std::string className = doc[ "ClassName" ].GetString ();
+    std::string displayName = "LoadedObject";
+
+    if (doc.HasMember ( "DisplayName" ) && doc[ "DisplayName" ].IsString ())
+        {
+        displayName = doc[ "DisplayName" ].GetString ();
+        }
+
+        // Create through factory
+    CObject * obj = OBJECT_FACTORY.Create ( className, nullptr, displayName );
+    if (!obj)
+        {
+        std::cerr << "Failed to create object of type: " << className << std::endl;
+        return nullptr;
+        }
+
+        // Deserialize properties
+    obj->Deserialize ( doc );
+
+    return std::unique_ptr<CObject> ( obj );
+    }
+
+std::unique_ptr<CObject> CObject::LoadFromJSONFile ( const std::string & filename )
+    {
+    std::ifstream file ( filename );
+    if (!file.is_open ())
+        {
+        std::cerr << "Failed to open file: " << filename << std::endl;
+        return nullptr;
+        }
+
+    std::stringstream buffer;
+    buffer << file.rdbuf ();
+    file.close ();
+
+    return CreateFromJSON ( buffer.str () );
+    }
+
+std::string CObject::GetJSONSchema () const
+    {
+    rapidjson::Document doc;
+    doc.SetObject ();
+    rapidjson::Document::AllocatorType & allocator = doc.GetAllocator ();
+
+    rapidjson::Value schema ( rapidjson::kObjectType );
+    schema.AddMember ( "type", "object", allocator );
+
+    rapidjson::Value properties ( rapidjson::kObjectType );
+
+    // Required properties
+    rapidjson::Value required ( rapidjson::kArrayType );
+    required.PushBack ( "ClassName", allocator );
+    required.PushBack ( "DisplayName", allocator );
+    required.PushBack ( "UUID", allocator );
+
+    // ClassName property
+    rapidjson::Value classNameProp ( rapidjson::kObjectType );
+    classNameProp.AddMember ( "type", "string", allocator );
+    classNameProp.AddMember ( "description", "Object class name", allocator );
+    properties.AddMember ( "ClassName", classNameProp, allocator );
+
+    // DisplayName property
+    rapidjson::Value displayNameProp ( rapidjson::kObjectType );
+    displayNameProp.AddMember ( "type", "string", allocator );
+    displayNameProp.AddMember ( "description", "User-friendly display name", allocator );
+    properties.AddMember ( "DisplayName", displayNameProp, allocator );
+
+    // UUID property
+    rapidjson::Value uuidProp ( rapidjson::kObjectType );
+    uuidProp.AddMember ( "type", "string", allocator );
+    uuidProp.AddMember ( "description", "Unique identifier", allocator );
+    uuidProp.AddMember ( "pattern", "^[0-9a-f]{32}$", allocator );
+    properties.AddMember ( "UUID", uuidProp, allocator );
+
+    // Children property
+    rapidjson::Value childrenProp ( rapidjson::kObjectType );
+    childrenProp.AddMember ( "type", "array", allocator );
+    childrenProp.AddMember ( "description", "Child objects", allocator );
+
+    rapidjson::Value items ( rapidjson::kObjectType );
+    items.AddMember ( "$ref", "#", allocator ); // Self-reference
+    childrenProp.AddMember ( "items", items, allocator );
+
+    properties.AddMember ( "Children", childrenProp, allocator );
+
+    schema.AddMember ( "properties", properties, allocator );
+    schema.AddMember ( "required", required, allocator );
+    schema.AddMember ( "additionalProperties", true, allocator );
+
+    doc.AddMember ( "$schema", "http://json-schema.org/draft-07/schema#", allocator );
+    doc.AddMember ( "$id", rapidjson::StringRef ( GetObjectClassName () ), allocator );
+    doc.AddMember ( "title", rapidjson::StringRef ( GetObjectClassName () ), allocator );
+    doc.AddMember ( "description", "JSON schema for CObject hierarchy", allocator );
+    doc.AddMember ( "definitions", schema, allocator );
+
+    rapidjson::StringBuffer buffer;
+    rapidjson::PrettyWriter<rapidjson::StringBuffer> writer ( buffer );
+    doc.Accept ( writer );
+
+    return buffer.GetString ();
+    }
+
+//    // JSON Helper implementations
+//rapidjson::Value CObject::StringToJSON ( const std::string & str, rapidjson::Document::AllocatorType & allocator )
+//    {
+//    return rapidjson::Value ( str.c_str (), allocator );
+//    }
+//
+//rapidjson::Value CObject::VectorToJSON ( const std::vector<std::string> & vec, rapidjson::Document::AllocatorType & allocator )
+//    {
+//    rapidjson::Value array ( rapidjson::kArrayType );
+//    for (const auto & item : vec)
+//        {
+//        array.PushBack ( rapidjson::Value ( item.c_str (), allocator ), allocator );
+//        }
+//    return array;
+//    }
+//
+//std::string CObject::JSONToString ( const rapidjson::Value & jsonValue )
+//    {
+//    if (jsonValue.IsString ())
+//        {
+//        return jsonValue.GetString ();
+//        }
+//    return "";
+//    }
+//
+//std::vector<std::string> CObject::JSONToVector ( const rapidjson::Value & jsonValue )
+//    {
+//    std::vector<std::string> result;
+//    if (jsonValue.IsArray ())
+//        {
+//        for (rapidjson::SizeType i = 0; i < jsonValue.Size (); i++)
+//            {
+//            if (jsonValue[ i ].IsString ())
+//                {
+//                result.push_back ( jsonValue[ i ].GetString () );
+//                }
+//            }
+//        }
+//    return result;
+//    }

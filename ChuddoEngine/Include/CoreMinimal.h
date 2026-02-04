@@ -8,13 +8,22 @@
 #include <unordered_map>
 #include <algorithm>
 #include <iostream>
+#include <locale>
 
 //engine
 #include "Utils/Math/MathTypes.h"
-#include "Core/EngineLoop.h"
 
-
+// Forward declarations
 class CObject;
+class CObjectFactory;
 
-class FEngineLoop;
-extern FEngineLoop GEngine;
+// Global factory access
+extern CObjectFactory & OBJECT_FACTORY;
+
+#define EDITOR_MODE 0
+
+#ifdef EDITOR_MODE
+#define IN_EDITOR 1
+#else
+#define IN_EDITOR 0
+#endif // EDITOR_MODE

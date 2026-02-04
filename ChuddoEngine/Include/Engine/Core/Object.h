@@ -1,62 +1,237 @@
 #pragma once
-#include <CoreMinimal.h>
+#include "CoreMinimal.h"
+#include <atomic>
+#include <random>
+#include <sstream>
+#include <iomanip>
+#include <memory>
 #include <vector>
 #include <string>
-#include <memory>
-#include <unordered_set>
+#include <iostream>
+#include <typeinfo>
+#include <algorithm>
+#include <cctype>
+
+// Forward declarations
+class CObjectFactory;
+#include <rapidjson/document.h>
+#include <rapidjson/writer.h>
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/prettywriter.h>
+
+// Base macros for class declaration - УПРОЩЕННЫЕ
+#define CHUDDO_DECLARE_CLASS(ClassName, BaseClassName) \
+public: \
+    using Super = BaseClassName; \
+    static const char* StaticClassName() { return #ClassName; } \
+    static const char* StaticBaseClassName() { return #BaseClassName; } \
+    virtual const char* GetObjectClassName() const override { return #ClassName; } \
+    virtual void SerializeProperties(rapidjson::Value& jsonValue, rapidjson::Document::AllocatorType& allocator) const override { Super::SerializeProperties(jsonValue, allocator); } \
+    virtual void DeserializeProperties(const rapidjson::Value& jsonValue) override { Super::DeserializeProperties(jsonValue); }
+
+#define CHUDDO_DECLARE_ABSTRACT_CLASS(ClassName, BaseClassName) \
+public: \
+    using Super = BaseClassName; \
+    static const char* StaticClassName() { return #ClassName; } \
+    static const char* StaticBaseClassName() { return #BaseClassName; } \
+    virtual const char* GetObjectClassName() const override { return #ClassName; } \
+    virtual void SerializeProperties(rapidjson::Value& jsonValue, rapidjson::Document::AllocatorType& allocator) const override { Super::SerializeProperties(jsonValue, allocator); } \
+    virtual void DeserializeProperties(const rapidjson::Value& jsonValue) override { Super::DeserializeProperties(jsonValue); }
 
 class CObject
-{
-public:
-    CObject(const CObject* Owner = nullptr, const std::string& inName = "Object");
-    explicit CObject(const std::string& inName);
+    {
+    public:
+        // Базовые объявления без использования макроса
+        using Super = CObject;
+        static const char * StaticClassName () { return "CObject"; }
+        static const char * StaticBaseClassName () { return "CObject"; }
+        virtual const char * GetObjectClassName () const { return "CObject"; }
+        virtual void SerializeProperties ( rapidjson::Value & jsonValue, rapidjson::Document::AllocatorType & allocator ) const;
+        virtual void DeserializeProperties ( const rapidjson::Value & jsonValue );
 
-    virtual ~CObject();
+    private:
+        // Thread-safe UUID generator
+        static std::string GenerateUUID ()
+            {
+            static std::random_device rd;
+            static std::mt19937_64 gen ( rd () );
+            static std::uniform_int_distribution<uint64_t> dis;
 
-    CObject(const CObject&) = delete;
-    CObject& operator=(const CObject&) = delete;
+            uint64_t part1 = dis ( gen );
+            uint64_t part2 = dis ( gen );
 
-    CObject(CObject&&) = default;
-    CObject& operator=(CObject&&) = default;
+            std::stringstream ss;
+            ss << std::hex << std::setfill ( '0' )
+                << std::setw ( 16 ) << part1
+                << std::setw ( 16 ) << part2;
+            return ss.str ();
+            }
+        friend class CObjectFactory;
+    public:
+        CObject ( CObject * inOwner = nullptr, const std::string & inDisplayName = "Object" );
+        virtual ~CObject ();
 
-    // ownership
-    void SetOwner(const CObject* NewOwner);
-    void ClearOwner() { OwnerObject = nullptr; }
-    const CObject* GetOwner() const { return OwnerObject; }
+        // Basic getters
+        CObject * GetOwner () const { return ObjectOwner; }
+        bool HasOwner () const { return GetOwner () != nullptr; }
 
-    // name
-    void Rename(const std::string& NewName) { m_Name = NewName; }
-    const std::string& GetName() const { return m_Name; }
+        // Display name (for UI/Editor) - can be changed
+        std::string GetName () const { return DisplayName; }
 
-    // manage owned objects
-    // New API: caller passes ownership via unique_ptr; function returns raw pointer for convenience
-    CObject* AddOwnedObject(std::unique_ptr<CObject> Obj);
-    // convenience overload: take raw pointer and assume ownership
-    CObject* AddOwnedObject(CObject* Obj) { return AddOwnedObject(std::unique_ptr<CObject>(Obj)); }
+        // Unique persistent identifier (UUID) - never changes
+        std::string GetUUID () const { return ObjectUUID; }
 
-    void RemoveOwnedObject(CObject* Obj, bool bDeleteObject = false);
-    void ClearOwnedObjects(bool bDeleteObjects = true);
+        // For backward compatibility
+        std::string GetUniqName () const { return DisplayName + "_" + GetShortUUID (); }
+        std::string GetFullIdentifier () const { return GetUniqName (); }
 
-    // find owned objects
-    CObject* FindOwnedObject(const std::string& Name) const;
-    CObject* FindOwnedObject(const CObject* Obj) const;
+        void UpdateDebugIdentifier ();
+        std::string GetShortUUID () const
+            {
+            return ( ObjectUUID.length () > 8 ) ? ObjectUUID.substr ( 0, 8 ) : ObjectUUID;
+            }
 
-    // debugging info and hierarchy /* delete later */
-    void PrintInfo() const;
-    void PrintHierarchy(int Depth = 0) const;
+            // Object search
+        CObject * FindOwned ( const std::string & displayName ) const;
+        const std::vector<std::unique_ptr<CObject>> & GetOwnedObjects () const { return OwnedObjects; }
+        size_t GetNumOwnedObjects () const { return OwnedObjects.size (); }
+        bool HasOwnedObjects () const { return !OwnedObjects.empty (); }
 
-    // counting owned objects
-    size_t GetOwnedObjectsCount() const { return OwnedObjects.size(); }
-    bool HasOwnedObjects() const { return !OwnedObjects.empty(); }
+        // Recursive search by display name
+        bool FindRecursive ( const std::string & displayName );
+        CObject * FindObjectByDisplayNameRecursive ( const std::string & displayName );
 
-    // check ownership
-    bool IsOwnerOf(const CObject* Obj) const;
-    void SetName(const std::string& NewName);
-protected:
-    const CObject* OwnerObject = nullptr;
-    std::string m_Name;
-    std::vector<std::unique_ptr<CObject>> OwnedObjects;
+        // Search by UUID (unique)
+        CObject * FindByUUID ( const std::string & uuid ) const;
+        CObject * FindByUUIDRecursive ( const std::string & uuid );
 
-    // registry of live objects to avoid dereferencing destroyed owners
-    static std::unordered_set<const CObject*> s_AliveObjects;
-};
+        // Object management
+        bool RemoveOwnedObject ( const std::string & displayName );
+        void AddOwnedObject ( std::unique_ptr<CObject> object );
+        void AddOwnedObject ( CObject * object );
+        bool TransferOwnership ( CObject * obj, CObject * newOwner );
+
+        // Child object creation
+        template<typename ClassName, typename... Args>
+        ClassName * AddSubObject ( const std::string & desiredDisplayName = "SubObject", Args&&... args )
+            {
+            static_assert( std::is_base_of<CObject, ClassName>::value,
+                           "Class must be derived from CObject" );
+
+            if (desiredDisplayName.empty ())
+                {
+                std::cerr << "Error: Object display name cannot be empty!\n";
+                return nullptr;
+                }
+
+                // Find hierarchy root for global check
+            CObject * root = this;
+            while (root->GetOwner ())
+                {
+                root = root->GetOwner ();
+                }
+
+            std::string finalDisplayName = desiredDisplayName;
+
+            // Check if display name already exists globally
+            if (root->FindRecursive ( desiredDisplayName ))
+                {
+                    // Display name exists ANYWHERE in hierarchy, generate unique variant
+                finalDisplayName = GenerateUniqueDisplayNameVariant ( desiredDisplayName, root );
+                std::cout << "Note: Display name '" << desiredDisplayName
+                    << "' already exists, using '" << finalDisplayName << "' instead\n";
+                }
+
+                // Create object (old way - direct construction)
+            auto newObj = std::make_unique<ClassName> ( this, finalDisplayName, std::forward<Args> ( args )... );
+            ClassName * rawPtr = newObj.get ();
+
+            AddOwnedObject ( std::move ( newObj ) );
+
+            return rawPtr;
+            }
+
+            // Version 2: Factory creation (new way) - объявление без реализации
+        CObject * AddSubObjectByClass ( const std::string & className,
+                                        const std::string & desiredDisplayName = "SubObject" );
+
+           // Renaming operations
+        bool RenameOwnedObject ( const std::string & oldDisplayName, const std::string & newDisplayName );
+        bool Rename ( const std::string & newDisplayName );
+
+        // Safe type casting for search
+        template<typename T>
+        T * FindOwnedAs ( const std::string & displayName ) const
+            {
+            CObject * obj = FindOwned ( displayName );
+            if (obj)
+                {
+                return dynamic_cast< T * >( obj );
+                }
+            return nullptr;
+            }
+
+            // Cloning
+        std::unique_ptr<CObject> Clone () const;
+
+        // Get root object
+        CObject * GetRoot () const
+            {
+            const CObject * root = this;
+            while (root->GetOwner ())
+                {
+                root = root->GetOwner ();
+                }
+            return const_cast< CObject * >( root );
+            }
+
+            // === JSON Serialization Methods ===
+
+            // Main serialization method
+        virtual void Serialize ( rapidjson::Value & jsonValue, rapidjson::Document::AllocatorType & allocator ) const;
+
+        // Main deserialization method
+        virtual void Deserialize ( const rapidjson::Value & jsonValue );
+
+        // Convert object to JSON string
+        std::string ToJSON ( bool pretty = false ) const;
+
+        // Load object from JSON string
+        bool FromJSON ( const std::string & jsonString );
+
+        // Save object to file
+        bool SaveToFile ( const std::string & filename, bool pretty = true ) const;
+
+        // Load object from file
+        bool LoadFromFile ( const std::string & filename );
+
+        // Static methods for creating objects from JSON
+        static std::unique_ptr<CObject> CreateFromJSON ( const std::string & jsonString );
+        static std::unique_ptr<CObject> LoadFromJSONFile ( const std::string & filename );
+
+        // Utility to get JSON schema for this object type
+        std::string GetJSONSchema () const;
+
+    protected:
+        CObject * ObjectOwner = nullptr;
+        std::string DisplayName {};        // User-friendly name (for display/editor)
+        std::string ObjectUUID {};         // Unique immutable identifier
+        std::vector<std::unique_ptr<CObject>> OwnedObjects;
+
+        // Generate unique display name variant
+        static std::string GenerateUniqueDisplayNameVariant ( const std::string & baseDisplayName, CObject * root );
+
+        // Find all objects with similar display names
+        static void CollectSimilarDisplayNames ( CObject * node, const std::string & baseDisplayName,
+                                                 std::vector<std::string> & result );
+
+          // Get short version of UUID for display
+        static std::string GetShortUUID ( const std::string & uuid )
+            {
+            if (uuid.length () > 8)
+                return uuid.substr ( 0, 8 );
+            return uuid;
+            }
+    };
+#include "Core/ObjectFactory.h"
+    REGISTER_CLASS_FACTORY ( CObject );

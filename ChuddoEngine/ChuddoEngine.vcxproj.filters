@@ -39,37 +39,25 @@
     <ClCompile Include="Source\Utils\Math\Vector4.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Engine\Core\EngineLoop.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Engine\Core\Object.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Engine\Core\GameInstance.cpp">
+    <ClCompile Include="Source\Engine\GameFramework\GameInstance.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Engine\Core\World.cpp">
+    <ClCompile Include="Source\Engine\GameFramework\World\World.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Engine\Core\Level.cpp">
+    <ClCompile Include="Source\Engine\GameFramework\World\Level.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Engine\Components\BaseComponent.cpp">
+    <ClCompile Include="Source\Engine\Core\Engine.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Engine\Actors\Actor.cpp">
+    <ClCompile Include="Source\Engine\GameFramework\Actors\Actor.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Engine\Pawns\Pawn.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Engine\Pawns\Character.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Engine\Controllers\Controller.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Engine\Components\SceneComponent.cpp">
+    <ClCompile Include="Source\Engine\Core\ObjectFactory.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>
@@ -98,43 +86,28 @@
     <ClInclude Include="Include\CoreMinimal.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="Include\Engine\Core\EngineLoop.h">
+    <ClInclude Include="Include\Utils\Math\MathTypes.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="Include\Engine\Core\Object.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="Include\Engine\Core\GameInstance.h">
+    <ClInclude Include="Include\Engine\Core\ObjectFactory.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="Include\Engine\Core\World.h">
+    <ClInclude Include="Include\Engine\GameFramework\GameInstance.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="Include\Engine\Core\Level.h">
+    <ClInclude Include="Include\Engine\GameFramework\World\World.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="Include\Engine\Components\BaseComponent.h">
+    <ClInclude Include="Include\Engine\GameFramework\World\Level.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="Include\Engine\Actors\Actor.h">
+    <ClInclude Include="Include\Engine\Core\Engine.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="Include\Utils\Math\MathTypes.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\Engine\Pawns\Pawn.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\Engine\Pawns\Character.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\Engine\Controllers\Controller.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\Tests\test.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\Engine\Components\SceneComponent.h">
+    <ClInclude Include="Include\Engine\GameFramework\Actors\Actor.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
