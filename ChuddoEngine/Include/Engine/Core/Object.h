@@ -104,6 +104,8 @@ class CObject
         // Search by UUID (unique)
         CObject * FindByUUID ( const std::string & uuid ) const;
         CObject * FindByUUIDRecursive ( const std::string & uuid );
+     
+        std::string CheckNameAndGenerateUniqName ( const std::string & DesiredName );
 
         // Object management
         bool RemoveOwnedObject ( const std::string & displayName );
@@ -120,7 +122,7 @@ class CObject
 
             if (desiredDisplayName.empty ())
                 {
-                std::cerr << "Error: Object display name cannot be empty!\n";
+                LOG_ERROR( "Error: Object display name cannot be empty!" )  ;
                 return nullptr;
                 }
 
@@ -129,17 +131,16 @@ class CObject
             while (root->GetOwner ())
                 {
                 root = root->GetOwner ();
-                }
-
+                }            
             std::string finalDisplayName = desiredDisplayName;
-
+            finalDisplayName = CheckNameAndGenerateUniqName ( finalDisplayName );
             // Check if display name already exists globally
             if (root->FindRecursive ( desiredDisplayName ))
                 {
                     // Display name exists ANYWHERE in hierarchy, generate unique variant
                 finalDisplayName = GenerateUniqueDisplayNameVariant ( desiredDisplayName, root );
-                std::cout << "Note: Display name '" << desiredDisplayName
-                    << "' already exists, using '" << finalDisplayName << "' instead\n";
+                LOG_WARN ( "Note: Display name '", desiredDisplayName
+                              , "' already exists, using '", finalDisplayName , "' instead" );                
                 }
 
                 // Create object (old way - direct construction)

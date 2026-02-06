@@ -83,9 +83,11 @@ class CObjectFactory
 
             // Запоминаем
             registeredClasses.insert ( className );
-
+#ifdef _DEBUG
             std::cout << "[FACTORY] Registered class '" << className
                 << "' (base: '" << T::StaticBaseClassName () << "')\n";
+#endif
+           
             }
 
             // Register a class with custom name
@@ -117,7 +119,10 @@ class CObjectFactory
                 };
 
             registeredClasses.insert ( className );
+#ifdef DEBUG
             std::cout << "[FACTORY] Registered class '" << className << "'\n";
+#endif // DEBUG
+
             }
 
             // Create object by class name and automatically add to owner

@@ -8,273 +8,344 @@
 #include <algorithm>
 
 CWorld::CWorld ( CObject * inOwner, const std::string & displayName )
-    : Super ( inOwner, displayName )
-    {
-        // Получаем GameInstance из владельца
-    OwningGameInstance = dynamic_cast< CGameInstance * >( inOwner );
+	: Super ( inOwner, displayName )
+	{
+		// Получаем GameInstance из владельца
+	OwningGameInstance = dynamic_cast< CGameInstance * >( inOwner );
 
-    if (OwningGameInstance)
-        {
-        std::cout << "[WORLD] World created: " << displayName
-            << " [Owner: " << OwningGameInstance->GetName () << "]\n";
-        }
-    else if (inOwner)
-        {
-        std::cout << "[WORLD] World created: " << displayName
-            << " [Owner: " << inOwner->GetObjectClassName () << "]\n";
-        }
-    else
-        {
-        std::cout << "[WORLD] World created: " << displayName << " [No owner]\n";
-        }
-    }
+	if (OwningGameInstance)
+		{
+		LOG_INFO ("[WORLD] World created : ",  displayName
+			, " [Owner: " , OwningGameInstance->GetName () , "]");
+		}
+	else if (inOwner)
+		{
+		LOG_INFO ( "[WORLD] World created: " , displayName
+			, " [Owner: " , inOwner->GetObjectClassName () , "]");
+		}
+	else
+		{
+		LOG_INFO ( "[WORLD] World created: ",  displayName , " [No owner]");
+		}
+	}
 
 CWorld::~CWorld ()
-    {
-    std::cout << "[WORLD] World destroyed: " << GetName () << "\n";
+	{
+	LOG_INFO ( "[WORLD] World destroyed: " , GetName ());
+	DumpState ();
+	// Завершаем игру если запущена
+	if (bIsPlaying)
+		{
+		EndPlay ();
+		}
 
-    // Завершаем игру если запущена
-    if (bIsPlaying)
-        {
-        EndPlay ();
-        }
+		// Очищаем уровни
+	Levels.clear ();
+	CurrentLevel = nullptr;
+	OwningGameInstance = nullptr;
+	}
 
-        // Очищаем уровни
-    Levels.clear ();
-    CurrentLevel = nullptr;
-    OwningGameInstance = nullptr;
-    }
-
-    // ========== LEVEL MANAGEMENT ==========
+	// ========== LEVEL MANAGEMENT ==========
 
 CWorld * CWorld::GetWorld ()
-    {
-    return CGameInstance::Get().GetWorld();
-    }
+	{
+	return CGameInstance::Get ().GetWorld ();
+	}
 
-CLevel * CWorld::CreateLevel ( const std::string & levelName )
-    {
-        // Создаем уровень с этим миром как владельцем
-    auto level = std::make_unique<CLevel> ( this, levelName );
-    CLevel * rawPtr = level.get ();
+CLevel * CWorld::CreateDefaultEmptyLevel ()
+	{
+	return CreateLevel<CLevel> ( "Empty Level" );
+	}
 
-    Levels.push_back ( std::move ( level ) );
 
-    // Если это первый уровень, делаем его текущим
-    if (Levels.size () == 1)
-        {
-        SetCurrentLevel ( rawPtr );
-        }
+void CWorld::AddLevel ( CLevel * level )
+	{
+	if (!level)
+		return;
 
-    std::cout << "[WORLD] Level created: " << levelName
-        << " (Total levels: " << Levels.size () << ")\n";
+	// Устанавливаем этот мир как владельца уровня
+	level->OwningWorld = this;
 
-    return rawPtr;
-    }
 
-void CWorld::AddLevel ( std::unique_ptr<CLevel> level )
-    {
-    if (!level)
-        return;
+	Levels.push_back ( level );
 
-    // Устанавливаем этот мир как владельца уровня
-    level->OwningWorld = this;
-    CLevel * rawPtr = level.get ();
-
-    Levels.push_back ( std::move ( level ) );
-
-    std::cout << "[WORLD] Level added: " << rawPtr->GetName ()
-        << " (Total levels: " << Levels.size () << ")\n";
-    }
+	LOG_DEBUG( "[WORLD] Level added: " , level->GetName ()
+		, " (Total levels: " , Levels.size (), ")");
+	}
 
 bool CWorld::RemoveLevel ( const std::string & levelName )
-    {
-    auto it = std::find_if ( Levels.begin (), Levels.end (),
-                             [ &levelName ] ( const std::unique_ptr<CLevel> & level )
-                             {
-                             return level && level->GetName () == levelName;
-                             } );
+	{
+		// Ищем уровень по имени
+	auto level = this->FindObjectByName ( levelName );
+	if (!level)
+		{
+		LOG_WARN( "[WORLD] Level not found: " , levelName);
+		return false;
+		}
 
-    if (it != Levels.end ())
-        {
-            // Если удаляем текущий уровень, сбрасываем текущий
-        if (CurrentLevel == it->get ())
-            {
-            CurrentLevel = nullptr;
-            }
+		// Приводим к CLevel*
+	CLevel * levelPtr = dynamic_cast< CLevel * >( level );
+	if (!levelPtr)
+		{
+		LOG_ERROR( "[WORLD] ERROR: Object '" , levelName
+			, "' is not a CLevel!");
+		return false;
+		}
 
-        std::cout << "[WORLD] Level removed: " << ( *it )->GetName () << "\n";
-        Levels.erase ( it );
-        return true;
-        }
+		// Ищем уровень в векторе
+	auto it = std::find ( Levels.begin (), Levels.end (), levelPtr );
+	if (it == Levels.end ())
+		{
+		LOG_ERROR( "[WORLD] ERROR: Level '" , levelName
+			, "' not found in Levels vector!");
+		return false;
+		}
 
-    std::cout << "[WORLD] Level not found: " << levelName << "\n";
-    return false;
-    }
+		// Обработка текущего уровня
+	if (CurrentLevel == levelPtr)
+		{
+		LOG_DEBUG ( "[WORLD] Removing current level: ", levelName );
+
+		// Если есть другие уровни, выбираем новый текущий
+		if (Levels.size () > 1)
+			{
+				// Определяем индекс удаляемого уровня
+			auto levelIndex = std::distance ( Levels.begin (), it );
+
+			// Выбираем следующий уровень, или предыдущий если удаляем последний
+			if (levelIndex < static_cast< int > ( Levels.size () ) - 1)
+				{
+					// Выбираем следующий уровень
+				SetCurrentLevel ( Levels[ levelIndex + 1 ] );
+				}
+			else
+				{
+					// Удаляем последний уровень, выбираем предыдущий
+				SetCurrentLevel ( Levels[ levelIndex - 1 ] );
+				}
+			}
+		else
+			{
+				// Это единственный уровень
+			SetCurrentLevel ( nullptr );
+			}
+		}
+
+		// Завершаем уровень если мир играет
+	if (bIsPlaying)
+		{
+		levelPtr->EndPlay ();
+		}
+
+		// Удаляем из вектора
+	Levels.erase ( it );
+
+	// Устанавливаем указатель на мир в nullptr перед удалением
+	levelPtr->OwningWorld = nullptr;
+
+	// Удаляем из OwnedObjects
+	bool removed = RemoveOwnedObject ( levelName );
+
+	if (removed)
+		{
+		LOG_DEBUG( "[WORLD] Level removed: " , levelName
+			, " (Remaining levels: " , Levels.size (), ")");
+		}
+
+	return removed;
+	}
 
 bool CWorld::RemoveLevel ( CLevel * level )
-    {
-    if (!level)
-        return false;
+	{
+	if (!level)
+		return false;
 
-    return RemoveLevel ( level->GetName () );
-    }
+	// Проверяем, что уровень принадлежит этому миру
+	if (level->OwningWorld != this)
+		{
+		LOG_ERROR( "[WORLD] ERROR: Level '" , level->GetName ()
+			, "' does not belong to this world!");
+		return false;
+		}
+
+	return RemoveLevel ( level->GetName () );
+	}
 
 void CWorld::SetCurrentLevel ( CLevel * level )
-    {
-        // Проверяем, что уровень принадлежит этому миру
-    bool belongsToWorld = false;
-    for (const auto & lvl : Levels)
-        {
-        if (lvl.get () == level)
-            {
-            belongsToWorld = true;
-            break;
-            }
-        }
+	{
+		// Если устанавливаем nullptr
+	if (!level)
+		{
+		if (CurrentLevel)
+			{
+			LOG_DEBUG( "[WORLD] Current level cleared. Was: "
+				, CurrentLevel->GetName ());
+			}
+		CurrentLevel = nullptr;
+		return;
+		}
 
-    if (!belongsToWorld && level != nullptr)
-        {
-        std::cerr << "[WORLD] ERROR: Level '" << ( level ? level->GetName () : "null" )
-            << "' does not belong to this world!\n";
-        return;
-        }
+		// Проверяем, что уровень принадлежит этому миру
+	bool belongsToWorld = false;
+	for (auto lvl : Levels)
+		{
+		if (lvl == level)
+			{
+			belongsToWorld = true;
+			break;
+			}
+		}
 
-    CurrentLevel = level;
-    std::cout << "[WORLD] Current level set to: "
-        << ( CurrentLevel ? CurrentLevel->GetName () : "None" ) << "\n";
-    }
+	if (!belongsToWorld)
+		{
+		LOG_ERROR( "[WORLD] ERROR: Level '" , level->GetName ()
+			, "' does not belong to this world!");
+		return;
+		}
 
-    // ========== WORLD LIFECYCLE ==========
+		// Если уровень уже текущий
+	if (CurrentLevel == level)
+		{
+		LOG_WARN( "[WORLD] Level '" , level->GetName ()
+			, "' is already current");
+		return;
+		}
+
+		// Завершаем предыдущий уровень если мир играет
+	if (bIsPlaying && CurrentLevel)
+		{
+		CurrentLevel->EndPlay ();
+		}
+
+		// Устанавливаем новый уровень
+	CurrentLevel = level;
+
+	// Запускаем новый уровень если мир играет
+	if (bIsPlaying)
+		{
+		level->BeginPlay ();
+		}
+
+	LOG_DEBUG( "[WORLD] Current level set to: ",  level->GetName ());
+	}
+
+	// ========== WORLD LIFECYCLE ==========
 
 void CWorld::BeginPlay ()
-    {
-    if (bIsPlaying)
-        {
-        std::cerr << "[WORLD] ERROR: World is already playing!\n";
-        return;
-        }
+	{
+	if (bIsPlaying)
+		{
+		LOG_WARN( "[WORLD] ERROR: World is already playing!");
+		return;
+		}
 
-    bIsPlaying = true;
-    std::cout << "[WORLD] BeginPlay: " << GetName () << "\n";
+	bIsPlaying = true;
+	LOG_DEBUG( "[WORLD] BeginPlay: " , GetName ());
 
-    // Запускаем все уровни
-    for (auto & level : Levels)
-        {
-        level->BeginPlay ();
-        }
-    }
+	// Запускаем все уровни
+	for (auto & level : Levels)
+		{
+		level->BeginPlay ();
+		}
+	}
 
 void CWorld::Tick ( float deltaTime )
-    {
-    if (!bIsPlaying)
-        {
-        std::cout << "[WORLD] World is not playing, skipping tick\n";
-        return;
-        }
+	{
+	if (!bIsPlaying)
+		{
+		LOG_DEBUG( "[WORLD] World is not playing, skipping tick");
+		return;
+		}
 
-    std::cout << "[WORLD] Tick: " << GetName () << " (delta: " << deltaTime << ")\n";
+	LOG_DEBUG( "[WORLD] Tick: ",  GetName () , " (delta: " , deltaTime , ")");
 
-    // Обновляем текущий уровень
-    if (CurrentLevel)
-        {
-        CurrentLevel->Tick ( deltaTime );
-        }
-    else
-        {
-        std::cout << "[WORLD] No current level to tick\n";
-        }
-    }
+	// Обновляем текущий уровень
+	if (CurrentLevel)
+		{
+		CurrentLevel->Tick ( deltaTime );
+		}
+	else
+		{
+		LOG_WARN ("[WORLD] No current level to tick");
+		}
+	}
 
 void CWorld::EndPlay ()
-    {
-    if (!bIsPlaying)
-        return;
+	{
+	if (!bIsPlaying)
+		return;
 
-    bIsPlaying = false;
-    std::cout << "[WORLD] EndPlay: " << GetName () << "\n";
+	bIsPlaying = false;
+	LOG_DEBUG( "[WORLD] EndPlay: " , GetName ());
 
-    // Завершаем все уровни
-    for (auto & level : Levels)
-        {
-        level->EndPlay ();
-        }
-    }
+	// Завершаем все уровни
+	for (auto & level : Levels)
+		{
+		level->EndPlay ();
+		}
+	}
 
-    // ========== SEARCH/QUERY ==========
+	// ========== SEARCH/QUERY ==========
 
 CObject * CWorld::FindObjectByName ( const std::string & name ) const
-    {
-        // Ищем в уровнях
-    for (const auto & level : Levels)
-        {
-        CObject * found = level->FindObjectByName ( name );
-        if (found)
-            return found;
-        }
+	{
+		// Ищем в уровнях
+	for (const auto & level : Levels)
+		{
+		CObject * found = level->FindObjectByName ( name );
+		if (found)
+			return found;
+		}
 
-    return nullptr;
-    }
+	return nullptr;
+	}
 
 CObject * CWorld::FindObjectByUUID ( const std::string & uuid ) const
-    {
-        // Ищем в уровнях
-    for (const auto & level : Levels)
-        {
-        CObject * found = level->FindObjectByUUID ( uuid );
-        if (found)
-            return found;
-        }
+	{
+		// Ищем в уровнях
+	for (const auto & level : Levels)
+		{
+		CObject * found = level->FindObjectByUUID ( uuid );
+		if (found)
+			return found;
+		}
 
-    return nullptr;
-    }
+	return nullptr;
+	}
 
 template<typename T>
 T * CWorld::FindObjectOfType () const
-    {
-    for (const auto & level : Levels)
-        {
-            // Реализуем когда будет система компонентов
-            // T* found = level->FindObjectOfType<T>();
-            // if (found) return found;
-        }
+	{
+	for (const auto & level : Levels)
+		{
+			// Реализуем когда будет система компонентов
+			// T* found = level->FindObjectOfType<T>();
+			// if (found) return found;
+		}
 
-    return nullptr;
-    }
+	return nullptr;
+	}
 
-    // ========== DEBUG/UTILS ==========
+	// ========== DEBUG/UTILS ==========
 
 void CWorld::DumpState () const
-    {
-    std::cout << "\n=== WORLD STATE ===\n";
-    std::cout << "Name: " << GetName () << "\n";
-    std::cout << "UUID: " << GetShortUUID () << "\n";
-    std::cout << "GameInstance: "
-        << ( OwningGameInstance ? OwningGameInstance->GetName () : "None" ) << "\n";
-    std::cout << "Is Playing: " << ( bIsPlaying ? "Yes" : "No" ) << "\n";
-    std::cout << "Current Level: "
-        << ( CurrentLevel ? CurrentLevel->GetName () : "None" ) << "\n";
-    std::cout << "Total Levels: " << Levels.size () << "\n";
+	{
+	LOG_DEBUG( "=== WORLD STATE ===");
+	LOG_DEBUG( "Name: " , GetName ()) ;
+	LOG_DEBUG( "UUID: " , GetShortUUID ()) ;
+	LOG_DEBUG( "GameInstance: "
+		, ( OwningGameInstance ? OwningGameInstance->GetName () : "None" ) );
+	LOG_DEBUG( "Is Playing: " , ( bIsPlaying ? "Yes" : "No" ));
+	LOG_DEBUG( "Current Level: "
+			   , ( CurrentLevel ? CurrentLevel->GetName () : "None" ) );
+	LOG_DEBUG ( "Total Levels: " , Levels.size ());
 
-    for (size_t i = 0; i < Levels.size (); ++i)
-        {
-        std::cout << "  [" << i << "] " << Levels[ i ]->GetName ()
-            << " (Active: " << ( Levels[ i ].get () == CurrentLevel ? "Yes" : "No" ) << ")\n";
-        }
+	for (size_t i = 0; i < Levels.size (); ++i)
+		{
+		LOG_DEBUG( "  [" , i , "] " , Levels[ i ]->GetName ()
+			, " (Active: " , ( Levels[ i ] == CurrentLevel ? "Yes" : "No" ) );
+		}
 
-    std::cout << "===================\n";
-    }
+	LOG_DEBUG( "===================");
+	}
 
-    // ========== FACTORY REGISTRATION ==========
-
-//namespace
-//    {
-//    struct CWorldRegistrar
-//        {
-//        CWorldRegistrar ()
-//            {
-//            CObjectFactory::GetInstance ().RegisterClass<CWorld> ();
-//            }
-//        };
-//    static CWorldRegistrar CWorld_AutoReg;
-//    }

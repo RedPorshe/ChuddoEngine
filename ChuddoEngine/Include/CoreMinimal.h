@@ -12,7 +12,7 @@
 
 //engine
 #include "Utils/Math/MathTypes.h"
-
+#include "Utils/Logger.h"
 // Forward declarations
 class CObject;
 class CObjectFactory;

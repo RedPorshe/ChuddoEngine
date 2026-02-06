@@ -14,7 +14,7 @@ class CWorld : public CObject
 
     private:
         CGameInstance * OwningGameInstance = nullptr;
-        std::vector<std::unique_ptr<CLevel>> Levels;
+        std::vector<CLevel*> Levels;
         CLevel * CurrentLevel = nullptr;
 
     public:
@@ -27,9 +27,11 @@ class CWorld : public CObject
 
         CWorld * GetWorld ();
 
+        CLevel * CreateDefaultEmptyLevel ();
+
         // ========== LEVEL MANAGEMENT ==========
-        CLevel * CreateLevel ( const std::string & levelName = "Level" );
-        void AddLevel ( std::unique_ptr<CLevel> level );
+       // CLevel * CreateLevel ( const std::string & levelName = "Level" );
+        void AddLevel ( CLevel* level );
         bool RemoveLevel ( const std::string & levelName );
         bool RemoveLevel ( CLevel * level );
 
@@ -54,8 +56,33 @@ class CWorld : public CObject
         // ========== DEBUG/UTILS ==========
         virtual void DumpState () const;
 
+
+
+        template<typename LevelType ,typename... Args>
+        LevelType* CreateLevel ( const std::string & name = "Actor", Args&&... args );
+           
+
     protected:
         bool bIsPlaying = false;
     };
 
 REGISTER_CLASS_FACTORY ( CWorld );
+
+template<typename LevelType, typename... Args>
+LevelType* CWorld::CreateLevel ( const std::string & name  , Args&&... args )
+    {
+    static_assert( std::is_base_of<CLevel, LevelType>::value,
+                   "Level type must be derived from CLevel" );
+
+    LevelType * newLevel = this->AddSubObject<LevelType> ( name, std::forward<Args> ( args )... );
+    if (!newLevel)
+        {
+        LOG_ERROR ( "[WORLD] Error: Failed to spawn actor '", name, "'" );
+        
+        return nullptr;
+        }
+    Levels.push_back ( newLevel );
+    if(CurrentLevel==nullptr)
+        { SetCurrentLevel ( newLevel ); }
+    return newLevel;
+    }

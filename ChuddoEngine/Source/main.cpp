@@ -2,29 +2,41 @@
 #include "Core/Engine.h"
 #include <iostream>
 
+
+
+
 int main ()
     {
-    std::cout << "========================================\n";
-    std::cout << "   CHUDDO ENGINE - TEST   \n";
-    std::cout << "========================================\n";
-       
+    setlocale ( LC_ALL, "ru" );
+    LOG_INIT ( "Engine", false, true );
+        // Установка уровня логирования в зависимости от конфигурации сборки
+#ifdef _DEBUG
+    LOG_SET_LEVEL ( CE::CLogger::CLogLevel::DEBUG );
+    LOG_INFO ( "DEBUG CONFIG" );
+#else
+    LOG_SET_LEVEL ( CE::CLogger::CLogLevel::INFO );
+    LOG_INFO ( "RELEASE CONFIG" );
+#endif
+
+   
+    LOG_INFO ( "Initializing engine..." );
     if (!CEngine::InitializeEngine ())
         {
-        std::cerr << "Failed to initialize engine!\n";
-        return -1;
+        LOG_FATAL ( "Failed to initialize engine!" );
+        LOG_SHUTDOWN ();
+        return EXIT_FAILURE;
         }
 
     auto & eng = CEngine::Get ();
 
-   
+    LOG_INFO ( "Starting engine..." );
     eng.Start ();
 
-    
+    LOG_INFO ( "Shutting down engine..." );
     CEngine::ShutdownEngine (); 
 
-    std::cout << "\n========================================\n";
-    std::cout << "            TEST COMPLETE              \n";
-    std::cout << "========================================\n";
 
-    return 0;
+   
+    LOG_SHUTDOWN ();
+    return EXIT_SUCCESS;
     }

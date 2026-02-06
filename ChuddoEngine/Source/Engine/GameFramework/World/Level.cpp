@@ -1,9 +1,8 @@
-// Engine includes
 #include "World/Level.h"
 #include "World/World.h"
 #include "Actors/Actor.h"
 
-//system includes
+// system includes
 #include <iostream>
 #include <algorithm>
 
@@ -15,25 +14,24 @@ CLevel::CLevel ( CObject * owner, const std::string & inName )
 
     if (OwningWorld)
         {
-        std::cout << "[LEVEL] Level created: " << inName
-            << " [World: " << OwningWorld->GetName () << "]\n";
+        LOG_INFO ( "[LEVEL] Level created: ", inName, " [World: ", OwningWorld->GetName (), "]" );            
         }
     else
         {
-        std::cout << "[LEVEL] Level created: " << inName << " [No world]\n";
+        LOG_INFO ( "[LEVEL] Level created: " , inName , " [No world]");
         }
     }
 
 CLevel::~CLevel ()
     {
-    std::cout << "[LEVEL] Level destroyed: " << GetName () << "\n";
-
+    LOG_INFO ( "[LEVEL] Level destroyed: ", GetName () );
+    DumpState ();
     if (bIsPlaying)
         {
         EndPlay ();
         }
 
-        // Очищаем акторов
+        // Очищаем вектор сырых указателей (не удаляем объекты - они в OwnedObjects)
     Actors.clear ();
     }
 
@@ -41,17 +39,20 @@ void CLevel::BeginPlay ()
     {
     if (bIsPlaying)
         {
-        std::cerr << "[LEVEL] ERROR: Level is already playing!\n";
+        LOG_ERROR  ( "[LEVEL] ERROR: Level is already playing!" );
         return;
         }
 
     bIsPlaying = true;
-    std::cout << "[LEVEL] BeginPlay '" << GetName () << "'\n";
+    LOG_DEBUG ( "[LEVEL] BeginPlay '" , GetName () ,"'");
 
     // Запускаем всех акторов
-    for (auto & actor : Actors)
+    for (CActor * actor : Actors)
         {
-        actor->BeginPlay ();
+        if (actor)
+            {
+            actor->BeginPlay ();
+            }
         }
     }
 
@@ -59,16 +60,17 @@ void CLevel::Tick ( float DeltaTime )
     {
     if (!bIsPlaying)
         {
-        std::cout << "[LEVEL] Level is not playing, skipping tick\n";
+        LOG_WARN( "[LEVEL] Level is not playing, skipping tick");
         return;
         }
 
-    std::cout << "[LEVEL] " << GetName () << " is ticking with " << DeltaTime << " ms\n";
-
-    // Обновляем всех акторов
-    for (auto & actor : Actors)
+        // Обновляем всех акторов
+    for (CActor * actor : Actors)
         {
-        actor->Tick ( DeltaTime );
+        if (actor && !actor->IsAttached ())
+            {
+            actor->Tick ( DeltaTime );
+            }
         }
     }
 
@@ -78,13 +80,30 @@ void CLevel::EndPlay ()
         return;
 
     bIsPlaying = false;
-    std::cout << "[LEVEL] End Play for '" << GetName () << "'\n";
+    LOG_DEBUG( "[LEVEL] End Play for '", GetName (), "'" ) ;
 
     // Завершаем всех акторов
-    for (auto & actor : Actors)
+    for (CActor * actor : Actors)
         {
-        actor->EndPlay ();
+        if (actor)
+            {
+            actor->EndPlay ();
+            }
         }
+    }
+
+bool CLevel::RemoveActorFromVector ( CActor * actor )
+    {
+    if (!actor)
+        return false;
+
+    auto it = std::find ( Actors.begin (), Actors.end (), actor );
+    if (it != Actors.end ())
+        {
+        Actors.erase ( it );
+        return true;
+        }
+    return false;
     }
 
 bool CLevel::DestroyActor ( CActor * actor )
@@ -92,41 +111,53 @@ bool CLevel::DestroyActor ( CActor * actor )
     if (!actor)
         return false;
 
-    auto it = std::find_if ( Actors.begin (), Actors.end (),
-                             [ actor ] ( const std::unique_ptr<CActor> & a )
-                             {
-                             return a.get () == actor;
-                             } );
-
-    if (it != Actors.end ())
+    // Удаляем актор из вектора сырых указателей
+    if (!RemoveActorFromVector ( actor ))
         {
-            // Завершаем актора если уровень играет
-        if (bIsPlaying)
-            {
-            ( *it )->EndPlay ();
-            }
-
-        std::cout << "[LEVEL] Actor destroyed: " << ( *it )->GetName () << "\n";
-        Actors.erase ( it );
-        return true;
+        LOG_ERROR ("[LEVEL] Error: Actor not found in level: "
+            , actor->GetName () );
+        return false;
         }
 
-    return false;
+        // Завершаем актора если уровень играет
+    if (bIsPlaying)
+        {
+        actor->EndPlay ();
+        }
+
+    LOG_DEBUG("[LEVEL] Actor destroyed: " , actor->GetName () );
+
+    auto it = std::find_if ( OwnedObjects.begin (), OwnedObjects.end (),
+                             [ actor ] ( const std::unique_ptr<CObject> & obj )
+                             {
+                             return obj.get () == actor;
+                             } );
+
+    if (it != OwnedObjects.end ())
+        {
+        OwnedObjects.erase ( it );
+        return true;
+        }
+    else
+        {
+        LOG_ERROR( "[LEVEL] Warning: Actor not found in OwnedObjects: "
+            , actor->GetName () );
+        return false;
+        }
     }
 
 bool CLevel::DestroyActor ( const std::string & actorName )
     {
-    auto it = std::find_if ( Actors.begin (), Actors.end (),
-                             [ &actorName ] ( const std::unique_ptr<CActor> & actor )
-                             {
-                             return actor && actor->GetName () == actorName;
-                             } );
-
-    if (it != Actors.end ())
+        // Ищем актор по имени
+    for (CActor * actor : Actors)
         {
-        return DestroyActor ( it->get () );
+        if (actor && actor->GetName () == actorName)
+            {
+            return DestroyActor ( actor );
+            }
         }
 
+    LOG_ERROR( "[LEVEL] Actor not found: " , actorName );
     return false;
     }
 
@@ -137,12 +168,10 @@ CObject * CLevel::FindObjectByName ( const std::string & name ) const
         return const_cast< CLevel * >( this );
 
     // Ищем в акторах
-    for (const auto & actor : Actors)
+    for (CActor * actor : Actors)
         {
-        if (actor->GetName () == name)
-            return actor.get ();
-
-        // Можно добавить рекурсивный поиск в компонентах актора позже
+        if (actor && actor->GetName () == name)
+            return actor;
         }
 
     return nullptr;
@@ -155,10 +184,10 @@ CObject * CLevel::FindObjectByUUID ( const std::string & uuid ) const
         return const_cast< CLevel * >( this );
 
     // Ищем в акторах
-    for (const auto & actor : Actors)
+    for (CActor * actor : Actors)
         {
-        if (actor->GetUUID () == uuid)
-            return actor.get ();
+        if (actor && actor->GetUUID () == uuid)
+            return actor;
         }
 
     return nullptr;
@@ -166,34 +195,38 @@ CObject * CLevel::FindObjectByUUID ( const std::string & uuid ) const
 
 void CLevel::DumpState () const
     {
-    std::cout << "\n=== LEVEL STATE ===\n";
-    std::cout << "Name: " << GetName () << "\n";
-    std::cout << "UUID: " << GetShortUUID () << "\n";
-    std::cout << "World: " << ( OwningWorld ? OwningWorld->GetName () : "None" ) << "\n";
-    std::cout << "Is Playing: " << ( bIsPlaying ? "Yes" : "No" ) << "\n";
-    std::cout << "Total Actors: " << Actors.size () << "\n";
+    LOG_DEBUG ( " == = LEVEL STATE == = ");
+    LOG_DEBUG ( "Name: " , GetName ()) ;
+    LOG_DEBUG ("UUID: " , GetShortUUID ());
+    LOG_DEBUG ("World: " , ( OwningWorld ? OwningWorld->GetName () : "None" )) ;
+    LOG_DEBUG (  "Is Playing: " , ( bIsPlaying ? "Yes" : "No" ));
+    LOG_DEBUG( "Total Actors : " , Actors.size ());
+    LOG_DEBUG (  "Total Owned Objects: " , OwnedObjects.size ());
 
+    LOG_DEBUG ("Actors list:");
     for (size_t i = 0; i < Actors.size (); ++i)
         {
-        std::cout << "  [" << i << "] " << Actors[ i ]->GetName ()
-            << " (" << Actors[ i ]->GetObjectClassName () << ")\n";
+        if (Actors[ i ])
+            {
+            LOG_DEBUG ( "  [" , i , "] " , Actors[ i ]->GetName ()
+                , " (" , Actors[ i ]->GetObjectClassName () , ")" );
+            }
+        else
+            {
+            LOG_DEBUG( "  [" , i , "] NULL pointer!");
+            }
         }
 
-    std::cout << "===================\n";
-    }
-
-    // ========== FACTORY REGISTRATION ==========
-
-
-namespace
-    {
-    struct CLevelRegistrar
+    LOG_DEBUG( "Owned Objects list:");
+    for (size_t i = 0; i < OwnedObjects.size (); ++i)
         {
-        CLevelRegistrar ()
+        if (OwnedObjects[ i ])
             {
-            CObjectFactory::GetInstance ().RegisterClass<CLevel> ();
-            CObjectFactory::GetInstance ().RegisterClass<CActor> ();
+            LOG_DEBUG ( "  [" , i , "] " , OwnedObjects[ i ]->GetName ()
+                , " (" , OwnedObjects[ i ]->GetObjectClassName () , ")");
             }
-        };
-    static CLevelRegistrar CLevel_AutoReg;
+        }
+
+    LOG_DEBUG (  "===================");
     }
+REGISTER_CLASS_FACTORY ( CLevel );

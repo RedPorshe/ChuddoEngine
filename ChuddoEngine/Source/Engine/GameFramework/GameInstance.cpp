@@ -11,13 +11,13 @@ CGameInstance * CGameInstance::Instance = nullptr;
 CGameInstance::CGameInstance ( CObject * owner, const std::string & displayName )
     : Super ( owner, displayName )
     {
-    std::cout << "[GAME] GameInstance created: " << displayName
-        << " [UUID: " << GetShortUUID () << "]\n";
+    LOG_INFO ( "[GAME] GameInstance created: " , displayName
+        , " [UUID: " , GetShortUUID () , "]");
     }
 
 CGameInstance::~CGameInstance ()
     {
-    std::cout << "[GAME] GameInstance destroyed: " << GetName () << "\n";
+    LOG_INFO ( "[GAME] GameInstance destroyed: " , GetName () );
 
     // Уничтожаем мир при уничтожении GameInstance
     if (CurrentWorld)
@@ -39,7 +39,7 @@ CGameInstance & CGameInstance::Get ()
     {
     if (!Instance)
         {
-        std::cerr << "[ERROR] GameInstance not created! Call Create() first.\n";
+        LOG_ERROR( "[ERROR] GameInstance not created! Call Create() first.");
         // Можно создать автоматически или assert
         Create ();
         }
@@ -50,7 +50,7 @@ bool CGameInstance::Create ()
     {
     if (Instance)
         {
-        std::cerr << "[WARNING] GameInstance already exists!\n";
+        LOG_WARN( "[WARNING] GameInstance already exists!");
         return false;
         }
 
@@ -65,7 +65,7 @@ void CGameInstance::Destroy ()
         {
         delete Instance;
         Instance = nullptr;
-        std::cout << "[GAME] GameInstance destroyed\n";
+        LOG_DEBUG("[GAME] GameInstance destroyed");
         }
     }
 
@@ -75,7 +75,7 @@ CWorld * CGameInstance::CreateWorld ( const std::string & worldName )
     {
     if (CurrentWorld)
         {
-        std::cerr << "[GAME] World already exists! Destroy current world first.\n";
+        LOG_ERROR( "[GAME] World already exists! Destroy current world first.");
         return nullptr;
         }
 
@@ -85,7 +85,7 @@ CWorld * CGameInstance::CreateWorld ( const std::string & worldName )
 
   
 
-    std::cout << "[GAME] World created: " << worldName << "\n";
+    LOG_DEBUG( "[GAME] World created: " , worldName );
     return CurrentWorld;
     }
 
@@ -96,7 +96,7 @@ void CGameInstance::DestroyWorld ()
             // Удаляем из дочерних объектов
         RemoveOwnedObject ( CurrentWorld->GetName () );
         CurrentWorld = nullptr;
-        std::cout << "[GAME] World destroyed\n";
+        LOG_DEBUG( "[GAME] World destroyed");
         }
     }
 
@@ -104,7 +104,7 @@ void CGameInstance::DestroyWorld ()
 
 void CGameInstance::Init ()
     {
-    std::cout << "[GAME] Initializing GameInstance...\n";
+    LOG_DEBUG( "[GAME] Initializing GameInstance...");
     GameTime = 0.0f;
     DeltaTime = 0.0f;
 
@@ -113,7 +113,7 @@ void CGameInstance::Init ()
 
 void CGameInstance::Tick ( float deltaTime )
     {
-    std::cout << "GameInstance tick with " << deltaTime << "\n";
+    LOG_DEBUG( "GameInstance tick with " , deltaTime);
     DeltaTime = deltaTime;
     GameTime += deltaTime;
 
@@ -127,8 +127,8 @@ void CGameInstance::Tick ( float deltaTime )
 
 void CGameInstance::Shutdown ()
     {
-    std::cout << "[GAME] Shutting down GameInstance...\n";
-
+    LOG_DEBUG( "[GAME] Shutting down GameInstance...");
+    DumpState ();
     if (CurrentWorld)
         {
         DestroyWorld ();
@@ -137,36 +137,24 @@ void CGameInstance::Shutdown ()
 
 void CGameInstance::SaveGameInstanceState ()
     {
-    std::cout << "Proccessing save gameinstance '" << GetName () << "' state \n";
+    LOG_DEBUG( "Proccessing save gameinstance '" , GetName () , "' state ");
     
     }
 
 void CGameInstance::DumpState () const
     {
-    std::cout << "\n=== GAME INSTANCE STATE ===\n";
-    std::cout << "Name: " << GetName () << "\n";
-    std::cout << "UUID: " << GetShortUUID () << "\n";
-    std::cout << "Game Time: " << GameTime << "s\n";
-    std::cout << "Delta Time: " << DeltaTime << "s\n";
-    std::cout << "Has World: " << ( CurrentWorld ? "Yes" : "No" ) << "\n";
+    LOG_DEBUG( "\n=== GAME INSTANCE STATE ===");
+    LOG_DEBUG( "Name: " , GetName () );
+    LOG_DEBUG ( "UUID: " , GetShortUUID ());
+    LOG_DEBUG( "Game Time: " , GameTime , "s");
+    LOG_DEBUG( "Delta Time: " , DeltaTime , "s");
+    LOG_DEBUG( "Has World: " , ( CurrentWorld ? "Yes" : "No" ));
 
     if (CurrentWorld)
         {
-        std::cout << "World: " << CurrentWorld->GetName () << "\n";
+        LOG_DEBUG( "World: " , CurrentWorld->GetName () );
         }
 
-    std::cout << "Child Objects: " << GetNumOwnedObjects () << "\n";
-    std::cout << "===========================\n";
-    }
-
-namespace
-    {
-    struct CGameInstanceRegistrar
-        {
-        CGameInstanceRegistrar ()
-            {
-            CObjectFactory::GetInstance ().RegisterClass<CGameInstance> ();
-            }
-        };
-    static CGameInstanceRegistrar CGameInstance_AutoReg;
+    LOG_DEBUG( "Child Objects: " , GetNumOwnedObjects ());
+    LOG_DEBUG ( "===========================");
     }

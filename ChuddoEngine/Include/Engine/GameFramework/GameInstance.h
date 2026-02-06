@@ -48,3 +48,4 @@ class CGameInstance : public CObject
         CGameInstance & operator=( const CGameInstance & ) = delete;
         bool bIsMustSaveState { true };
 	};
+REGISTER_CLASS_FACTORY ( CGameInstance );

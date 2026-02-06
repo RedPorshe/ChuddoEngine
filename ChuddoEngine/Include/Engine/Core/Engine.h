@@ -1,6 +1,8 @@
 #pragma once
 #include "CoreMinimal.h"
 
+class CActor;
+
 class CEngine
     {
     private:
@@ -28,6 +30,7 @@ class CEngine
         bool bIsRunning = false;
 
         void CreateTestWorld ();
+        
     };
 
 #include "Core/Object.h"
