@@ -2,12 +2,12 @@
 
 CSceneComponent::CSceneComponent ( CObject * inOwner, const std::string & inDisplayName ) : Super(inOwner,inDisplayName)
     {
-    LOG_DEBUG( "Scene component constructor for '" , GetName (), "'");
+   
     }
 
 CSceneComponent::~CSceneComponent ()
     {
-    LOG_DEBUG( "Scene component destructor for '" , GetName () , "'");
+   
     }
 
 void CSceneComponent::InitComponent ()

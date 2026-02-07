@@ -11,14 +11,13 @@
 
 CObject::CObject ( CObject * inOwner, const std::string & inDisplayName )
 	: ObjectOwner ( inOwner ), DisplayName ( inDisplayName )
-	{
-		// Generate unique UUID
+	{		
 	ObjectUUID = GenerateUUID ();	
 	}
 
 CObject::~CObject ()
 	{
-	
+	LOG_DEBUG ( GetName (), " destroyed" );
 	}
 
 void CObject::UpdateDebugIdentifier ()
@@ -42,8 +41,6 @@ bool CObject::FindRecursive ( const std::string & displayName )
 	{
 	if (GetName () == displayName)
 		{
-		LOG_DEBUG( " FindRecursive: FOUND '",  displayName
-			, "' at '" , GetName () , "'");
 		return true;
 		}
 
@@ -87,7 +84,7 @@ CObject * CObject::FindByUUID ( const std::string & uuid ) const
 	return nullptr;
 	}
 
-CObject * CObject::FindByUUIDRecursive ( const std::string & uuid )
+CObject * CObject::FindByUUIDRecursive ( const std::string & uuid ) 
 	{
 	if (ObjectUUID == uuid)
 		return this;
@@ -286,7 +283,7 @@ std::string CObject::GenerateUniqueDisplayNameVariant ( const std::string & base
 			}
 		else
 			{
-			std::string suffix = name.substr ( baseDisplayName.size () + 1 );
+			std::string suffix = name.substr ( baseDisplayName.size () +1 );
 			try
 				{
 				int num = std::stoi ( suffix );
@@ -322,7 +319,7 @@ std::string CObject::GenerateUniqueDisplayNameVariant ( const std::string & base
 		return baseDisplayName;
 		}
 
-	return baseDisplayName + "_" + std::to_string ( nextNumber );
+	return baseDisplayName + "_" + std::to_string ( nextNumber  );
 	}
 
 bool CObject::RenameOwnedObject ( const std::string & oldDisplayName, const std::string & newDisplayName )

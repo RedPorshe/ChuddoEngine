@@ -135,7 +135,7 @@ class CObject
             std::string finalDisplayName = desiredDisplayName;
             finalDisplayName = CheckNameAndGenerateUniqName ( finalDisplayName );
             // Check if display name already exists globally
-            if (root->FindRecursive ( desiredDisplayName ))
+            if (root->FindRecursive ( finalDisplayName ))
                 {
                     // Display name exists ANYWHERE in hierarchy, generate unique variant
                 finalDisplayName = GenerateUniqueDisplayNameVariant ( desiredDisplayName, root );
@@ -155,6 +155,20 @@ class CObject
             // Version 2: Factory creation (new way) - объявление без реализации
         CObject * AddSubObjectByClass ( const std::string & className,
                                         const std::string & desiredDisplayName = "SubObject" );
+
+        template<typename ObjectType>
+        ObjectType * FindObjectByType () const
+            {
+            for (auto & actor : OwnedObjects)
+                {
+                ObjectType * founded = actor->FindObjectByType <ObjectType>();
+                if (founded)
+                    {
+                    return founded;
+                    }
+                }
+            return nullptr;
+            }
 
            // Renaming operations
         bool RenameOwnedObject ( const std::string & oldDisplayName, const std::string & newDisplayName );

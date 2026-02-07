@@ -10,36 +10,21 @@
 CWorld::CWorld ( CObject * inOwner, const std::string & displayName )
 	: Super ( inOwner, displayName )
 	{
-		// Получаем GameInstance из владельца
+		
 	OwningGameInstance = dynamic_cast< CGameInstance * >( inOwner );
 
-	if (OwningGameInstance)
-		{
-		LOG_INFO ("[WORLD] World created : ",  displayName
-			, " [Owner: " , OwningGameInstance->GetName () , "]");
-		}
-	else if (inOwner)
-		{
-		LOG_INFO ( "[WORLD] World created: " , displayName
-			, " [Owner: " , inOwner->GetObjectClassName () , "]");
-		}
-	else
-		{
-		LOG_INFO ( "[WORLD] World created: ",  displayName , " [No owner]");
-		}
 	}
 
 CWorld::~CWorld ()
 	{
-	LOG_INFO ( "[WORLD] World destroyed: " , GetName ());
+	
 	DumpState ();
-	// Завершаем игру если запущена
+	
 	if (bIsPlaying)
 		{
 		EndPlay ();
 		}
-
-		// Очищаем уровни
+		
 	Levels.clear ();
 	CurrentLevel = nullptr;
 	OwningGameInstance = nullptr;
@@ -242,7 +227,7 @@ void CWorld::BeginPlay ()
 	bIsPlaying = true;
 	LOG_DEBUG( "[WORLD] BeginPlay: " , GetName ());
 
-	// Запускаем все уровни
+	
 	for (auto & level : Levels)
 		{
 		level->BeginPlay ();
@@ -252,14 +237,10 @@ void CWorld::BeginPlay ()
 void CWorld::Tick ( float deltaTime )
 	{
 	if (!bIsPlaying)
-		{
-		LOG_DEBUG( "[WORLD] World is not playing, skipping tick");
+		{		
 		return;
 		}
-
-	LOG_DEBUG( "[WORLD] Tick: ",  GetName () , " (delta: " , deltaTime , ")");
-
-	// Обновляем текущий уровень
+	
 	if (CurrentLevel)
 		{
 		CurrentLevel->Tick ( deltaTime );
@@ -277,19 +258,15 @@ void CWorld::EndPlay ()
 
 	bIsPlaying = false;
 	LOG_DEBUG( "[WORLD] EndPlay: " , GetName ());
-
-	// Завершаем все уровни
+		
 	for (auto & level : Levels)
 		{
 		level->EndPlay ();
 		}
 	}
 
-	// ========== SEARCH/QUERY ==========
-
 CObject * CWorld::FindObjectByName ( const std::string & name ) const
-	{
-		// Ищем в уровнях
+	{		
 	for (const auto & level : Levels)
 		{
 		CObject * found = level->FindObjectByName ( name );
@@ -301,8 +278,7 @@ CObject * CWorld::FindObjectByName ( const std::string & name ) const
 	}
 
 CObject * CWorld::FindObjectByUUID ( const std::string & uuid ) const
-	{
-		// Ищем в уровнях
+	{	
 	for (const auto & level : Levels)
 		{
 		CObject * found = level->FindObjectByUUID ( uuid );
@@ -313,18 +289,7 @@ CObject * CWorld::FindObjectByUUID ( const std::string & uuid ) const
 	return nullptr;
 	}
 
-template<typename T>
-T * CWorld::FindObjectOfType () const
-	{
-	for (const auto & level : Levels)
-		{
-			// Реализуем когда будет система компонентов
-			// T* found = level->FindObjectOfType<T>();
-			// if (found) return found;
-		}
 
-	return nullptr;
-	}
 
 	// ========== DEBUG/UTILS ==========
 

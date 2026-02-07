@@ -1,232 +1,417 @@
+// Level.cpp - исправленная версия
 #include "World/Level.h"
 #include "World/World.h"
 #include "Actors/Actor.h"
-
-// system includes
 #include <iostream>
 #include <algorithm>
+#include <sstream>
+#include <iomanip>
 
 CLevel::CLevel ( CObject * owner, const std::string & inName )
-    : CObject ( owner, inName )
-    {
-        // Получаем World из владельца
-    OwningWorld = dynamic_cast< CWorld * >( owner );
-
-    if (OwningWorld)
-        {
-        LOG_INFO ( "[LEVEL] Level created: ", inName, " [World: ", OwningWorld->GetName (), "]" );            
-        }
-    else
-        {
-        LOG_INFO ( "[LEVEL] Level created: " , inName , " [No world]");
-        }
-    }
+	: CObject ( owner, inName )
+	{
+	OwningWorld = dynamic_cast< CWorld * >( owner );
+	}
 
 CLevel::~CLevel ()
-    {
-    LOG_INFO ( "[LEVEL] Level destroyed: ", GetName () );
-    DumpState ();
-    if (bIsPlaying)
-        {
-        EndPlay ();
-        }
-
-        // Очищаем вектор сырых указателей (не удаляем объекты - они в OwnedObjects)
-    Actors.clear ();
-    }
+	{
+	DumpState ();
+	if (bIsPlaying)
+		{
+		EndPlay ();
+		}
+	Actors.clear ();
+	SpawnQueue.clear ();
+	}
 
 void CLevel::BeginPlay ()
-    {
-    if (bIsPlaying)
-        {
-        LOG_ERROR  ( "[LEVEL] ERROR: Level is already playing!" );
-        return;
-        }
+	{
+	if (bIsPlaying)
+		{
+		LOG_ERROR ( "[LEVEL] ERROR: Level is already playing!" );
+		return;
+		}
 
-    bIsPlaying = true;
-    LOG_DEBUG ( "[LEVEL] BeginPlay '" , GetName () ,"'");
-
-    // Запускаем всех акторов
-    for (CActor * actor : Actors)
-        {
-        if (actor)
-            {
-            actor->BeginPlay ();
-            }
-        }
-    }
+	bIsPlaying = true;
+	LOG_DEBUG ( " BeginPlay for '", GetName (), "'" );
+	for (CActor * actor : Actors)
+		{
+		if (actor)
+			{
+			actor->BeginPlay ();
+			}
+		}
+	}
 
 void CLevel::Tick ( float DeltaTime )
-    {
-    if (!bIsPlaying)
-        {
-        LOG_WARN( "[LEVEL] Level is not playing, skipping tick");
-        return;
-        }
+	{
+	ProccessPendingActors ();
+	if (!bIsPlaying)
+		{
+		LOG_WARN ( "[LEVEL] Level is not playing, skipping tick" );
+		return;
+		}
 
-        // Обновляем всех акторов
-    for (CActor * actor : Actors)
-        {
-        if (actor && !actor->IsAttached ())
-            {
-            actor->Tick ( DeltaTime );
-            }
-        }
-    }
+		// Сбрасываем счетчик созданных акторов в начале тика
+	ActorsSpawnedThisTick = 0;
+
+	if (!bSkipNextSpawnTick)
+		{
+		ProcessSpawnQueue ();
+		}
+	else
+		{
+		bSkipNextSpawnTick = false;
+		LOG_DEBUG ( "[LEVEL] Skipping spawn processing for this tick" );
+		}
+
+	for (CActor * actor : Actors)
+		{
+		if (actor && !actor->IsAttached ())
+			{
+			actor->Tick ( DeltaTime );
+			}
+		}
+	CollectAllPendingActors ();
+	}
 
 void CLevel::EndPlay ()
-    {
-    if (!bIsPlaying)
-        return;
+	{
+	if (!bIsPlaying)
+		return;
 
-    bIsPlaying = false;
-    LOG_DEBUG( "[LEVEL] End Play for '", GetName (), "'" ) ;
-
-    // Завершаем всех акторов
-    for (CActor * actor : Actors)
-        {
-        if (actor)
-            {
-            actor->EndPlay ();
-            }
-        }
-    }
+	bIsPlaying = false;
+	LOG_DEBUG ( "[LEVEL] End Play for '", GetName (), "'" );
+	for (CActor * actor : Actors)
+		{
+		if (actor)
+			{
+			actor->EndPlay ();
+			}
+		}
+	}
 
 bool CLevel::RemoveActorFromVector ( CActor * actor )
-    {
-    if (!actor)
-        return false;
+	{
+	if (!actor)
+		return false;
 
-    auto it = std::find ( Actors.begin (), Actors.end (), actor );
-    if (it != Actors.end ())
-        {
-        Actors.erase ( it );
-        return true;
-        }
-    return false;
-    }
+	auto it = std::find ( Actors.begin (), Actors.end (), actor );
+	if (it != Actors.end ())
+		{
+		Actors.erase ( it );
+		return true;
+		}
+	return false;
+	}
+
+bool CLevel::PendingDestoyActor ( CActor * actor )
+	{
+	if (!actor)
+		return false;
+
+	if (!RemoveActorFromVector ( actor ))
+		{
+		LOG_ERROR ( "[LEVEL] Error: Actor not found in level: "
+					, actor->GetName () );
+		return false;
+		}
+
+	if (bIsPlaying)
+		{
+		actor->EndPlay ();
+		}
+
+	LOG_DEBUG ( "[LEVEL] Actor destroyed: ", actor->GetName () );
+
+	auto it = std::find_if ( OwnedObjects.begin (), OwnedObjects.end (),
+							 [ actor ] ( const std::unique_ptr<CObject> & obj )
+							 {
+							 return obj.get () == actor;
+							 } );
+
+	if (it != OwnedObjects.end ())
+		{
+		OwnedObjects.erase ( it );
+		return true;
+		}
+	else
+		{
+		LOG_ERROR ( "[LEVEL] Warning: Actor not found in OwnedObjects: "
+					, actor->GetName () );
+		return false;
+		}
+	}
+
+bool CLevel::PendingDestoyActor ( const std::string & actorName )
+	{
+	for (CActor * actor : Actors)
+		{
+		if (actor && actor->GetName () == actorName)
+			{
+			return PendingDestoyActor ( actor );
+			}
+		}
+
+	LOG_ERROR ( "[LEVEL] Actor not found: ", actorName );
+	return false;
+	}
+
+void CLevel::CollectAllPendingActors ()
+	{
+	ActorsPendingToDestroy.clear ();
+
+	std::vector<CActor *> actorsCopy = Actors;
+
+	for (auto act : actorsCopy)
+		{
+		if (act->IsPendingToDestroy ())
+			{
+			ActorsPendingToDestroy.push_back ( act );
+			}
+		}
+	if (!ActorsPendingToDestroy.empty ())
+		{
+		int count = 1;
+		LOG_DEBUG ( "Actors collected for Destroy List of actors:" );
+		for (auto act : ActorsPendingToDestroy)
+			{
+
+			LOG_DEBUG ( count, ": ", act->GetName () );
+			count++;
+			}
+		}
+	}
 
 bool CLevel::DestroyActor ( CActor * actor )
-    {
-    if (!actor)
-        return false;
-
-    // Удаляем актор из вектора сырых указателей
-    if (!RemoveActorFromVector ( actor ))
-        {
-        LOG_ERROR ("[LEVEL] Error: Actor not found in level: "
-            , actor->GetName () );
-        return false;
-        }
-
-        // Завершаем актора если уровень играет
-    if (bIsPlaying)
-        {
-        actor->EndPlay ();
-        }
-
-    LOG_DEBUG("[LEVEL] Actor destroyed: " , actor->GetName () );
-
-    auto it = std::find_if ( OwnedObjects.begin (), OwnedObjects.end (),
-                             [ actor ] ( const std::unique_ptr<CObject> & obj )
-                             {
-                             return obj.get () == actor;
-                             } );
-
-    if (it != OwnedObjects.end ())
-        {
-        OwnedObjects.erase ( it );
-        return true;
-        }
-    else
-        {
-        LOG_ERROR( "[LEVEL] Warning: Actor not found in OwnedObjects: "
-            , actor->GetName () );
-        return false;
-        }
-    }
+	{
+	if (actor == nullptr)
+		{
+		LOG_ERROR ( "actor is NULL" );
+		return false;
+		}
+	actor->SetPendingToDestroy ();
+	return true;
+	}
 
 bool CLevel::DestroyActor ( const std::string & actorName )
-    {
-        // Ищем актор по имени
-    for (CActor * actor : Actors)
-        {
-        if (actor && actor->GetName () == actorName)
-            {
-            return DestroyActor ( actor );
-            }
-        }
+	{
+	for (CActor * actor : Actors)
+		{
+		if (actor && actor->GetName () == actorName)
+			{
+			return DestroyActor ( actor );
+			}
+		}
 
-    LOG_ERROR( "[LEVEL] Actor not found: " , actorName );
-    return false;
-    }
+	LOG_ERROR ( "[LEVEL] Actor not found: ", actorName );
+	return false;
+	}
+
+CActor * CLevel::SpawnActorAtLocation ( const std::string & ClassName, const std::string & ActorName, const FVector & loc )
+	{
+	auto newActor = SpawnActorByClass ( ClassName, ActorName );
+	if (newActor)
+		{
+		LOG_DEBUG ( newActor->GetName (), " spawned at location :", loc, "THIS IS STUB IMPLEMENTATION NEED LATER ADD TRANSFORM COMPONENT TO ACTOR!!!!" );
+		return newActor;
+		}
+	return nullptr;
+	}
+
+CActor * CLevel::SpawnActorByClass ( const std::string & ClassName, const std::string & ActorName )
+	{
+	auto newActor = AddSubObjectByClass ( ClassName, ActorName );
+	if (CActor * actToSpawn = dynamic_cast< CActor * >( newActor ))
+		{
+		Actors.push_back ( actToSpawn );
+		return actToSpawn;
+		}
+	return nullptr;
+	}
+
+void CLevel::ProccessPendingActors ()
+	{
+	if (!ActorsPendingToDestroy.empty ())
+		{
+		LOG_DEBUG ( "Proccessing destroy Actors" );
+		for (auto actor : ActorsPendingToDestroy)
+			{
+			if (actor)
+				{
+				std::string ActorName = actor->GetName ();
+				PendingDestoyActor ( ActorName );
+				}
+			}
+		}
+	ActorsPendingToDestroy.clear ();
+	}
 
 CObject * CLevel::FindObjectByName ( const std::string & name ) const
-    {
-        // Проверяем себя
-    if (GetName () == name)
-        return const_cast< CLevel * >( this );
+	{
+	if (GetName () == name)
+		return const_cast< CLevel * >( this );
 
-    // Ищем в акторах
-    for (CActor * actor : Actors)
-        {
-        if (actor && actor->GetName () == name)
-            return actor;
-        }
+	for (CActor * actor : Actors)
+		{
+		if (actor && actor->GetName () == name)
+			return actor;
+		}
 
-    return nullptr;
-    }
+	return nullptr;
+	}
 
-CObject * CLevel::FindObjectByUUID ( const std::string & uuid ) const
-    {
-        // Проверяем себя
-    if (GetUUID () == uuid)
-        return const_cast< CLevel * >( this );
+CObject * CLevel::FindObjectByUUID ( const std::string & uuid )
+	{
+	if (GetUUID () == uuid)
+		return const_cast< CLevel * >( this );
 
-    // Ищем в акторах
-    for (CActor * actor : Actors)
-        {
-        if (actor && actor->GetUUID () == uuid)
-            return actor;
-        }
+	for (CActor * actor : Actors)
+		{
+		if (actor && actor->GetUUID () == uuid)
+			{
+			LOG_INFO ( "Founded actor: ", actor->GetName () );
+			return actor;
+			}
+		}
 
-    return nullptr;
-    }
+	for (auto & obj : OwnedObjects)
+		{
+		auto founded = FindByUUIDRecursive ( uuid );
+		if (founded)
+			{
+			LOG_INFO ( "Founded Object: ", founded->GetName () );
+			return founded;
+			}
+		}
+
+	return nullptr;
+	}
+
+void CLevel::ProcessSpawnQueue ()
+	{
+	if (SpawnQueue.empty ())
+		return;
+
+	size_t spawnedThisTick = 0;
+	size_t availableSlots = MaxActorsPerTick - ActorsSpawnedThisTick;
+	size_t totalToProcess = std::min ( SpawnQueue.size (), availableSlots );
+
+	if (totalToProcess == 0)
+		{
+		LOG_DEBUG ( "[LEVEL] Cannot spawn more actors this tick. Limit reached (",
+					ActorsSpawnedThisTick, "/", MaxActorsPerTick, ")." );
+		return;
+		}
+
+	LOG_DEBUG ( "[LEVEL] Processing spawn queue. Pending: ",
+				SpawnQueue.size (), ", Available slots: ", availableSlots,
+				", Will process: ", totalToProcess );
+
+	for (size_t i = 0; i < totalToProcess; i++)
+		{
+		if (SpawnQueue.empty ())
+			break;
+
+		SpawnRequest & request = SpawnQueue.front ();
+		CActor * newActor = request.Func ();
+
+		if (newActor)
+			{
+			Actors.push_back ( newActor );
+			ActorsSpawnedThisTick++;
+
+			if (bIsPlaying)
+				{
+				newActor->BeginPlay ();
+				}
+
+			LOG_DEBUG ( "[LEVEL] Spawned queued actor: ",
+						newActor->GetName (),
+						" (", spawnedThisTick + 1, "/", totalToProcess, " this tick)" );
+			spawnedThisTick++;
+			}
+
+		SpawnQueue.pop_front ();
+		}
+
+	if (HasPendingSpawns ())
+		{
+		LOG_DEBUG ( "[LEVEL] Still have ", GetPendingSpawnCount (),
+					" actors pending for next tick" );
+		}
+	}
+
+void CLevel::ProcessAllPendingSpawns ()
+	{
+	if (SpawnQueue.empty ())
+		return;
+
+	LOG_DEBUG ( "[LEVEL] Processing all pending spawns: ",
+				SpawnQueue.size (), " actors" );
+
+	  // Временно увеличиваем лимит до максимума
+	size_t originalLimit = MaxActorsPerTick;
+	MaxActorsPerTick = std::numeric_limits<size_t>::max ();
+
+	ProcessSpawnQueue ();
+
+	// Восстанавливаем оригинальный лимит
+	MaxActorsPerTick = originalLimit;
+	}
 
 void CLevel::DumpState () const
-    {
-    LOG_DEBUG ( " == = LEVEL STATE == = ");
-    LOG_DEBUG ( "Name: " , GetName ()) ;
-    LOG_DEBUG ("UUID: " , GetShortUUID ());
-    LOG_DEBUG ("World: " , ( OwningWorld ? OwningWorld->GetName () : "None" )) ;
-    LOG_DEBUG (  "Is Playing: " , ( bIsPlaying ? "Yes" : "No" ));
-    LOG_DEBUG( "Total Actors : " , Actors.size ());
-    LOG_DEBUG (  "Total Owned Objects: " , OwnedObjects.size ());
+	{
+	std::stringstream ss;
+	ss << "=== LEVEL STATE ===" << "\n";
+	ss << "Name: " << GetName () << "\n";
+	ss << "UUID: " << GetShortUUID () << "\n";
+	ss << "World: " << ( OwningWorld ? OwningWorld->GetName () : "None" ) << "\n";
+	ss << "Is Playing: " << ( bIsPlaying ? "Yes" : "No" ) << "\n";
+	ss << "Total Actors: " << Actors.size () << "\n";
+	ss << "Pending Spawns: " << SpawnQueue.size () << "\n";
+	ss << "Max Actors Per Tick: " << MaxActorsPerTick << "\n";
+	ss << "Total Owned Objects: " << OwnedObjects.size () << "\n";
 
-    LOG_DEBUG ("Actors list:");
-    for (size_t i = 0; i < Actors.size (); ++i)
-        {
-        if (Actors[ i ])
-            {
-            LOG_DEBUG ( "  [" , i , "] " , Actors[ i ]->GetName ()
-                , " (" , Actors[ i ]->GetObjectClassName () , ")" );
-            }
-        else
-            {
-            LOG_DEBUG( "  [" , i , "] NULL pointer!");
-            }
-        }
+	ss << "Actors list:" << "\n";
+	for (size_t i = 0; i < Actors.size (); ++i)
+		{
+		if (Actors[ i ])
+			{
+			ss << "  [" << std::setw ( 3 ) << i << "] " << Actors[ i ]->GetName ()
+				<< " (" << Actors[ i ]->GetObjectClassName () << ")" << "\n";
+			}
+		else
+			{
+			ss << "  [" << std::setw ( 3 ) << i << "] NULL pointer!" << "\n";
+			}
+		}
 
-    LOG_DEBUG( "Owned Objects list:");
-    for (size_t i = 0; i < OwnedObjects.size (); ++i)
-        {
-        if (OwnedObjects[ i ])
-            {
-            LOG_DEBUG ( "  [" , i , "] " , OwnedObjects[ i ]->GetName ()
-                , " (" , OwnedObjects[ i ]->GetObjectClassName () , ")");
-            }
-        }
+	ss << "Pending spawn requests:" << "\n";
+	if (SpawnQueue.empty ())
+		{
+		ss << "  None" << "\n";
+		}
+	else
+		{
+		size_t index = 0;
+		for (const auto & request : SpawnQueue)
+			{
+			ss << "  [" << std::setw ( 3 ) << index++ << "] " << request.Name << "\n";
+			}
+		}
 
-    LOG_DEBUG (  "===================");
-    }
-REGISTER_CLASS_FACTORY ( CLevel );
+	ss << "Owned Objects list:" << "\n";
+	for (size_t i = 0; i < OwnedObjects.size (); ++i)
+		{
+		if (OwnedObjects[ i ])
+			{
+			ss << "  [" << std::setw ( 3 ) << i << "] " << OwnedObjects[ i ]->GetName ()
+				<< " (" << OwnedObjects[ i ]->GetObjectClassName () << ")" << "\n";
+			}
+		}
+
+	ss << "===================";
+
+	std::cout << ss.str () << std::endl;
+	}

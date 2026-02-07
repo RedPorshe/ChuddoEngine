@@ -27,7 +27,7 @@ class CActor : public CObject
 		void SetCanTickOnAttached ( bool value ) { bIsCanTickAsAttached = value; }
 
 		bool IsAttached () const { return bIsAttached; }
-
+		void Destroy ();
 		void SetIsAttached ( bool value ) { bIsAttached = value; }
 	protected:
 		std::vector<CBaseComponent *> ActorComponents;
@@ -35,11 +35,15 @@ class CActor : public CObject
 		bool bIsCanTickAsAttached { false };
 		bool bIsAttached { false };
 	public:
-
+		void SetPendingToDestroy ();
 		void SetActorName ( const std::string & newName );
-
+		
+		bool IsPendingToDestroy () const { return bIsPendingToDestroy; }
 		template<typename Comp, typename... Args>
 		Comp * AddDefaultSubObject ( const std::string & desiredDisplayName = "SubObject" );
+	protected:
+		bool bIsPendingToDestroy { false };
+		
 			
 
 	};

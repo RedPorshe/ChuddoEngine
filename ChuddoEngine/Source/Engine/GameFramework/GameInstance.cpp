@@ -11,26 +11,21 @@ CGameInstance * CGameInstance::Instance = nullptr;
 CGameInstance::CGameInstance ( CObject * owner, const std::string & displayName )
     : Super ( owner, displayName )
     {
-    LOG_INFO ( "[GAME] GameInstance created: " , displayName
-        , " [UUID: " , GetShortUUID () , "]");
+  
     }
 
 CGameInstance::~CGameInstance ()
-    {
-    LOG_INFO ( "[GAME] GameInstance destroyed: " , GetName () );
-
-    // Уничтожаем мир при уничтожении GameInstance
+    {    
     if (CurrentWorld)
-        {
-            // World будет удален автоматически как дочерний объект
+        {        
         CurrentWorld = nullptr;
         }
-
-        // Сбрасываем singleton
+       
     if (Instance == this)
         {
         Instance = nullptr;
         }
+    LOG_INFO ( "[GAME] GameInstance destroyed: " , GetName () );
     }
 
     // ========== SINGLETON METHODS ==========
@@ -112,8 +107,7 @@ void CGameInstance::Init ()
     }
 
 void CGameInstance::Tick ( float deltaTime )
-    {
-    LOG_DEBUG( "GameInstance tick with " , deltaTime);
+    {   
     DeltaTime = deltaTime;
     GameTime += deltaTime;
 

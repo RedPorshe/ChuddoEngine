@@ -5,19 +5,17 @@ REGISTER_CLASS_FACTORY ( CBaseComponent );
 
 
 CBaseComponent::CBaseComponent ( CObject * owner, const std::string & inName ) : CObject ( owner, inName )
-	{
-	LOG_DEBUG( "Constructor of CBaseComponent with name '" , GetName () , "'");
+	{	
 	auto AnewOwner = dynamic_cast< CActor * >( owner );
 	if (AnewOwner)
 		{
-		ActorOwner = AnewOwner;
-		LOG_DEBUG( GetName () , " has owner actor " , typeid( *ActorOwner ).name () , " with name '" , ActorOwner->GetName () , "'");
+		ActorOwner = AnewOwner;		
 		}
 	}
 
 CBaseComponent::~CBaseComponent ()
 	{
-	LOG_DEBUG("Destructor of CBaseComponent with name '" , GetName () , "'");
+	
 	}
 
 void CBaseComponent::InitComponent ()
@@ -53,8 +51,7 @@ void CBaseComponent::Tick ( float DeltaTime )
 			comp->Tick ( DeltaTime );
 			}
 		}
-
-		// Тикаем прикреплённых акторов
+		
 	for (auto actor : AttachedActors)
 		{
 		if (actor && actor->IsCanTickOnAttached () && actor->IsAttached ())
