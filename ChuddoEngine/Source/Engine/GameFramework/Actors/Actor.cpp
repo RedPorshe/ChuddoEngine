@@ -8,7 +8,7 @@
 
 CActor::CActor ( CObject * owner, const std::string & inName ) : CObject ( owner, inName )
 	{
-
+	RootComponent = AddDefaultSubObject<CTransformComponent> ( inName + "_Transform" );	
 	}
 
 CActor::~CActor ()
@@ -34,7 +34,7 @@ void CActor::Tick ( float deltaTime )
 			{
 			comp->Tick ( deltaTime );
 			}
-		}
+		}	
 	}
 
 void CActor::EndPlay ()
@@ -52,7 +52,7 @@ CWorld * CActor::GetWorld () const
 	return CGameInstance::Get ().GetWorld ();
 	}
 
-void CActor::SetRootComponent ( CSceneComponent * NewRoot )
+void CActor::SetRootComponent ( CTransformComponent * NewRoot )
 	{
 	if (!NewRoot)
 		{
@@ -68,11 +68,10 @@ void CActor::SetRootComponent ( CSceneComponent * NewRoot )
 
 	if (RootComponent == NewRoot)
 		{
-		LOG_WARN ( "Component is already RootComponent" );
 		return;
 		}
 
-	CSceneComponent * OldRoot = RootComponent;
+	CTransformComponent * OldRoot = RootComponent;
 	RootComponent = NewRoot;
 
 	if (OldRoot)
@@ -93,7 +92,7 @@ void CActor::Destroy ()
 	{
 	if (bIsPendingToDestroy)
 		{
-		LOG_WARN ("Actor: ", GetName (), " already marked to destroy");
+		LOG_WARN ( "Actor: ", GetName (), " already marked to destroy" );
 		return;
 		}
 	auto level = GetLevel ();
@@ -107,12 +106,101 @@ void CActor::SetPendingToDestroy ()
 	{
 	if (bIsPendingToDestroy)
 		{
-		LOG_WARN ( "Actor: ", GetName(), " already marked to destroy");
+		LOG_WARN ( "Actor: ", GetName (), " already marked to destroy" );
 		return;
 		}
 	LOG_DEBUG ( "Actor:", GetName (), " is marked to destroy" );
 	bIsPendingToDestroy = true;
 	}
+
+FVector  CActor::GetActorLocation ()
+	{
+	FVector result {};
+	if(GetRootComponent()!= nullptr) result = RootComponent->GetLocation ();
+	return result;
+	}
+
+FVector CActor::GetActorRotation ()
+	{	
+	FVector RotVec = GetActorRotationQuat ().GetEulerAngles ();
+	return FVector (
+		CEMath::RadiansToDegrees ( RotVec.x ),
+		CEMath::RadiansToDegrees ( RotVec.y ),
+		CEMath::RadiansToDegrees ( RotVec.z )
+	);
+	}
+
+FVector CActor::GetActorScale ()
+	{
+	FVector result {};
+	if (GetRootComponent () != nullptr) result = RootComponent->GetScale ();
+	return result;
+	}
+
+FQuat CActor::GetActorRotationQuat ()
+	{
+	FQuat result {};
+	if (GetRootComponent () != nullptr) result = RootComponent->GetRotationQuat ();
+	return result;
+	}
+
+void CActor::SetActorLocation ( const FVector & InLocation )
+	{	
+	if (RootComponent)
+		{
+		RootComponent->SetLocation ( InLocation );
+		}	
+	}
+
+void CActor::SetActorLocation ( float inX, float inY, float inZ )
+	{
+	SetActorLocation ( FVector ( inX, inY, inZ ) );
+	}
+
+void CActor::SetActorScale ( const FVector & InScale )
+	{	
+	if (RootComponent)
+		{
+		RootComponent->SetScale ( InScale );
+		}	
+	}
+
+void CActor::SetActorScale ( float inX, float inY, float inZ )
+	{
+	SetActorScale ( FVector ( inX, inY, inZ ) );
+	}
+
+void CActor::SetActorScale ( float InScale )
+	{
+	SetActorScale ( InScale, InScale, InScale );
+	}
+
+void CActor::SetActorRotation ( const FVector & inRotation )
+	{
+	FQuat rotationQuat = FQuat::FromEulerAngles (
+		CEMath::DegreesToRadians ( inRotation.x ),
+		CEMath::DegreesToRadians ( inRotation.y ),
+		CEMath::DegreesToRadians ( inRotation.z )
+	);
+	SetActorRotation ( rotationQuat );
+	}
+
+void CActor::SetActorRotation ( const FQuat & inRotation )
+	{	
+	if (RootComponent)
+		{
+		RootComponent->SetRotation ( inRotation );
+		}
+	}
+
+void CActor::SetActorRotation ( float inX, float inY, float inZ )
+	{
+	SetActorRotation ( FVector ( inX, inY, inZ ) );
+	}
+
+
+
+
 
 void CActor::SetActorName ( const std::string & newName )
 	{

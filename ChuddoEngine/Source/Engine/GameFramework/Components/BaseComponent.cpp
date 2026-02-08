@@ -161,9 +161,9 @@ void CBaseComponent::AttachActorToComponent ( CActor * ActorToAttach )
 	
 
 	// Если это SceneComponent, можно обновить трансформы
-	if (CSceneComponent * SceneComp = dynamic_cast< CSceneComponent * >( this ))
+	if (CTransformComponent * SceneComp = dynamic_cast< CTransformComponent * >( this ))
 		{
-		if (CSceneComponent * ActorRoot = ActorToAttach->GetRootComponent ())
+		if (CTransformComponent * ActorRoot = ActorToAttach->GetRootComponent ())
 			{
 				// Прикрепляем корневой компонент актора к этому компоненту
 			ActorRoot->AttachComponentToComponent ( SceneComp );

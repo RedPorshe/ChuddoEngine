@@ -1,16 +1,16 @@
 #pragma once
-#include "Components/BaseComponent.h"
+#include "Components/TransformComponent.h"
 
 
-class CSceneComponent : public CBaseComponent
+class CSceneComponent : public CTransformComponent
 	{
-	CHUDDO_DECLARE_CLASS ( CSceneComponent, CBaseComponent );
+	CHUDDO_DECLARE_CLASS ( CSceneComponent, CTransformComponent );
 	public:
 		CSceneComponent ( CObject * inOwner = nullptr, const std::string & inDisplayName = "Object" );
 		virtual ~CSceneComponent ();
 		virtual void InitComponent () override;
 		virtual void Tick ( float DeltaTime ) override;
-		virtual void OnBeginPlay () override;
+		virtual void OnBeginPlay () override;	
 	};
 
 REGISTER_CLASS_FACTORY ( CSceneComponent );

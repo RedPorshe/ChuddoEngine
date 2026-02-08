@@ -250,3 +250,4 @@ class CObject
     };
 #include "Core/ObjectFactory.h"
     REGISTER_CLASS_FACTORY ( CObject );
+

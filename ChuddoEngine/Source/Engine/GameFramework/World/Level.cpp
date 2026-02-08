@@ -213,7 +213,8 @@ CActor * CLevel::SpawnActorAtLocation ( const std::string & ClassName, const std
 	auto newActor = SpawnActorByClass ( ClassName, ActorName );
 	if (newActor)
 		{
-		LOG_DEBUG ( newActor->GetName (), " spawned at location :", loc, "THIS IS STUB IMPLEMENTATION NEED LATER ADD TRANSFORM COMPONENT TO ACTOR!!!!" );
+		newActor->SetActorLocation ( loc );
+		LOG_DEBUG ( newActor->GetName (), " spawned at location :", newActor->GetActorLocation());
 		return newActor;
 		}
 	return nullptr;

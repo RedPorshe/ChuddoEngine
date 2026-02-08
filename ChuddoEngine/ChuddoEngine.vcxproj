@@ -157,6 +157,7 @@
     <ClCompile Include="Source\Engine\Core\Object.cpp" />
     <ClCompile Include="Source\Engine\Core\ObjectFactory.cpp" />
     <ClCompile Include="Source\Engine\GameFramework\Actors\Actor.cpp" />
+    <ClCompile Include="Source\Engine\GameFramework\Components\TransformComponent.cpp" />
     <ClCompile Include="Source\Engine\GameFramework\GameInstance.cpp" />
     <ClCompile Include="Source\Engine\GameFramework\World\Level.cpp" />
     <ClCompile Include="Source\Engine\GameFramework\World\World.cpp" />
@@ -177,6 +178,7 @@
     <ClInclude Include="Include\Engine\GameFramework\Actors\Actor.h" />
     <ClInclude Include="Include\Engine\GameFramework\Components\BaseComponent.h" />
     <ClInclude Include="Include\Engine\GameFramework\Components\SceneComponent.h" />
+    <ClInclude Include="Include\Engine\GameFramework\Components\TransformComponent.h" />
     <ClInclude Include="Include\Engine\GameFramework\GameInstance.h" />
     <ClInclude Include="Include\Engine\GameFramework\World\Level.h" />
     <ClInclude Include="Include\Engine\GameFramework\World\World.h" />
