@@ -6,10 +6,12 @@ REGISTER_CLASS_FACTORY ( CBaseComponent );
 
 CBaseComponent::CBaseComponent ( CObject * owner, const std::string & inName ) : CObject ( owner, inName )
 	{	
-	auto AnewOwner = dynamic_cast< CActor * >( owner );
-	if (AnewOwner)
+	 // Ищем актора в цепочке владельцев
+	CObject * current = owner;
+	while (current && !ActorOwner)
 		{
-		ActorOwner = AnewOwner;		
+		ActorOwner = dynamic_cast< CActor * >( current );
+		current = current->GetOwner ();
 		}
 	}
 
@@ -87,9 +89,17 @@ void CBaseComponent::SetAutoInitialize ( bool value )
 
 CActor * CBaseComponent::GetOwnerActor ()
 	{
-	if (ActorOwner)
-		{ return ActorOwner; }
-	return nullptr;
+	 // Если ещё не нашли актора, ищем
+	if (!ActorOwner)
+		{
+		CObject * current = GetOwner ();
+		while (current && !ActorOwner)
+			{
+			ActorOwner = dynamic_cast< CActor * >( current );
+			current = current->GetOwner ();
+			}
+		}
+	return ActorOwner;
 	}
 
 bool CBaseComponent::IsHaveOwnerActor ()

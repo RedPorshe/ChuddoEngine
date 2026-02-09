@@ -2,6 +2,8 @@
 
 #include "Components/BaseComponent.h"
 
+class CBaseCollisionComponent;
+
 class CTransformComponent : public CBaseComponent
     {
     CHUDDO_DECLARE_CLASS ( CTransformComponent, CBaseComponent );
@@ -9,7 +11,7 @@ class CTransformComponent : public CBaseComponent
     public:
 
         CTransformComponent ( CObject * inOwner = nullptr,
-                              const std::string & inDisplayName = "Object" );
+                              const std::string & inDisplayName = "TransformComponent" );
         virtual ~CTransformComponent ();
 
 
@@ -37,8 +39,10 @@ class CTransformComponent : public CBaseComponent
         FQuat GetRelativeRotationQuat () const;
         FVector GetRotation () const;
         FVector GetRelativeRotation () const;
-
-
+        //collision component
+        CBaseCollisionComponent * GetCollisionComponent ();
+        void SetCollisionComponent ( CBaseCollisionComponent * inComp );
+        void SetCollisionEnabled ( bool value = true );
         //transform setters
         //transform
         void SetTransform ( const FTransform & InTransform );
@@ -86,6 +90,8 @@ class CTransformComponent : public CBaseComponent
         bool IsChildOf ( CTransformComponent * PotentialParent ) const;
         CTransformComponent * GetRootTransformComponent () const;
 
+
+
     protected:
 
         FTransform GetParentTransform ();        
@@ -94,13 +100,14 @@ class CTransformComponent : public CBaseComponent
         FTransform m_WorldTransform = FTransform::Identity ();
         FTransform CachedWordTransform = FTransform::Identity ();
         FTransform CachedRelativeTransform = FTransform::Identity ();
-
+        CBaseCollisionComponent * CollisionComp;
 
         CTransformComponent * ParentTransform = nullptr;
         std::vector<CTransformComponent *> ChildTransformComponents;
 
         void UpdateTransformMatix ();
         bool bIsTransformDirty = false;
+        bool bIsCollisionEnabled { false };
     };
 
 REGISTER_CLASS_FACTORY ( CTransformComponent );

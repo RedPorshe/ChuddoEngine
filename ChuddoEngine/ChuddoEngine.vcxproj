@@ -151,6 +151,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Source\Engine\GameFramework\Components\SphereComponent.cpp" />
+    <ClCompile Include="Include\tests.cpp" />
+    <ClCompile Include="Source\Engine\Core\Collision.cpp" />
+    <ClCompile Include="Source\Engine\Core\CollisionSystem.cpp" />
+    <ClCompile Include="Source\Engine\GameFramework\Components\BaseCollisionComponent.cpp" />
     <ClCompile Include="Source\Engine\GameFramework\Components\SceneComponent.cpp" />
     <ClCompile Include="Source\Engine\GameFramework\Components\BaseComponent.cpp" />
     <ClCompile Include="Source\Engine\Core\Engine.cpp" />
@@ -172,12 +177,16 @@
     <ClCompile Include="Source\Utils\Math\Vector4.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Include\Engine\Core\Collision.h" />
+    <ClInclude Include="Include\Engine\Core\CollisionSystem.h" />
     <ClInclude Include="Include\Engine\Core\Engine.h" />
     <ClInclude Include="Include\CoreMinimal.h" />
     <ClInclude Include="Include\Engine\Core\ObjectFactory.h" />
     <ClInclude Include="Include\Engine\GameFramework\Actors\Actor.h" />
+    <ClInclude Include="Include\Engine\GameFramework\Components\BaseCollisionComponent.h" />
     <ClInclude Include="Include\Engine\GameFramework\Components\BaseComponent.h" />
     <ClInclude Include="Include\Engine\GameFramework\Components\SceneComponent.h" />
+    <ClInclude Include="Include\Engine\GameFramework\Components\SphereComponent.h" />
     <ClInclude Include="Include\Engine\GameFramework\Components\TransformComponent.h" />
     <ClInclude Include="Include\Engine\GameFramework\GameInstance.h" />
     <ClInclude Include="Include\Engine\GameFramework\World\Level.h" />

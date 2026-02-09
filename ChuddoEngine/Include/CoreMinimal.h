@@ -13,6 +13,7 @@
 //engine
 #include "Utils/Math/MathTypes.h"
 #include "Utils/Logger.h"
+#include "Core/Collision.h"
 // Forward declarations
 class CObject;
 class CObjectFactory;

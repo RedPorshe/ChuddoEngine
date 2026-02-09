@@ -14,11 +14,11 @@ class CEngine
 
         // Singleton
         static CEngine & Get ();
-        static bool InitializeEngine ();  // Статический метод для инициализации
-        static void ShutdownEngine ();    // Статический метод для очистки
+        static bool InitializeEngine ();  
+        static void ShutdownEngine ();    
 
-        bool Initialize ();  // Нестатическая инициализация
-        void Shutdown ();    // Нестатическая очистка
+        bool Initialize ();  
+        void Shutdown ();    
 
         void Start ();
 

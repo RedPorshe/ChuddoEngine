@@ -6,6 +6,7 @@ class CWorld;
 class CLevel;
 class CBaseComponent;
 class CTransformComponent;
+class CBaseCollisionComponent;
 
 class CActor : public CObject
     {
@@ -77,6 +78,11 @@ class CActor : public CObject
         void SetInterpolationSpeed ( const float inSpeed ) { LerpSpeed = inSpeed; }
         std::vector<CBaseComponent *> GetActorComponents () const { return ActorComponents; }
 
+
+        void SetCollisionEnabled ( bool value = true );
+
+        void OnComponentBeginOverlap ( CBaseCollisionComponent * other);
+        void  OnComponentEndOverlap ( CBaseCollisionComponent * other );
     protected:
         std::vector<CBaseComponent *> ActorComponents;
         CTransformComponent * RootComponent = nullptr;
@@ -85,6 +91,7 @@ class CActor : public CObject
         bool bIsCanTickAsAttached { false };
         bool bIsAttached { false };
         bool bIsPendingToDestroy { false };
+        bool bIsCollisionEnabled { false };
 
         // Interpolation data
         FVector TargetLocation;

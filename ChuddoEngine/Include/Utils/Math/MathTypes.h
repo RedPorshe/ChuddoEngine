@@ -23,6 +23,7 @@ using FVector = CEMath::Vec3;
 using FVector4D = CEMath::Vec4;
 using FMat4 = CEMath::Mat4;
 using FQuat = CEMath::Quat;
+using int32 = int;
 
 struct FTransform
     {
