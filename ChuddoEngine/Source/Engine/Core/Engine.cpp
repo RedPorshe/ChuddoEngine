@@ -90,23 +90,105 @@ void CEngine::Start ()
 	MainLoop ();
 	}
 
+
 void CEngine::MainLoop ()
-	{
-	CGameInstance::Get ().Init ();
-	auto level = CGameInstance::Get ().GetWorld ()->GetCurrentLevel ();
+    {
+    LOG_INFO ( "=== STARTING MAIN LOOP TEST ===" );
 
+    CGameInstance::Get ().Init ();
+    auto level = CGameInstance::Get ().GetWorld ()->GetCurrentLevel ();
 
-	static int frame = 0;
+    // Создаем главный актор
+    auto actor = level->SpawnActor<CActor> ( "TestActor" );
+    actor->SetActorLocation ( 0, 0, 0 );
 
-	// 1. Создаем простой актор
-	auto Actor1 = level->SpawnActor<CActor> ("Player");
-		
-	while (frame < 9)
-		{
-		Tick ( 0.016f );
-		frame++;
-		}
-	}
+    LOG_INFO ( "Actor created. Initial setup complete." );
+
+    static int frame = 0;
+
+    while (frame < 12)  // 12 кадров чтобы увидеть все изменения
+        {
+            // ВАЖНО: сначала логируем текущее состояние (результат ПРЕДЫДУЩЕГО кадра)
+        LOG_INFO ( "=== Frame ", frame, " ===" );
+        LOG_INFO ( "Position: ", actor->GetActorLocation () );
+        LOG_INFO ( "Rotation: ", actor->GetActorRotation () );
+
+        // Затем выполняем действие на ЭТОМ кадре
+        switch (frame)
+            {
+                case 0:
+                    {
+                    LOG_INFO ( "Action: Instant move to (10, 0, 0)" );
+                    actor->MoveActor ( FVector ( 10, 0, 0 ), false );
+                    break;
+                    }
+                case 1:
+                    {
+               // Пустой кадр - просто наблюдаем результат предыдущего действия
+                    LOG_INFO ( "(Observing result of instant move)" );
+                    break;
+                    }
+                case 2:
+                    {
+                    LOG_INFO ( "Action: Rotate 45 degrees around Y axis" );
+                    actor->RotateActor ( FVector ( 0, 45, 0 ), false );
+                    break;
+                    }
+                case 3:
+                    {
+               // Пустой кадр - наблюдаем результат поворота
+                    LOG_INFO ( "(Observing result of rotation)" );
+                    break;
+                    }
+                case 4:
+                    {
+                    LOG_INFO ( "Action: Move forward 5 units (local space)" );
+                    actor->AddActorLocalOffset ( FVector ( 0, 0, 5 ) );
+                    break;
+                    }
+                case 5:
+                    {
+               // Пустой кадр - наблюдаем результат локального смещения
+                    LOG_INFO ( "(Observing result of local offset)" );
+                    break;
+                    }
+                case 6:
+                    {
+                    LOG_INFO ( "Action: Move in direction (1, 1, 0) distance 7" );
+                    actor->MoveActorInDirection ( FVector ( 1, 1, 0 ), 7.0f, false ); // мгновенно
+                    break;
+                    }
+                case 7:
+                    {
+               // Пустой кадр - наблюдаем результат движения по направлению
+                    LOG_INFO ( "(Observing result of direction move)" );
+                    break;
+                    }
+                case 8:
+                    {
+                    LOG_INFO ( "Action: Test interpolated move (5, 0, 0)" );
+                    actor->MoveActor ( FVector ( 5, 0, 0 ), true );  // с интерполяцией!
+                    break;
+                    }
+                case 9:
+                case 10:
+                case 11:
+                    {
+              // Несколько кадров для наблюдения интерполяции
+                    LOG_INFO ( "(Interpolation in progress...)" );
+                    break;
+                    }
+            }
+
+            // Обновляем движок - изменения применятся в СЛЕДУЮЩЕМ кадре
+        Tick ( 0.016f );
+        frame++;
+        }
+
+    LOG_INFO ( "=== MAIN LOOP TEST COMPLETE ===" );
+
+   
+    }
 
 void CEngine::Tick ( float deltaTime )
 	{

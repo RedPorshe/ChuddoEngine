@@ -258,6 +258,27 @@ CObject * CLevel::FindObjectByName ( const std::string & name ) const
 		if (actor && actor->GetName () == name)
 			return actor;
 		}
+	for (CActor * actor : Actors)
+		{
+		if (actor)
+			{
+			for (auto comp : actor->GetActorComponents ())
+				{
+				if (comp && comp->GetName () == name)
+					{
+					return comp;
+					}
+				else if(comp)
+					{
+					auto found = comp->FindOwned ( name );
+					if (found)
+						{
+						return found;
+						}
+					}
+				}
+			}			
+		}
 
 	return nullptr;
 	}

@@ -23,7 +23,6 @@ class CActor : public CObject
         CTransformComponent * GetRootComponent () const { return RootComponent; }
         CLevel * GetLevel () const;
         CWorld * GetWorld () const;
-       
 
         bool IsCanTickOnAttached () const { return bIsCanTickAsAttached; }
         bool IsAttached () const { return bIsAttached; }
@@ -43,12 +42,16 @@ class CActor : public CObject
         template<typename Comp, typename... Args>
         Comp * AddDefaultSubObject ( const std::string & desiredDisplayName = "SubObject" );
 
+        CBaseComponent * AddDefaultSubObject ( const std::string & className,
+                                               const std::string & desiredDisplayName );
 
-        FVector  GetActorLocation () ;
-        FVector  GetActorRotation () ;
-        FVector  GetActorScale () ;
-        FQuat  GetActorRotationQuat () ;
+          // Transform getters
+        FVector GetActorLocation ();
+        FVector GetActorRotation ();
+        FVector GetActorScale ();
+        FQuat GetActorRotationQuat ();
 
+        // Transform setters
         void SetActorLocation ( const FVector & InLocation );
         void SetActorLocation ( float inX, float inY, float inZ );
         void SetActorScale ( const FVector & InScale );
@@ -58,16 +61,44 @@ class CActor : public CObject
         void SetActorRotation ( const FQuat & inRotation );
         void SetActorRotation ( float inX, float inY, float inZ );
 
+        // Movement methods
+        void MoveActor ( const FVector & Delta, bool Interpolate = true );
+        void RotateActor ( const FVector & DeltaRotation, bool Interpolate = true );
 
-      
+        // Offset methods (world and local space)
+        void AddActorWorldOffset ( const FVector & DeltaLocation, bool Interpolate = false );
+        void AddActorLocalOffset ( const FVector & DeltaLocation, bool Interpolate = false );
+        void AddActorWorldRotation ( const FQuat & DeltaRotation, bool Interpolate = false );
+        void AddActorLocalRotation ( const FQuat & DeltaRotation, bool Interpolate = false );
+
+        // Helper movement methods
+        void MoveActorInDirection ( const FVector & Direction, float Distance, bool Interpolate = true );
+        void RotateAroundAxis ( const FVector & Axis, float AngleDegrees, bool Interpolate = true );
+        void SetInterpolationSpeed ( const float inSpeed ) { LerpSpeed = inSpeed; }
+        std::vector<CBaseComponent *> GetActorComponents () const { return ActorComponents; }
+
     protected:
-        
         std::vector<CBaseComponent *> ActorComponents;
         CTransformComponent * RootComponent = nullptr;
+
         // State flags
         bool bIsCanTickAsAttached { false };
         bool bIsAttached { false };
-        bool bIsPendingToDestroy { false };   
+        bool bIsPendingToDestroy { false };
+
+        // Interpolation data
+        FVector TargetLocation;
+        FQuat TargetRotation;
+        FVector LerpStartLocation;
+        FQuat LerpStartRotation;
+
+        // РАЗДЕЛЬНЫЕ переменные для интерполяции позиции и вращения
+        float LocationLerpAlpha = 0.0f;
+        float RotationLerpAlpha = 0.0f;
+
+        bool bIsLerpingLocation = false;
+        bool bIsLerpingRotation = false;
+        float LerpSpeed = 10.0f; 
     };
 
     // Inline template implementation

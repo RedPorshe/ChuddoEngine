@@ -18,7 +18,7 @@ class CWorld : public CObject
         CLevel * CurrentLevel = nullptr;
 
     public:
-        // Конструктор должен принимать CObject* (для фабрики)
+       
         CWorld ( CObject * inOwner = nullptr, const std::string & displayName = "World" );
         virtual ~CWorld ();
 
@@ -50,8 +50,7 @@ class CWorld : public CObject
         CObject * FindObjectByName ( const std::string & name ) const;
         CObject * FindObjectByUUID ( const std::string & uuid ) const;
 
-        template<typename T>
-        T * FindObjectOfType () const;
+     
 
         // ========== DEBUG/UTILS ==========
         virtual void DumpState () const;
@@ -67,6 +66,8 @@ class CWorld : public CObject
     };
 
 REGISTER_CLASS_FACTORY ( CWorld );
+
+
 
 template<typename LevelType, typename... Args>
 LevelType* CWorld::CreateLevel ( const std::string & name  , Args&&... args )

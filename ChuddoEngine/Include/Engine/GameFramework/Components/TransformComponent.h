@@ -88,8 +88,7 @@ class CTransformComponent : public CBaseComponent
 
     protected:
 
-        FTransform GetParentTransform ();
-        void UpdateAllTransforms ();
+        FTransform GetParentTransform ();        
 
         FTransform m_RelativeTransform = FTransform::Identity ();
         FTransform m_WorldTransform = FTransform::Identity ();

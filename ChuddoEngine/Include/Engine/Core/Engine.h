@@ -24,6 +24,7 @@ class CEngine
 
     protected:
         void MainLoop ();
+       
         void Tick ( float deltaTime );
 
         bool bIsInitialized = false;
