@@ -58,7 +58,7 @@ class CWorld : public CObject
 
 
         template<typename LevelType ,typename... Args>
-        LevelType* CreateLevel ( const std::string & name = "Actor", Args&&... args );
+        LevelType* CreateLevel ( const std::string & name = "Level", Args&&... args );
            
 
     protected:

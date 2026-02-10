@@ -28,6 +28,8 @@ class CActor : public CObject
         bool IsCanTickOnAttached () const { return bIsCanTickAsAttached; }
         bool IsAttached () const { return bIsAttached; }
         bool IsPendingToDestroy () const { return bIsPendingToDestroy; }
+        bool IsLerpingLocation () const { return bIsLerpingLocation; }
+        bool IsLerpingRotation () const { return bIsLerpingRotation; }
 
         // Setters
         void SetRootComponent ( CTransformComponent * NewRoot );
@@ -52,6 +54,11 @@ class CActor : public CObject
         FVector GetActorScale ();
         FQuat GetActorRotationQuat ();
 
+        // Direction vectors getters
+        FVector GetActorForwardVector ();
+        FVector GetActorRightVector ();
+        FVector GetActorUpVector ();
+
         // Transform setters
         void SetActorLocation ( const FVector & InLocation );
         void SetActorLocation ( float inX, float inY, float inZ );
@@ -65,6 +72,7 @@ class CActor : public CObject
         // Movement methods
         void MoveActor ( const FVector & Delta, bool Interpolate = true );
         void RotateActor ( const FVector & DeltaRotation, bool Interpolate = true );
+        void RotateActor ( const FQuat & DeltaRotation, bool Interpolate = true ); // НОВЫЙ: Перегрузка для кватерниона
 
         // Offset methods (world and local space)
         void AddActorWorldOffset ( const FVector & DeltaLocation, bool Interpolate = false );
@@ -78,11 +86,26 @@ class CActor : public CObject
         void SetInterpolationSpeed ( const float inSpeed ) { LerpSpeed = inSpeed; }
         std::vector<CBaseComponent *> GetActorComponents () const { return ActorComponents; }
 
+        // Unreal Engine style input functions
+       // void AddMovementInput ( const FVector & WorldDirection, float ScaleValue = 1.0f, bool Interpolate = true );
+       // void AddControllerYawInput ( float YawDegrees, bool Interpolate = true );
+       // void AddControllerPitchInput ( float PitchDegrees, bool Interpolate = true );
+      //  void AddControllerRollInput ( float RollDegrees, bool Interpolate = true );
+      //  void AddActorLocalRotationInput ( const FVector & RotationDegrees, bool Interpolate = true );
+      //  void AddActorWorldRotationInput ( const FVector & RotationDegrees, bool Interpolate = true );
+
+        // Teleport functions (immediate movement)
+        void TeleportTo ( const FVector & NewLocation );
+        void TeleportTo ( float NewX, float NewY, float NewZ );
+        void SetActorRotationImmediately ( const FQuat & NewRotation );
+        void SetActorRotationImmediately ( const FVector & NewRotation );
+        void SetActorRotationImmediately ( float inX, float inY, float inZ );
 
         void SetCollisionEnabled ( bool value = true );
 
-        void OnComponentBeginOverlap ( CBaseCollisionComponent * other);
-        void  OnComponentEndOverlap ( CBaseCollisionComponent * other );
+        void OnComponentBeginOverlap ( CBaseCollisionComponent * other );
+        void OnComponentEndOverlap ( CBaseCollisionComponent * other );
+
     protected:
         std::vector<CBaseComponent *> ActorComponents;
         CTransformComponent * RootComponent = nullptr;
@@ -105,7 +128,7 @@ class CActor : public CObject
 
         bool bIsLerpingLocation = false;
         bool bIsLerpingRotation = false;
-        float LerpSpeed = 10.0f; 
+        float LerpSpeed = 10.0f;
     };
 
     // Inline template implementation

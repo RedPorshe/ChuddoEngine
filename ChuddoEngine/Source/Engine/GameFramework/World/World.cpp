@@ -242,7 +242,7 @@ void CWorld::Tick ( float deltaTime )
 		}
 	
 	if (CurrentLevel)
-		{
+		{		
 		CurrentLevel->Tick ( deltaTime );
 		}
 	else

@@ -7,6 +7,9 @@
 #include "Core/CollisionSystem.h"
 
 
+
+
+
 CEngine * CEngine::Instance = nullptr;
 
 CEngine::~CEngine ()
@@ -90,6 +93,7 @@ void CEngine::Start ()
 	CreateTestWorld ();
 
 	MainLoop ();
+	
 	}
 
 
@@ -100,37 +104,36 @@ void CEngine::MainLoop ()
     CGameInstance::Get ().Init ();
     auto level = CGameInstance::Get ().GetWorld ()->GetCurrentLevel ();
 
-    
-    auto actor = level->SpawnActor<CActor> ( "TestActor" );
-    actor->SetActorLocation ( 0, 0, 0 );
-
    
+
+	
 
     static int frame = 0;
 
     while (frame < 12)  // 12 кадров чтобы увидеть все изменения
-        {
-        if(frame == 5)
-			{
-			LOG_INFO ( "Collision component for actor: ", actor->GetName (), " is ", actor->GetRootComponent ()->GetCollisionComponent ()->GetName () );
-			}
-            
+        {        
         Tick ( 0.016f );
         frame++;
         }
+	
     }
 
 void CEngine::Tick ( float deltaTime )
 	{
 	CGameInstance::Get ().Tick ( deltaTime );
-	COLLISION_SYSTEM.Update ( deltaTime );
+	CollisionSystem.Update ( deltaTime );
 	}
-//#include "tests.h"
+
 
 void CEngine::CreateTestWorld ()
 	{
-	auto word = CGameInstance::Get ().CreateWorld ( "testworld" );
+	auto word = CGameInstance::Get ().CreateWorld (  "Super" );
 	word->CreateLevel<CLevel> ( "New Level" );
 	}
+
+CEngine::CEngine () : CollisionSystem( COLLISION_SYSTEM )
+	{
+	
+	};
 
 

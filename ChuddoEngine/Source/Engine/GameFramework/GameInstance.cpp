@@ -9,146 +9,153 @@
 CGameInstance * CGameInstance::Instance = nullptr;
 
 CGameInstance::CGameInstance ( CObject * owner, const std::string & displayName )
-    : Super ( owner, displayName )
-    {
-  
-    }
+	: Super ( owner, displayName )
+	{
+
+	}
 
 CGameInstance::~CGameInstance ()
-    {    
-    if (CurrentWorld)
-        {        
-        CurrentWorld = nullptr;
-        }
-       
-    if (Instance == this)
-        {
-        Instance = nullptr;
-        }
-    LOG_INFO ( "[GAME] GameInstance destroyed: " , GetName () );
-    }
+	{
+	if (CurrentWorld)
+		{
+		CurrentWorld = nullptr;
+		}
 
-    // ========== SINGLETON METHODS ==========
+	if (Instance == this)
+		{
+		Instance = nullptr;
+		}
+	LOG_INFO ( "[GAME] GameInstance destroyed: ", GetName () );
+	}
+
+	// ========== SINGLETON METHODS ==========
 
 CGameInstance & CGameInstance::Get ()
-    {
-    if (!Instance)
-        {
-        LOG_ERROR( "[ERROR] GameInstance not created! Call Create() first.");
-        // Можно создать автоматически или assert
-        Create ();
-        }
-    return *Instance;
-    }
+	{
+	if (!Instance)
+		{
+		LOG_ERROR ( "[ERROR] GameInstance not created! Call Create() first." );
+		// Можно создать автоматически или assert
+		Create ();
+		}
+	return *Instance;
+	}
 
 bool CGameInstance::Create ()
-    {
-    if (Instance)
-        {
-        LOG_WARN( "[WARNING] GameInstance already exists!");
-        return false;
-        }
+	{
+	if (Instance)
+		{
+		LOG_WARN ( "[WARNING] GameInstance already exists!" );
+		return false;
+		}
 
-        // Создаем как root объект (без владельца)
-    Instance = new CGameInstance ( nullptr, "MainGameInstance" );
-    return true;
-    }
+		// Создаем как root объект (без владельца)
+	Instance = new CGameInstance ( nullptr, "MainGameInstance" );
+	return true;
+	}
 
 void CGameInstance::Destroy ()
-    {
-    if (Instance)
-        {
-        delete Instance;
-        Instance = nullptr;
-        LOG_DEBUG("[GAME] GameInstance destroyed");
-        }
-    }
+	{
+	if (Instance)
+		{
+		delete Instance;
+		Instance = nullptr;
+		LOG_DEBUG ( "[GAME] GameInstance destroyed" );
+		}
+	}
 
-    // ========== WORLD MANAGEMENT ==========
+	// ========== WORLD MANAGEMENT ==========
 
 CWorld * CGameInstance::CreateWorld ( const std::string & worldName )
-    {
-    if (CurrentWorld)
-        {
-        LOG_ERROR( "[GAME] World already exists! Destroy current world first.");
-        return nullptr;
-        }
+	{
+	if (CurrentWorld)
+		{
+		LOG_ERROR ( "[GAME] World already exists! Destroy current world first." );
+		return nullptr;
+		}
 
-        // Создаем World с правильным владельцем
-    CurrentWorld = new CWorld ( this, worldName );  // this - CGameInstance*
-    AddOwnedObject ( CurrentWorld );
+		// Создаем World с правильным владельцем
+	CurrentWorld = new CWorld ( this, worldName );  // this - CGameInstance*
+	AddOwnedObject ( CurrentWorld );
 
-  
 
-    LOG_DEBUG( "[GAME] World created: " , worldName );
-    return CurrentWorld;
-    }
 
-void CGameInstance::DestroyWorld ()
-    {
-    if (CurrentWorld)
-        {
-            // Удаляем из дочерних объектов
-        RemoveOwnedObject ( CurrentWorld->GetName () );
-        CurrentWorld = nullptr;
-        LOG_DEBUG( "[GAME] World destroyed");
-        }
-    }
+	LOG_DEBUG ( "[GAME] World created: ", worldName );
+	return CurrentWorld;
+	}
 
-    // ========== GAME LIFECYCLE ==========
+bool CGameInstance::DestroyWorld ()
+	{
+	if (CurrentWorld)
+		{
+		if (RemoveOwnedObject ( CurrentWorld->GetName () ))
+			{
+			CurrentWorld = nullptr;
+			LOG_DEBUG ( "[GAME] World destroyed" );
+			return true;
+			}
+		else
+			{
+			LOG_ERROR ( "Something wrong with Remove owned world in GameInstance. Setting  CurrentWorld = nullptr;  Uniq_ptr delete automatic" );
+			CurrentWorld = nullptr;
+			return true;
+			}
+		}
+	return false;
+	}
+	// ========== GAME LIFECYCLE ==========
 
 void CGameInstance::Init ()
-    {
-    LOG_DEBUG( "[GAME] Initializing GameInstance...");
-    GameTime = 0.0f;
-    DeltaTime = 0.0f;
+	{
+	LOG_DEBUG ( "[GAME] Initializing GameInstance..." );
+	GameTime = 0.0f;
+	DeltaTime = 0.0f;
 
-    CurrentWorld->BeginPlay ();
-    }
+	CurrentWorld->BeginPlay ();
+	}
 
 void CGameInstance::Tick ( float deltaTime )
-    {   
-    DeltaTime = deltaTime;
-    GameTime += deltaTime;
+	{
+	DeltaTime = deltaTime;
+	GameTime += deltaTime;
 
-    // Tick world если существует
-    if (CurrentWorld)
-        {
-        CurrentWorld->Tick ( deltaTime );
-        }
-
-    }
+	// Tick world если существует
+	if (CurrentWorld)
+		{		
+		CurrentWorld->Tick ( deltaTime );		
+		}	
+	}
 
 void CGameInstance::Shutdown ()
-    {
-    LOG_DEBUG( "[GAME] Shutting down GameInstance...");
-    DumpState ();
-    if (CurrentWorld)
-        {
-        DestroyWorld ();
-        }
-    }
+	{
+	LOG_DEBUG ( "[GAME] Shutting down GameInstance..." );
+	DumpState ();
+	if (CurrentWorld)
+		{
+		DestroyWorld ();
+		}
+	}
 
 void CGameInstance::SaveGameInstanceState ()
-    {
-    LOG_DEBUG( "Proccessing save gameinstance '" , GetName () , "' state ");
-    
-    }
+	{
+	LOG_DEBUG ( "Proccessing save gameinstance '", GetName (), "' state " );
+
+	}
 
 void CGameInstance::DumpState () const
-    {
-    LOG_DEBUG( "\n=== GAME INSTANCE STATE ===");
-    LOG_DEBUG( "Name: " , GetName () );
-    LOG_DEBUG ( "UUID: " , GetShortUUID ());
-    LOG_DEBUG( "Game Time: " , GameTime , "s");
-    LOG_DEBUG( "Delta Time: " , DeltaTime , "s");
-    LOG_DEBUG( "Has World: " , ( CurrentWorld ? "Yes" : "No" ));
+	{
+	LOG_DEBUG ( "\n=== GAME INSTANCE STATE ===" );
+	LOG_DEBUG ( "Name: ", GetName () );
+	LOG_DEBUG ( "UUID: ", GetShortUUID () );
+	LOG_DEBUG ( "Game Time: ", GameTime, "s" );
+	LOG_DEBUG ( "Delta Time: ", DeltaTime, "s" );
+	LOG_DEBUG ( "Has World: ", ( CurrentWorld ? "Yes" : "No" ) );
 
-    if (CurrentWorld)
-        {
-        LOG_DEBUG( "World: " , CurrentWorld->GetName () );
-        }
+	if (CurrentWorld)
+		{
+		LOG_DEBUG ( "World: ", CurrentWorld->GetName () );
+		}
 
-    LOG_DEBUG( "Child Objects: " , GetNumOwnedObjects ());
-    LOG_DEBUG ( "===========================");
-    }
+	LOG_DEBUG ( "Child Objects: ", GetNumOwnedObjects () );
+	LOG_DEBUG ( "===========================" );
+	}

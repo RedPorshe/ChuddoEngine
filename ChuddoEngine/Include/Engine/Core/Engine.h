@@ -2,12 +2,13 @@
 #include "CoreMinimal.h"
 
 class CActor;
+class CCollisionSystem;
 
 class CEngine
     {
     private:
         static CEngine * Instance;
-        CEngine () { };
+        
 
     public:
         virtual ~CEngine ();
@@ -31,6 +32,11 @@ class CEngine
         bool bIsRunning = false;
 
         void CreateTestWorld ();
+
+        CCollisionSystem & CollisionSystem;
+
+        CEngine ();
+           
         
     };
 

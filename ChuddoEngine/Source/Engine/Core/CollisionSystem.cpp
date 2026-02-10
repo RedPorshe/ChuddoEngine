@@ -17,7 +17,7 @@ bool CCollisionSystem::s_IsInitialized = false;
 CCollisionSystem::CCollisionSystem ( CObject * inOwner, const std::string & inDisplayName )
 	: CObject ( inOwner, inDisplayName )
 	{
-	LOG_DEBUG ( "Collision System created: ", inDisplayName );
+	LOG_DEBUG ( "Collision Initialized: ", inDisplayName );
 	}
 
 CCollisionSystem::~CCollisionSystem ()
@@ -110,24 +110,6 @@ void CCollisionSystem::ProcessCollisions ()
 	{
 	m_LastFrameCollisions = 0;
 
-	LOG_DEBUG ( "[COLLISION] ======= START FRAME =======" );
-	LOG_DEBUG ( "[COLLISION] Processing ", m_CollisionComponents.size (), " collision components" );
-
-	// Выведем все компоненты для отладки
-	for (size_t i = 0; i < m_CollisionComponents.size (); ++i)
-		{
-		CBaseCollisionComponent * comp = m_CollisionComponents[ i ];
-		if (comp)
-			{
-			FVector pos = comp->GetWorldLocation ();
-			LOG_DEBUG ( "[COLLISION] Component ", i, ": ", comp->GetName (),
-						" at (", pos.x, ", ", pos.y, ", ", pos.z, ")",
-						" Shape: ", Collision::ShapeToString ( comp->GetShapeType () ),
-						" Enabled: ", comp->IsCollisionEnabled () );
-			}
-		}
-
-		// Обрабатываем все потенциальные пары
 	for (size_t i = 0; i < m_CollisionComponents.size (); ++i)
 		{
 		CBaseCollisionComponent * compA = m_CollisionComponents[ i ];
@@ -146,7 +128,7 @@ void CCollisionSystem::ProcessCollisions ()
 
 		LOG_DEBUG ( "[COLLISION] --- Checking pairs for ", compA->GetName (), " ---" );
 
-		// Проверяем со всеми компонентами после текущего
+		
 		for (size_t j = i + 1; j < m_CollisionComponents.size (); ++j)
 			{
 			CBaseCollisionComponent * compB = m_CollisionComponents[ j ];
@@ -236,9 +218,6 @@ void CCollisionSystem::ProcessCollisions ()
 				}
 			}
 		}
-
-	LOG_DEBUG ( "[COLLISION] ======= END FRAME =======" );
-	LOG_DEBUG ( "[COLLISION] Total collisions this frame: ", m_LastFrameCollisions );
 	}
 
 

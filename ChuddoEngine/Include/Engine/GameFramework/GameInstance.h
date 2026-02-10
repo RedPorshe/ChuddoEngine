@@ -24,7 +24,8 @@ class CGameInstance : public CObject
         // ========== WORLD MANAGEMENT ==========
         CWorld * GetWorld () const { return CurrentWorld; }
         CWorld * CreateWorld ( const std::string & worldName = "World" );
-        void DestroyWorld ();
+        bool DestroyWorld ();
+       
 
         // ========== GAME LIFECYCLE ==========
         virtual void Init ();
