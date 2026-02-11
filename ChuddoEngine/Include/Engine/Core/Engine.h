@@ -22,12 +22,14 @@ class CEngine
         void Shutdown ();    
 
         void Start ();
-
+        void RequestExit ();
     protected:
         void MainLoop ();
        
         void Tick ( float deltaTime );
-
+        float m_DeltaTime = 0.f;
+        std::chrono::steady_clock::time_point m_LastFrameTime;
+        void CalculateDeltaTime ();
         bool bIsInitialized = false;
         bool bIsRunning = false;
 

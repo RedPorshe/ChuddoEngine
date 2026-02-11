@@ -151,6 +151,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Source\Engine\GameFramework\Actors\Pawn.cpp" />
+    <ClCompile Include="Source\Engine\GameFramework\Camera\CameraComponent.cpp" />
+    <ClCompile Include="Source\Engine\GameFramework\Components\InputComponent.cpp" />
     <ClCompile Include="Source\Engine\GameFramework\Components\SphereComponent.cpp" />
     <ClCompile Include="Include\tests.cpp" />
     <ClCompile Include="Source\Engine\Core\Collision.cpp" />
@@ -183,8 +186,11 @@
     <ClInclude Include="Include\CoreMinimal.h" />
     <ClInclude Include="Include\Engine\Core\ObjectFactory.h" />
     <ClInclude Include="Include\Engine\GameFramework\Actors\Actor.h" />
+    <ClInclude Include="Include\Engine\GameFramework\Actors\Pawn.h" />
+    <ClInclude Include="Include\Engine\GameFramework\Camera\CameraComponent.h" />
     <ClInclude Include="Include\Engine\GameFramework\Components\BaseCollisionComponent.h" />
     <ClInclude Include="Include\Engine\GameFramework\Components\BaseComponent.h" />
+    <ClInclude Include="Include\Engine\GameFramework\Components\InputComponent.h" />
     <ClInclude Include="Include\Engine\GameFramework\Components\SceneComponent.h" />
     <ClInclude Include="Include\Engine\GameFramework\Components\SphereComponent.h" />
     <ClInclude Include="Include\Engine\GameFramework\Components\TransformComponent.h" />

@@ -235,7 +235,8 @@ void CWorld::BeginPlay ()
 	}
 
 void CWorld::Tick ( float deltaTime )
-	{
+	{	
+	CurrentDeltaTime = deltaTime;
 	if (!bIsPlaying)
 		{		
 		return;
@@ -248,7 +249,7 @@ void CWorld::Tick ( float deltaTime )
 	else
 		{
 		LOG_WARN ("[WORLD] No current level to tick");
-		}
+		}	
 	}
 
 void CWorld::EndPlay ()

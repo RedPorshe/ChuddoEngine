@@ -24,6 +24,15 @@ class CTransformComponent : public CBaseComponent
         void MarkTransformDirty ();
 
 
+        void AddLocalRotation ( const FQuat & DeltaRotation );
+        void AddLocalRotation ( const FVector & DeltaRotationDegrees );  // В градусах
+        void AddLocalRotation ( float PitchDegrees, float YawDegrees, float RollDegrees );
+
+        // Мировое вращение (относительно мировых осей)
+        void AddWorldRotation ( const FQuat & DeltaRotation );
+        void AddWorldRotation ( const FVector & DeltaRotationDegrees );  // В градусах
+        void AddWorldRotation ( float PitchDegrees, float YawDegrees, float RollDegrees );
+
         //transform getters
         //transform
         FTransform GetTransform () const;

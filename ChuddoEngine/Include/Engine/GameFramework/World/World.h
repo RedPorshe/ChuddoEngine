@@ -26,7 +26,7 @@ class CWorld : public CObject
         CGameInstance * GetGameInstance () const { return OwningGameInstance; }
 
         CWorld * GetWorld ();
-
+        float GetDeltaSeconds () { return CurrentDeltaTime; }
         CLevel * CreateDefaultEmptyLevel ();
 
         // ========== LEVEL MANAGEMENT ==========
@@ -63,6 +63,7 @@ class CWorld : public CObject
 
     protected:
         bool bIsPlaying = false;
+        float CurrentDeltaTime {};
     };
 
 REGISTER_CLASS_FACTORY ( CWorld );

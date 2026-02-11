@@ -20,6 +20,8 @@ class CActor : public CObject
         virtual void Tick ( float deltaTime );
         virtual void EndPlay ();
 
+        bool IsMIsMoving () { return bIsMovin; }
+
         // Getters
         CTransformComponent * GetRootComponent () const { return RootComponent; }
         CLevel * GetLevel () const;
@@ -86,14 +88,6 @@ class CActor : public CObject
         void SetInterpolationSpeed ( const float inSpeed ) { LerpSpeed = inSpeed; }
         std::vector<CBaseComponent *> GetActorComponents () const { return ActorComponents; }
 
-        // Unreal Engine style input functions
-       // void AddMovementInput ( const FVector & WorldDirection, float ScaleValue = 1.0f, bool Interpolate = true );
-       // void AddControllerYawInput ( float YawDegrees, bool Interpolate = true );
-       // void AddControllerPitchInput ( float PitchDegrees, bool Interpolate = true );
-      //  void AddControllerRollInput ( float RollDegrees, bool Interpolate = true );
-      //  void AddActorLocalRotationInput ( const FVector & RotationDegrees, bool Interpolate = true );
-      //  void AddActorWorldRotationInput ( const FVector & RotationDegrees, bool Interpolate = true );
-
         // Teleport functions (immediate movement)
         void TeleportTo ( const FVector & NewLocation );
         void TeleportTo ( float NewX, float NewY, float NewZ );
@@ -105,7 +99,7 @@ class CActor : public CObject
 
         void OnComponentBeginOverlap ( CBaseCollisionComponent * other );
         void OnComponentEndOverlap ( CBaseCollisionComponent * other );
-
+        
     protected:
         std::vector<CBaseComponent *> ActorComponents;
         CTransformComponent * RootComponent = nullptr;
@@ -115,14 +109,15 @@ class CActor : public CObject
         bool bIsAttached { false };
         bool bIsPendingToDestroy { false };
         bool bIsCollisionEnabled { false };
-
+        bool bIsMovin { false };
+      
         // Interpolation data
         FVector TargetLocation;
         FQuat TargetRotation;
         FVector LerpStartLocation;
         FQuat LerpStartRotation;
 
-        // РАЗДЕЛЬНЫЕ переменные для интерполяции позиции и вращения
+       
         float LocationLerpAlpha = 0.0f;
         float RotationLerpAlpha = 0.0f;
 

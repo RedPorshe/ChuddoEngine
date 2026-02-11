@@ -4,7 +4,7 @@
 
 //forward decl
 class CWorld;
-
+class CEngine;
 class CGameInstance : public CObject
 	{
 	CHUDDO_DECLARE_CLASS ( CGameInstance, CObject );
@@ -26,12 +26,13 @@ class CGameInstance : public CObject
         CWorld * CreateWorld ( const std::string & worldName = "World" );
         bool DestroyWorld ();
        
-
+        CEngine & GetEngine ();
         // ========== GAME LIFECYCLE ==========
         virtual void Init ();
         virtual void Tick ( float deltaTime );
         virtual void Shutdown ();
         void SaveGameInstanceState ();
+
         // ========== UTILITIES ==========
         float GetGameTime () const { return GameTime; }
         float GetDeltaTime () const { return DeltaTime; }

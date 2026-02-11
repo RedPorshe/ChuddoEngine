@@ -38,6 +38,7 @@ void CActor::Tick ( float deltaTime )
                 // Интерполяция завершена
             LocationLerpAlpha = 1.0f;
             bIsLerpingLocation = false;
+            bIsMovin = false;
             RootComponent->SetLocation ( TargetLocation );
             LOG_DEBUG ( "[ACTOR] Location lerp completed for: ", GetName (),
                         " final position=(", TargetLocation.x, ", ",
@@ -329,9 +330,7 @@ void CActor::SetActorRotationImmediately ( float inX, float inY, float inZ )
     SetActorRotationImmediately ( FVector ( inX, inY, inZ ) );
     }
 
-    // ============================================================================
-    // Movement methods
-    // ============================================================================
+   
 
 void CActor::MoveActor ( const FVector & Delta, bool Interpolate )
     {
@@ -360,7 +359,8 @@ void CActor::MoveActor ( const FVector & Delta, bool Interpolate )
     LerpStartLocation = currentLocation;
     LocationLerpAlpha = 0.0f;
     bIsLerpingLocation = true;
-
+    bIsMovin = true;
+    
     LOG_DEBUG ( "[ACTOR] Starting location lerp from: (",
                 currentLocation.x, ", ", currentLocation.y, ", ", currentLocation.z, ")",
                 " to: (", TargetLocation.x, ", ", TargetLocation.y, ", ", TargetLocation.z, ")",

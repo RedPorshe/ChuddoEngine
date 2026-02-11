@@ -534,6 +534,98 @@ FTransform  CTransformComponent::GetParentTransform ()
 	}
 
 
+// ============================================================================
+// AddLocalRotation - добавляет локальное вращение (относительно текущего)
+// ============================================================================
+void CTransformComponent::AddLocalRotation ( const FQuat & DeltaRotation )
+	{
+		// Получаем текущее относительное вращение
+	FQuat currentRotation = m_RelativeTransform.Rotation;
+	currentRotation.Normalize ();
+
+	// Нормализуем дельту
+	FQuat delta = DeltaRotation;
+	delta.Normalize ();
+
+	// ПРАВИЛЬНЫЙ ПОРЯДОК: новое = дельта * текущее (локальное вращение)
+	// Это добавляет вращение в локальном пространстве компонента
+	FQuat newRotation = delta * currentRotation;
+	newRotation.Normalize ();
+
+	// Устанавливаем новое вращение
+	SetRelativeRotation ( newRotation );
+
+	LOG_DEBUG ( "[CTransformComponent] AddLocalRotation (quat): ", GetName () );
+	}
+
+void CTransformComponent::AddLocalRotation ( const FVector & DeltaRotationDegrees )
+	{
+		// Конвертируем градусы в радианы и создаем кватернион
+	FQuat deltaQuat = FQuat::FromEulerAngles (
+		CEMath::DegreesToRadians ( DeltaRotationDegrees.x ),
+		CEMath::DegreesToRadians ( DeltaRotationDegrees.y ),
+		CEMath::DegreesToRadians ( DeltaRotationDegrees.z )
+	);
+
+	AddLocalRotation ( deltaQuat );
+
+	LOG_DEBUG ( "[CTransformComponent] AddLocalRotation (degrees): ", GetName (),
+				" Pitch=", DeltaRotationDegrees.x,
+				" Yaw=", DeltaRotationDegrees.y,
+				" Roll=", DeltaRotationDegrees.z );
+	}
+
+void CTransformComponent::AddLocalRotation ( float PitchDegrees, float YawDegrees, float RollDegrees )
+	{
+	AddLocalRotation ( FVector ( PitchDegrees, YawDegrees, RollDegrees ) );
+	}
+
+	// ============================================================================
+	// AddWorldRotation - добавляет мировое вращение (относительно мировых осей)
+	// ============================================================================
+void CTransformComponent::AddWorldRotation ( const FQuat & DeltaRotation )
+	{
+	if (ParentTransform)
+		{
+			// Если есть родитель, нужно преобразовать мировое вращение в локальное
+
+			// Получаем вращение родителя
+		FQuat parentRotation = ParentTransform->GetRotationQuat ();
+		parentRotation.Normalize ();
+
+		// Конвертируем мировую дельту в локальное пространство родителя
+		FQuat parentInverse = parentRotation.Conjugated ();
+		FQuat localDelta = parentInverse * DeltaRotation * parentRotation;
+		localDelta.Normalize ();
+
+		// Добавляем локальное вращение
+		AddLocalRotation ( localDelta );
+		}
+	else
+		{
+			// Нет родителя - мировое = локальное
+		AddLocalRotation ( DeltaRotation );
+		}
+
+	LOG_DEBUG ( "[CTransformComponent] AddWorldRotation (quat): ", GetName () );
+	}
+
+void CTransformComponent::AddWorldRotation ( const FVector & DeltaRotationDegrees )
+	{
+	FQuat deltaQuat = FQuat::FromEulerAngles (
+		CEMath::DegreesToRadians ( DeltaRotationDegrees.x ),
+		CEMath::DegreesToRadians ( DeltaRotationDegrees.y ),
+		CEMath::DegreesToRadians ( DeltaRotationDegrees.z )
+	);
+
+	AddWorldRotation ( deltaQuat );
+	}
+
+void CTransformComponent::AddWorldRotation ( float PitchDegrees, float YawDegrees, float RollDegrees )
+	{
+	AddWorldRotation ( FVector ( PitchDegrees, YawDegrees, RollDegrees ) );
+	}
+
 
 void CTransformComponent::UpdateTransformMatix ()
 	{

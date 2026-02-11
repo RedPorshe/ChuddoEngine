@@ -6,7 +6,7 @@
 #include "Components/BaseCollisionComponent.h"
 #include "Core/CollisionSystem.h"
 
-
+#include "tests.h"
 
 
 
@@ -90,45 +90,74 @@ void CEngine::Shutdown ()
 
 void CEngine::Start ()
 	{
+	LOG_WARN ("Engine Start");
 	CreateTestWorld ();
-
+	
 	MainLoop ();
 	
+	}
+
+void CEngine::RequestExit ()
+	{
+	bIsRunning = false;
 	}
 
 
 void CEngine::MainLoop ()
     {
+	LOG_WARN ("Main loop Start");
 	
-
     CGameInstance::Get ().Init ();
-    auto level = CGameInstance::Get ().GetWorld ()->GetCurrentLevel ();
-
-   
-
-	
-
+	bIsRunning = true;
     static int frame = 0;
 
-    while (frame < 12)  // 12 кадров чтобы увидеть все изменения
+    while (bIsRunning)  
         {        
-        Tick ( 0.016f );
-        frame++;
-        }
+		CalculateDeltaTime ();
+		
+        Tick ( m_DeltaTime );
 	
+        frame++;
+		//if (frame > 15) break;
+        }	
     }
 
 void CEngine::Tick ( float deltaTime )
-	{
+	{	
 	CGameInstance::Get ().Tick ( deltaTime );
 	CollisionSystem.Update ( deltaTime );
+	}
+
+void CEngine::CalculateDeltaTime ()
+	{
+	auto currentTime = std::chrono::steady_clock::now ();
+
+	if (m_LastFrameTime.time_since_epoch ().count () != 0)
+		{			
+		auto delta = std::chrono::duration_cast< std::chrono::microseconds >(
+			currentTime - m_LastFrameTime
+		).count ();
+		
+		m_DeltaTime = delta * 0.000001f; 
+
+		
+		if (m_DeltaTime > 0.033f)  
+			m_DeltaTime = 0.033f;
+		}
+	else
+		{
+			
+		m_DeltaTime = 0.016f;  
+		}
+
+	m_LastFrameTime = currentTime;
 	}
 
 
 void CEngine::CreateTestWorld ()
 	{
 	auto word = CGameInstance::Get ().CreateWorld (  "Super" );
-	word->CreateLevel<CLevel> ( "New Level" );
+	word->CreateLevel<CTestLevel> ( "SuperLevel" );
 	}
 
 CEngine::CEngine () : CollisionSystem( COLLISION_SYSTEM )

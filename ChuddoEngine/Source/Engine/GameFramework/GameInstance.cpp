@@ -5,6 +5,8 @@
 #include <iostream>
 #include <rapidjson/rapidjson.h>
 
+#include "Engine/Core/Engine.h"
+
 // Статический член
 CGameInstance * CGameInstance::Instance = nullptr;
 
@@ -103,6 +105,10 @@ bool CGameInstance::DestroyWorld ()
 		}
 	return false;
 	}
+CEngine & CGameInstance::GetEngine ()
+	{
+	return CEngine::Get ();
+	}
 	// ========== GAME LIFECYCLE ==========
 
 void CGameInstance::Init ()
@@ -118,7 +124,7 @@ void CGameInstance::Tick ( float deltaTime )
 	{
 	DeltaTime = deltaTime;
 	GameTime += deltaTime;
-
+	
 	// Tick world если существует
 	if (CurrentWorld)
 		{		

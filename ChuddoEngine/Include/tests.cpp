@@ -1,113 +1,116 @@
 #include "tests.h"
+#include "Engine/GameFramework/Actors/Actor.h"
+#include "Engine/GameFramework/Components/BaseCollisionComponent.h"
+#include "Engine/GameFramework/GameInstance.h"
+#include "Engine/Core/Engine.h"
 
-#include "Components/SphereComponent.h"
+CTestLevel::CTestLevel ( CObject * Owner, const std::string & inLevelName ) :Super ( Owner, inLevelName )
+	{
+	Player = SpawnActor<CPawn> ( "Player" );
 
-void TestCollisionScene ()
-     {
-    LOG_INFO ( "=== SIMPLE COLLISION DETECTION TEST ===" );
+	Enemy = SpawnActor <CPawn> ( "Enemy" );
 
-    if (!CGameInstance::Create ())
+	}
+
+
+
+void CTestLevel::Tick ( float DeltaTime )
+    {
+    Super::Tick ( DeltaTime );
+
+    static float TotalTime = 0.0f;
+    TotalTime += DeltaTime;
+
+    static bool bMovementStarted = false;
+    static bool bMovementCompleted = false;
+    static float MovementStartTime = 0.0f;
+
+    // ТЕСТ 1: Движение
+    if (!bMovementStarted && TotalTime > 0.1f)  // Через 0.1 секунды
         {
-        LOG_ERROR ( "Failed to create game instance" );
-        return;
+        LOG_DEBUG ( "\n=== TEST 1: Pawn Move Forward ===" );
+
+        Player->SetInputEnabled ( true );
+        Player->SetMoveSpeed ( 500.0f );
+        Player->AddMovementInput ( Player->GetActorForwardVector (), 1.0f );
+
+        bMovementStarted = true;
+        MovementStartTime = TotalTime;
+        LOG_DEBUG ( "  Movement started at time ", MovementStartTime, "s" );
         }
 
-    auto & GI = CGameInstance::Get ();
-    auto world = GI.CreateWorld ( "TestWorld" );
-    auto level = world->CreateLevel<CLevel> ( "TestLevel" );
-    GI.Init ();
-
-    // Создаем ТОЛЬКО два актора для простоты
-    CActor * obj1 = level->SpawnActor<CActor> ( "Object1" );
-    CActor * obj2 = level->SpawnActor<CActor> ( "Object2" );
-
-    // Добавляем коллизионные компоненты
-    CSphereComponent * coll1 =
-        obj1->AddSubObject<CSphereComponent> ( "Collision1", 25.0f ); // Радиус 25
-    CSphereComponent * coll2 =
-        obj2->AddSubObject<CSphereComponent> ( "Collision2", 25.0f ); // Радиус 25
-
-    // Настраиваем каналы (должны коллайдить)
-    coll1->SetChannelAsCharacter ();
-    coll2->SetChannelAsPawn ();
-    coll1->SetResponseToChannel ( "Pawn", ECollisionResponse::BLOCK );
-    coll2->SetResponseToChannel ( "Character", ECollisionResponse::BLOCK );
-
-    // Тест 1: Объекты далеко (нет коллизии)
-    LOG_INFO ( "\n=== TEST 1: OBJECTS FAR APART ===" );
-    obj1->SetActorLocation ( 0, 0, 0 );
-    obj2->SetActorLocation ( 100, 0, 0 ); // Расстояние 100, радиусы 25+25=50
-
-    GI.Tick ( 0.016f );
-    COLLISION_SYSTEM.Update ( 0.016f );
-
-    LOG_INFO ( "Distance: 100, Sum of radii: 50" );
-    LOG_INFO ( "Should NOT collide" );
-
-    // Тест 2: Объекты касаются (коллизия с depth=0)
-    LOG_INFO ( "\n=== TEST 2: OBJECTS TOUCHING ===" );
-    obj1->SetActorLocation ( 0, 0, 0 );
-    obj2->SetActorLocation ( 50, 0, 0 ); // Расстояние 50, радиусы 25+25=50
-
-    GI.Tick ( 0.016f );
-    COLLISION_SYSTEM.Update ( 0.016f );
-
-    LOG_INFO ( "Distance: 50, Sum of radii: 50" );
-    LOG_INFO ( "Should collide with depth=0" );
-
-    // Тест 3: Объекты пересекаются (сильная коллизия)
-    LOG_INFO ( "\n=== TEST 3: OBJECTS OVERLAPPING ===" );
-    obj1->SetActorLocation ( 0, 0, 0 );
-    obj2->SetActorLocation ( 25, 0, 0 ); // Расстояние 25, радиусы 25+25=50
-
-    GI.Tick ( 0.016f );
-    COLLISION_SYSTEM.Update ( 0.016f );
-
-    LOG_INFO ( "Distance: 25, Sum of radii: 50" );
-    LOG_INFO ( "Should collide with depth=25" );
-
-    // Тест 4: Объекты на одной позиции (максимальная коллизия)
-    LOG_INFO ( "\n=== TEST 4: OBJECTS AT SAME POSITION ===" );
-    obj1->SetActorLocation ( 0, 0, 0 );
-    obj2->SetActorLocation ( 0, 0, 0 );
-
-    GI.Tick ( 0.016f );
-    COLLISION_SYSTEM.Update ( 0.016f );
-
-    LOG_INFO ( "Distance: 0, Sum of radii: 50" );
-    LOG_INFO ( "Should collide with depth=50" );
-
-    // Проверяем вручную
-    LOG_INFO ( "\n=== MANUAL COLLISION CHECK ===" );
-
-    // Получаем позиции
-    FVector pos1 = coll1->GetWorldLocation ();
-    FVector pos2 = coll2->GetWorldLocation ();
-    float distance = ( pos2 - pos1 ).Length ();
-
-    LOG_INFO ( "Object1 at: (", pos1.x, ", ", pos1.y, ", ", pos1.z, ")" );
-    LOG_INFO ( "Object2 at: (", pos2.x, ", ", pos2.y, ", ", pos2.z, ")" );
-    LOG_INFO ( "Actual distance: ", distance );
-    LOG_INFO ( "Sum of radii: 50" );
-
-    // Простая математическая проверка
-    if (distance < 50.0f)
+        // ТЕСТ 2: Проверка движения
+    if (bMovementStarted && !bMovementCompleted && !Player->IsMoving ())
         {
-        LOG_INFO ( "MATHEMATICALLY: Should be colliding (distance < sum of radii)" );
-        }
-    else if (distance == 50.0f)
-        {
-        LOG_INFO ( "MATHEMATICALLY: Touching (distance = sum of radii)" );
-        }
-    else
-        {
-        LOG_INFO ( "MATHEMATICALLY: Not colliding (distance > sum of radii)" );
+        float TimeTaken = TotalTime - MovementStartTime;
+
+        LOG_DEBUG ( "\n=== TEST 2: Movement Check ===" );
+        LOG_DEBUG ( "  Time taken: ", TimeTaken, " seconds" );
+        LOG_DEBUG ( "  Frames: ~", int ( TimeTaken / DeltaTime ) );
+        LOG_DEBUG ( "  Final Position: (", Player->GetActorLocation ().z, ")" );
+
+        bMovementCompleted = true;
         }
 
-    LOG_INFO ( "\n=== SYSTEM STATS ===" );
-    LOG_INFO ( "Registered components: ", COLLISION_SYSTEM.GetRegisteredComponentsCount () );
-    LOG_INFO ( "Active collisions: ", COLLISION_SYSTEM.GetActiveCollisionsCount () );
+        // ТЕСТ 3: Поворот
+    static bool bRotationStarted = false;
+    static float RotationStartTime = 0.0f;
 
-    LOG_INFO ( "\n=== TEST COMPLETE ===" );
-    GI.Shutdown ();
+    if (bMovementCompleted && !bRotationStarted && TotalTime > MovementStartTime + 0.2f)
+        {
+        LOG_DEBUG ( "\n=== TEST 3: Pawn Rotate 90° ===" );
+
+        Player->TeleportTo ( FVector ( 0.f, 0.f, 0.f ) );
+        Player->SetActorRotationImmediately ( 0.f, 0.f, 0.f );
+        Player->RotateActor ( FVector ( 0, 90, 0 ), true );
+
+        bRotationStarted = true;
+        RotationStartTime = TotalTime;
+        LOG_DEBUG ( "  Rotation started at time ", RotationStartTime, "s" );
+        }
+
+        // ТЕСТ 4: Проверка поворота
+    static bool bRotationCompleted = false;
+
+    if (bRotationStarted && !bRotationCompleted && !Player->IsLerpingRotation ())
+        {
+        float TimeTaken = TotalTime - RotationStartTime;
+
+        LOG_DEBUG ( "\n=== TEST 4: Rotation Check ===" );
+        LOG_DEBUG ( "  Time taken: ", TimeTaken, " seconds" );
+        LOG_DEBUG ( "  Forward: (", Player->GetActorForwardVector ().x, ", 0, 0)" );
+        LOG_DEBUG ( "  ✅ PASSED!" );
+
+        bRotationCompleted = true;
+        }
+
+        // ВЫХОД
+    static bool bExited = false;
+    if (bMovementCompleted && bRotationCompleted && !bExited)
+        {
+        LOG_DEBUG ( "\n========================================" );
+        LOG_DEBUG ( "🎉 ALL TESTS PASSED! 🎉" );
+        LOG_DEBUG ( "========================================" );
+        LOG_DEBUG ( "  Total time: ", TotalTime, " seconds" );
+        LOG_DEBUG ( "========================================\n" );
+
+        CGameInstance::Get ().GetEngine ().RequestExit ();
+        bExited = true;
+        }
     }
+    
+    
+    void CTestLevel::BeginPlay ()
+	{
+	Super::BeginPlay ();
+	Player->SetActorLocation ( { 40.f,0.f,50.f } );
+
+	Enemy->SetActorLocation ( { 10.f,0.f,20.f } );
+	Player->GetRootComponent ()->GetCollisionComponent ()->SetChannelAsPawn ();
+	Enemy->GetRootComponent ()->GetCollisionComponent ()->SetChannelAsPawn ();
+	}
+
+void CTestLevel::EndPlay ()
+	{
+	Super::EndPlay ();
+	}

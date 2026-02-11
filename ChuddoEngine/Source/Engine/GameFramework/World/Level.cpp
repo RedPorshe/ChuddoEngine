@@ -44,7 +44,7 @@ void CLevel::BeginPlay ()
 	}
 
 void CLevel::Tick ( float DeltaTime )
-	{
+	{	
 	ProccessPendingActors ();
 	if (!bIsPlaying)
 		{
@@ -72,7 +72,8 @@ void CLevel::Tick ( float DeltaTime )
 			actor->Tick ( DeltaTime );
 			}
 		}
-	CollectAllPendingActors ();
+	CollectAllPendingActors ();	
+	CollectAllPendingActors ();	
 	}
 
 void CLevel::EndPlay ()

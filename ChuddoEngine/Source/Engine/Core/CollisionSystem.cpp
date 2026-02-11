@@ -94,8 +94,7 @@ void CCollisionSystem::UnregisterCollisionComponent ( CBaseCollisionComponent * 
 	}
 
 void CCollisionSystem::Update ( float deltaTime )
-	{
-		// Обновляем с заданной частотой
+	{		
 	m_AccumulatedTime += deltaTime;
 	float updateInterval = 1.0f / m_UpdateRate;
 
@@ -126,7 +125,7 @@ void CCollisionSystem::ProcessCollisions ()
 			continue;
 			}
 
-		LOG_DEBUG ( "[COLLISION] --- Checking pairs for ", compA->GetName (), " ---" );
+		//LOG_DEBUG ( "[COLLISION] --- Checking pairs for ", compA->GetName (), " ---" );
 
 		
 		for (size_t j = i + 1; j < m_CollisionComponents.size (); ++j)
@@ -145,13 +144,13 @@ void CCollisionSystem::ProcessCollisions ()
 				continue;
 				}
 
-			LOG_DEBUG ( "[COLLISION]   Pair: ", compA->GetName (), " vs ", compB->GetName () );
+			//LOG_DEBUG ( "[COLLISION]   Pair: ", compA->GetName (), " vs ", compB->GetName () );
 
 			// Проверяем, могут ли они коллизировать по каналам
 			bool canCollideA = compA->CanCollideWith ( compB );
 			bool canCollideB = compB->CanCollideWith ( compA );
 
-			LOG_DEBUG ( "[COLLISION]     Can collide A->B: ", canCollideA, ", B->A: ", canCollideB );
+			//LOG_DEBUG ( "[COLLISION]     Can collide A->B: ", canCollideA, ", B->A: ", canCollideB );
 
 			if (!canCollideA || !canCollideB)
 				{
@@ -163,13 +162,13 @@ void CCollisionSystem::ProcessCollisions ()
 			ECollisionShape shapeA = compA->GetShapeType ();
 			ECollisionShape shapeB = compB->GetShapeType ();
 
-			LOG_DEBUG ( "[COLLISION]     Shape A: ", Collision::ShapeToString ( shapeA ),
-						", Shape B: ", Collision::ShapeToString ( shapeB ) );
+			//LOG_DEBUG ( "[COLLISION]     Shape A: ", Collision::ShapeToString ( shapeA ),
+				//		", Shape B: ", Collision::ShapeToString ( shapeB ) );
 
 			   // Если хотя бы один компонент не сфера - пропускаем (для упрощения)
 			if (shapeA != ECollisionShape::SPHERE || shapeB != ECollisionShape::SPHERE)
 				{
-				LOG_DEBUG ( "[COLLISION]     Skipping - not both spheres" );
+			//	LOG_DEBUG ( "[COLLISION]     Skipping - not both spheres" );
 				continue;
 				}
 
