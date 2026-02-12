@@ -10,12 +10,29 @@ class CTestLevel : public CLevel
 		virtual void Tick ( float DeltaTime ) override;
 		virtual void BeginPlay () override;
 		virtual void EndPlay () override;
-
-		CPawn * Player = nullptr;
-		CPawn * Enemy = nullptr;
-
-		
+		CActor * ParentActor = nullptr;
+		CActor * ChildActor = nullptr;
 
 	};
 
 REGISTER_CLASS_FACTORY ( CTestLevel );
+
+#include "GameFramework/GameMode.h"
+
+class CTestGameMode : public CGameMode
+	{
+	CHUDDO_DECLARE_CLASS ( CTestGameMode, CGameMode )
+
+	public:
+		CTestGameMode ( CObject * inOwner = nullptr, const std::string & inName = "TestGameMode" );
+		virtual ~CTestGameMode ();
+
+		virtual void InitGame () override;
+		virtual void StartPlay () override;
+		virtual void Tick ( float DeltaTime ) override;
+
+		// Переопределяем чтобы убедиться что GameMode работает
+		virtual bool ShouldSpawnPlayerAutomatically () const override { return true; }
+	};
+
+REGISTER_CLASS_FACTORY ( CTestGameMode );

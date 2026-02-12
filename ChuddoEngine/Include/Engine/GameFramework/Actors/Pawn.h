@@ -1,52 +1,70 @@
 #pragma once
 
-#include "Actor.h"
+#include "Actors/Actor.h"
 
-class CInputComponent;
-class CCameraComponent;
-
+class CPlayerController;
 
 class CPawn : public CActor
-	{
-	CHUDDO_DECLARE_CLASS ( CPawn, CActor );
-	public:
-		CPawn ( CObject * inOwner = nullptr, const std::string & inDisplayName = "Pawn");
-		virtual ~CPawn ();
-		virtual void Tick ( float DeltaTime ) override;
-		virtual void BeginPlay () override;
-		virtual void EndPlay () override;
-		virtual void SetupInputComponent ( CInputComponent * InputComponent);
-		CInputComponent * GetInputComponent () const { return m_InputComponent; }
+    {
+    CHUDDO_DECLARE_CLASS ( CPawn, CActor );
 
-		void AddMovementInput ( FVector WorldDirection, float ScaleValue = 1.0f, bool bForce = false );
-		void AddControllerYawInput ( float Val );
-		void AddControllerRollInput ( float Val );
-		void AddControllerPitchInput ( float Val );
-		virtual void OnPosses ();
-		void PossesedBy (/*controller*/ );
-		virtual void OnUnPosses ();
-		void UnPosses (/*Controller*/ );
-		void SetInputEnabled ( bool bEnabled ) { bInputEnabled = bEnabled; }
-		bool IsInputEnabled () const { return bInputEnabled; }
+    public:
+        CPawn ( CObject * inOwner = nullptr, const std::string & inDisplayName = "Pawn" );
+        virtual ~CPawn ();
 
-		void SetMoveSpeed ( float Speed ) { m_MoveSpeed = Speed; }
-		void SetTurnSpeed ( float Speed ) { m_TurnSpeed = Speed; }
-		void SetLookUpSpeed ( float Speed ) { m_LookUpSpeed = Speed; }
-		void SetCamera ( CCameraComponent * Camera ) { m_CameraComponent = Camera; }
-		bool IsMoving () { return bIsMovin; }
-	protected:
-		CInputComponent * m_InputComponent = nullptr;
-		void CreateInputComponent ();
-		
-		  // Movement parameters - добавить
-		float m_MoveSpeed = 600.0f;     // units per second
-		float m_TurnSpeed = 90.0f;      // degrees per second
-		float m_LookUpSpeed = 60.0f;    // degrees per second
+        // ========== CONTROLLER ==========
+        void SetController ( CPlayerController * NewController );
+        CPlayerController * GetController () const { return Controller; }
+        bool IsPlayerControlled () const { return Controller != nullptr; }
 
-		bool bUseControlRotation = true;
-		bool bInputEnabled = true;
-		CCameraComponent * m_CameraComponent = nullptr;
+        // ========== INPUT ==========
+        virtual void SetupPlayerInputComponent ();
+        virtual void ProcessPlayerInput ( float DeltaTime );
 
-	};
+        // ========== MOVEMENT METHODS FOR TESTS ==========
+        void SetInputEnabled ( bool bEnabled ) { bInputEnabled = bEnabled; }
+        bool IsInputEnabled () const { return bInputEnabled; }
+
+        void SetMoveSpeed ( float Speed ) { MaxSpeed = Speed; }
+        float GetMoveSpeed () const { return MaxSpeed; }
+
+        void AddMovementInput ( const FVector & WorldDirection, float ScaleValue = 1.0f );
+        bool IsMoving () const { return !Velocity.IsZero (); }
+
+        // ========== MOVEMENT ==========
+        virtual void MoveForward ( float Value );
+        virtual void MoveRight ( float Value );
+        virtual void MoveUp ( float Value );
+        virtual void Turn ( float Value );
+        virtual void LookUp ( float Value );
+
+        // ========== ACTOR OVERRIDES ==========
+        virtual void Tick ( float DeltaTime ) override;
+        virtual void BeginPlay () override;
+        virtual void EndPlay () override;
+
+      
+
+    protected:
+        CPlayerController * Controller = nullptr;
+
+        // Input state
+        bool bInputEnabled = true;
+
+        // Movement state
+        FVector Velocity;
+        FVector PendingMovementInput; // Накопленный ввод за кадр
+        float MaxSpeed = 600.0f;
+        float Acceleration = 1000.0f;
+        float Deceleration = 1500.0f;
+        float TurnRate = 90.0f; // Degrees per second
+
+        // Input values (accumulated per frame)
+        float ForwardInput = 0.0f;
+        float RightInput = 0.0f;
+        float UpInput = 0.0f;
+        float TurnInput = 0.0f;
+        float LookUpInput = 0.0f;
+    };
 
 REGISTER_CLASS_FACTORY ( CPawn );

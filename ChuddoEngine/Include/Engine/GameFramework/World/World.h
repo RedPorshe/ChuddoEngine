@@ -1,4 +1,3 @@
-// World.h
 #pragma once
 #include "Core/Object.h"
 #include <vector>
@@ -7,6 +6,7 @@
 // Forward declarations
 class CGameInstance;
 class CLevel;
+class CGameMode;
 
 class CWorld : public CObject
     {
@@ -14,64 +14,92 @@ class CWorld : public CObject
 
     private:
         CGameInstance * OwningGameInstance = nullptr;
-        std::vector<CLevel*> Levels;
+        std::vector<CLevel *> Levels;
         CLevel * CurrentLevel = nullptr;
 
+        // GAME MODE - принадлежит World!
+        CGameMode * CurrentGameMode = nullptr;
+
     public:
-       
         CWorld ( CObject * inOwner = nullptr, const std::string & displayName = "World" );
         virtual ~CWorld ();
 
         // ========== GAME INSTANCE ACCESS ==========
         CGameInstance * GetGameInstance () const { return OwningGameInstance; }
-
-        CWorld * GetWorld ();
+        CWorld * GetWorld ()  { return this; }
         float GetDeltaSeconds () { return CurrentDeltaTime; }
-        CLevel * CreateDefaultEmptyLevel ();
 
         // ========== LEVEL MANAGEMENT ==========
-       // CLevel * CreateLevel ( const std::string & levelName = "Level" );
-        void AddLevel ( CLevel* level );
+      
+        void AddLevel ( CLevel * level );
         bool RemoveLevel ( const std::string & levelName );
         bool RemoveLevel ( CLevel * level );
-
         void SetCurrentLevel ( CLevel * level );
         CLevel * GetCurrentLevel () const { return CurrentLevel; }
-
         size_t GetNumLevels () const { return Levels.size (); }
         bool HasLevels () const { return !Levels.empty (); }
 
+        // ========== GAME MODE MANAGEMENT ==========
+        // World СОЗДАЕТ GameMode!
+        template<typename GameModeType, typename... Args>
+        GameModeType * CreateGameMode ( const std::string & name = "GameMode", Args&&... args );
+
+        void SetGameMode ( CGameMode * NewGameMode );
+        CGameMode * GetGameMode () const { return CurrentGameMode; }
+
         // ========== WORLD LIFECYCLE ==========
-        virtual void BeginPlay ();
-        virtual void Tick ( float deltaTime );
-        virtual void EndPlay ();
+        virtual void BeginPlay () ;
+        virtual void Tick ( float deltaTime ) ;
+        virtual void EndPlay () ;
 
         // ========== SEARCH/QUERY ==========
-        CObject * FindObjectByName ( const std::string & name ) const;
-        CObject * FindObjectByUUID ( const std::string & uuid ) const;
-
-     
+        CObject * FindObjectByName ( const std::string & name ) const ;
+        CObject * FindObjectByUUID ( const std::string & uuid ) const ;
 
         // ========== DEBUG/UTILS ==========
-        virtual void DumpState () const;
+         void DumpState () const ;
 
-
-
-        template<typename LevelType ,typename... Args>
-        LevelType* CreateLevel ( const std::string & name = "Level", Args&&... args );
-           
+        template<typename LevelType, typename... Args>
+        LevelType * CreateLevel ( const std::string & name = "Level", Args&&... args );
 
     protected:
         bool bIsPlaying = false;
         float CurrentDeltaTime {};
     };
 
-REGISTER_CLASS_FACTORY ( CWorld );
 
+#include "GameMode.h"
 
+template<typename GameModeType, typename... Args>
+GameModeType * CWorld::CreateGameMode ( const std::string & name, Args&&... args )
+    {
+    static_assert( std::is_base_of<CGameMode, GameModeType>::value,
+                   "GameMode type must be derived from CGameMode" );
+
+     // Удаляем старый GameMode если есть
+    if (CurrentGameMode)
+        {
+        LOG_DEBUG ( "[WORLD] Replacing existing GameMode: ", CurrentGameMode->GetName () );
+        RemoveOwnedObject ( CurrentGameMode->GetName () );
+        CurrentGameMode = nullptr;
+        }
+
+        // World создает GameMode (владелец - World!)
+    GameModeType * NewGameMode = this->AddSubObject<GameModeType> ( name, std::forward<Args> ( args )... );
+
+    if (NewGameMode)
+        {
+        SetGameMode ( NewGameMode );
+        NewGameMode->SetWorld ( this );
+        LOG_DEBUG ( "[WORLD] GameMode created: ", NewGameMode->GetName (),
+                    " (Class: ", NewGameMode->GetObjectClassName (), ")" );
+        }
+
+    return NewGameMode;
+    }
 
 template<typename LevelType, typename... Args>
-LevelType* CWorld::CreateLevel ( const std::string & name  , Args&&... args )
+LevelType * CWorld::CreateLevel ( const std::string & name, Args&&... args )
     {
     static_assert( std::is_base_of<CLevel, LevelType>::value,
                    "Level type must be derived from CLevel" );
@@ -79,12 +107,19 @@ LevelType* CWorld::CreateLevel ( const std::string & name  , Args&&... args )
     LevelType * newLevel = this->AddSubObject<LevelType> ( name, std::forward<Args> ( args )... );
     if (!newLevel)
         {
-        LOG_ERROR ( "[WORLD] Error: Failed to spawn actor '", name, "'" );
-        
+        LOG_ERROR ( "[WORLD] Error: Failed to spawn level '", name, "'" );
         return nullptr;
         }
+
+    newLevel->OwningWorld = this;
     Levels.push_back ( newLevel );
-    if(CurrentLevel==nullptr)
-        { SetCurrentLevel ( newLevel ); }
+
+    if (CurrentLevel == nullptr)
+        {
+        SetCurrentLevel ( newLevel );
+        }
+
     return newLevel;
     }
+
+REGISTER_CLASS_FACTORY ( CWorld );

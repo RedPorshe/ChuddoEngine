@@ -151,7 +151,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Source\Engine\GameFramework\Actors\HUD.cpp" />
     <ClCompile Include="Source\Engine\GameFramework\Actors\Pawn.cpp" />
+    <ClCompile Include="Source\Engine\GameFramework\Actors\PlayerController.cpp" />
+    <ClCompile Include="Source\Engine\GameFramework\Actors\PlayerStart.cpp" />
     <ClCompile Include="Source\Engine\GameFramework\Camera\CameraComponent.cpp" />
     <ClCompile Include="Source\Engine\GameFramework\Components\InputComponent.cpp" />
     <ClCompile Include="Source\Engine\GameFramework\Components\SphereComponent.cpp" />
@@ -167,6 +170,7 @@
     <ClCompile Include="Source\Engine\GameFramework\Actors\Actor.cpp" />
     <ClCompile Include="Source\Engine\GameFramework\Components\TransformComponent.cpp" />
     <ClCompile Include="Source\Engine\GameFramework\GameInstance.cpp" />
+    <ClCompile Include="Source\Engine\GameFramework\GameMode.cpp" />
     <ClCompile Include="Source\Engine\GameFramework\World\Level.cpp" />
     <ClCompile Include="Source\Engine\GameFramework\World\World.cpp" />
     <ClCompile Include="Source\main.cpp" />
@@ -186,7 +190,10 @@
     <ClInclude Include="Include\CoreMinimal.h" />
     <ClInclude Include="Include\Engine\Core\ObjectFactory.h" />
     <ClInclude Include="Include\Engine\GameFramework\Actors\Actor.h" />
+    <ClInclude Include="Include\Engine\GameFramework\Actors\HUD.h" />
     <ClInclude Include="Include\Engine\GameFramework\Actors\Pawn.h" />
+    <ClInclude Include="Include\Engine\GameFramework\Actors\PlayerController.h" />
+    <ClInclude Include="Include\Engine\GameFramework\Actors\PlayerStart.h" />
     <ClInclude Include="Include\Engine\GameFramework\Camera\CameraComponent.h" />
     <ClInclude Include="Include\Engine\GameFramework\Components\BaseCollisionComponent.h" />
     <ClInclude Include="Include\Engine\GameFramework\Components\BaseComponent.h" />
@@ -195,6 +202,8 @@
     <ClInclude Include="Include\Engine\GameFramework\Components\SphereComponent.h" />
     <ClInclude Include="Include\Engine\GameFramework\Components\TransformComponent.h" />
     <ClInclude Include="Include\Engine\GameFramework\GameInstance.h" />
+    <ClInclude Include="Include\Engine\GameFramework\GameMode.h" />
+    <ClInclude Include="Include\Engine\GameFramework\GameModeSettings.h" />
     <ClInclude Include="Include\Engine\GameFramework\World\Level.h" />
     <ClInclude Include="Include\Engine\GameFramework\World\World.h" />
     <ClInclude Include="Include\tests.h" />

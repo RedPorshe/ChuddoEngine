@@ -10,6 +10,7 @@
 #include <type_traits>
 #include <mutex>
 #include <unordered_set>
+#include <stack>
 
 // Forward declaration
 class CObject;
@@ -38,7 +39,10 @@ class CObjectFactory
             return instance;
             }
 
-            // Disable copying
+            // Проверка наследования с защитой от циклов
+        bool IsDerivedFrom ( const std::string & ClassName, const std::string & BaseClassName ) const;
+
+        // Disable copying
         CObjectFactory ( const CObjectFactory & ) = delete;
         CObjectFactory & operator=( const CObjectFactory & ) = delete;
 
@@ -79,15 +83,25 @@ class CObjectFactory
             ClassCreators[ className ] = creator;
 
             // Store class hierarchy info
-            ClassHierarchy[ className ] = T::StaticBaseClassName ();
+            std::string baseClassName = T::StaticBaseClassName ();
 
-            // Запоминаем
+            // ВАЖНО: Для CObject базовый класс должен быть пустой строкой!
+            if (className == "CObject")
+                {
+                ClassHierarchy[ className ] = "";  // Нет базового класса!
+                }
+            else
+                {
+                ClassHierarchy[ className ] = baseClassName;
+                }
+
+                // Запоминаем
             registeredClasses.insert ( className );
+
 #ifdef _DEBUG
             std::cout << "[FACTORY] Registered class '" << className
-                << "' (base: '" << T::StaticBaseClassName () << "')\n";
+                << "' (base: '" << ( baseClassName.empty () ? "None" : baseClassName ) << "')\n";
 #endif
-           
             }
 
             // Register a class with custom name
@@ -118,11 +132,21 @@ class CObjectFactory
                 return new T ( owner, displayName );
                 };
 
-            registeredClasses.insert ( className );
-#ifdef DEBUG
-            std::cout << "[FACTORY] Registered class '" << className << "'\n";
-#endif // DEBUG
+                // Для кастомного имени тоже сохраняем иерархию
+            if (className == "CObject")
+                {
+                ClassHierarchy[ className ] = "";
+                }
+            else
+                {
+                ClassHierarchy[ className ] = T::StaticBaseClassName ();
+                }
 
+            registeredClasses.insert ( className );
+
+#ifdef _DEBUG
+            std::cout << "[FACTORY] Registered class '" << className << "'\n";
+#endif
             }
 
             // Create object by class name and automatically add to owner
@@ -130,7 +154,7 @@ class CObjectFactory
                            CObject * owner = nullptr,
                            const std::string & displayName = "Object" );
 
-            // Check if class is registered
+           // Check if class is registered
         bool IsClassRegistered ( const std::string & className ) const
             {
             return ClassCreators.find ( className ) != ClassCreators.end ();
@@ -152,7 +176,8 @@ class CObjectFactory
             ss << "Class Hierarchy:\n";
             for (const auto & [className, baseClass] : ClassHierarchy)
                 {
-                ss << "  " << className << " -> " << baseClass << "\n";
+                ss << "  " << className << " -> "
+                    << ( baseClass.empty () ? "None" : baseClass ) << "\n";
                 }
             return ss.str ();
             }

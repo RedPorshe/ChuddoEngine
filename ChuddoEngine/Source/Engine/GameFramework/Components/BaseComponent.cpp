@@ -1,7 +1,7 @@
 #include "GameFramework/Components/BaseComponent.h"
 #include "GameFramework/Actors/Actor.h"
 
-REGISTER_CLASS_FACTORY ( CBaseComponent );
+
 
 
 CBaseComponent::CBaseComponent ( CObject * owner, const std::string & inName ) : CObject ( owner, inName )

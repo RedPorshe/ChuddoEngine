@@ -44,7 +44,7 @@ class CObject
         // Базовые объявления без использования макроса
         using Super = CObject;
         static const char * StaticClassName () { return "CObject"; }
-        static const char * StaticBaseClassName () { return "CObject"; }
+        static const char * StaticBaseClassName () { return ""; }
         virtual const char * GetObjectClassName () const { return "CObject"; }
         virtual void SerializeProperties ( rapidjson::Value & jsonValue, rapidjson::Document::AllocatorType & allocator ) const;
         virtual void DeserializeProperties ( const rapidjson::Value & jsonValue );

@@ -31,3 +31,5 @@ class CBaseComponent : public CObject
 		CActor * ActorOwner = nullptr;
 
 	};
+
+REGISTER_CLASS_FACTORY ( CBaseComponent );

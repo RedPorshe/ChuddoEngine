@@ -97,7 +97,7 @@ void CBaseCollisionComponent::SetShapeType ( const ECollisionShape & inShape )
 void CBaseCollisionComponent::SetCollisionChannel ( const FCollisionChannel & channel )
 	{
 	m_CollisionChannel = channel;
-	LOG_DEBUG ( "Set collision channel to: ", channel.GetName () );
+	LOG_DEBUG ( "Set collision channel to: ", channel.GetName (), " for ", GetOwnerActor()->GetName());
 	}
 
 void CBaseCollisionComponent::SetCollisionChannel ( const std::string & channelName )

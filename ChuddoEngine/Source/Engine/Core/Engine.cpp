@@ -1,168 +1,181 @@
 #include "Core/Engine.h"
 #include "GameFramework/GameInstance.h"
-#include "World/World.h"
-#include "World/Level.h"
-#include "Actors/Actor.h"
+#include "GameFramework/World/World.h"
+#include "GameFramework/World/Level.h"
+#include "GameFramework/Actors/Actor.h"
+#include "GameFramework/GameMode.h"
 #include "Components/BaseCollisionComponent.h"
 #include "Core/CollisionSystem.h"
-
 #include "tests.h"
-
-
+#include <iostream>
+#include <fstream>
 
 CEngine * CEngine::Instance = nullptr;
 
 CEngine::~CEngine ()
-	{
-
-	if (bIsInitialized)
-		{
-		Shutdown ();
-		}
-	LOG_INFO ( "Engine destroyed" );
-	}
+    {
+    if (bIsInitialized)
+        {
+        Shutdown ();
+        }
+    LOG_INFO ( "Engine destroyed" );
+    }
 
 CEngine & CEngine::Get ()
-	{
-	return *Instance;
-	}
+    {
+    return *Instance;
+    }
 
 bool CEngine::InitializeEngine ()
-	{
-	if (Instance)
-		{
-		LOG_ERROR ( "Engine already initialized!" );
-		return false;
-		}
+    {
+    if (Instance)
+        {
+        LOG_ERROR ( "Engine already initialized!" );
+        return false;
+        }
 
-	Instance = new CEngine ();
-	return Instance->Initialize ();
-	}
+    Instance = new CEngine ();
+    return Instance->Initialize ();
+    }
 
 void CEngine::ShutdownEngine ()
-	{
-	if (Instance)
-		{
-		delete Instance;
-		Instance = nullptr;
-		}
-	}
+    {
+    if (Instance)
+        {
+        delete Instance;
+        Instance = nullptr;
+        }
+    }
 
 bool CEngine::Initialize ()
-	{
-	if (bIsInitialized)
-		{
-		LOG_WARN ( "Engine already initialized" );
-		return true;
-		}
+    {
+    if (bIsInitialized)
+        {
+        LOG_WARN ( "Engine already initialized" );
+        return true;
+        }
 
-	if (!CGameInstance::Create ())
-		{
-		LOG_FATAL ( "Failed to create GameInstance" );
-		return false;
-		}
-	COLLISION_SYSTEM;
-	bIsInitialized = true;
-	LOG_INFO ( "Engine initialized" );
-	return true;
-	}
+    if (!CGameInstance::Create ())
+        {
+        LOG_FATAL ( "Failed to create GameInstance" );
+        return false;
+        }
+
+    COLLISION_SYSTEM;
+    bIsInitialized = true;
+    LOG_INFO ( "Engine initialized" );
+    return true;
+    }
 
 void CEngine::Shutdown ()
-	{
-	if (!bIsInitialized)
-		return;
+    {
+    if (!bIsInitialized)
+        return;
 
-	LOG_INFO ( "Engine shutting down..." );
+    LOG_INFO ( "Engine shutting down..." );
 
-	if (CGameInstance::Get ().IsMustSaveState ())
-		{
-		LOG_INFO ( "saving gameInstance state" );
-		CGameInstance::Get ().SaveGameInstanceState ();
-		}
+    // Shutdown GameInstance first
+    auto & GameInstance = CGameInstance::Get ();
 
-	CGameInstance::Destroy ();
+    if (GameInstance.IsMustSaveState ())
+        {
+        LOG_INFO ( "saving gameInstance state" );
+        GameInstance.SaveGameInstanceState ();
+        }
 
-	bIsInitialized = false;
-	bIsRunning = false;
+    GameInstance.Shutdown ();
+    CGameInstance::Destroy ();
 
-	LOG_DEBUG ( "Engine shutdown complete" );
-	}
+    bIsInitialized = false;
+    bIsRunning = false;
+
+    LOG_DEBUG ( "Engine shutdown complete" );
+    }
 
 void CEngine::Start ()
-	{
-	LOG_WARN ("Engine Start");
-	CreateTestWorld ();
-	
-	MainLoop ();
-	
-	}
+    {
+   
+    CreateTestWorld ();
+
+    auto & GameInstance = CGameInstance::Get ();
+    GameInstance.Init ();
+
+    
+    MainLoop ();
+    }
 
 void CEngine::RequestExit ()
-	{
-	bIsRunning = false;
-	}
+    {
+    bIsRunning = false;
+    }
 
+CGameInstance & CEngine::GetGameInstance ()
+    
+    {
+             return CGameInstance::Get (); 
+    }
 
 void CEngine::MainLoop ()
     {
-	LOG_WARN ("Main loop Start");
-	
-    CGameInstance::Get ().Init ();
-	bIsRunning = true;
-    static int frame = 0;
+   
 
-    while (bIsRunning)  
-        {        
-		CalculateDeltaTime ();
-		
+    bIsRunning = true;
+    int MaxFrames = 1000; // Ограничим для теста
+
+    while (bIsRunning)
+        {
+        CalculateDeltaTime ();
         Tick ( m_DeltaTime );
-	
-        frame++;
-		//if (frame > 15) break;
-        }	
+
+        // Автоматический выход после 10 секунд
+        static float TotalTime = 0;
+        TotalTime += m_DeltaTime;
+        if (TotalTime > 10.0f)
+            {
+            LOG_DEBUG ( "[ENGINE] Auto exit after 10 seconds" );
+            RequestExit ();
+            }
+        }
     }
 
 void CEngine::Tick ( float deltaTime )
-	{	
-	CGameInstance::Get ().Tick ( deltaTime );
-	CollisionSystem.Update ( deltaTime );
-	}
+    {
+    CGameInstance::Get ().Tick ( deltaTime );
+    CollisionSystem.Update ( deltaTime );
+    }
 
 void CEngine::CalculateDeltaTime ()
-	{
-	auto currentTime = std::chrono::steady_clock::now ();
+    {
+    auto currentTime = std::chrono::steady_clock::now ();
 
-	if (m_LastFrameTime.time_since_epoch ().count () != 0)
-		{			
-		auto delta = std::chrono::duration_cast< std::chrono::microseconds >(
-			currentTime - m_LastFrameTime
-		).count ();
-		
-		m_DeltaTime = delta * 0.000001f; 
+    if (m_LastFrameTime.time_since_epoch ().count () != 0)
+        {
+        auto delta = std::chrono::duration_cast< std::chrono::microseconds >(
+            currentTime - m_LastFrameTime
+        ).count ();
 
-		
-		if (m_DeltaTime > 0.033f)  
-			m_DeltaTime = 0.033f;
-		}
-	else
-		{
-			
-		m_DeltaTime = 0.016f;  
-		}
+        m_DeltaTime = delta * 0.000001f;
 
-	m_LastFrameTime = currentTime;
-	}
+        if (m_DeltaTime > 0.033f)
+            m_DeltaTime = 0.033f;
+        }
+    else
+        {
+        m_DeltaTime = 0.016f;
+        }
 
+    m_LastFrameTime = currentTime;
+    }
 
 void CEngine::CreateTestWorld ()
-	{
-	auto word = CGameInstance::Get ().CreateWorld (  "Super" );
-	word->CreateLevel<CTestLevel> ( "SuperLevel" );
-	}
+    {
+    auto world = CGameInstance::Get ().CreateWorld ( "Super" );
+    if (world)
+        {
+        world->CreateLevel<CTestLevel> ( "SuperLevel" );
+        LOG_DEBUG ( "[ENGINE] Test world created: Super with level: SuperLevel" );
+        }
+    }
 
-CEngine::CEngine () : CollisionSystem( COLLISION_SYSTEM )
-	{
-	
-	};
-
-
+CEngine::CEngine () : CollisionSystem ( COLLISION_SYSTEM )
+    {}
