@@ -29,8 +29,7 @@ class CPlayerController : public CActor
         void SetOwningGameMode ( CGameMode * inGameMode );
         CGameMode * GetOwningGameMode () const { return OwningGameMode; }
 
-        // ========== INPUT ==========
-        virtual void SetupInputComponent ();
+        // ========== INPUT ==========       
         virtual void ProcessPlayerInput ( float DeltaTime );
         bool IsInputEnabled () const { return bInputEnabled; }
         void SetInputEnabled ( bool bEnabled ) { bInputEnabled = bEnabled; }

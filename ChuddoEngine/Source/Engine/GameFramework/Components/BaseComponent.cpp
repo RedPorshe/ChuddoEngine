@@ -102,6 +102,23 @@ CActor * CBaseComponent::GetOwnerActor ()
 	return ActorOwner;
 	}
 
+CActor * CBaseComponent::GetOwnerActor () const
+	{
+	if (ActorOwner)
+		return ActorOwner;
+
+	CObject * current = GetOwner ();
+	while (current)
+		{
+		if (CActor * actor = dynamic_cast< CActor * >( current ))
+			{
+			return actor;
+			}
+		current = current->GetOwner ();
+		}
+	return nullptr;
+	}
+
 bool CBaseComponent::IsHaveOwnerActor ()
 	{
 	return GetOwnerActor () != nullptr;

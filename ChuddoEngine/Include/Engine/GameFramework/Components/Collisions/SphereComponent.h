@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Components/BaseCollisionComponent.h"
+#include "Components/Collisions/BaseCollisionComponent.h"
 
 class CSphereComponent : public CBaseCollisionComponent
 	{
@@ -12,7 +12,7 @@ class CSphereComponent : public CBaseCollisionComponent
 		virtual void InitComponent () override;
 		virtual void Tick ( float DeltaTime ) override;
 		virtual void OnBeginPlay () override;
-		virtual bool CheckCollision ( CBaseCollisionComponent * other ) const override;
+		virtual bool CheckCollision ( CBaseCollisionComponent * other, FCollisionInfo & outInfo ) const override;
 		virtual float GetCollisionRadius () const override { return GetRadius (); }
 		float GetRadius () const { return m_Radius; }
 		void SetRadius ( float value ) { m_Radius = value; }

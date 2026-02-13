@@ -21,6 +21,8 @@ class CTransformComponent : public CBaseComponent
         void UpdateTransform ();
         void MarkTransformDirty ();
 
+        void SetAutoGenerateCollisionComponent ( bool value = true, const FCollisionChannel& inChannel = FCollisionChannel::Static() );
+
         // Локальное вращение (относительно собственных осей)
         void AddLocalRotation ( const FQuat & DeltaRotation );
         void AddLocalRotation ( const FVector & DeltaRotationDegrees );  // В градусах
@@ -56,6 +58,7 @@ class CTransformComponent : public CBaseComponent
         // collision component
         CBaseCollisionComponent * GetCollisionComponent ();
         void SetCollisionComponent ( CBaseCollisionComponent * inComp );
+        void SetCollisionComponent ( const std::string & inCompClassName );
         void SetCollisionEnabled ( bool value = true );
 
         // ========== Setters ==========
@@ -108,7 +111,8 @@ class CTransformComponent : public CBaseComponent
 
     protected:
         FTransform GetParentTransform ();
-
+        FCollisionChannel CollisionChannel = FCollisionChannel::Static ();
+        std::string m_collisionClass = "CBaseCollisionComponent";
         // Обновление матрицы трансформации для рендеринга
         virtual void UpdateTransformMatrix ();
 
@@ -129,6 +133,8 @@ class CTransformComponent : public CBaseComponent
 
         bool bIsTransformDirty = false;
         bool bIsCollisionEnabled = false;
+        bool bIsAutoGenerateCollision = false;
+      
     };
 
 REGISTER_CLASS_FACTORY ( CTransformComponent );

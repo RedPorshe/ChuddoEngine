@@ -2,6 +2,9 @@
 #include "World/Level.h"
 #include "World/World.h"
 #include "Actors/Actor.h"
+#include "Actors/TerrainActor.h"
+#include "Components/Collisions/TerrainComponent.h"
+
 #include <iostream>
 #include <algorithm>
 #include <sstream>
@@ -44,7 +47,7 @@ void CLevel::BeginPlay ()
 	}
 
 void CLevel::Tick ( float DeltaTime )
-	{	
+	{
 	ProccessPendingActors ();
 	if (!bIsPlaying)
 		{
@@ -72,8 +75,8 @@ void CLevel::Tick ( float DeltaTime )
 			actor->Tick ( DeltaTime );
 			}
 		}
-	CollectAllPendingActors ();	
-	CollectAllPendingActors ();	
+	CollectAllPendingActors ();
+	CollectAllPendingActors ();
 	}
 
 void CLevel::EndPlay ()
@@ -209,13 +212,15 @@ bool CLevel::DestroyActor ( const std::string & actorName )
 	return false;
 	}
 
+
+
 CActor * CLevel::SpawnActorAtLocation ( const std::string & ClassName, const std::string & ActorName, const FVector & loc )
 	{
 	auto newActor = SpawnActorByClass ( ClassName, ActorName );
 	if (newActor)
 		{
 		newActor->SetActorLocation ( loc );
-		LOG_DEBUG ( newActor->GetName (), " spawned at location :", newActor->GetActorLocation());
+		LOG_DEBUG ( newActor->GetName (), " spawned at location :", newActor->GetActorLocation () );
 		return newActor;
 		}
 	return nullptr;
@@ -269,7 +274,7 @@ CObject * CLevel::FindObjectByName ( const std::string & name ) const
 					{
 					return comp;
 					}
-				else if(comp)
+				else if (comp)
 					{
 					auto found = comp->FindOwned ( name );
 					if (found)
@@ -278,7 +283,7 @@ CObject * CLevel::FindObjectByName ( const std::string & name ) const
 						}
 					}
 				}
-			}			
+			}
 		}
 
 	return nullptr;
@@ -437,4 +442,80 @@ void CLevel::DumpState () const
 	ss << "===================";
 
 	std::cout << ss.str () << std::endl;
+	}
+
+
+CTerrainActor * CLevel::SpawnTerrainActor ( const std::string & name,
+											int32 width,
+											int32 height,
+											float cellSize,
+											float heightValue )
+	{
+		// Создаём актор террейна
+	CTerrainActor * terrainActor = SpawnActor<CTerrainActor> ( name );
+
+	if (!terrainActor)
+		{
+		LOG_ERROR ( "[LEVEL] Failed to spawn TerrainActor: ", name );
+		return nullptr;
+		}
+
+		// Получаем компонент террейна
+	CTerrainComponent * terrainComp = terrainActor->GetTerrainComponent ();
+	if (!terrainComp)
+		{
+		LOG_ERROR ( "[LEVEL] TerrainActor has no TerrainComponent!" );
+		return nullptr;
+		}
+
+		// Генерируем плоский террейн
+	terrainComp->GenerateFlat ( width, height, cellSize, heightValue );
+
+	LOG_DEBUG ( "[LEVEL] TerrainActor spawned: ", name,
+				" Size: ", width, "x", height,
+				" CellSize: ", cellSize,
+				" Height: ", heightValue );
+
+	return terrainActor;
+	}
+
+CTerrainActor * CLevel::SpawnTerrainActorFromHeightmap ( const std::string & name,
+														 const std::vector<float> & heights,
+														 int32 width,
+														 int32 height,
+														 float cellSize )
+	{
+		// Создаём актор террейна
+	CTerrainActor * terrainActor = SpawnActor<CTerrainActor> ( name );
+
+	if (!terrainActor)
+		{
+		LOG_ERROR ( "[LEVEL] Failed to spawn TerrainActor: ", name );
+		return nullptr;
+		}
+
+		// Получаем компонент террейна
+	CTerrainComponent * terrainComp = terrainActor->GetTerrainComponent ();
+	if (!terrainComp)
+		{
+		LOG_ERROR ( "[LEVEL] TerrainActor has no TerrainComponent!" );
+		return nullptr;
+		}
+
+		// Загружаем террейн из карты высот
+	terrainComp->GenerateFromHeightmap ( heights, width, height, cellSize );
+
+	LOG_DEBUG ( "[LEVEL] TerrainActor spawned from heightmap: ", name,
+				" Size: ", width, "x", height,
+				" CellSize: ", cellSize,
+				" Height range: ", terrainComp->GetTerrainData ().MinHeight,
+				" - ", terrainComp->GetTerrainData ().MaxHeight );
+
+	return terrainActor;
+	}
+
+bool CLevel::SpawnTerrain ()
+	{
+		// Упрощённый метод - создаём стандартный террейн
+	return SpawnTerrainActor ( "Terrain", 100, 100, 100.0f, 0.0f ) != nullptr;
 	}

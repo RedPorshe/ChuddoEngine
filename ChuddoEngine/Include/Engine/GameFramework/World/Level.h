@@ -11,6 +11,7 @@
 // Forward declarations
 class CWorld;
 class CActor;
+class CTerrainActor;
 
 class CLevel : public CObject
     {
@@ -78,8 +79,23 @@ class CLevel : public CObject
         void CollectAllPendingActors ();
         void ProccessPendingActors ();
     public:
+
+        CTerrainActor * SpawnTerrainActor ( const std::string & name = "Terrain",
+                                            int32 width = 100,
+                                            int32 height = 100,
+                                            float cellSize = 100.0f,
+                                            float heightValue = 0.0f );
+
+          // Создание террейна из карты высот
+        CTerrainActor * SpawnTerrainActorFromHeightmap ( const std::string & name,
+                                                         const std::vector<float> & heights,
+                                                         int32 width,
+                                                         int32 height,
+                                                         float cellSize );
+
         bool DestroyActor ( CActor * actor );
         bool DestroyActor ( const std::string & actorName );
+        bool SpawnTerrain ();
         CActor * SpawnActorAtLocation ( const std::string & ClassName, const std::string & ActorName, const FVector & loc );
         CActor* SpawnActorByClass ( const std::string & ClassName, const std::string & ActorName );
 
@@ -128,7 +144,7 @@ class CLevel : public CObject
     private:
         bool bIsPlaying = false;
         bool bSkipNextSpawnTick = false;
-
+        std::vector< CTerrainActor *> Terrains;
         bool RemoveActorFromVector ( CActor * actor );
 
         // Проверка возможности немедленного спавна

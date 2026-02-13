@@ -10,8 +10,7 @@
 
 CGameMode::CGameMode ( CObject * inOwner, const std::string & inName )
     : Super ( inOwner, inName )
-    {
-    LOG_DEBUG ( "[GAMEMODE] Created: ", GetName () );
+    {   
     Settings = new FGameModeSettings();
     }
 
@@ -22,26 +21,22 @@ CGameMode::~CGameMode ()
     }
 
 void CGameMode::InitGame ()
-    {
-    LOG_DEBUG ( "[GAMEMODE] InitGame: ", GetName () );
+    {    
     bGameStarted = false;
     bGameOver = false;
     GameTime = 0.0f;
     }
 
 void CGameMode::StartPlay ()
-    {
-    LOG_DEBUG ( "[GAMEMODE] StartPlay: ", GetName () );
+    {   
     bGameStarted = true;
     bGameOver = false;
-
-    // Режим "только контроллер" (для редактора/камеры)
+    
     if (Settings->DefaultPawnClassName.empty ())
         {
         LOG_DEBUG ( "[GAMEMODE] Editor mode: Spawning controller only" );
         CPlayerController * Controller = SpawnPlayerController ();
-
-        // Опционально: спавним HUD если указан
+       
         if (Controller && !Settings->DefaultHUDClassName.empty ())
             {
             CHUD * NewHUD = dynamic_cast< CHUD * >(
@@ -59,7 +54,6 @@ void CGameMode::StartPlay ()
             }
         return;
         }
-
         
     if (PlayerControllers.empty ())
         {
@@ -79,6 +73,10 @@ void CGameMode::Tick ( float DeltaTime )
     if (bGameStarted && !bGameOver)
         {
         GameTime += DeltaTime;
+        for (auto controller : PlayerControllers)
+            {
+            controller->ProcessPlayerInput ( DeltaTime );
+            }
         }
     }
 
@@ -105,8 +103,7 @@ void CGameMode::SetDefaultPawnClass ( const std::string & className )
         return;
         }
 
-    Settings->SetPawn ( className );
-    LOG_DEBUG ( "[GAMEMODE] Default pawn class set to: ", className );
+    Settings->SetPawn ( className );   
     }
 
 CPlayerController * CGameMode::SpawnPlayerController ()
@@ -129,15 +126,13 @@ CPlayerController * CGameMode::SpawnPlayerController ()
         LOG_ERROR ( "[GAMEMODE] Cannot spawn player controller: No current level" );
         return nullptr;
         }
-
-        // Проверяем, не спавнили ли мы уже контроллер
+           
     if (!PlayerControllers.empty ())
         {
         LOG_DEBUG ( "[GAMEMODE] Player controller already exists, returning existing" );
         return PlayerControllers[ 0 ];
         }
-
-        // Используем фабрику для создания PlayerController
+       
     CObject * NewControllerObj = OBJECT_FACTORY.Create (
         Settings->DefaultPlayerControllerClassName,
         CurrentLevel,
@@ -149,9 +144,7 @@ CPlayerController * CGameMode::SpawnPlayerController ()
     if (NewController)
         {
         PlayerControllers.push_back ( NewController );
-        NewController->SetOwningGameMode ( this );
-        LOG_DEBUG ( "[GAMEMODE] Spawned player controller: ", NewController->GetName (),
-                    " (Class: ", Settings->DefaultPlayerControllerClassName, ")" );
+        NewController->SetOwningGameMode ( this );        
         }
     else
         {

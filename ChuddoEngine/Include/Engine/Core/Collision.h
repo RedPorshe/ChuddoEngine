@@ -6,190 +6,200 @@
 #include <vector>
 
 enum class ECollisionShape : uint8_t
-    {
-    NONE,
-    BOX,
-    SPHERE,
-    CAPSULE,
-    COMPLEX,
-    CYLINDER,
-    HEIGHTFIELD,
-    COMPOUND
-    };
+	{
+
+	NONE = 0,
+	SPHERE,
+	BOX,
+	CAPSULE,
+	CYLINDER,
+	CONE,
+
+
+	COMPOUND,
+	MESH,
+	TERRAIN,       // Ландшафт (heightfield)
+
+
+	RAY,
+	PLANE,
+
+	MAX
+	};
 
 enum class ECollisionChannel : uint16_t
-    {
-        // Стандартные каналы
-    NoCollision = 0,
-    WorldStatic = 1,
-    WorldDynamic = 2,
-    Pawn = 3,
-    Character = 4,
-    Vehicle = 5,
-    Trigger = 6,
-    Interactable = 7,
+	{
+		// Стандартные каналы
+	NoCollision = 0,
+	WorldStatic = 1,
+	WorldDynamic = 2,
+	Pawn = 3,
+	Character = 4,
+	Vehicle = 5,
+	Trigger = 6,
+	Interactable = 7,
 
-    // Пользовательские каналы начинаются здесь
-    CustomStart = 8,
+	// Пользовательские каналы начинаются здесь
+	CustomStart = 8,
 
-    // Максимальное количество каналов
-    MaxChannels = 64
-    };
+	// Максимальное количество каналов
+	MaxChannels = 64
+	};
 
 enum class ECollisionResponse : uint8_t
-    {
-    IGNORE,
-    OVERLAP,
-    BLOCK
-    };
+	{
+	IGNORE,
+	OVERLAP,
+	BLOCK
+	};
 
-    // ==================== Реестр каналов ====================
+	// ==================== Реестр каналов ====================
 class FCollisionChannelRegistry
-    {
-    public:
-        // Регистрация нового канала по имени
-        static ECollisionChannel RegisterChannel ( const std::string & channelName,
-                                                   ECollisionResponse defaultResponse = ECollisionResponse::BLOCK );
+	{
+	public:
+		// Регистрация нового канала по имени
+		static ECollisionChannel RegisterChannel ( const std::string & channelName,
+												   ECollisionResponse defaultResponse = ECollisionResponse::BLOCK );
 
-           // Получение канала по имени
-        static std::optional<ECollisionChannel> GetChannelByName ( const std::string & channelName );
+		   // Получение канала по имени
+		static std::optional<ECollisionChannel> GetChannelByName ( const std::string & channelName );
 
-        // Получение имени канала
-        static std::string GetChannelName ( ECollisionChannel channel );
+		// Получение имени канала
+		static std::string GetChannelName ( ECollisionChannel channel );
 
-        // Получение всех зарегистрированных каналов
-        static const std::unordered_map<std::string, ECollisionChannel> & GetAllRegisteredChannels ();
+		// Получение всех зарегистрированных каналов
+		static const std::unordered_map<std::string, ECollisionChannel> & GetAllRegisteredChannels ();
 
-        // Получение всех имён каналов
-        static std::vector<std::string> GetAllChannelNames ();
+		// Получение всех имён каналов
+		static std::vector<std::string> GetAllChannelNames ();
 
-        // Проверка валидности канала
-        static bool IsValidChannel ( ECollisionChannel channel );
+		// Проверка валидности канала
+		static bool IsValidChannel ( ECollisionChannel channel );
 
-        // Проверка, является ли канал пользовательским
-        static bool IsCustomChannel ( ECollisionChannel channel );
+		// Проверка, является ли канал пользовательским
+		static bool IsCustomChannel ( ECollisionChannel channel );
 
-        // Удаление пользовательского канала
-        static bool RemoveCustomChannel ( const std::string & channelName );
+		// Удаление пользовательского канала
+		static bool RemoveCustomChannel ( const std::string & channelName );
 
-        // Очистка всех пользовательских каналов
-        static void ClearCustomChannels ();
+		// Очистка всех пользовательских каналов
+		static void ClearCustomChannels ();
 
-    private:
-        static std::unordered_map<std::string, ECollisionChannel> s_NameToChannel;
-        static std::unordered_map<ECollisionChannel, std::string> s_ChannelToName;
-        static ECollisionChannel s_NextCustomChannel;
-        static bool s_Initialized;
+	private:
+		static std::unordered_map<std::string, ECollisionChannel> s_NameToChannel;
+		static std::unordered_map<ECollisionChannel, std::string> s_ChannelToName;
+		static ECollisionChannel s_NextCustomChannel;
+		static bool s_Initialized;
 
-        static void InitializeStandardChannels ();
-    };
+		static void InitializeStandardChannels ();
+	};
 
-    // ==================== Основной класс канала ====================
+	// ==================== Основной класс канала ====================
 struct FCollisionChannel
-    {
-    ECollisionChannel Channel;
-    ECollisionResponse DefaultResponse;
-    std::unordered_map<ECollisionChannel, ECollisionResponse> ResponseChannels;
+	{
+	ECollisionChannel Channel;
+	ECollisionResponse DefaultResponse;
+	std::unordered_map<ECollisionChannel, ECollisionResponse> ResponseChannels;
 
-    // ========== Конструкторы ==========
-    FCollisionChannel ();
-    FCollisionChannel ( ECollisionChannel inChannel,
-                        ECollisionResponse inResponse = ECollisionResponse::BLOCK );
-    FCollisionChannel ( const std::string & channelName,
-                        ECollisionResponse defaultResponse = ECollisionResponse::BLOCK );
+	// ========== Конструкторы ==========
+	FCollisionChannel ();
+	FCollisionChannel ( ECollisionChannel inChannel,
+						ECollisionResponse inResponse = ECollisionResponse::BLOCK );
+	FCollisionChannel ( const std::string & channelName,
+						ECollisionResponse defaultResponse = ECollisionResponse::BLOCK );
 
-       // ========== Основные методы ==========
-    void SetResponseTo ( ECollisionChannel inChannel, ECollisionResponse inResponse );
-    void SetResponseTo ( const std::string & otherChannelName, ECollisionResponse inResponse );
+	   // ========== Основные методы ==========
+	void SetResponseTo ( ECollisionChannel inChannel, ECollisionResponse inResponse );
+	void SetResponseTo ( const std::string & otherChannelName, ECollisionResponse inResponse );
 
-    ECollisionResponse GetResponseTo ( ECollisionChannel inChannel ) const;
-    ECollisionResponse GetResponseTo ( const std::string & otherChannelName ) const;
+	ECollisionResponse GetResponseTo ( ECollisionChannel inChannel ) const;
+	ECollisionResponse GetResponseTo ( const std::string & otherChannelName ) const;
 
-    void SetIgnoreAll ();
-    void SetBlockAll ();
-    void SetOverlapAll ();
+	void SetIgnoreAll ();
+	void SetBlockAll ();
+	void SetOverlapAll ();
 
-    // ========== Проверка коллизии ==========
-    bool CanCollideWith ( ECollisionChannel otherChannel ) const;
-    bool CanCollideWith ( const std::string & otherChannelName ) const;
+	// ========== Проверка коллизии ==========
+	bool CanCollideWith ( ECollisionChannel otherChannel ) const;
+	bool CanCollideWith ( const std::string & otherChannelName ) const;
 
-      // ========== Проверка типа реакции ==========
-    bool ShouldBlock ( ECollisionChannel otherChannel ) const
-        {
-        return GetResponseTo ( otherChannel ) == ECollisionResponse::BLOCK;
-        }
+	  // ========== Проверка типа реакции ==========
+	bool ShouldBlock ( ECollisionChannel otherChannel ) const
+		{
+		return GetResponseTo ( otherChannel ) == ECollisionResponse::BLOCK;
+		}
 
-    bool ShouldBlock ( const std::string & otherChannelName ) const
-        {
-        return GetResponseTo ( otherChannelName ) == ECollisionResponse::BLOCK;
-        }
+	bool ShouldBlock ( const std::string & otherChannelName ) const
+		{
+		return GetResponseTo ( otherChannelName ) == ECollisionResponse::BLOCK;
+		}
 
-    bool ShouldOverlap ( ECollisionChannel otherChannel ) const
-        {
-        return GetResponseTo ( otherChannel ) == ECollisionResponse::OVERLAP;
-        }
+	bool ShouldOverlap ( ECollisionChannel otherChannel ) const
+		{
+		return GetResponseTo ( otherChannel ) == ECollisionResponse::OVERLAP;
+		}
 
-    bool ShouldOverlap ( const std::string & otherChannelName ) const
-        {
-        return GetResponseTo ( otherChannelName ) == ECollisionResponse::OVERLAP;
-        }
+	bool ShouldOverlap ( const std::string & otherChannelName ) const
+		{
+		return GetResponseTo ( otherChannelName ) == ECollisionResponse::OVERLAP;
+		}
 
-    // ========== Быстрые настройки ==========
-    void SetupAsStatic ();
-    void SetupAsDynamic ();
-    void SetupAsCharacter ();
-    void SetupAsTrigger ();
-    void SetupAsPawn ();
-    void SetupAsVehicle ();
-    void SetupAsInteractable ();
+	// ========== Быстрые настройки ==========
+	void SetupAsStatic ();
+	void SetupAsDynamic ();
+	void SetupAsCharacter ();
+	void SetupAsTrigger ();
+	void SetupAsPawn ();
+	void SetupAsVehicle ();
+	void SetupAsInteractable ();
 
-    // ========== Статические фабричные методы ==========
-    static FCollisionChannel CreateStatic ();
-    static FCollisionChannel CreateDynamic ();
-    static FCollisionChannel CreateCharacter ();
-    static FCollisionChannel CreateTrigger ();
-    static FCollisionChannel CreatePawn ();
-    static FCollisionChannel CreateVehicle ();
-    static FCollisionChannel CreateInteractable ();
-    static FCollisionChannel Create ( const std::string & channelName,
-                                      ECollisionResponse defaultResponse = ECollisionResponse::BLOCK );
+	// ========== Статические фабричные методы ==========
+	static FCollisionChannel CreateStatic ();
+	static FCollisionChannel CreateDynamic ();
+	static FCollisionChannel CreateCharacter ();
+	static FCollisionChannel CreateTrigger ();
+	static FCollisionChannel CreatePawn ();
+	static FCollisionChannel CreateVehicle ();
+	static FCollisionChannel CreateInteractable ();
+	static FCollisionChannel Create ( const std::string & channelName,
+									  ECollisionResponse defaultResponse = ECollisionResponse::BLOCK );
 
-       // ========== Статические геттеры ==========
-    static FCollisionChannel Static ();
-    static FCollisionChannel Dynamic ();
-    static FCollisionChannel Character ();
-    static FCollisionChannel Trigger ();
-    static FCollisionChannel Pawn ();
-    static FCollisionChannel Vehicle ();
-    static FCollisionChannel Interactable ();
-    static FCollisionChannel Get ( const std::string & channelName );
+	   // ========== Статические геттеры ==========
+	static FCollisionChannel Static ();
+	static FCollisionChannel Dynamic ();
+	static FCollisionChannel Character ();
+	static FCollisionChannel Trigger ();
+	static FCollisionChannel Pawn ();
+	static FCollisionChannel Vehicle ();
+	static FCollisionChannel Interactable ();
+	static FCollisionChannel Get ( const std::string & channelName );
 
-    // ========== Вспомогательные методы ==========
-    std::string GetName () const;
-    ECollisionChannel GetChannel () const { return Channel; }
-    ECollisionResponse GetDefaultResponse () const { return DefaultResponse; }
+	// ========== Вспомогательные методы ==========
+	std::string GetName () const;
+	ECollisionChannel GetChannel () const { return Channel; }
+	ECollisionResponse GetDefaultResponse () const { return DefaultResponse; }
 
-    private:
-        void InitializeDefaultResponses ();
-    };
+	private:
+		void InitializeDefaultResponses ();
+	};
 
-    // ==================== Вспомогательные функции ====================
+	// ==================== Вспомогательные функции ====================
 namespace Collision
-    {
-        // Конвертация в строку
-    const char * ShapeToString ( ECollisionShape shape );
-    const char * ResponseToString ( ECollisionResponse response );
-    std::string ChannelToString ( ECollisionChannel channel );
+	{
+		// Конвертация в строку
+	const char * ShapeToString ( ECollisionShape shape );
+	const char * ResponseToString ( ECollisionResponse response );
+	std::string ChannelToString ( ECollisionChannel channel );
 
-    // Работа с каналами по имени
-    FCollisionChannel CreateChannel ( const std::string & name,
-                                      ECollisionResponse defaultResponse = ECollisionResponse::BLOCK );
+	// Работа с каналами по имени
+	FCollisionChannel CreateChannel ( const std::string & name,
+									  ECollisionResponse defaultResponse = ECollisionResponse::BLOCK );
 
-    void SetChannelResponse ( const std::string & channelA,
-                              const std::string & channelB,
-                              ECollisionResponse response );
+	void SetChannelResponse ( const std::string & channelA,
+							  const std::string & channelB,
+							  ECollisionResponse response );
 
-       // Проверка столкновения между каналами
-    bool CanChannelsCollide ( const std::string & channelA, const std::string & channelB );
-    ECollisionResponse GetResponseBetween ( const std::string & channelA, const std::string & channelB );
-    }
+	   // Проверка столкновения между каналами
+	bool CanChannelsCollide ( const std::string & channelA, const std::string & channelB );
+	ECollisionResponse GetResponseBetween ( const std::string & channelA, const std::string & channelB );
+	}

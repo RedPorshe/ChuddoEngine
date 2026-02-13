@@ -2,15 +2,24 @@
 #include "Actors/PlayerController.h"
 #include "Actors/Pawn.h"
 #include "World/World.h"
-//#include "Engine/Rendering/Texture.h"
-//#include "Engine/Rendering/Font.h"
-//#include "Engine/Rendering/Renderer.h"
 #include "Components/TransformComponent.h"
+#include "Components/GravityComponent.h"
 
 CHUD::CHUD ( CObject * inOwner, const std::string & inDisplayName )
     : Super ( inOwner, inDisplayName )
     {
     LOG_DEBUG ( "[HUD] Created: ", GetName () );
+    if (m_Gravity)
+        {
+        auto it = std::find ( ActorComponents.begin (), ActorComponents.end (), m_Gravity );
+        if (it != ActorComponents.end ())
+            {
+            ActorComponents.erase ( it );
+            }
+        RemoveOwnedObject ( m_Gravity->GetName () );
+
+        m_Gravity = nullptr;
+        }
     }
 
 CHUD::~CHUD ()

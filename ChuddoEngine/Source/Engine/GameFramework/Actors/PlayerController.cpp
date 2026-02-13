@@ -3,13 +3,28 @@
 #include "Actors/HUD.h"
 #include "GameFramework/GameMode.h"
 #include "Components/TransformComponent.h"
-#include "Components/BaseCollisionComponent.h"
+#include "Components/Collisions/BaseCollisionComponent.h"
+#include "Components/GravityComponent.h"
 
 CPlayerController::CPlayerController ( CObject * inOwner, const std::string & inDisplayName )
     : Super ( inOwner, inDisplayName )
     {
     LOG_DEBUG ( "[PLAYERCONTROLLER] Created: ", GetName () );
-    GetRootComponent ()->GetCollisionComponent ()->SetCollisionChannel(ECollisionChannel::NoCollision);
+    if (m_Gravity)
+        {
+
+        auto it = std::find ( ActorComponents.begin (), ActorComponents.end (), m_Gravity );
+        if (it != ActorComponents.end ())
+            {
+            ActorComponents.erase ( it );
+            }
+
+
+        RemoveOwnedObject ( m_Gravity->GetName () );
+
+
+        m_Gravity = nullptr;
+        }
     }
 
 CPlayerController::~CPlayerController ()
@@ -49,8 +64,6 @@ void CPlayerController::Possess ( CPawn * PawnToPossess )
 
     LOG_DEBUG ( "[PLAYERCONTROLLER] Possessed pawn: ", ControlledPawn->GetName (),
                 " for controller: ", GetName () );
-
-    SetupInputComponent ();
     }
 
 void CPlayerController::Unpossess ()
@@ -108,16 +121,11 @@ void CPlayerController::SetOwningGameMode ( CGameMode * inGameMode )
     OwningGameMode = inGameMode;
     }
 
-void CPlayerController::SetupInputComponent ()
-    {
-    LOG_DEBUG ( "[PLAYERCONTROLLER] SetupInputComponent for: ", GetName () );
-    }
-
 void CPlayerController::ProcessPlayerInput ( float DeltaTime )
     {
     if (!bInputEnabled || !ControlledPawn)
         return;
-
+    
     ControlledPawn->ProcessPlayerInput ( DeltaTime );
     }
 

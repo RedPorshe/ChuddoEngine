@@ -553,8 +553,8 @@ namespace CEMath
 
     Vector2D& Vector2D::Sign()
     {
-        x = CEMath::Sign(x);
-        y = CEMath::Sign(y);
+        x = static_cast< float >( CEMath::Sign ( x ) );
+        y = static_cast< float >( CEMath::Sign ( y ) );
         return *this;
     }
 

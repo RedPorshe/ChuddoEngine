@@ -2,8 +2,7 @@
 #include "Core/Engine.h"
 #include <iostream>
 #include "tests.h"
-#include "Components/BaseCollisionComponent.h"
-#include "Core/CollisionSystem.h"
+
 
  
 

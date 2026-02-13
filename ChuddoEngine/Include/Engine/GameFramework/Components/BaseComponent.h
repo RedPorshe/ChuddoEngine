@@ -16,6 +16,7 @@ class CBaseComponent : public CObject
 		void SetPrimaryTick ( bool value = true );
 		void SetAutoInitialize ( bool value );
 		CActor * GetOwnerActor ();
+		CActor * GetOwnerActor () const;
 		bool IsHaveOwnerActor  ( );
 		void AttachComponentToComponent ( CBaseComponent * CompToAttach );
 		void AttachActorToComponent ( CActor * ActorToAttach );

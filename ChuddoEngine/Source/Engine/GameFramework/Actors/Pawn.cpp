@@ -46,7 +46,13 @@ void CPawn::ProcessPlayerInput ( float DeltaTime )
     {
     if (!Controller || !bInputEnabled)
         return;
-
+    //stub implementation need check buttons
+    static int warncount = 0;
+    if (warncount < 1)
+        {
+        LOG_WARN ( "stub implementation ProcessPlayerInput ( float DeltaTime ) need check buttons" );
+        warncount++;
+        }
     // Apply movement based on input
     if (!CEMath::IsZero ( ForwardInput ) || !CEMath::IsZero ( RightInput ) || !CEMath::IsZero ( UpInput ))
         {
@@ -91,22 +97,18 @@ void CPawn::ProcessPlayerInput ( float DeltaTime )
             }
         }
 
-        // Apply rotation - ИСПРАВЛЕНО: конвертируем FVector в FQuat
     if (!CEMath::IsZero ( TurnInput ))
-        {
-            // Создаем кватернион вращения вокруг оси Y (yaw)
+        {            
         FQuat YawRotation ( FVector::Up (), CEMath::DegreesToRadians ( TurnInput * TurnRate * DeltaTime ) );
         AddActorWorldRotation ( YawRotation, true );
         }
 
     if (!CEMath::IsZero ( LookUpInput ))
-        {
-            // Создаем кватернион вращения вокруг оси X (pitch) в локальном пространстве
+        {            
         FQuat PitchRotation ( FVector::Right (), CEMath::DegreesToRadians ( LookUpInput * TurnRate * DeltaTime ) );
         AddActorLocalRotation ( PitchRotation, true );
         }
 
-        // Reset input for next frame
     ForwardInput = 0.0f;
     RightInput = 0.0f;
     UpInput = 0.0f;

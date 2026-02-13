@@ -72,7 +72,7 @@
     <ClCompile Include="Source\Engine\GameFramework\Components\TransformComponent.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Engine\GameFramework\Components\BaseCollisionComponent.cpp">
+    <ClCompile Include="Source\Engine\GameFramework\Components\Collisions\BaseCollisionComponent.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\Core\Collision.cpp">
@@ -84,7 +84,7 @@
     <ClCompile Include="Include\tests.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Engine\GameFramework\Components\SphereComponent.cpp">
+    <ClCompile Include="Source\Engine\GameFramework\Components\Collisions\SphereComponent.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\GameFramework\Actors\Pawn.cpp">
@@ -106,6 +106,24 @@
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\GameFramework\Actors\HUD.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\GameFramework\Components\Collisions\BoxComponent.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Include\TestCubeActor.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\GameFramework\Components\Collisions\CapsuleComponent.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\GameFramework\Actors\TerrainActor.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\GameFramework\Components\Collisions\TerrainComponent.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\GameFramework\Components\GravityComponent.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>
@@ -173,7 +191,7 @@
     <ClInclude Include="Include\Engine\GameFramework\Components\TransformComponent.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="Include\Engine\GameFramework\Components\BaseCollisionComponent.h">
+    <ClInclude Include="Include\Engine\GameFramework\Components\Collisions\BaseCollisionComponent.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="Include\Engine\Core\Collision.h">
@@ -182,7 +200,7 @@
     <ClInclude Include="Include\Engine\Core\CollisionSystem.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="Include\Engine\GameFramework\Components\SphereComponent.h">
+    <ClInclude Include="Include\Engine\GameFramework\Components\Collisions\SphereComponent.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="Include\Engine\GameFramework\Actors\Pawn.h">
@@ -207,6 +225,24 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="Include\Engine\GameFramework\GameModeSettings.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Engine\GameFramework\Components\Collisions\BoxComponent.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\TestCubeActor.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Engine\GameFramework\Components\Collisions\CapsuleComponent.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Engine\GameFramework\Actors\TerrainActor.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Engine\GameFramework\Components\Collisions\TerrainComponent.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Engine\GameFramework\Components\GravityComponent.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>

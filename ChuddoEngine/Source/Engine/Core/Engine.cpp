@@ -4,7 +4,7 @@
 #include "GameFramework/World/Level.h"
 #include "GameFramework/Actors/Actor.h"
 #include "GameFramework/GameMode.h"
-#include "Components/BaseCollisionComponent.h"
+#include "Components/Collisions/BaseCollisionComponent.h"
 #include "Core/CollisionSystem.h"
 #include "tests.h"
 #include <iostream>

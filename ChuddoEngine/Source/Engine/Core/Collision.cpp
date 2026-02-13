@@ -467,16 +467,22 @@ namespace Collision
     {
     const char * ShapeToString ( ECollisionShape shape )
         {
+        if (shape < ECollisionShape::NONE || shape >= ECollisionShape::MAX)
+            return "Invalid";
         switch (shape)
             {
                 case ECollisionShape::NONE: return "None";
                 case ECollisionShape::BOX: return "Box";
                 case ECollisionShape::SPHERE: return "Sphere";
                 case ECollisionShape::CAPSULE: return "Capsule";
-                case ECollisionShape::COMPLEX: return "Complex";
                 case ECollisionShape::CYLINDER: return "Cylinder";
-                case ECollisionShape::HEIGHTFIELD: return "Heightfield";
+                case ECollisionShape::CONE: return "Cone";
                 case ECollisionShape::COMPOUND: return "Compound";
+                case ECollisionShape::MESH: return "Mesh";
+                case ECollisionShape::TERRAIN: return "Terrain";
+                case ECollisionShape::RAY: return "Ray";
+                case ECollisionShape::PLANE: return "Plane";                
+                case ECollisionShape::MAX: 
                 default: return "Unknown";
             }
         }

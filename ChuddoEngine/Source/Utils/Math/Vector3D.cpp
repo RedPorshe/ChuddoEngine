@@ -12,13 +12,39 @@ namespace CEMath
         x(inX), y(inY), z(inZ) {
     }
 
-    Vector3D::Vector3D(int inX, int inY, int inZ) :
-        x(static_cast<float>(inX)), y(static_cast<float>(inY)), z(static_cast<float>(inZ)) {
-    }
-
     Vector3D::Vector3D(const Vector2D& vec2, float z) :
         x(vec2.x), y(vec2.y), z(z) {
     }
+
+  // Добавьте эти методы в Vector3D.cpp:
+
+// ============================================================================
+// Index Operators
+// ============================================================================
+
+    float Vector3D::operator[]( int index ) const
+        {
+        switch (index)
+            {
+                case 0: return x;
+                case 1: return y;
+                case 2: return z;
+                default:
+                    throw std::out_of_range ( "Vector3D index out of range - must be 0, 1, or 2" );
+            }
+        }
+
+    float & Vector3D::operator[]( int index )
+        {
+        switch (index)
+            {
+                case 0: return x;
+                case 1: return y;
+                case 2: return z;
+                default:
+                    throw std::out_of_range ( "Vector3D index out of range - must be 0, 1, or 2" );
+            }
+        }
 
     Vector3D::Vector3D(const Vector3D& other) :
         x(other.x), y(other.y), z(other.z) {
@@ -37,7 +63,7 @@ namespace CEMath
 
     bool Vector3D::operator==(const Vector3D& other) const
     {
-        return IsEqual(x, other.x) && IsEqual(y, other.y) && IsEqual(z, other.z);
+        return CEMath::IsEqual(x, other.x) && CEMath::IsEqual(y, other.y) && CEMath::IsEqual(z, other.z);
     }
 
     bool Vector3D::operator!=(const Vector3D& other) const
@@ -419,9 +445,9 @@ namespace CEMath
 
     Vector3D& Vector3D::Sign()
     {
-        x = CEMath::Sign(x);
-        y = CEMath::Sign(y);
-        z = CEMath::Sign(z);
+        x = static_cast< float >( CEMath::Sign ( x ) );
+        y = static_cast< float >( CEMath::Sign ( y ) );
+        z = static_cast< float >( CEMath::Sign ( z ) );
         return *this;
     }
 
