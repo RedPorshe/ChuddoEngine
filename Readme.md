@@ -86,7 +86,7 @@ gravity->SetGravityStrength(9.8f);
 
 auto result = COLLISION_SYSTEM.Raycast(start, end, "All");
 if (result.bHit) LOG_DEBUG("Hit: ", result.HitComponent->GetName());
-
+```
 ИТОГ
 С нуля создана полноценная, промышленного уровня система коллизий для игрового движка. Проект готов к использованию в реальных играх! 
 [2026-02-15] [INFO] System ready for production! 🚀
