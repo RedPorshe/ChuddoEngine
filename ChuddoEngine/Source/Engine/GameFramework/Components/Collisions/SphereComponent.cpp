@@ -61,17 +61,13 @@ bool CSphereComponent::CheckCollision ( CBaseCollisionComponent * other, FCollis
                 }
 
             case ECollisionShape::CYLINDER:
-                {
-                    // TODO: Implement Sphere-Cylinder collision
-                LOG_DEBUG ( "stub for Sphere-Cylinder collision" );
-                return false;
+                {                
+                return COLLISION_SYSTEM.CheckSphereCylinder(nonConstThis,other,outInfo);
                 }
 
             case ECollisionShape::CONE:
-                {
-                    // TODO: Implement Sphere-Cone collision
-                LOG_DEBUG ( "stub for Sphere-Cone collision" );
-                return false;
+                {                
+                return COLLISION_SYSTEM.CheckSphereCone(nonConstThis,other,outInfo);
                 }
 
             case ECollisionShape::COMPOUND:

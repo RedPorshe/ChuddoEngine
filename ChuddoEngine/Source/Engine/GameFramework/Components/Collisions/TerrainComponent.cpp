@@ -215,15 +215,13 @@ bool CTerrainComponent::CheckCollision ( CBaseCollisionComponent * other, FColli
                 }
 
             case ECollisionShape::CYLINDER:
-                {
-                LOG_DEBUG ( "stub for Terrain-Cylinder collision" );
-                return false;
+                {                
+                return COLLISION_SYSTEM.CheckCylinderTerrain(other,nonConstThis,outInfo);
                 }
 
             case ECollisionShape::CONE:
-                {
-                LOG_DEBUG ( "stub for Terrain-Cone collision" );
-                return false;
+                {                
+                return COLLISION_SYSTEM.CheckConeTerrain(other,nonConstThis,outInfo);
                 }
 
             case ECollisionShape::COMPOUND:
@@ -240,7 +238,12 @@ bool CTerrainComponent::CheckCollision ( CBaseCollisionComponent * other, FColli
 
             case ECollisionShape::TERRAIN:
                 {         
-                LOG_DEBUG ( "Terrain-Terrain collision not implemented" );
+                static int warnCount = 0;
+                if (warnCount < 1)
+                    {
+                    LOG_DEBUG ( "Terrain-Terrain collision not implemented" );
+                    warnCount++;
+                    }
                 return false;
                 }
 
@@ -260,6 +263,7 @@ bool CTerrainComponent::CheckCollision ( CBaseCollisionComponent * other, FColli
             default:
                 break;
         }
+    return false;
     }
  
 bool CTerrainComponent::RaycastTerrain ( const FVector & start, const FVector & dir, float maxDist,

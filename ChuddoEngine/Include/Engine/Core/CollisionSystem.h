@@ -18,37 +18,37 @@ class CSphereComponent;
 // ============================================================================
 
 enum class ECollisionEventType : uint8_t
-    {
-    BEGIN_OVERLAP,
-    END_OVERLAP,
-    COLLISION_HIT
-    };
+	{
+	BEGIN_OVERLAP,
+	END_OVERLAP,
+	COLLISION_HIT
+	};
 
-    // ============================================================================
-    // Structures
-    // ============================================================================
+	// ============================================================================
+	// Structures
+	// ============================================================================
 
 struct FCollisionInfo
-    {
-    CBaseCollisionComponent * ComponentA = nullptr;
-    CBaseCollisionComponent * ComponentB = nullptr;
-    FVector Location;       // Точка столкновения
-    FVector Normal;         // Нормаль столкновения
-    float Depth = 0.0f;     // Глубина проникновения
-    };
+	{
+	CBaseCollisionComponent * ComponentA = nullptr;
+	CBaseCollisionComponent * ComponentB = nullptr;
+	FVector Location;       // Точка столкновения
+	FVector Normal;         // Нормаль столкновения
+	float Depth = 0.0f;     // Глубина проникновения
+	};
 
 struct FRaycastResult
-    {
-    bool bHit = false;
-    CBaseCollisionComponent * HitComponent = nullptr;
-    FVector Location;
-    FVector Normal;
-    float Distance = 0.0f;
-    };
+	{
+	bool bHit = false;
+	CBaseCollisionComponent * HitComponent = nullptr;
+	FVector Location;
+	FVector Normal;
+	float Distance = 0.0f;
+	};
 
-    // ============================================================================
-    // Callback Types
-    // ============================================================================
+	// ============================================================================
+	// Callback Types
+	// ============================================================================
 
 using FCollisionCallback = std::function<void ( const FCollisionInfo & )>;
 
@@ -57,187 +57,204 @@ using FCollisionCallback = std::function<void ( const FCollisionInfo & )>;
 // ============================================================================
 
 class CCollisionSystem : public CObject
-    {
-    CHUDDO_DECLARE_CLASS ( CCollisionSystem, CObject );
+	{
+	CHUDDO_DECLARE_CLASS ( CCollisionSystem, CObject );
 
-    public:
-        // ------------------------------------------------------------------------
-        // Constructors & Destructor
-        // ------------------------------------------------------------------------
+	public:
+		// ------------------------------------------------------------------------
+		// Constructors & Destructor
+		// ------------------------------------------------------------------------
 
-        CCollisionSystem ( CObject * inOwner = nullptr, const std::string & inDisplayName = "CollisionSystem" );
-        virtual ~CCollisionSystem ();
+		CCollisionSystem ( CObject * inOwner = nullptr, const std::string & inDisplayName = "CollisionSystem" );
+		virtual ~CCollisionSystem ();
 
-        // Delete copy/move constructors and assignment operators
-        CCollisionSystem ( const CCollisionSystem & ) = delete;
-        CCollisionSystem & operator=( const CCollisionSystem & ) = delete;
+		// Delete copy/move constructors and assignment operators
+		CCollisionSystem ( const CCollisionSystem & ) = delete;
+		CCollisionSystem & operator=( const CCollisionSystem & ) = delete;
 
-        // ------------------------------------------------------------------------
-        // Singleton Access
-        // ------------------------------------------------------------------------
+		// ------------------------------------------------------------------------
+		// Singleton Access
+		// ------------------------------------------------------------------------
 
-        static CCollisionSystem & Get ();
+		static CCollisionSystem & Get ();
 
-        // ------------------------------------------------------------------------
-        // Component Registration
-        // ------------------------------------------------------------------------
+		// ------------------------------------------------------------------------
+		// Component Registration
+		// ------------------------------------------------------------------------
 
-        void RegisterCollisionComponent ( CBaseCollisionComponent * component );
-        void UnregisterCollisionComponent ( CBaseCollisionComponent * component );
+		void RegisterCollisionComponent ( CBaseCollisionComponent * component );
+		void UnregisterCollisionComponent ( CBaseCollisionComponent * component );
 
-        // ------------------------------------------------------------------------
-        // Main Update
-        // ------------------------------------------------------------------------
+		// ------------------------------------------------------------------------
+		// Main Update
+		// ------------------------------------------------------------------------
 
-        void Update ( float deltaTime );
+		void Update ( float deltaTime );
 
-        // ------------------------------------------------------------------------
-        // Collision Queries
-        // ------------------------------------------------------------------------
+		// ------------------------------------------------------------------------
+		// Collision Queries
+		// ------------------------------------------------------------------------
 
-        // Manual collision checks
-        std::vector<FCollisionInfo> CheckCollisions ( CBaseCollisionComponent * component ) const;
-        std::vector<FCollisionInfo> CheckCollisionsAtLocation ( const FVector & location, float radius ) const;
+		// Manual collision checks
+		std::vector<FCollisionInfo> CheckCollisions ( CBaseCollisionComponent * component ) const;
+		std::vector<FCollisionInfo> CheckCollisionsAtLocation ( const FVector & location, float radius ) const;
 
-        // Raycasting
-        FRaycastResult Raycast ( const FVector & start, const FVector & end,
-                                 const std::string & channelName = "All" ) const;
-        FRaycastResult Raycast ( const FVector & start, const FVector & direction, float distance,
-                                 const std::string & channelName = "All" ) const;
+		// Raycasting
+		FRaycastResult Raycast ( const FVector & start, const FVector & end,
+								 const std::string & channelName = "All" ) const;
+		FRaycastResult Raycast ( const FVector & start, const FVector & direction, float distance,
+								 const std::string & channelName = "All" ) const;
 
-          // Overlap tests
-        std::vector<CBaseCollisionComponent *> SphereOverlap ( const FVector & center, float radius,
-                                                               const std::string & channelName = "All" ) const;
-        std::vector<CBaseCollisionComponent *> BoxOverlap ( const FVector & center, const FVector & halfExtents,
-                                                            const FVector & rotation,
-                                                            const std::string & channelName = "All" ) const;
+		  // Overlap tests
+		std::vector<CBaseCollisionComponent *> SphereOverlap ( const FVector & center, float radius,
+															   const std::string & channelName = "All" ) const;
+		std::vector<CBaseCollisionComponent *> BoxOverlap ( const FVector & center, const FVector & halfExtents,
+															const FVector & rotation,
+															const std::string & channelName = "All" ) const;
 
-           // ------------------------------------------------------------------------
-           // Callback Management
-           // ------------------------------------------------------------------------
+		   // ------------------------------------------------------------------------
+		   // Callback Management
+		   // ------------------------------------------------------------------------
 
-        void RegisterCollisionCallback ( ECollisionEventType eventType, const FCollisionCallback & callback );
-        void UnregisterCollisionCallback ( ECollisionEventType eventType );
+		void RegisterCollisionCallback ( ECollisionEventType eventType, const FCollisionCallback & callback );
+		void UnregisterCollisionCallback ( ECollisionEventType eventType );
 
-        // ------------------------------------------------------------------------
-        // Debug & Statistics
-        // ------------------------------------------------------------------------
+		// ------------------------------------------------------------------------
+		// Debug & Statistics
+		// ------------------------------------------------------------------------
 
-        void EnableDebugDraw ( bool enable ) { bDebugDraw = enable; }
-        bool IsDebugDrawEnabled () const { return bDebugDraw; }
+		void EnableDebugDraw ( bool enable ) { bDebugDraw = enable; }
+		bool IsDebugDrawEnabled () const { return bDebugDraw; }
 
-        int32 GetRegisteredComponentsCount () const { return static_cast< int32 >( m_CollisionComponents.size () ); }
-        int32 GetActiveCollisionsCount () const { return m_LastFrameCollisions; }
+		int32 GetRegisteredComponentsCount () const { return static_cast< int32 >( m_CollisionComponents.size () ); }
+		int32 GetActiveCollisionsCount () const { return m_LastFrameCollisions; }
 
-        // ------------------------------------------------------------------------
-        // Optimization Settings
-        // ------------------------------------------------------------------------
+		// ------------------------------------------------------------------------
+		// Optimization Settings
+		// ------------------------------------------------------------------------
 
-        void SetUpdateRate ( float rateHz ) { m_UpdateRate = rateHz; }
-        void EnableSpatialPartition ( bool enable ) { bUseSpatialPartition = enable; }
-        void SetSpatialCellSize ( float cellSize ) { m_CellSize = cellSize; }
+		void SetUpdateRate ( float rateHz ) { m_UpdateRate = rateHz; }
+		void EnableSpatialPartition ( bool enable ) { bUseSpatialPartition = enable; }
+		void SetSpatialCellSize ( float cellSize ) { m_CellSize = cellSize; }
 
-    private:
-        // ------------------------------------------------------------------------
-        // Internal Collision Processing
-        // ------------------------------------------------------------------------
+	private:
+		// ------------------------------------------------------------------------
+		// Internal Collision Processing
+		// ------------------------------------------------------------------------
 
-        void ProcessCollisions ();
-        void ResolveCollision ( const FCollisionInfo & collision );
-        void FireCollisionEvent ( ECollisionEventType eventType, const FCollisionInfo & info );
-        void ProcessCollisionsSpatial ();
-        // ------------------------------------------------------------------------
-        // Geometry Checks
-        // ------------------------------------------------------------------------
-        inline bool IsValidCollisionComponent ( CBaseCollisionComponent * comp ) const;
-        void ProcessComponentPair ( const FCollisionInfo & collisionInfo );
-        // Basic shape collisions
-        bool CheckSphereSphere ( CBaseCollisionComponent * a, CBaseCollisionComponent * b, FCollisionInfo & outInfo ) const;
-        bool CheckSphereBox ( CBaseCollisionComponent * sphere, CBaseCollisionComponent * box, FCollisionInfo & outInfo ) const;
-        bool CheckBoxBox ( CBaseCollisionComponent * a, CBaseCollisionComponent * b, FCollisionInfo & outInfo ) const;
+		void ProcessCollisions ();
+		void ResolveCollision ( const FCollisionInfo & collision );
+		void FireCollisionEvent ( ECollisionEventType eventType, const FCollisionInfo & info );
+		void ProcessCollisionsSpatial ();
+		// ------------------------------------------------------------------------
+		// Geometry Checks
+		// ------------------------------------------------------------------------
+		inline bool IsValidCollisionComponent ( CBaseCollisionComponent * comp ) const;
+		void ProcessComponentPair ( const FCollisionInfo & collisionInfo );
+		// Basic shape collisions
+		bool CheckSphereSphere ( CBaseCollisionComponent * a, CBaseCollisionComponent * b, FCollisionInfo & outInfo ) const;
+		bool CheckSphereBox ( CBaseCollisionComponent * sphere, CBaseCollisionComponent * box, FCollisionInfo & outInfo ) const;
+		bool CheckBoxBox ( CBaseCollisionComponent * a, CBaseCollisionComponent * b, FCollisionInfo & outInfo ) const;
 
-        // Capsule collisions
-        bool CheckSphereCapsule ( CBaseCollisionComponent * sphere, CBaseCollisionComponent * capsule, FCollisionInfo & outInfo ) const;
-        bool CheckBoxCapsule ( CBaseCollisionComponent * box, CBaseCollisionComponent * capsule, FCollisionInfo & outInfo ) const;
-        bool CheckCapsuleCapsule ( CBaseCollisionComponent * capA, CBaseCollisionComponent * capB, FCollisionInfo & outInfo ) const;
+		// Capsule collisions
+		bool CheckSphereCapsule ( CBaseCollisionComponent * sphere, CBaseCollisionComponent * capsule, FCollisionInfo & outInfo ) const;
+		bool CheckBoxCapsule ( CBaseCollisionComponent * box, CBaseCollisionComponent * capsule, FCollisionInfo & outInfo ) const;
+		bool CheckCapsuleCapsule ( CBaseCollisionComponent * capA, CBaseCollisionComponent * capB, FCollisionInfo & outInfo ) const;
 
-        // Advanced box checks
-        bool CheckAABBAABB ( const FVector & posA, const FVector & halfA,
-                             const FVector & posB, const FVector & halfB,
-                             FCollisionInfo & outInfo,
-                             CBaseCollisionComponent * compA,
-                             CBaseCollisionComponent * compB ) const;
-        bool CheckOBBOBB ( CBoxComponent * boxA, CBoxComponent * boxB, FCollisionInfo & outInfo ) const;
+		// Advanced box checks
+		bool CheckAABBAABB ( const FVector & posA, const FVector & halfA,
+							 const FVector & posB, const FVector & halfB,
+							 FCollisionInfo & outInfo,
+							 CBaseCollisionComponent * compA,
+							 CBaseCollisionComponent * compB ) const;
+		bool CheckOBBOBB ( CBoxComponent * boxA, CBoxComponent * boxB, FCollisionInfo & outInfo ) const;
 
-        bool CheckSphereTerrain ( CBaseCollisionComponent * sphere, CBaseCollisionComponent * terrain, FCollisionInfo & outInfo ) const;
-        bool CheckBoxTerrain ( CBaseCollisionComponent * box, CBaseCollisionComponent * terrain, FCollisionInfo & outInfo ) const;
-        bool CheckCapsuleTerrain ( CBaseCollisionComponent * capsule, CBaseCollisionComponent * terrain, FCollisionInfo & outInfo ) const;
-        bool CheckRayTerrain ( const FVector & start, const FVector & direction, float maxDistance,
-                               CBaseCollisionComponent * terrain, FVector & outHit, FVector & outNormal, float & outDist ) const;
+		bool CheckSphereTerrain ( CBaseCollisionComponent * sphere, CBaseCollisionComponent * terrain, FCollisionInfo & outInfo ) const;
+		bool CheckBoxTerrain ( CBaseCollisionComponent * box, CBaseCollisionComponent * terrain, FCollisionInfo & outInfo ) const;
+		bool CheckCapsuleTerrain ( CBaseCollisionComponent * capsule, CBaseCollisionComponent * terrain, FCollisionInfo & outInfo ) const;
+		bool CheckRayTerrain ( const FVector & start, const FVector & direction, float maxDistance,
+							   CBaseCollisionComponent * terrain, FVector & outHit, FVector & outNormal, float & outDist ) const;
 
-        // ------------------------------------------------------------------------
-        // Spatial Partitioning
-        // ------------------------------------------------------------------------
+		// Cylinder collisions
+		bool CheckSphereCylinder ( CBaseCollisionComponent * sphere, CBaseCollisionComponent * cylinder, FCollisionInfo & outInfo ) const;
+		bool CheckBoxCylinder ( CBaseCollisionComponent * box, CBaseCollisionComponent * cylinder, FCollisionInfo & outInfo ) const;
+		bool CheckCapsuleCylinder ( CBaseCollisionComponent * capsule, CBaseCollisionComponent * cylinder, FCollisionInfo & outInfo ) const;
+		bool CheckCylinderCylinder ( CBaseCollisionComponent * cylA, CBaseCollisionComponent * cylB, FCollisionInfo & outInfo ) const;
+		bool CheckCylinderTerrain ( CBaseCollisionComponent * cylinder, CBaseCollisionComponent * terrain, FCollisionInfo & outInfo ) const;
 
-        struct FSpatialCell
-            {
-            std::vector<CBaseCollisionComponent *> Components;
-            };
+		// Cone collisions
+		bool CheckSphereCone ( CBaseCollisionComponent * sphere, CBaseCollisionComponent * cone, FCollisionInfo & outInfo ) const;
+		bool CheckBoxCone ( CBaseCollisionComponent * box, CBaseCollisionComponent * cone, FCollisionInfo & outInfo ) const;
+		bool CheckCapsuleCone ( CBaseCollisionComponent * capsule, CBaseCollisionComponent * cone, FCollisionInfo & outInfo ) const;
+		bool CheckCylinderCone ( CBaseCollisionComponent * cylinder, CBaseCollisionComponent * cone, FCollisionInfo & outInfo ) const;
+		bool CheckConeCone ( CBaseCollisionComponent * coneA, CBaseCollisionComponent * coneB, FCollisionInfo & outInfo ) const;
+		bool CheckConeTerrain ( CBaseCollisionComponent * cone, CBaseCollisionComponent * terrain, FCollisionInfo & outInfo ) const;
 
-        void UpdateSpatialPartition ();
-        std::vector<CBaseCollisionComponent *> GetPotentiallyCollidingComponents ( CBaseCollisionComponent * component ) const;
-        float GetComponentBoundingRadius ( CBaseCollisionComponent * component ) const;
+		// ------------------------------------------------------------------------
+		// Spatial Partitioning
+		// ------------------------------------------------------------------------
 
-        // ------------------------------------------------------------------------
-        // Member Variables
-        // ------------------------------------------------------------------------
+		struct FSpatialCell
+			{
+			std::vector<CBaseCollisionComponent *> Components;
+			};
 
-        // Core collision data
-        std::vector<CBaseCollisionComponent *> m_CollisionComponents;
-        std::unordered_map<CBaseCollisionComponent *, FVector> m_LastPositions;
+		void UpdateSpatialPartition ();
+		std::vector<CBaseCollisionComponent *> GetPotentiallyCollidingComponents ( CBaseCollisionComponent * component ) const;
+		float GetComponentBoundingRadius ( CBaseCollisionComponent * component ) const;
 
-        // Collision state tracking
-        std::set<std::pair<CBaseCollisionComponent *, CBaseCollisionComponent *>> m_PreviousFrameCollisions;
-        std::set<std::pair<CBaseCollisionComponent *, CBaseCollisionComponent *>> m_CurrentFrameCollisions;
+		// ------------------------------------------------------------------------
+		// Member Variables
+		// ------------------------------------------------------------------------
 
-        // Spatial partitioning
-        bool bUseSpatialPartition = false;
-        float m_CellSize = 500.0f;
-        std::unordered_map<int64_t, FSpatialCell> m_SpatialGrid;
+		// Core collision data
+		std::vector<CBaseCollisionComponent *> m_CollisionComponents;
+		std::unordered_map<CBaseCollisionComponent *, FVector> m_LastPositions;
 
-        // Callbacks
-        std::unordered_map<ECollisionEventType, FCollisionCallback> m_Callbacks;
+		// Collision state tracking
+		std::set<std::pair<CBaseCollisionComponent *, CBaseCollisionComponent *>> m_PreviousFrameCollisions;
+		std::set<std::pair<CBaseCollisionComponent *, CBaseCollisionComponent *>> m_CurrentFrameCollisions;
 
-        // Statistics and timing
-        bool bDebugDraw = false;
-        int32 m_LastFrameCollisions = 0;
-        float m_UpdateRate = 60.0f;        // Hz
-        float m_AccumulatedTime = 0.0f;
-        float m_AccumulatedTime2 = 0.0f;
-        float m_AccumulatedTime3 = 0.0f;
-        float m_AccumulatedTime4 = 0.0f;
+		// Spatial partitioning
+		bool bUseSpatialPartition = false;
+		float m_CellSize = 500.0f;
+		std::unordered_map<int64_t, FSpatialCell> m_SpatialGrid;
 
-        // Static instance for singleton
-        static std::unique_ptr<CCollisionSystem> s_Instance;
-        static bool s_IsInitialized;
+		// Callbacks
+		std::unordered_map<ECollisionEventType, FCollisionCallback> m_Callbacks;
 
-        // Friend classes
-        friend class CBoxComponent;
-        friend class CSphereComponent;
-        friend class CBaseCollisionComponent;
-        friend class CCapsuleComponent;
-        friend class CTerrainComponent;
-    };
+		// Statistics and timing
+		bool bDebugDraw = false;
+		int32 m_LastFrameCollisions = 0;
+		float m_UpdateRate = 60.0f;        // Hz
+		float m_AccumulatedTime = 0.0f;
+		float m_AccumulatedTime2 = 0.0f;
+		float m_AccumulatedTime3 = 0.0f;
+		float m_AccumulatedTime4 = 0.0f;
 
-    // ============================================================================
-    // Macros
-    // ============================================================================
+		// Static instance for singleton
+		static std::unique_ptr<CCollisionSystem> s_Instance;
+		static bool s_IsInitialized;
+
+		// Friend classes
+		friend class CBoxComponent;
+		friend class CSphereComponent;
+		friend class CBaseCollisionComponent;
+		friend class CCapsuleComponent;
+		friend class CTerrainComponent;
+		friend class CCylinderComponent;
+		friend class CConeComponent;
+	};
+
+	// ============================================================================
+	// Macros
+	// ============================================================================
 
 #define COLLISION_SYSTEM CCollisionSystem::Get()
 
 #include "Components/Collisions/BaseCollisionComponent.h"
-    inline bool CCollisionSystem::IsValidCollisionComponent ( CBaseCollisionComponent * comp ) const
-     { return comp && comp->IsCollisionEnabled (); }
+inline bool CCollisionSystem::IsValidCollisionComponent ( CBaseCollisionComponent * comp ) const
+	{ return comp && comp->IsCollisionEnabled (); }
 // ============================================================================
 // Factory Registration
 // ============================================================================

@@ -3,6 +3,8 @@
 #include "Components/TransformComponent.h"
 #include "Components/Collisions/SphereComponent.h"
 #include "Components/Collisions/CapsuleComponent.h"
+#include "Components/Collisions/CylinderComponent.h"
+#include "Components/Collisions/ConeComponent.h"
 #include "Components/GravityComponent.h"
 #include "Components/Collisions/BoxComponent.h"
 #include "Components/Collisions/TerrainComponent.h"
@@ -470,7 +472,15 @@ void CCollisionSystem::ProcessComponentPair ( const FCollisionInfo & collisionIn
 
 	bool bShouldBlock = compA->ShouldBlockWith ( compB ) || compB->ShouldBlockWith ( compA );
 	bool bShouldOverlap = compA->ShouldOverlapWith ( compB ) && compB->ShouldOverlapWith ( compA );
-
+	
+	static float debugCounter = 0.0f;
+	if (debugCounter > 1.0f)
+		{
+		LOG_DEBUG ( "[COLLISION DEBUG] ", compA->GetName (), " vs ", compB->GetName (),
+					" Block=", bShouldBlock, " Overlap=", bShouldOverlap );
+		debugCounter = 0.0f;
+		}
+	debugCounter += 0.16f;
 	// Разрешаем коллизию если блокирующая
 	if (bShouldBlock)
 		{
@@ -1295,8 +1305,8 @@ bool CCollisionSystem::CheckSphereTerrain ( CBaseCollisionComponent * sphere,
 	}
 
 
-bool CCollisionSystem::CheckBoxTerrain ( CBaseCollisionComponent * box,
-										 CBaseCollisionComponent * terrain,
+bool CCollisionSystem::CheckBoxTerrain (  CBaseCollisionComponent * box,
+										  CBaseCollisionComponent * terrain,
 										 FCollisionInfo & outInfo ) const
 	{
 	CBoxComponent * boxComp = dynamic_cast< CBoxComponent * >( box );
@@ -1410,6 +1420,861 @@ bool CCollisionSystem::CheckRayTerrain ( const FVector & start, const FVector & 
 
 		current += direction * step;
 		traveled += step;
+		}
+
+	return false;
+	}
+
+// ============================================================================
+// Cylinder Collision Checks
+// ============================================================================
+
+bool CCollisionSystem::CheckSphereCylinder ( CBaseCollisionComponent * sphere,
+											 CBaseCollisionComponent * cylinder,
+											 FCollisionInfo & outInfo ) const
+	{
+	CSphereComponent * sphereComp = dynamic_cast< CSphereComponent * >( sphere );
+	CCylinderComponent * cylComp = dynamic_cast< CCylinderComponent * >( cylinder );
+
+	if (!sphereComp || !cylComp) return false;
+
+	FVector spherePos = sphere->GetWorldLocation ();
+	float sphereRadius = sphereComp->GetRadius ();
+
+	FVector cylPos = cylinder->GetWorldLocation ();
+	float cylRadius = cylComp->GetRadius ();
+	float cylHalfHeight = cylComp->GetHalfHeight ();
+	FQuat cylRot = cylinder->GetOwnerActor ()->GetActorRotationQuat ();
+
+	// Преобразуем позицию сферы в локальное пространство цилиндра
+	FVector localSpherePos = cylRot.Inverse () * ( spherePos - cylPos );
+
+	// Проецируем на плоскость XZ (основания цилиндра)
+	float distXZ = std::sqrt ( localSpherePos.x * localSpherePos.x + localSpherePos.z * localSpherePos.z );
+
+	// Проверка по высоте (Y)
+	if (std::abs ( localSpherePos.y ) > cylHalfHeight + sphereRadius)
+		return false;
+
+	// Проверка по радиусу
+	if (distXZ > cylRadius + sphereRadius)
+		return false;
+
+	// Если внутри цилиндра по всем осям - есть коллизия
+	// Находим ближайшую точку на поверхности цилиндра
+	FVector localClosestPoint = localSpherePos;
+
+	// Ограничиваем по высоте
+	if (std::abs ( localClosestPoint.y ) > cylHalfHeight)
+		localClosestPoint.y = ( localClosestPoint.y > 0 ) ? cylHalfHeight : -cylHalfHeight;
+
+	// Ограничиваем по радиусу
+	float currentDistXZ = std::sqrt ( localClosestPoint.x * localClosestPoint.x + localClosestPoint.z * localClosestPoint.z );
+	if (currentDistXZ > cylRadius)
+		{
+		float scale = cylRadius / currentDistXZ;
+		localClosestPoint.x *= scale;
+		localClosestPoint.z *= scale;
+		}
+
+		// Вычисляем глубину проникновения
+	FVector delta = localSpherePos - localClosestPoint;
+	float distance = delta.Length ();
+
+	outInfo.ComponentA = sphere;
+	outInfo.ComponentB = cylinder;
+	outInfo.Depth = sphereRadius - distance;
+
+	if (distance > 0.001f)
+		{
+		outInfo.Normal = ( cylRot * delta ).Normalized ();
+		outInfo.Location = spherePos - outInfo.Normal * sphereRadius;
+		}
+	else
+		{
+		outInfo.Normal = FVector ( 0.0f, 1.0f, 0.0f );
+		outInfo.Location = spherePos;
+		}
+
+	return true;
+	}
+
+bool CCollisionSystem::CheckBoxCylinder ( CBaseCollisionComponent * box,
+										  CBaseCollisionComponent * cylinder,
+										  FCollisionInfo & outInfo ) const
+	{
+	CBoxComponent * boxComp = dynamic_cast< CBoxComponent * >( box );
+	CCylinderComponent * cylComp = dynamic_cast< CCylinderComponent * >( cylinder );
+
+	if (!boxComp || !cylComp) return false;
+
+	FVector boxPos = box->GetWorldLocation ();
+	FVector boxHalf = boxComp->GetHalfExtents ();
+	FQuat boxRot = box->GetOwnerActor ()->GetActorRotationQuat ();
+
+	FVector cylPos = cylinder->GetWorldLocation ();
+	float cylRadius = cylComp->GetRadius ();
+	float cylHalfHeight = cylComp->GetHalfHeight ();
+	FQuat cylRot = cylinder->GetOwnerActor ()->GetActorRotationQuat ();
+
+	// Преобразуем позицию бокса в локальное пространство цилиндра
+	FVector localBoxPos = cylRot.Inverse () * ( boxPos - cylPos );
+
+	// Трансформируем половины размеров бокса в локальное пространство цилиндра
+	FVector localHalf;
+
+	// Получаем оси бокса в мировом пространстве
+	FVector boxAxisX = boxRot * FVector ( 1, 0, 0 );
+	FVector boxAxisY = boxRot * FVector ( 0, 1, 0 );
+	FVector boxAxisZ = boxRot * FVector ( 0, 0, 1 );
+
+	// Получаем оси цилиндра в мировом пространстве
+	FVector cylAxisX = cylRot * FVector ( 1, 0, 0 );
+	FVector cylAxisY = cylRot * FVector ( 0, 1, 0 );
+	FVector cylAxisZ = cylRot * FVector ( 0, 0, 1 );
+
+	// Проецируем половины размеров бокса на оси цилиндра
+	localHalf.x = std::abs ( boxAxisX.Dot ( cylAxisX ) ) * boxHalf.x +
+		std::abs ( boxAxisY.Dot ( cylAxisX ) ) * boxHalf.y +
+		std::abs ( boxAxisZ.Dot ( cylAxisX ) ) * boxHalf.z;
+
+	localHalf.y = std::abs ( boxAxisX.Dot ( cylAxisY ) ) * boxHalf.x +
+		std::abs ( boxAxisY.Dot ( cylAxisY ) ) * boxHalf.y +
+		std::abs ( boxAxisZ.Dot ( cylAxisY ) ) * boxHalf.z;
+
+	localHalf.z = std::abs ( boxAxisX.Dot ( cylAxisZ ) ) * boxHalf.x +
+		std::abs ( boxAxisY.Dot ( cylAxisZ ) ) * boxHalf.y +
+		std::abs ( boxAxisZ.Dot ( cylAxisZ ) ) * boxHalf.z;
+
+// Проверка по высоте (Y)
+	if (std::abs ( localBoxPos.y ) > cylHalfHeight + localHalf.y)
+		return false;
+
+	// Проверка по радиусу - находим ближайшую точку бокса к оси цилиндра
+	float minX = localBoxPos.x - localHalf.x;
+	float maxX = localBoxPos.x + localHalf.x;
+	float minZ = localBoxPos.z - localHalf.z;
+	float maxZ = localBoxPos.z + localHalf.z;
+
+	// Находим ближайшую точку к оси цилиндра (0,0)
+	float closestX = 0.0f;
+	if (localBoxPos.x > 0)
+		closestX = std::max ( 0.0f, minX );
+	else
+		closestX = std::min ( 0.0f, maxX );
+
+	float closestZ = 0.0f;
+	if (localBoxPos.z > 0)
+		closestZ = std::max ( 0.0f, minZ );
+	else
+		closestZ = std::min ( 0.0f, maxZ );
+
+	float distToAxis = std::sqrt ( closestX * closestX + closestZ * closestZ );
+
+	if (distToAxis > cylRadius)
+		return false;
+
+	// Есть коллизия
+	outInfo.ComponentA = box;
+	outInfo.ComponentB = cylinder;
+
+	// Упрощённая нормаль (в направлении от оси цилиндра)
+	if (distToAxis > 0.001f)
+		{
+		outInfo.Normal = ( cylRot * FVector ( closestX, 0.0f, closestZ ) ).Normalized ();
+		}
+	else
+		{
+		outInfo.Normal = FVector ( 1.0f, 0.0f, 0.0f );
+		}
+
+	outInfo.Depth = cylRadius - distToAxis;
+	outInfo.Location = boxPos + outInfo.Normal * ( boxHalf.Length () - outInfo.Depth * 0.5f );
+
+	return true;
+	}
+
+bool CCollisionSystem::CheckCapsuleCylinder ( CBaseCollisionComponent * capsule,
+											  CBaseCollisionComponent * cylinder,
+											  FCollisionInfo & outInfo ) const
+	{
+	CCapsuleComponent * capComp = dynamic_cast< CCapsuleComponent * >( capsule );
+	CCylinderComponent * cylComp = dynamic_cast< CCylinderComponent * >( cylinder );
+
+	if (!capComp || !cylComp) return false;
+
+	FVector capPos = capsule->GetWorldLocation ();
+	float capRadius = capComp->GetRadius ();
+	float capHalfHeight = capComp->GetHalfHeight ();
+	FQuat capRot = capsule->GetOwnerActor ()->GetActorRotationQuat ();
+
+	FVector cylPos = cylinder->GetWorldLocation ();
+	float cylRadius = cylComp->GetRadius ();
+	float cylHalfHeight = cylComp->GetHalfHeight ();
+	FQuat cylRot = cylinder->GetOwnerActor ()->GetActorRotationQuat ();
+
+	// Получаем центры полусфер капсулы
+	FVector capTop = capRot * FVector ( 0, 0, capHalfHeight ) + capPos;
+	FVector capBottom = capRot * FVector ( 0, 0, -capHalfHeight ) + capPos;
+
+	// Преобразуем в локальное пространство цилиндра
+	FVector localCapTop = cylRot.Inverse () * ( capTop - cylPos );
+	FVector localCapBottom = cylRot.Inverse () * ( capBottom - cylPos );
+	FVector localCapAxis = localCapTop - localCapBottom;
+	float capLength = localCapAxis.Length ();
+	FVector localCapDir = localCapAxis / capLength;
+
+	// Ось цилиндра в локальном пространстве - Y
+	FVector cylAxis ( 0, 1, 0 );
+
+	// Находим ближайшие точки между отрезками
+	FVector w = localCapBottom - FVector ( 0, -cylHalfHeight, 0 );
+	float a = 1.0f; // Длина оси цилиндра нормирована
+	float b = localCapDir.Dot ( localCapDir );
+	float c = localCapDir.Dot ( cylAxis );
+	float d = cylAxis.Dot ( w );
+	float e = localCapDir.Dot ( w );
+
+	float t, s;
+	float denom = a * b - c * c;
+
+	if (std::abs ( denom ) < 0.001f)
+		{
+		t = 0.0f;
+		s = e / b;
+		}
+	else
+		{
+		t = ( c * e - b * d ) / denom;
+		s = ( a * e - c * d ) / denom;
+		}
+
+		// Ограничиваем параметры
+	t = std::max ( -cylHalfHeight, std::min ( cylHalfHeight, t ) );
+	s = std::max ( 0.0f, std::min ( capLength, s ) );
+
+	// Ближайшие точки
+	FVector closestCyl = FVector ( 0, t, 0 );
+	FVector closestCap = localCapBottom + localCapDir * s;
+
+	// Проверяем расстояние в плоскости XZ
+	FVector delta = closestCap - closestCyl;
+	float distXZ = std::sqrt ( delta.x * delta.x + delta.z * delta.z );
+	float distY = std::abs ( delta.y );
+
+	if (distXZ > cylRadius + capRadius)
+		return false;
+
+	// Есть коллизия
+	outInfo.ComponentA = capsule;
+	outInfo.ComponentB = cylinder;
+
+	if (distXZ > 0.001f)
+		{
+		FVector normalXZ = FVector ( delta.x, 0, delta.z ).Normalized ();
+		outInfo.Normal = cylRot * normalXZ;
+		}
+	else
+		{
+		outInfo.Normal = FVector ( 1.0f, 0.0f, 0.0f );
+		}
+
+	outInfo.Depth = cylRadius + capRadius - distXZ;
+	outInfo.Location = ( capTop + capBottom ) * 0.5f + outInfo.Normal * ( capRadius - outInfo.Depth * 0.5f );
+
+	return true;
+	}
+
+bool CCollisionSystem::CheckCylinderCylinder ( CBaseCollisionComponent * cylA,
+											   CBaseCollisionComponent * cylB,
+											   FCollisionInfo & outInfo ) const
+	{
+	CCylinderComponent * cylAComp = dynamic_cast< CCylinderComponent * >( cylA );
+	CCylinderComponent * cylBComp = dynamic_cast< CCylinderComponent * >( cylB );
+
+	if (!cylAComp || !cylBComp) return false;
+
+	FVector posA = cylA->GetWorldLocation ();
+	float radiusA = cylAComp->GetRadius ();
+	float halfHeightA = cylAComp->GetHalfHeight ();
+	FQuat rotA = cylA->GetOwnerActor ()->GetActorRotationQuat ();
+
+	FVector posB = cylB->GetWorldLocation ();
+	float radiusB = cylBComp->GetRadius ();
+	float halfHeightB = cylBComp->GetHalfHeight ();
+	FQuat rotB = cylB->GetOwnerActor ()->GetActorRotationQuat ();
+
+	// Оси цилиндров в локальном пространстве
+	FVector axisA = rotA * FVector ( 0, 1, 0 );
+	FVector axisB = rotB * FVector ( 0, 1, 0 );
+
+	// Вектор между центрами
+	FVector delta = posB - posA;
+
+	// Находим ближайшие точки между осями
+	float a = 1.0f;
+	float b = 1.0f;
+	float c = axisA.Dot ( axisB );
+	float d = axisA.Dot ( delta );
+	float e = axisB.Dot ( delta );
+
+	float s, t;
+	float denom = a * b - c * c;
+
+	if (std::abs ( denom ) < 0.001f)
+		{
+		s = 0.0f;
+		t = e;
+		}
+	else
+		{
+		s = ( c * e - b * d ) / denom;
+		t = ( a * e - c * d ) / denom;
+		}
+
+		// Ограничиваем параметры
+	s = std::max ( -halfHeightA, std::min ( halfHeightA, s ) );
+	t = std::max ( -halfHeightB, std::min ( halfHeightB, t ) );
+
+	// Ближайшие точки на осях
+	FVector closestA = posA + axisA * s;
+	FVector closestB = posB + axisB * t;
+
+	// Проверяем расстояние
+	FVector deltaClosest = closestB - closestA;
+	float distXZ = std::sqrt ( deltaClosest.x * deltaClosest.x + deltaClosest.z * deltaClosest.z );
+
+	if (distXZ > radiusA + radiusB)
+		return false;
+
+	// Проверка по высоте
+	if (std::abs ( deltaClosest.y ) > halfHeightA + halfHeightB)
+		return false;
+
+	// Есть коллизия
+	outInfo.ComponentA = cylA;
+	outInfo.ComponentB = cylB;
+
+	if (distXZ > 0.001f)
+		{
+		outInfo.Normal = ( closestB - closestA ).Normalized ();
+		}
+	else
+		{
+		outInfo.Normal = FVector ( 1.0f, 0.0f, 0.0f );
+		}
+
+	outInfo.Depth = radiusA + radiusB - distXZ;
+	outInfo.Location = ( closestA + closestB ) * 0.5f;
+
+	return true;
+	}
+
+bool CCollisionSystem::CheckCylinderTerrain ( CBaseCollisionComponent * cylinder,
+											  CBaseCollisionComponent * terrain,
+											  FCollisionInfo & outInfo ) const
+	{
+	CCylinderComponent * cylComp = dynamic_cast< CCylinderComponent * >( cylinder );
+	CTerrainComponent * terrComp = dynamic_cast< CTerrainComponent * >( terrain );
+
+	if (!cylComp || !terrComp) return false;
+
+	FVector cylPos = cylinder->GetWorldLocation ();
+	float cylRadius = cylComp->GetRadius ();
+	float cylHalfHeight = cylComp->GetHalfHeight ();
+	FQuat cylRot = cylinder->GetOwnerActor ()->GetActorRotationQuat ();
+
+	// Получаем нижнюю точку цилиндра
+	FVector bottomCenter = cylPos + cylRot * FVector ( 0, -cylHalfHeight, 0 );
+	float lowestPoint = bottomCenter.y - cylRadius;
+
+	// Получаем высоту террейна под центром цилиндра
+	float terrainHeight = terrComp->GetHeightAtWorld ( cylPos );
+
+	if (lowestPoint <= terrainHeight)
+		{
+		outInfo.ComponentA = cylinder;
+		outInfo.ComponentB = terrain;
+		outInfo.Depth = terrainHeight - lowestPoint;
+		outInfo.Normal = FVector ( 0.0f, -1.0f, 0.0f );
+		outInfo.Location = FVector ( cylPos.x, terrainHeight, cylPos.z );
+
+		return true;
+		}
+
+	return false;
+	}
+
+// ============================================================================
+// Cone Collision Checks
+// ============================================================================
+
+bool CCollisionSystem::CheckSphereCone ( CBaseCollisionComponent * sphere,
+										 CBaseCollisionComponent * cone,
+										 FCollisionInfo & outInfo ) const
+	{
+	CSphereComponent * sphereComp = dynamic_cast< CSphereComponent * >( sphere );
+	CConeComponent * coneComp = dynamic_cast< CConeComponent * >( cone );
+
+	if (!sphereComp || !coneComp) return false;
+
+	FVector spherePos = sphere->GetWorldLocation ();
+	float sphereRadius = sphereComp->GetRadius ();
+
+	FVector conePos = cone->GetWorldLocation ();
+	float coneRadius = coneComp->GetRadius ();
+	float coneHeight = coneComp->GetHeight ();
+	float coneHalfHeight = coneHeight * 0.5f;
+	float coneSlope = coneComp->GetSlope (); // radius / height
+
+	FQuat coneRot = cone->GetOwnerActor ()->GetActorRotationQuat ();
+
+	// Преобразуем позицию сферы в локальное пространство конуса
+	// В локальном пространстве: основание внизу (y = -halfHeight), острие вверху (y = +halfHeight)
+	FVector localSpherePos = coneRot.Inverse () * ( spherePos - conePos );
+
+	// Проверка по высоте (сфера может быть выше или ниже конуса)
+	if (localSpherePos.y < -coneHalfHeight - sphereRadius ||
+		 localSpherePos.y > coneHalfHeight + sphereRadius)
+		return false;
+
+	// Радиус конуса на данной высоте (линейно уменьшается от основания к острию)
+	float t = ( localSpherePos.y + coneHalfHeight ) / coneHeight; // 0 у основания, 1 у острия
+	t = std::max ( 0.0f, std::min ( 1.0f, t ) );
+	float radiusAtY = coneRadius * ( 1.0f - t );
+
+	// Расстояние от оси конуса в плоскости XZ
+	float distXZ = std::sqrt ( localSpherePos.x * localSpherePos.x + localSpherePos.z * localSpherePos.z );
+
+	// Проверка на коллизию
+	if (distXZ > radiusAtY + sphereRadius)
+		return false;
+
+	// Если сфера ниже основания конуса, проверяем специально
+	if (localSpherePos.y < -coneHalfHeight)
+		{
+			// Проверяем коллизию с основанием (круг)
+		float distToBase = std::abs ( localSpherePos.y + coneHalfHeight );
+		if (distToBase > sphereRadius)
+			return false;
+
+		// Проверяем расстояние до края основания
+		if (distXZ > coneRadius + sphereRadius)
+			return false;
+		}
+
+		// Если сфера выше острия, проверяем коллизию с остриём
+	if (localSpherePos.y > coneHalfHeight)
+		{
+		float distToTip = std::abs ( localSpherePos.y - coneHalfHeight );
+		if (distToTip > sphereRadius)
+			return false;
+
+		// У острия радиус = 0
+		if (distXZ > sphereRadius)
+			return false;
+		}
+
+		// Есть коллизия - находим ближайшую точку на конусе
+	FVector localClosestPoint = localSpherePos;
+
+	// Ограничиваем по высоте
+	if (localClosestPoint.y < -coneHalfHeight)
+		localClosestPoint.y = -coneHalfHeight;
+	else if (localClosestPoint.y > coneHalfHeight)
+		localClosestPoint.y = coneHalfHeight;
+
+	// Находим радиус на этой высоте
+	t = ( localClosestPoint.y + coneHalfHeight ) / coneHeight;
+	t = std::max ( 0.0f, std::min ( 1.0f, t ) );
+	float closestRadius = coneRadius * ( 1.0f - t );
+
+	// Ограничиваем по радиусу
+	float closestDistXZ = std::sqrt ( localClosestPoint.x * localClosestPoint.x +
+									  localClosestPoint.z * localClosestPoint.z );
+
+	if (closestDistXZ > closestRadius)
+		{
+		float scale = closestRadius / closestDistXZ;
+		localClosestPoint.x *= scale;
+		localClosestPoint.z *= scale;
+		}
+
+		// Вычисляем глубину проникновения
+	FVector delta = localSpherePos - localClosestPoint;
+	float distance = delta.Length ();
+
+	outInfo.ComponentA = sphere;
+	outInfo.ComponentB = cone;
+	outInfo.Depth = sphereRadius - distance;
+
+	if (distance > 0.001f)
+		{
+		outInfo.Normal = ( coneRot * delta ).Normalized ();
+		outInfo.Location = spherePos - outInfo.Normal * sphereRadius;
+		}
+	else
+		{
+		outInfo.Normal = FVector ( 0.0f, 1.0f, 0.0f );
+		outInfo.Location = spherePos;
+		}
+
+	return true;
+	}
+
+bool CCollisionSystem::CheckBoxCone ( CBaseCollisionComponent * box,
+									  CBaseCollisionComponent * cone,
+									  FCollisionInfo & outInfo ) const
+	{
+	CBoxComponent * boxComp = dynamic_cast< CBoxComponent * >( box );
+	CConeComponent * coneComp = dynamic_cast< CConeComponent * >( cone );
+
+	if (!boxComp || !coneComp) return false;
+
+	FVector boxPos = box->GetWorldLocation ();
+	FVector boxHalf = boxComp->GetHalfExtents ();
+	FQuat boxRot = box->GetOwnerActor ()->GetActorRotationQuat ();
+
+	FVector conePos = cone->GetWorldLocation ();
+	float coneRadius = coneComp->GetRadius ();
+	float coneHeight = coneComp->GetHeight ();
+	float coneHalfHeight = coneHeight * 0.5f;
+	float coneSlope = coneComp->GetSlope ();
+
+	FQuat coneRot = cone->GetOwnerActor ()->GetActorRotationQuat ();
+
+	// Преобразуем позицию бокса в локальное пространство конуса
+	FVector localBoxPos = coneRot.Inverse () * ( boxPos - conePos );
+
+	// Трансформируем половины размеров бокса в локальное пространство конуса
+	// Это сложно для точной проверки, используем приближение с 8 углами
+	FVector corners[ 8 ];
+	for (int i = 0; i < 8; i++)
+		{
+		FVector localCorner (
+			( i & 1 ) ? boxHalf.x : -boxHalf.x,
+			( i & 2 ) ? boxHalf.y : -boxHalf.y,
+			( i & 4 ) ? boxHalf.z : -boxHalf.z
+		);
+
+		// Поворачиваем угол в мировое пространство, затем в локальное конуса
+		FVector worldCorner = boxPos + boxRot * localCorner;
+		corners[ i ] = coneRot.Inverse () * ( worldCorner - conePos );
+		}
+
+		// Проверяем каждый угол на принадлежность конусу
+	bool anyInside = false;
+	for (int i = 0; i < 8; i++)
+		{
+		float y = corners[ i ].y;
+		float distXZ = std::sqrt ( corners[ i ].x * corners[ i ].x + corners[ i ].z * corners[ i ].z );
+
+		// Радиус конуса на этой высоте
+		float t = ( y + coneHalfHeight ) / coneHeight;
+		if (t < 0 || t > 1) continue; // Вне высоты конуса
+
+		float radiusAtY = coneRadius * ( 1.0f - t );
+
+		if (distXZ <= radiusAtY)
+			{
+			anyInside = true;
+			break;
+			}
+		}
+
+	if (!anyInside)
+		{
+			// Дополнительно проверяем пересечение рёбер конуса с боксом
+			// Упрощённо - проверяем расстояние до оси конуса
+		float minY = corners[ 0 ].y, maxY = corners[ 0 ].y;
+		float minXZ = std::sqrt ( corners[ 0 ].x * corners[ 0 ].x + corners[ 0 ].z * corners[ 0 ].z );
+
+		for (int i = 1; i < 8; i++)
+			{
+			minY = std::min ( minY, corners[ i ].y );
+			maxY = std::max ( maxY, corners[ i ].y );
+			float distXZ = std::sqrt ( corners[ i ].x * corners[ i ].x + corners[ i ].z * corners[ i ].z );
+			minXZ = std::min ( minXZ, distXZ );
+			}
+
+			// Если бокс полностью выше или ниже конуса
+		if (maxY < -coneHalfHeight || minY > coneHalfHeight)
+			return false;
+
+		// Находим максимальный радиус конуса в диапазоне высот бокса
+		float yCenter = ( minY + maxY ) * 0.5f;
+		float t = ( yCenter + coneHalfHeight ) / coneHeight;
+		t = std::max ( 0.0f, std::min ( 1.0f, t ) );
+		float radiusAtY = coneRadius * ( 1.0f - t );
+
+		// Если бокс достаточно далеко от оси
+		if (minXZ > radiusAtY)
+			return false;
+		}
+
+		// Есть коллизия
+	outInfo.ComponentA = box;
+	outInfo.ComponentB = cone;
+
+	// Упрощённая нормаль (в сторону от оси конуса)
+	FVector dirToBox = localBoxPos;
+	dirToBox.y = 0;
+	if (dirToBox.Length () > 0.001f)
+		{
+		outInfo.Normal = ( coneRot * dirToBox ).Normalized ();
+		}
+	else
+		{
+		outInfo.Normal = FVector ( 1.0f, 0.0f, 0.0f );
+		}
+
+	outInfo.Depth = 1.0f; // Приблизительная глубина
+	outInfo.Location = boxPos;
+
+	return true;
+	}
+
+bool CCollisionSystem::CheckCapsuleCone ( CBaseCollisionComponent * capsule,
+										  CBaseCollisionComponent * cone,
+										  FCollisionInfo & outInfo ) const
+	{
+	CCapsuleComponent * capComp = dynamic_cast< CCapsuleComponent * >( capsule );
+	CConeComponent * coneComp = dynamic_cast< CConeComponent * >( cone );
+
+	if (!capComp || !coneComp) return false;
+
+	FVector capPos = capsule->GetWorldLocation ();
+	float capRadius = capComp->GetRadius ();
+	float capHalfHeight = capComp->GetHalfHeight ();
+	FQuat capRot = capsule->GetOwnerActor ()->GetActorRotationQuat ();
+
+	FVector conePos = cone->GetWorldLocation ();
+	float coneRadius = coneComp->GetRadius ();
+	float coneHeight = coneComp->GetHeight ();
+	float coneHalfHeight = coneHeight * 0.5f;
+	float coneSlope = coneComp->GetSlope ();
+
+	FQuat coneRot = cone->GetOwnerActor ()->GetActorRotationQuat ();
+
+	// Получаем центры полусфер капсулы
+	FVector capTop = capRot * FVector ( 0, 0, capHalfHeight ) + capPos;
+	FVector capBottom = capRot * FVector ( 0, 0, -capHalfHeight ) + capPos;
+
+	// Преобразуем в локальное пространство конуса
+	FVector localCapTop = coneRot.Inverse () * ( capTop - conePos );
+	FVector localCapBottom = coneRot.Inverse () * ( capBottom - conePos );
+
+	// Проверяем коллизию каждой полусферы капсулы с конусом
+	FCollisionInfo sphereInfo;
+	bool topCollision = CheckSphereCone ( capsule, cone, sphereInfo ); // Временно используем капсулу как сферу
+	bool bottomCollision = false;
+
+	// Создаем временную сферу для нижней полусферы
+	// В реальности нужно проверять всю капсулу как сферу, сдвинутую к центру
+
+	// Упрощённо: проверяем расстояние от оси капсулы до оси конуса
+	FVector capAxis = localCapTop - localCapBottom;
+	float capLength = capAxis.Length ();
+	FVector capDir = capAxis / capLength;
+
+	// Ось конуса в локальном пространстве - Y
+	FVector coneAxis ( 0, 1, 0 );
+
+	// Находим ближайшие точки между осями
+	FVector w = localCapBottom - FVector ( 0, -coneHalfHeight, 0 );
+	float a = 1.0f;
+	float b = capDir.Dot ( capDir );
+	float c = capDir.Dot ( coneAxis );
+	float d = coneAxis.Dot ( w );
+	float e = capDir.Dot ( w );
+
+	float t, s;
+	float denom = a * b - c * c;
+
+	if (std::abs ( denom ) < 0.001f)
+		{
+		t = 0.0f;
+		s = e / b;
+		}
+	else
+		{
+		t = ( c * e - b * d ) / denom;
+		s = ( a * e - c * d ) / denom;
+		}
+
+	t = std::max ( -coneHalfHeight, std::min ( coneHalfHeight, t ) );
+	s = std::max ( 0.0f, std::min ( capLength, s ) );
+
+	FVector closestCone = FVector ( 0, t, 0 );
+	FVector closestCap = localCapBottom + capDir * s;
+
+	// Радиус конуса на этой высоте
+	float tNorm = ( t + coneHalfHeight ) / coneHeight;
+	tNorm = std::max ( 0.0f, std::min ( 1.0f, tNorm ) );
+	float radiusAtY = coneRadius * ( 1.0f - tNorm );
+
+	// Расстояние между точками в плоскости XZ
+	FVector delta = closestCap - closestCone;
+	float distXZ = std::sqrt ( delta.x * delta.x + delta.z * delta.z );
+
+	if (distXZ > radiusAtY + capRadius)
+		return false;
+
+	// Есть коллизия
+	outInfo.ComponentA = capsule;
+	outInfo.ComponentB = cone;
+
+	if (distXZ > 0.001f)
+		{
+		FVector normalXZ = FVector ( delta.x, 0, delta.z ).Normalized ();
+		outInfo.Normal = coneRot * normalXZ;
+		}
+	else
+		{
+		outInfo.Normal = FVector ( 1.0f, 0.0f, 0.0f );
+		}
+
+	outInfo.Depth = radiusAtY + capRadius - distXZ;
+	outInfo.Location = ( capTop + capBottom ) * 0.5f + outInfo.Normal * capRadius;
+
+	return true;
+	}
+
+bool CCollisionSystem::CheckCylinderCone ( CBaseCollisionComponent * cylinder,
+										   CBaseCollisionComponent * cone,
+										   FCollisionInfo & outInfo ) const
+	{
+	CCylinderComponent * cylComp = dynamic_cast< CCylinderComponent * >( cylinder );
+	CConeComponent * coneComp = dynamic_cast< CConeComponent * >( cone );
+
+	if (!cylComp || !coneComp) return false;
+
+	FVector cylPos = cylinder->GetWorldLocation ();
+	float cylRadius = cylComp->GetRadius ();
+	float cylHalfHeight = cylComp->GetHalfHeight ();
+	FQuat cylRot = cylinder->GetOwnerActor ()->GetActorRotationQuat ();
+
+	FVector conePos = cone->GetWorldLocation ();
+	float coneRadius = coneComp->GetRadius ();
+	float coneHeight = coneComp->GetHeight ();
+	float coneHalfHeight = coneHeight * 0.5f;
+	float coneSlope = coneComp->GetSlope ();
+
+	FQuat coneRot = cone->GetOwnerActor ()->GetActorRotationQuat ();
+
+	// Преобразуем позицию цилиндра в локальное пространство конуса
+	FVector localCylPos = coneRot.Inverse () * ( cylPos - conePos );
+
+	// Ось цилиндра в локальном пространстве
+	FVector cylAxisLocal = coneRot.Inverse () * ( cylRot * FVector ( 0, 1, 0 ) );
+
+	// Упрощённо: проверяем коллизию как пересечение сфер
+	float cylBoundRadius = std::sqrt ( cylRadius * cylRadius + cylHalfHeight * cylHalfHeight );
+	float coneBoundRadius = std::sqrt ( coneRadius * coneRadius + coneHalfHeight * coneHalfHeight );
+
+	if (( localCylPos ).Length () > cylBoundRadius + coneBoundRadius)
+		return false;
+
+	// Более точная проверка - дискретизация цилиндра по высоте
+	int numSamples = 5;
+	for (int i = 0; i < numSamples; i++)
+		{
+		float t = ( float ) i / ( numSamples - 1 );
+		float yOffset = ( t - 0.5f ) * 2.0f * cylHalfHeight;
+
+		FVector localPoint = localCylPos + cylAxisLocal * yOffset;
+
+		// Радиус конуса на этой высоте
+		float tNorm = ( localPoint.y + coneHalfHeight ) / coneHeight;
+		if (tNorm < 0 || tNorm > 1) continue;
+
+		float radiusAtY = coneRadius * ( 1.0f - tNorm );
+		float distXZ = std::sqrt ( localPoint.x * localPoint.x + localPoint.z * localPoint.z );
+
+		if (distXZ <= radiusAtY + cylRadius)
+			{
+			outInfo.ComponentA = cylinder;
+			outInfo.ComponentB = cone;
+			outInfo.Normal = FVector ( 1.0f, 0.0f, 0.0f );
+			outInfo.Depth = 1.0f;
+			outInfo.Location = cylPos;
+			return true;
+			}
+		}
+
+	return false;
+	}
+
+bool CCollisionSystem::CheckConeCone ( CBaseCollisionComponent * coneA,
+									   CBaseCollisionComponent * coneB,
+									   FCollisionInfo & outInfo ) const
+	{
+	CConeComponent * coneAComp = dynamic_cast< CConeComponent * >( coneA );
+	CConeComponent * coneBComp = dynamic_cast< CConeComponent * >( coneB );
+
+	if (!coneAComp || !coneBComp) return false;
+
+	FVector posA = coneA->GetWorldLocation ();
+	float radiusA = coneAComp->GetRadius ();
+	float heightA = coneAComp->GetHeight ();
+	float halfHeightA = heightA * 0.5f;
+	FQuat rotA = coneA->GetOwnerActor ()->GetActorRotationQuat ();
+
+	FVector posB = coneB->GetWorldLocation ();
+	float radiusB = coneBComp->GetRadius ();
+	float heightB = coneBComp->GetHeight ();
+	float halfHeightB = heightB * 0.5f;
+	FQuat rotB = coneB->GetOwnerActor ()->GetActorRotationQuat ();
+
+	// Упрощённо: проверяем как сферы
+	float distSq = ( posB - posA ).LengthSquared ();
+	float boundRadiusA = std::sqrt ( radiusA * radiusA + halfHeightA * halfHeightA );
+	float boundRadiusB = std::sqrt ( radiusB * radiusB + halfHeightB * halfHeightB );
+
+	if (distSq > ( boundRadiusA + boundRadiusB ) * ( boundRadiusA + boundRadiusB ))
+		return false;
+
+	// Точная проверка сложна, пока считаем что коллизия есть
+	outInfo.ComponentA = coneA;
+	outInfo.ComponentB = coneB;
+	outInfo.Normal = ( posB - posA ).Normalized ();
+	outInfo.Depth = boundRadiusA + boundRadiusB - std::sqrt ( distSq );
+	outInfo.Location = ( posA + posB ) * 0.5f;
+
+	return true;
+	}
+
+bool CCollisionSystem::CheckConeTerrain ( CBaseCollisionComponent * cone,
+										  CBaseCollisionComponent * terrain,
+										  FCollisionInfo & outInfo ) const
+	{
+	CConeComponent * coneComp = dynamic_cast< CConeComponent * >( cone );
+	CTerrainComponent * terrComp = dynamic_cast< CTerrainComponent * >( terrain );
+
+	if (!coneComp || !terrComp) return false;
+
+	FVector conePos = cone->GetWorldLocation ();
+	float coneRadius = coneComp->GetRadius ();
+	float coneHeight = coneComp->GetHeight ();
+	float coneHalfHeight = coneHeight * 0.5f;
+	FQuat coneRot = cone->GetOwnerActor ()->GetActorRotationQuat ();
+
+	// Получаем нижнюю точку конуса (основание)
+	FVector bottomCenter = conePos + coneRot * FVector ( 0, -coneHalfHeight, 0 );
+	float lowestPoint = bottomCenter.y - coneRadius;
+
+	// Получаем высоту террейна под центром конуса
+	float terrainHeight = terrComp->GetHeightAtWorld ( conePos );
+
+	if (lowestPoint <= terrainHeight)
+		{
+		outInfo.ComponentA = cone;
+		outInfo.ComponentB = terrain;
+		outInfo.Depth = terrainHeight - lowestPoint;
+		outInfo.Normal = FVector ( 0.0f, -1.0f, 0.0f );
+		outInfo.Location = FVector ( conePos.x, terrainHeight, conePos.z );
+
+		return true;
 		}
 
 	return false;
