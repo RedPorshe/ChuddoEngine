@@ -4,6 +4,7 @@
 class CActor;
 class CCollisionSystem;
 class CGameInstance;
+class IRenderer;
 
 class CEngine
     {
@@ -31,7 +32,6 @@ class CEngine
         void MainLoop ();
         void Tick ( float deltaTime );
         void CalculateDeltaTime ();
-
         float m_DeltaTime = 0.f;
         std::chrono::steady_clock::time_point m_LastFrameTime;
         bool bIsInitialized = false;
@@ -39,6 +39,7 @@ class CEngine
 
         void CreateTestWorld ();
 
+        std::unique_ptr< IRenderer>  Renderer = nullptr;
         CCollisionSystem & CollisionSystem;
 
         CEngine ();

@@ -181,6 +181,7 @@
     <ClCompile Include="Source\Engine\GameFramework\GameMode.cpp" />
     <ClCompile Include="Source\Engine\GameFramework\World\Level.cpp" />
     <ClCompile Include="Source\Engine\GameFramework\World\World.cpp" />
+    <ClCompile Include="Source\Engine\Render\VulkanRenderer.cpp" />
     <ClCompile Include="Source\main.cpp" />
     <ClCompile Include="Source\Utils\logger.cpp" />
     <ClCompile Include="Source\Utils\Math\MathConstants.cpp" />
@@ -194,9 +195,12 @@
   <ItemGroup>
     <ClInclude Include="Include\Engine\Core\Collision.h" />
     <ClInclude Include="Include\Engine\Core\CollisionSystem.h" />
+    <ClInclude Include="Include\Engine\Render\RenderInterFace.h" />
     <ClInclude Include="Include\Engine\Core\Engine.h" />
     <ClInclude Include="Include\CoreMinimal.h" />
+    <ClInclude Include="Include\Engine\Render\RenderInfo.h" />
     <ClInclude Include="Include\Engine\Core\ObjectFactory.h" />
+    <ClInclude Include="Include\Engine\Render\VulkanRenderer.h" />
     <ClInclude Include="Include\Engine\GameFramework\Actors\Actor.h" />
     <ClInclude Include="Include\Engine\GameFramework\Actors\HUD.h" />
     <ClInclude Include="Include\Engine\GameFramework\Actors\Pawn.h" />
@@ -234,6 +238,11 @@
     <ClInclude Include="Include\Utils\Math\Vector3D.h" />
     <ClInclude Include="Include\Utils\Math\Vector4.h" />
     <ClInclude Include="Include\Engine\Core\Object.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="BUILD.md" />
+    <None Include="CONTRIBUTING.md" />
+    <None Include="USAGE.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

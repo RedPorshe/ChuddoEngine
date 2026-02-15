@@ -7,6 +7,7 @@
 class CGameInstance;
 class CLevel;
 class CGameMode;
+struct RenderScene;
 
 class CWorld : public CObject
     {
@@ -38,6 +39,9 @@ class CWorld : public CObject
         CLevel * GetCurrentLevel () const { return CurrentLevel; }
         size_t GetNumLevels () const { return Levels.size (); }
         bool HasLevels () const { return !Levels.empty (); }
+
+        void RequestRenderData ( RenderScene & outScene );
+
 
         // ========== GAME MODE MANAGEMENT ==========
         // World СОЗДАЕТ GameMode!

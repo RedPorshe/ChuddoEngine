@@ -9,6 +9,7 @@ class CBaseComponent;
 class CTransformComponent;
 class CBaseCollisionComponent;
 class CGravityComponent;
+struct RenderScene;
 
 class CActor : public CObject
 	{
@@ -28,6 +29,8 @@ class CActor : public CObject
 		CTransformComponent * GetRootComponent () const { return RootComponent; }
 		CLevel * GetLevel () const;
 		CWorld * GetWorld () const;
+
+		void RequestRenderData ( RenderScene & outScene );
 
 		template<typename T>
 		T * FindComponent () const
@@ -125,7 +128,8 @@ class CActor : public CObject
 		void OnComponentBeginOverlap ( CBaseCollisionComponent * other );
 		void OnComponentEndOverlap ( CBaseCollisionComponent * other );
 		virtual void OnComponentHit ( CBaseCollisionComponent * other );
-
+		void SetHiddenInGame ( bool value ) { bIsHiddenInGame = value; }
+		bool IsHiddenInGame () const { return bIsHiddenInGame; }
 	protected:
 		std::vector<CBaseComponent *> ActorComponents;
 		CTransformComponent * RootComponent = nullptr;
@@ -151,6 +155,10 @@ class CActor : public CObject
 		float LerpSpeed = 10.0f;
 		CGravityComponent * m_Gravity = nullptr;
 		float m_MoveSpeed = 5.0f;
+
+		bool bIsHiddenInGame = false;
+		// Временная переменная
+		float m_DebugTimer = 0.f;
 
 	};
 

@@ -257,6 +257,8 @@ CTestLevel::CTestLevel ( CObject * Owner, const std::string & inLevelName )
         if (cylinder) cylinder->SetActorLocation ( 300.f, 100.f, 0.f );
         if (cone) cone->SetActorLocation ( 400.f, 100.f, 0.f );
 
+       
+
         LOG_DEBUG ( "[TESTLEVEL] BeginPlay completed with all shape types" );
         }
 

@@ -473,33 +473,20 @@ void CCollisionSystem::ProcessComponentPair ( const FCollisionInfo & collisionIn
 	bool bShouldBlock = compA->ShouldBlockWith ( compB ) || compB->ShouldBlockWith ( compA );
 	bool bShouldOverlap = compA->ShouldOverlapWith ( compB ) && compB->ShouldOverlapWith ( compA );
 	
-	static float debugCounter = 0.0f;
-	if (debugCounter > 1.0f)
-		{
-		LOG_DEBUG ( "[COLLISION DEBUG] ", compA->GetName (), " vs ", compB->GetName (),
-					" Block=", bShouldBlock, " Overlap=", bShouldOverlap );
-		debugCounter = 0.0f;
-		}
-	debugCounter += 0.16f;
-	// Разрешаем коллизию если блокирующая
 	if (bShouldBlock)
 		{
 		ResolveCollision ( collisionInfo );
 		}
 
 	if (bShouldOverlap && !bWasColliding)
-		{
-		LOG_DEBUG ( "[COLLISION] New overlap: ", compA->GetName (), " with ", compB->GetName () );
-
+		{		
 		compA->OnBeginOverlap ( compB );
 		compB->OnBeginOverlap ( compA );
 
 		FireCollisionEvent ( ECollisionEventType::BEGIN_OVERLAP, collisionInfo );
 		}
 	else if (bShouldBlock && !bWasColliding)
-		{
-		LOG_DEBUG ( "[COLLISION] New hit: ", compA->GetName (), " with ", compB->GetName () );
-
+		{		
 		compA->OnHit ( compB );
 		compB->OnHit ( compA );
 

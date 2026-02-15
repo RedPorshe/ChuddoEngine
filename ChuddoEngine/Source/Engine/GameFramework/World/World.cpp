@@ -167,6 +167,14 @@ void CWorld::SetCurrentLevel ( CLevel * level )
     LOG_DEBUG ( "[WORLD] Current level set to: ", level->GetName () );
     }
 
+void CWorld::RequestRenderData ( RenderScene & outScene )
+    {
+    if(CurrentLevel)
+        {
+        CurrentLevel->RequestRenderData ( outScene );
+        }
+    }
+
     // ========== GAME MODE MANAGEMENT ==========
 void CWorld::SetGameMode ( CGameMode * NewGameMode )
     {

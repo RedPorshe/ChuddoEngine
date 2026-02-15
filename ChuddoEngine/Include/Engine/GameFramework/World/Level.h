@@ -12,6 +12,7 @@
 class CWorld;
 class CActor;
 class CTerrainActor;
+struct RenderScene;
 
 class CLevel : public CObject
     {
@@ -63,6 +64,8 @@ class CLevel : public CObject
                 return nullptr;
                 }
             }
+
+        void RequestRenderData ( RenderScene & outScene );
 
         void ProcessSpawnQueue ();
         void SetMaxActorsPerTick ( size_t max ) { MaxActorsPerTick = max; }

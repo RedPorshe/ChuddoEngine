@@ -1,11 +1,14 @@
 #include "GameInstance.h"
 #include "World/World.h"
 #include "GameFramework/GameMode.h"
+#include "Engine/Core/Engine.h"
+#include "Render/RenderInfo.h"
+
+
 #include <filesystem>
 #include <iostream>
 #include <rapidjson/rapidjson.h>
 
-#include "Engine/Core/Engine.h"
 
 // Статический член
 CGameInstance * CGameInstance::Instance = nullptr;
@@ -145,6 +148,19 @@ void CGameInstance::Shutdown ()
 	if (CurrentWorld)
 		{
 		DestroyWorld ();
+		}
+	}
+
+void CGameInstance::RequestRenderData ( RenderScene & outScene )
+	{	
+	if (GetWorld () != nullptr)
+		{
+		 // Simulate time passing (assuming ~60 FPS)
+			GetWorld()->RequestRenderData( outScene );
+		}
+	else
+		{
+		LOG_WARN ( "[GAME] No world available to provide render data!" );
 		}
 	}
 

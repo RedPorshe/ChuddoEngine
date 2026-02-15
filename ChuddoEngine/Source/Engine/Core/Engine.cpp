@@ -6,6 +6,10 @@
 #include "GameFramework/GameMode.h"
 #include "Components/Collisions/BaseCollisionComponent.h"
 #include "Core/CollisionSystem.h"
+#include "Render/RenderInterFace.h"
+#include "Render/RenderInfo.h"
+#include "Render/VulkanRenderer.h"
+
 #include "tests.h"
 #include <iostream>
 #include <fstream>
@@ -60,7 +64,7 @@ bool CEngine::Initialize ()
         LOG_FATAL ( "Failed to create GameInstance" );
         return false;
         }
-
+    Renderer = std::make_unique<VulkanRenderer>();
     COLLISION_SYSTEM;
     bIsInitialized = true;
     LOG_INFO ( "Engine initialized" );
@@ -118,7 +122,7 @@ CGameInstance & CEngine::GetGameInstance ()
 void CEngine::MainLoop ()
     {
    
-
+    RenderScene* scene = new RenderScene(); // Пакет данных инициализация для передачи в гейм-инстанс и получения оттуда для рендера
     bIsRunning = true;
     int MaxFrames = 1000; // Ограничим для теста
 
@@ -126,7 +130,9 @@ void CEngine::MainLoop ()
         {
         CalculateDeltaTime ();
         Tick ( m_DeltaTime );
-
+        scene->DeltaTime = m_DeltaTime;
+        GetGameInstance ().RequestRenderData ( *scene );
+        Renderer->Render ( *scene );
         // Автоматический выход после 10 секунд
         static float TotalTime = 0;
         TotalTime += m_DeltaTime;

@@ -226,8 +226,7 @@ void CBaseCollisionComponent::OnBeginOverlap ( CBaseCollisionComponent * other )
 		{
 		other->OverlappingComponents.insert ( this );
 		other->OnBeginOverlap ( this ); 
-		}
-	LOG_ERROR ( "Overlaping for component", GetName() );
+		}	
 	GetOwnerActor ()->OnComponentBeginOverlap ( other );
 	}
 

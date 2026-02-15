@@ -2,6 +2,7 @@
 #include "World/Level.h"
 #include "World/World.h"
 #include "GameInstance.h"
+#include "Render/RenderInfo.h"
 #include "GameFramework/Components/BaseComponent.h"
 #include "Components/SceneComponent.h"
 #include "Components/Collisions/BaseCollisionComponent.h"
@@ -11,7 +12,7 @@
 CActor::CActor ( CObject * owner, const std::string & inName ) : CObject ( owner, inName )
 	{
 	RootComponent = AddDefaultSubObject<CTransformComponent> ( inName + "_Transform" );
-	m_Gravity = AddDefaultSubObject<CGravityComponent> ( GetName() + "_Gravity");
+	m_Gravity = AddDefaultSubObject<CGravityComponent> ( GetName () + "_Gravity" );
 	if (RootComponent) RootComponent->SetCollisionEnabled ( bIsCollisionEnabled );
 	}
 
@@ -103,6 +104,21 @@ CLevel * CActor::GetLevel () const
 CWorld * CActor::GetWorld () const
 	{
 	return CGameInstance::Get ().GetWorld ();
+	}
+
+void CActor::RequestRenderData ( RenderScene & outScene )
+	{
+	//stub
+	if (IsHiddenInGame ())
+		{
+		m_DebugTimer += outScene.DeltaTime;
+		if (m_DebugTimer >= 1.f)
+			{
+			LOG_DEBUG ( "[ACTOR] Actor '", GetName (), "' is hidden in game, skipping render data request" );
+			m_DebugTimer = 0.f;
+			}
+		return;
+		}
 	}
 
 void CActor::SetRootComponent ( CTransformComponent * NewRoot )
@@ -345,9 +361,9 @@ void CActor::MoveActor ( const FVector & Delta, bool Interpolate )
 
 	if (!Interpolate)
 		{
-			
+
 		FVector currentLocation = RootComponent->GetLocation ();
-		RootComponent->SetLocation ( currentLocation + Delta );		
+		RootComponent->SetLocation ( currentLocation + Delta );
 		return;
 		}
 
@@ -613,8 +629,6 @@ void CActor::OnComponentBeginOverlap ( CBaseCollisionComponent * other )
 	{
 	if (other == nullptr) return;
 
-	LOG_ERROR ( "OnComponentBeginOverlap with : ", other->GetOwnerActor ()->GetName (), " for ", GetName () );
-	LOG_ERROR ( "stub implementation TODO: implement real implementation" );
 	}
 
 void CActor::OnComponentEndOverlap ( CBaseCollisionComponent * other )
@@ -627,7 +641,7 @@ void CActor::OnComponentEndOverlap ( CBaseCollisionComponent * other )
 void CActor::OnComponentHit ( CBaseCollisionComponent * other )
 	{
 	if (other->GetShapeType () == ECollisionShape::TERRAIN)
-		{		
+		{
 		m_Gravity->SetVerticalVelocity ( 0.f );
 		}
 	}
