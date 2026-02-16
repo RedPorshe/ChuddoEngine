@@ -1,7 +1,9 @@
 #pragma once
 
-#include "RenderInterFace.h"
+#include "Render/RenderInterFace.h"
 
+class VulkanContext;
+class IWindow;
 
 class VulkanRenderer : public IRenderer
 	{
@@ -12,5 +14,9 @@ class VulkanRenderer : public IRenderer
 		virtual void Shutdown () override;
 		virtual void Render ( const RenderScene & scene ) override;
 	private:
-		//stub
+		std::unique_ptr<VulkanContext> Context = nullptr;
+		std::unique_ptr< IWindow> Window = nullptr;
+		// Inherited via IRenderer
+		void * GetWindow () const override;
+		void * RendererWindow = nullptr;
 	};

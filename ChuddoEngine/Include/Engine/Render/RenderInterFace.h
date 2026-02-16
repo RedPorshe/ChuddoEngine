@@ -11,6 +11,7 @@ class IRenderer
 
 		// Передать все данные сцены за кадр в рендерер
 		virtual void Render ( const RenderScene & scene ) = 0;
+		virtual void * GetWindow () const = 0;
 	};
 
 

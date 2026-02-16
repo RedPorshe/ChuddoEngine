@@ -94,11 +94,12 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>E:\Projects\ChuddoEngine\ChuddoEngine\Include\Engine\GameFramework;E:\Projects\ChuddoEngine\ChuddoEngine\Include\Engine;E:\Projects\ChuddoEngine\ChuddoEngine\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>E:\Libs\glfw-3.4.bin.WIN64\include;C:\VulkanSDK\Include;E:\Projects\ChuddoEngine\ChuddoEngine\Include\Engine\GameFramework;E:\Projects\ChuddoEngine\ChuddoEngine\Include\Engine;E:\Projects\ChuddoEngine\ChuddoEngine\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>C:\VulkanSDK\Lib;E:\Libs\glfw-3.4.bin.WIN64\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -111,11 +112,12 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>E:\Projects\ChuddoEngine\ChuddoEngine\Include\Engine\GameFramework;E:\Projects\ChuddoEngine\ChuddoEngine\Include\Engine;E:\Projects\ChuddoEngine\ChuddoEngine\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>E:\Libs\glfw-3.4.bin.WIN64\include;C:\VulkanSDK\Include;E:\Projects\ChuddoEngine\ChuddoEngine\Include\Engine\GameFramework;E:\Projects\ChuddoEngine\ChuddoEngine\Include\Engine;E:\Projects\ChuddoEngine\ChuddoEngine\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>C:\VulkanSDK\Lib;E:\Libs\glfw-3.4.bin.WIN64\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -126,11 +128,12 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>E:\Projects\ChuddoEngine\ChuddoEngine\Include\Engine\GameFramework;E:\Projects\ChuddoEngine\ChuddoEngine\Include\Engine;E:\Projects\ChuddoEngine\ChuddoEngine\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>E:\Libs\glfw-3.4.bin.WIN64\include;C:\VulkanSDK\Include;E:\Projects\ChuddoEngine\ChuddoEngine\Include\Engine\GameFramework;E:\Projects\ChuddoEngine\ChuddoEngine\Include\Engine;E:\Projects\ChuddoEngine\ChuddoEngine\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>C:\VulkanSDK\Lib;E:\Libs\glfw-3.4.bin.WIN64\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -143,14 +146,16 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>E:\Projects\ChuddoEngine\ChuddoEngine\Include\Engine\GameFramework;E:\Projects\ChuddoEngine\ChuddoEngine\Include\Engine;E:\Projects\ChuddoEngine\ChuddoEngine\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>E:\Libs\glfw-3.4.bin.WIN64\include;C:\VulkanSDK\Include;E:\Projects\ChuddoEngine\ChuddoEngine\Include\Engine\GameFramework;E:\Projects\ChuddoEngine\ChuddoEngine\Include\Engine;E:\Projects\ChuddoEngine\ChuddoEngine\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>C:\VulkanSDK\Lib;E:\Libs\glfw-3.4.bin.WIN64\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Source\Engine\Render\GLFWWindow.cpp" />
     <ClCompile Include="Include\TestCubeActor.cpp" />
     <ClCompile Include="Source\Engine\GameFramework\Actors\HUD.cpp" />
     <ClCompile Include="Source\Engine\GameFramework\Actors\Pawn.cpp" />
@@ -182,6 +187,7 @@
     <ClCompile Include="Source\Engine\GameFramework\World\Level.cpp" />
     <ClCompile Include="Source\Engine\GameFramework\World\World.cpp" />
     <ClCompile Include="Source\Engine\Render\VulkanRenderer.cpp" />
+    <ClCompile Include="Source\Engine\Render\Vulkan\VulkanContext.cpp" />
     <ClCompile Include="Source\main.cpp" />
     <ClCompile Include="Source\Utils\logger.cpp" />
     <ClCompile Include="Source\Utils\Math\MathConstants.cpp" />
@@ -195,12 +201,14 @@
   <ItemGroup>
     <ClInclude Include="Include\Engine\Core\Collision.h" />
     <ClInclude Include="Include\Engine\Core\CollisionSystem.h" />
+    <ClInclude Include="Include\Engine\Render\GLFWWindow.h" />
     <ClInclude Include="Include\Engine\Render\RenderInterFace.h" />
     <ClInclude Include="Include\Engine\Core\Engine.h" />
     <ClInclude Include="Include\CoreMinimal.h" />
     <ClInclude Include="Include\Engine\Render\RenderInfo.h" />
     <ClInclude Include="Include\Engine\Core\ObjectFactory.h" />
-    <ClInclude Include="Include\Engine\Render\VulkanRenderer.h" />
+    <ClInclude Include="Include\Engine\Render\Vulkan\VulkanContext.h" />
+    <ClInclude Include="Include\Engine\Render\Vulkan\VulkanRenderer.h" />
     <ClInclude Include="Include\Engine\GameFramework\Actors\Actor.h" />
     <ClInclude Include="Include\Engine\GameFramework\Actors\HUD.h" />
     <ClInclude Include="Include\Engine\GameFramework\Actors\Pawn.h" />
@@ -225,6 +233,7 @@
     <ClInclude Include="Include\Engine\GameFramework\GameModeSettings.h" />
     <ClInclude Include="Include\Engine\GameFramework\World\Level.h" />
     <ClInclude Include="Include\Engine\GameFramework\World\World.h" />
+    <ClInclude Include="Include\Engine\Render\WindowInterface.h" />
     <ClInclude Include="Include\TestCubeActor.h" />
     <ClInclude Include="Include\tests.h" />
     <ClInclude Include="Include\Utils\Logger.h" />

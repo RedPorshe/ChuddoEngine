@@ -8,7 +8,7 @@
 #include "Core/CollisionSystem.h"
 #include "Render/RenderInterFace.h"
 #include "Render/RenderInfo.h"
-#include "Render/VulkanRenderer.h"
+#include "Render/Vulkan/VulkanRenderer.h"
 
 #include "tests.h"
 #include <iostream>
@@ -65,6 +65,20 @@ bool CEngine::Initialize ()
         return false;
         }
     Renderer = std::make_unique<VulkanRenderer>();
+    if(Renderer)
+        {
+        if (!Renderer->Initialize ())
+            {
+            LOG_FATAL ( "Failed to initialize Renderer" );
+            return false;
+            }
+        }
+    Window = Renderer->GetWindow ();
+    if (Window == nullptr)
+        {
+        LOG_ERROR ( "Failed to get window from Renderer" );
+        return false;
+        }
     COLLISION_SYSTEM;
     bIsInitialized = true;
     LOG_INFO ( "Engine initialized" );
@@ -78,7 +92,16 @@ void CEngine::Shutdown ()
 
     LOG_INFO ( "Engine shutting down..." );
 
-    // Shutdown GameInstance first
+    // Shutdown Renderer first to ensure all rendering/Vulkan resources are freed
+    // before tearing down game objects which may reference them.
+    if (Renderer != nullptr)
+        {
+        LOG_DEBUG ( "Engine::Shutdown() - calling Renderer->Shutdown()" );
+        Renderer.get ()->Shutdown ();
+        LOG_DEBUG ( "Engine::Shutdown() - Renderer shutdown returned" );
+        }
+
+    // Shutdown GameInstance after renderer has been stopped
     auto & GameInstance = CGameInstance::Get ();
 
     if (GameInstance.IsMustSaveState ())
@@ -89,7 +112,6 @@ void CEngine::Shutdown ()
 
     GameInstance.Shutdown ();
     CGameInstance::Destroy ();
-
     bIsInitialized = false;
     bIsRunning = false;
 

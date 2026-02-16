@@ -36,7 +36,7 @@ class CEngine
         std::chrono::steady_clock::time_point m_LastFrameTime;
         bool bIsInitialized = false;
         bool bIsRunning = false;
-
+        void * Window = nullptr; // Окно для использования в инпуте , берется из рендера для передачи в инпут систему, чтобы не создавать отдельное окно для инпута
         void CreateTestWorld ();
 
         std::unique_ptr< IRenderer>  Renderer = nullptr;
