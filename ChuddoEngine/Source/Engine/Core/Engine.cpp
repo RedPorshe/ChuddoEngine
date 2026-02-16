@@ -5,9 +5,11 @@
 #include "GameFramework/Actors/Actor.h"
 #include "GameFramework/GameMode.h"
 #include "Components/Collisions/BaseCollisionComponent.h"
+
 #include "Core/CollisionSystem.h"
 #include "Render/RenderInterFace.h"
 #include "Render/RenderInfo.h"
+#include "Render/GLFWWindow.h"
 #include "Render/Vulkan/VulkanRenderer.h"
 
 #include "tests.h"
@@ -132,6 +134,7 @@ void CEngine::Start ()
 
 void CEngine::RequestExit ()
     {
+    LOG_DEBUG ( "Exit requested from window or by reached 10 sec" );
     bIsRunning = false;
     }
 
@@ -147,9 +150,12 @@ void CEngine::MainLoop ()
     RenderScene* scene = new RenderScene(); // Пакет данных инициализация для передачи в гейм-инстанс и получения оттуда для рендера
     bIsRunning = true;
     int MaxFrames = 1000; // Ограничим для теста
+   VulkanRenderer * vulkanRenderer = dynamic_cast<VulkanRenderer*>(Renderer.get());
+
 
     while (bIsRunning)
         {
+        vulkanRenderer->GetWindowPtr().get()->PollEvents(); // Poll events to handle window close and other input
         CalculateDeltaTime ();
         Tick ( m_DeltaTime );
         scene->DeltaTime = m_DeltaTime;
@@ -164,6 +170,7 @@ void CEngine::MainLoop ()
             RequestExit ();
             }
         }
+    if (vulkanRenderer->GetWindowPtr ().get ()->ShouldClose ()) RequestExit();
     }
 
 void CEngine::Tick ( float deltaTime )

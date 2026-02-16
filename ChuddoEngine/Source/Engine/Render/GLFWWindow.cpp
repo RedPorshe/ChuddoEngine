@@ -11,7 +11,7 @@ bool GLFWWindowPtr::Initialize ( int width, int height, const char * title )
         }
 
     glfwWindowHint ( GLFW_CLIENT_API, GLFW_NO_API );
-    glfwWindowHint ( GLFW_RESIZABLE, GLFW_FALSE );
+    glfwWindowHint ( GLFW_RESIZABLE, GLFW_TRUE );
 
     Window = glfwCreateWindow ( width, height, title, nullptr, nullptr );
     if (Window == nullptr)

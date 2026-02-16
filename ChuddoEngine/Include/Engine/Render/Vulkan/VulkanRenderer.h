@@ -13,6 +13,7 @@ class VulkanRenderer : public IRenderer
 		virtual bool Initialize () override;
 		virtual void Shutdown () override;
 		virtual void Render ( const RenderScene & scene ) override;
+		std::unique_ptr <IWindow> & GetWindowPtr () { return Window; }
 	private:
 		std::unique_ptr<VulkanContext> Context = nullptr;
 		std::unique_ptr< IWindow> Window = nullptr;
