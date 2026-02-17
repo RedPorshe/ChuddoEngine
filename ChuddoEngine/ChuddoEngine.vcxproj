@@ -155,6 +155,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Source\Engine\GameFramework\Components\MeshComponent.cpp" />
+    <ClCompile Include="Source\Engine\GameFramework\Components\StaticMeshComponent.cpp" />
+    <ClCompile Include="Source\Engine\Render\Vulkan\InstanceVK.cpp" />
     <ClCompile Include="Source\Engine\Render\GLFWWindow.cpp" />
     <ClCompile Include="Include\TestCubeActor.cpp" />
     <ClCompile Include="Source\Engine\GameFramework\Actors\HUD.cpp" />
@@ -188,6 +191,7 @@
     <ClCompile Include="Source\Engine\GameFramework\World\World.cpp" />
     <ClCompile Include="Source\Engine\Render\VulkanRenderer.cpp" />
     <ClCompile Include="Source\Engine\Render\Vulkan\VulkanContext.cpp" />
+    <ClCompile Include="Source\Engine\Render\Vulkan\VulkanDevice.cpp" />
     <ClCompile Include="Source\main.cpp" />
     <ClCompile Include="Source\Utils\logger.cpp" />
     <ClCompile Include="Source\Utils\Math\MathConstants.cpp" />
@@ -201,13 +205,18 @@
   <ItemGroup>
     <ClInclude Include="Include\Engine\Core\Collision.h" />
     <ClInclude Include="Include\Engine\Core\CollisionSystem.h" />
+    <ClInclude Include="Include\Engine\GameFramework\Components\MeshComponent.h" />
+    <ClInclude Include="Include\Engine\GameFramework\Components\StaticMeshComponent.h" />
     <ClInclude Include="Include\Engine\Render\GLFWWindow.h" />
+    <ClInclude Include="Include\Engine\Render\Mesh.h" />
     <ClInclude Include="Include\Engine\Render\RenderInterFace.h" />
     <ClInclude Include="Include\Engine\Core\Engine.h" />
     <ClInclude Include="Include\CoreMinimal.h" />
     <ClInclude Include="Include\Engine\Render\RenderInfo.h" />
     <ClInclude Include="Include\Engine\Core\ObjectFactory.h" />
+    <ClInclude Include="Include\Engine\Render\Vulkan\InstanceVK.h" />
     <ClInclude Include="Include\Engine\Render\Vulkan\VulkanContext.h" />
+    <ClInclude Include="Include\Engine\Render\Vulkan\VulkanDevice.h" />
     <ClInclude Include="Include\Engine\Render\Vulkan\VulkanRenderer.h" />
     <ClInclude Include="Include\Engine\GameFramework\Actors\Actor.h" />
     <ClInclude Include="Include\Engine\GameFramework\Actors\HUD.h" />

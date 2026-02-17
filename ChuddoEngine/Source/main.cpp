@@ -35,7 +35,7 @@ int main ()
 
     LOG_INFO ( "Shutting down engine..." );
     CEngine::ShutdownEngine ();
-
+    
     LOG_SHUTDOWN ();
     return EXIT_SUCCESS;
     }

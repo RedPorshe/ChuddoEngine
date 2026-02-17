@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Actors/Actor.h"
+#include "Components/MeshComponent.h"
+class CStaticMeshComponent;
 
 class CTestCube : public CActor
 	{
@@ -13,7 +15,8 @@ class CTestCube : public CActor
 		virtual void EndPlay () override;
 		virtual void OnComponentHit ( CBaseCollisionComponent * other ) override;
 	private:
-		bool bIsCanMove = true;
+    bool bIsCanMove = true;
+	CStaticMeshComponent * MeshComponent = nullptr;
 	};
 
 REGISTER_CLASS_FACTORY ( CTestCube );
@@ -28,6 +31,7 @@ class CTestSphere : public CActor
 		virtual void Tick ( float deltaTime ) override;
 		virtual void EndPlay () override;
 		virtual void OnComponentHit ( CBaseCollisionComponent * other ) override;
+      CMeshComponent * MeshComponent = nullptr;
 		CBaseCollisionComponent* GetCollisionComponent ();
 	private: 
 		float AcumTime = 0.f;

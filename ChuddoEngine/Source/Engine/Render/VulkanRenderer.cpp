@@ -9,16 +9,12 @@
 #include <stdexcept>
 #include <cstring>
 
-VulkanRenderer::VulkanRenderer ()
+
+
+
+
+VulkanRenderer::VulkanRenderer ( const VulkanContextInfo & info ) : Info ( info )
 	{
-	// В конструктор нужно передавать настройки рендера, например, разрешение, полноэкранный режим и т.д.
-	// Но для простоты сейчас оставим это на потом и будем использовать дефолтные настройки внутри Initialize
-	// В будущем можно будет расширить конструктор, добавив параметры или структуру настроек
-	// Например:
-	// VulkanRenderer ( const RenderSettings & settings );
-	// И внутри Initialize использовать эти настройки для создания окна и настройки VulkanContext
-	// Так же нужно передавать название окна (или брать его из настроек), чтобы при создании окна использовать его
-	// Но сейчас для теста просто оставим дефолтные настройки инициализации
 	}
 
 VulkanRenderer::~VulkanRenderer ()
@@ -30,7 +26,7 @@ bool VulkanRenderer::Initialize ()
 	{
 	Context = std::make_unique<VulkanContext> ();
 	Window = std::make_unique< GLFWWindowPtr> ();
-	if (!Window->Initialize ( 800, 600, "ChuddoEngine - Vulkan" ))
+	if (!Window->Initialize ( Info.WindowWidth, Info.WindowHeight, Info.AppName.c_str() ))
 		{
 		LOG_ERROR ( "Failed to initialize GLFW window for VulkanRenderer" );
 		return false;
@@ -42,7 +38,7 @@ bool VulkanRenderer::Initialize ()
 		LOG_ERROR ( "Failed to get native window handle for Vulkan initialization" );
 		return false;
 		}
-	if (!Context->Initialize ( nativeWindow ))
+    if (!Context->Initialize ( &Info, nativeWindow ))
 		{
 		LOG_ERROR ( "Failed to initialize Vulkan context" );
 		return false;

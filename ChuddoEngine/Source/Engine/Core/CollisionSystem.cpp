@@ -38,8 +38,10 @@ CCollisionSystem::~CCollisionSystem ()
 	m_LastPositions.clear ();
 	m_PreviousFrameCollisions.clear ();
 	m_CurrentFrameCollisions.clear ();
+	}
 
-	LOG_DEBUG ( "Collision System destroyed" );
+void CCollisionSystem::Shutdown ()
+	{
 	}
 
 	// ============================================================================

@@ -4,12 +4,21 @@
 #include "Components/Collisions/BoxComponent.h"
 #include "Components/Collisions/SphereComponent.h"
 #include "Core/CollisionSystem.h"
+#include "Components/StaticMeshComponent.h"
 
 CTestCube::CTestCube ( CObject * inOwner, const std::string InName ) :Super ( inOwner, InName )
 	{
 	if (GetRootComponent ())
 		{
 		GetRootComponent ()->SetAutoGenerateCollisionComponent ( false );
+    }
+
+	// Create and attach static mesh component for this actor
+	MeshComponent = AddDefaultSubObject<CStaticMeshComponent> ( "StaticMesh" );
+	if (MeshComponent)
+		{
+		MeshComponent->CreateCubeMesh ( 100.0f );
+		LOG_DEBUG ( "[TESTCUBE] StaticMeshComponent created with mesh vertices: ", MeshComponent->GetMesh () ? MeshComponent->GetMesh ()->GetVertices ().size () : 0 );
 		}
 
 	auto BoxCollision = AddDefaultSubObject<CCapsuleComponent> ( "Capsule" );

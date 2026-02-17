@@ -2,6 +2,15 @@
 #include <GLFW/glfw3.h>
 
 
+GLFWWindowPtr::~GLFWWindowPtr ()
+    {
+    LOG_DEBUG ( "GLFWWindowPtr destructor called" );
+    if (GetNativeWindow() != nullptr)
+        {
+        Shutdown ();
+        }
+    }
+
 bool GLFWWindowPtr::Initialize ( int width, int height, const char * title )
     {
     if (!glfwInit ())
@@ -33,6 +42,10 @@ void GLFWWindowPtr::Shutdown ()
 void GLFWWindowPtr::PollEvents ()
     {
     glfwPollEvents ();
+    if (ShouldClose ())
+        {
+        LOG_DEBUG ( "GLFW window close requested" );
+        }
     }
 
 bool GLFWWindowPtr::ShouldClose () const

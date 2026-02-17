@@ -3,6 +3,7 @@
 #include "Core/CollisionSystem.h"
 #include <cmath>
 #include <algorithm>
+#include "Render/Mesh.h"
 
 // ============================================================================
 // FTerrainData Implementation
@@ -101,6 +102,44 @@ void CTerrainComponent::GenerateFlat ( int32 width, int32 height, float cellSize
 
     LOG_DEBUG ( "Terrain generated: ", width, "x", height, " cells, size: ",
                 totalWidth, " x ", totalHeight );
+
+    // Also build simple flat render mesh
+    m_RenderMesh = std::make_unique<CStaticMesh> ();
+    auto & verts = m_RenderMesh->GetVerticesRef ();
+    auto & idx = m_RenderMesh->GetIndicesRef ();
+    verts.clear ();
+    idx.clear ();
+
+    for (int32 z = 0; z < height; ++z)
+        {
+        for (int32 x = 0; x < width; ++x)
+            {
+            Vertex v{};
+            FVector pos = GetWorldPositionAt ( x, z );
+            v.Position[0] = pos.x;
+            v.Position[1] = pos.y;
+            v.Position[2] = pos.z;
+            v.UV[0] = static_cast<float> ( x ) / ( width - 1 );
+            v.UV[1] = static_cast<float> ( z ) / ( height - 1 );
+            v.Normal[0] = v.Normal[1] = v.Normal[2] = 0.0f;
+            verts.push_back ( v );
+            }
+        }
+
+    for (int32 z = 0; z < height - 1; ++z)
+        {
+        for (int32 x = 0; x < width - 1; ++x)
+            {
+            uint32_t i0 = z * width + x;
+            uint32_t i1 = i0 + 1;
+            uint32_t i2 = ( z + 1 ) * width + x;
+            uint32_t i3 = i2 + 1;
+            idx.push_back ( i0 ); idx.push_back ( i1 ); idx.push_back ( i3 );
+            idx.push_back ( i0 ); idx.push_back ( i3 ); idx.push_back ( i2 );
+            }
+        }
+
+    LOG_DEBUG ( "Terrain flat render mesh generated: vertices=", verts.size (), " indices=", idx.size () );
     }
 
 void CTerrainComponent::GenerateFromHeightmap ( const std::vector<float> & heights,
@@ -128,6 +167,55 @@ void CTerrainComponent::GenerateFromHeightmap ( const std::vector<float> & heigh
 
     LOG_DEBUG ( "Terrain generated from heightmap: ", width, "x", height,
                 ", height range: ", m_TerrainData.MinHeight, " - ", m_TerrainData.MaxHeight );
+
+    // Build simple render mesh (grid of quads -> triangles)
+    m_RenderMesh = std::make_unique<CStaticMesh> ();
+    auto & verts = m_RenderMesh->GetVerticesRef ();
+    auto & idx = m_RenderMesh->GetIndicesRef ();
+
+    verts.clear ();
+    idx.clear ();
+
+    // Create vertices (one per grid point)
+    for (int32 z = 0; z < height; ++z)
+        {
+        for (int32 x = 0; x < width; ++x)
+            {
+            Vertex v{};
+            FVector pos = GetWorldPositionAt ( x, z );
+            v.Position[0] = pos.x;
+            v.Position[1] = pos.y;
+            v.Position[2] = pos.z;
+            v.UV[0] = static_cast<float> ( x ) / ( width - 1 );
+            v.UV[1] = static_cast<float> ( z ) / ( height - 1 );
+            v.Normal[0] = v.Normal[1] = v.Normal[2] = 0.0f; // placeholder; can be computed later
+            verts.push_back ( v );
+            }
+        }
+
+    // Create indices (two triangles per cell)
+    for (int32 z = 0; z < height - 1; ++z)
+        {
+        for (int32 x = 0; x < width - 1; ++x)
+            {
+            uint32_t i0 = z * width + x;
+            uint32_t i1 = i0 + 1;
+            uint32_t i2 = ( z + 1 ) * width + x;
+            uint32_t i3 = i2 + 1;
+
+            // triangle 1: i0, i1, i3
+            idx.push_back ( i0 );
+            idx.push_back ( i1 );
+            idx.push_back ( i3 );
+
+            // triangle 2: i0, i3, i2
+            idx.push_back ( i0 );
+            idx.push_back ( i3 );
+            idx.push_back ( i2 );
+            }
+        }
+
+    LOG_DEBUG ( "Terrain render mesh generated: vertices=", verts.size (), " indices=", idx.size () );
     }
 
 void CTerrainComponent::SetHeightAt ( int32 x, int32 z, float height )

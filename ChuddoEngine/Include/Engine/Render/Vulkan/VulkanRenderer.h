@@ -1,14 +1,17 @@
 #pragma once
 
 #include "Render/RenderInterFace.h"
+#include "Render/Vulkan/VulkanContext.h"
+#include <memory>
 
 class VulkanContext;
 class IWindow;
+struct VulkanContextInfo;
 
 class VulkanRenderer : public IRenderer
 	{
 	public:
-		VulkanRenderer ();
+		VulkanRenderer ( const VulkanContextInfo & info );
 		virtual ~VulkanRenderer () override;
 		virtual bool Initialize () override;
 		virtual void Shutdown () override;
@@ -20,4 +23,5 @@ class VulkanRenderer : public IRenderer
 		// Inherited via IRenderer
 		void * GetWindow () const override;
 		void * RendererWindow = nullptr;
+      VulkanContextInfo Info ;
 	};
