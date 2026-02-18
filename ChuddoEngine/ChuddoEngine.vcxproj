@@ -157,6 +157,9 @@
   <ItemGroup>
     <ClCompile Include="Source\Engine\GameFramework\Components\MeshComponent.cpp" />
     <ClCompile Include="Source\Engine\GameFramework\Components\StaticMeshComponent.cpp" />
+    <ClCompile Include="Source\Engine\Render\Vulkan\BufferManager.cpp" />
+    <ClCompile Include="Source\Engine\Render\Vulkan\CommandManager.cpp" />
+    <ClCompile Include="Source\Engine\Render\Vulkan\ImageManager.cpp" />
     <ClCompile Include="Source\Engine\Render\Vulkan\InstanceVK.cpp" />
     <ClCompile Include="Source\Engine\Render\GLFWWindow.cpp" />
     <ClCompile Include="Include\TestCubeActor.cpp" />
@@ -190,6 +193,9 @@
     <ClCompile Include="Source\Engine\GameFramework\World\Level.cpp" />
     <ClCompile Include="Source\Engine\GameFramework\World\World.cpp" />
     <ClCompile Include="Source\Engine\Render\VulkanRenderer.cpp" />
+    <ClCompile Include="Source\Engine\Render\Vulkan\PipelineManager.cpp" />
+    <ClCompile Include="Source\Engine\Render\Vulkan\SwapChainManager.cpp" />
+    <ClCompile Include="Source\Engine\Render\Vulkan\SyncManager.cpp" />
     <ClCompile Include="Source\Engine\Render\Vulkan\VulkanContext.cpp" />
     <ClCompile Include="Source\Engine\Render\Vulkan\VulkanDevice.cpp" />
     <ClCompile Include="Source\main.cpp" />
@@ -214,7 +220,13 @@
     <ClInclude Include="Include\CoreMinimal.h" />
     <ClInclude Include="Include\Engine\Render\RenderInfo.h" />
     <ClInclude Include="Include\Engine\Core\ObjectFactory.h" />
+    <ClInclude Include="Include\Engine\Render\Vulkan\BufferManager.h" />
+    <ClInclude Include="Include\Engine\Render\Vulkan\CommandManager.h" />
+    <ClInclude Include="Include\Engine\Render\Vulkan\ImageManager.h" />
     <ClInclude Include="Include\Engine\Render\Vulkan\InstanceVK.h" />
+    <ClInclude Include="Include\Engine\Render\Vulkan\PipelineManager.h" />
+    <ClInclude Include="Include\Engine\Render\Vulkan\SwapChainManager.h" />
+    <ClInclude Include="Include\Engine\Render\Vulkan\SyncManager.h" />
     <ClInclude Include="Include\Engine\Render\Vulkan\VulkanContext.h" />
     <ClInclude Include="Include\Engine\Render\Vulkan\VulkanDevice.h" />
     <ClInclude Include="Include\Engine\Render\Vulkan\VulkanRenderer.h" />
@@ -258,6 +270,8 @@
     <ClInclude Include="Include\Engine\Core\Object.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Assets\Shaders\Mesh.frag" />
+    <None Include="Assets\Shaders\Mesh.vert" />
     <None Include="BUILD.md" />
     <None Include="CONTRIBUTING.md" />
     <None Include="USAGE.md" />

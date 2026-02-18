@@ -3,10 +3,17 @@
 #include <vulkan/vulkan.h>
 #include <vector>
 #include <optional>
+class PipelineManager;
 
 struct GLFWwindow;
 struct RenderScene;
 class InstanceVK;
+   // Managers
+class SyncManager;
+class CommandManager;
+class BufferManager;
+class SwapChainManager;
+class ImageManager;
 class VulkanDevice;
 
 struct QueueFamilyIndices
@@ -92,6 +99,10 @@ struct VulkanContextInfo
     VkImage DepthImage = VK_NULL_HANDLE;
     VkDeviceMemory DepthImageMemory = VK_NULL_HANDLE;
     VkImageView DepthImageView = VK_NULL_HANDLE;
+    // MSAA color resources (optional)
+    VkImage ColorImage = VK_NULL_HANDLE;
+    VkDeviceMemory ColorImageMemory = VK_NULL_HANDLE;
+    VkImageView ColorImageView = VK_NULL_HANDLE;
 
     // Sync objects
     std::vector<VkSemaphore> ImageAvailableSemaphores;
@@ -140,10 +151,20 @@ class VulkanContext
     private:
         bool StartFrame ( VkCommandBuffer & cmdBuffer, const RenderScene & scene );
         bool EndFrame ( VkCommandBuffer & cmdBuffer );
+        void RecreateSwapChain();
 
         VulkanContextInfo ContextInfo {};
+        std::unique_ptr<PipelineManager> PipelineMgr = nullptr;
+        std::unique_ptr<SwapChainManager> SwapChainMgr = nullptr;
+        int LastImageIndex = -1;
         std::unique_ptr<InstanceVK> VulkanInstance = nullptr;
         std::unique_ptr<VulkanDevice> m_Device = nullptr;
+     
+
+        std::unique_ptr<SyncManager> SyncMgr = nullptr;
+        std::unique_ptr<CommandManager> CmdMgr = nullptr;
+        std::unique_ptr<BufferManager> BufMgr = nullptr;
+        std::unique_ptr<ImageManager> ImgMgr = nullptr;
         VkSurfaceKHR Surface = VK_NULL_HANDLE;
         GLFWwindow * Window = nullptr;
     };

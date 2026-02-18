@@ -116,12 +116,12 @@ void CTerrainComponent::GenerateFlat ( int32 width, int32 height, float cellSize
             {
             Vertex v{};
             FVector pos = GetWorldPositionAt ( x, z );
-            v.Position[0] = pos.x;
-            v.Position[1] = pos.y;
-            v.Position[2] = pos.z;
-            v.UV[0] = static_cast<float> ( x ) / ( width - 1 );
-            v.UV[1] = static_cast<float> ( z ) / ( height - 1 );
-            v.Normal[0] = v.Normal[1] = v.Normal[2] = 0.0f;
+            v.Position.x = pos.x;
+            v.Position.y = pos.y;
+            v.Position.z = pos.z;
+            v.UV.x = static_cast<float> ( x ) / ( width - 1 );
+            v.UV.y = static_cast<float> ( z ) / ( height - 1 );
+            v.Normal.x = v.Normal.y = v.Normal.z = 0.0f;
             verts.push_back ( v );
             }
         }
@@ -186,8 +186,8 @@ void CTerrainComponent::GenerateFromHeightmap ( const std::vector<float> & heigh
             v.Position[0] = pos.x;
             v.Position[1] = pos.y;
             v.Position[2] = pos.z;
-            v.UV[0] = static_cast<float> ( x ) / ( width - 1 );
-            v.UV[1] = static_cast<float> ( z ) / ( height - 1 );
+            v.UV.x = static_cast<float> ( x ) / ( width - 1 );
+            v.UV.y = static_cast<float> ( z ) / ( height - 1 );
             v.Normal[0] = v.Normal[1] = v.Normal[2] = 0.0f; // placeholder; can be computed later
             verts.push_back ( v );
             }
