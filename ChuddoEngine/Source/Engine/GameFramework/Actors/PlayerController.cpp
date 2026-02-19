@@ -3,6 +3,7 @@
 #include "Actors/HUD.h"
 #include "GameFramework/GameMode.h"
 #include "Components/TransformComponent.h"
+#include "Core/InputSystem.h"
 #include "Components/Collisions/BaseCollisionComponent.h"
 #include "Components/GravityComponent.h"
 
@@ -125,8 +126,12 @@ void CPlayerController::ProcessPlayerInput ( float DeltaTime )
     {
     if (!bInputEnabled || !ControlledPawn)
         return;
-    
-    ControlledPawn->ProcessPlayerInput ( DeltaTime );
+
+    auto * InputSystem = CInputSystem::GetInstance ();
+    if (InputSystem)
+        {
+        InputSystem->ProcessControllerInput ( this, DeltaTime );
+        }
     }
 
 FVector CPlayerController::GetViewLocation () const

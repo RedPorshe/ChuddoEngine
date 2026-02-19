@@ -1,4 +1,5 @@
 #include "Core/Engine.h"
+#include "Core/InputSystem.h"
 #include "GameFramework/GameInstance.h"
 #include "GameFramework/World/World.h"
 #include "GameFramework/World/Level.h"
@@ -98,6 +99,8 @@ bool CEngine::Initialize ()
 		return false;
 		}
 	COLLISION_SYSTEM;
+	GLFWwindow * glfwWindow = static_cast<GLFWwindow *>( Window );
+	INPUT_SYSTEM->Initialize ( glfwWindow );
 	bIsInitialized = true;
 	LOG_INFO ( "Engine initialized" );
 	return true;
@@ -173,6 +176,7 @@ void CEngine::MainLoop ()
 		{
 		vulkanRenderer->GetWindowPtr ().get ()->PollEvents (); // Poll events to handle window close and other input
 		CalculateDeltaTime ();
+		INPUT_SYSTEM->Update ( m_DeltaTime );
 		Tick ( m_DeltaTime );
 		if(!bIsRunning)
 			{ break; }
@@ -230,5 +234,5 @@ void CEngine::CreateTestWorld ()
 		}
 	}
 
-CEngine::CEngine () : CollisionSystem ( COLLISION_SYSTEM )
+CEngine::CEngine () : CollisionSystem ( COLLISION_SYSTEM ) , InputSystem ( *INPUT_SYSTEM )
 	{}

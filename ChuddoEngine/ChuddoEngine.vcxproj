@@ -155,6 +155,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Source\Engine\Core\InputSystem.cpp" />
     <ClCompile Include="Source\Engine\GameFramework\Components\MeshComponent.cpp" />
     <ClCompile Include="Source\Engine\GameFramework\Components\StaticMeshComponent.cpp" />
     <ClCompile Include="Source\Engine\Render\Vulkan\BufferManager.cpp" />
@@ -211,6 +212,8 @@
   <ItemGroup>
     <ClInclude Include="Include\Engine\Core\Collision.h" />
     <ClInclude Include="Include\Engine\Core\CollisionSystem.h" />
+    <ClInclude Include="Include\Engine\Core\InputSystem.h" />
+    <ClInclude Include="Include\Engine\GameFramework\Actors\Character.h" />
     <ClInclude Include="Include\Engine\GameFramework\Components\MeshComponent.h" />
     <ClInclude Include="Include\Engine\GameFramework\Components\StaticMeshComponent.h" />
     <ClInclude Include="Include\Engine\Render\GLFWWindow.h" />

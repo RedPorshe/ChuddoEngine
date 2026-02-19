@@ -5,6 +5,8 @@ class CActor;
 class CCollisionSystem;
 class CGameInstance;
 class IRenderer;
+class CInputSystem;
+
 
 class CEngine
     {
@@ -41,6 +43,7 @@ class CEngine
 
         std::unique_ptr< IRenderer>  Renderer = nullptr;
         CCollisionSystem & CollisionSystem;
+        CInputSystem & InputSystem;
 
         CEngine ();
     };
