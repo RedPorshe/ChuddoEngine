@@ -5,7 +5,7 @@
 //forward decl
 class CWorld;
 class CEngine;
-struct RenderScene;
+
 
 class CGameInstance : public CObject
 	{
@@ -37,7 +37,7 @@ class CGameInstance : public CObject
 		virtual void Init ();
 		virtual void Tick ( float deltaTime );
 		virtual void Shutdown ();
-		void RequestRenderData ( RenderScene & outScene );
+		
 		void SaveGameInstanceState ();
 
 		// ========== UTILITIES ==========

@@ -166,16 +166,8 @@ void CWorld::SetCurrentLevel ( CLevel * level )
 
     LOG_DEBUG ( "[WORLD] Current level set to: ", level->GetName () );
     }
-
-void CWorld::RequestRenderData ( RenderScene & outScene )
-    {
-    if(CurrentLevel)
-        {
-        CurrentLevel->RequestRenderData ( outScene );
-        }
-    }
-
-    // ========== GAME MODE MANAGEMENT ==========
+ 
+// ========== GAME MODE MANAGEMENT ==========
 void CWorld::SetGameMode ( CGameMode * NewGameMode )
     {
     if (CurrentGameMode == NewGameMode)
@@ -198,7 +190,7 @@ void CWorld::SetGameMode ( CGameMode * NewGameMode )
         }
     }    // ========== WORLD LIFECYCLE ==========
 
-#include "tests.h"
+
 void CWorld::BeginPlay ()
     {
     if (bIsPlaying)
@@ -214,7 +206,7 @@ void CWorld::BeginPlay ()
     if (!CurrentGameMode)
         {
         LOG_DEBUG ( "[WORLD] No GameMode found, creating default GameMode" );
-        CreateGameMode<CTestGameMode> ( "TestGameMode" );
+        CreateGameMode<CGameMode> ( "GameModeBase" );
         }
 
         // 2. ЕДИНСТВЕННЫЙ ВЫЗОВ StartPlay() - ЗДЕСЬ!

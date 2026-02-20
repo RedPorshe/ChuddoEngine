@@ -121,10 +121,7 @@ void CCollisionSystem::UnregisterCollisionComponent ( CBaseCollisionComponent * 
 
 void CCollisionSystem::Update ( float deltaTime )
 	{
-	m_AccumulatedTime += deltaTime;
-	m_AccumulatedTime2 += deltaTime;
-	m_AccumulatedTime3 += deltaTime;
-	m_AccumulatedTime4 += deltaTime;
+	m_AccumulatedTime += deltaTime;	
 
 	float updateInterval = 1.0f / m_UpdateRate;
 

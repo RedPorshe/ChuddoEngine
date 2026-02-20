@@ -3,8 +3,7 @@
 #include "BaseCollisionComponent.h"
 #include <vector>
 #include <cstdint>
-// For creating render mesh
-#include "Render/Mesh.h"
+
 
 // Структура для хранения данных ландшафта
 struct FTerrainData
@@ -61,8 +60,6 @@ class CTerrainComponent : public CBaseCollisionComponent
         const FTerrainData & GetTerrainData () const { return m_TerrainData; }
         FVector GetWorldPositionAt ( int32 x, int32 z ) const;
 
-        // Access to generated render mesh (may be null if not generated)
-        CStaticMesh * GetRenderMesh () const { return m_RenderMesh.get (); }
 
         // Отладка
         void EnableDebugDraw ( bool enable ) { m_bDebugDraw = enable; }
@@ -74,8 +71,7 @@ class CTerrainComponent : public CBaseCollisionComponent
                               FVector & outHit, FVector & outNormal, float & outDist ) const;
 
         FTerrainData m_TerrainData;
-    // Optional render mesh generated from terrain data
-    std::unique_ptr<CStaticMesh> m_RenderMesh;
+   
         bool m_bDebugDraw = false;
     };
 

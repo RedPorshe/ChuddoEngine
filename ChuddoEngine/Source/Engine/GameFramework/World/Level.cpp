@@ -4,7 +4,7 @@
 #include "Actors/Actor.h"
 #include "Actors/TerrainActor.h"
 #include "Components/Collisions/TerrainComponent.h"
-#include "Render/RenderInfo.h"
+
 
 #include <iostream>
 #include <algorithm>
@@ -317,15 +317,7 @@ CObject * CLevel::FindObjectByUUID ( const std::string & uuid )
 	return nullptr;
 	}
 
-void CLevel::RequestRenderData ( RenderScene & outScene )
-	{	
-	for (auto & actor : Actors)
-		{
-		//first check if actor is valid and has a root component and bIsVisible == true
-		actor->RequestRenderData ( outScene );
-		}	
-	}
-
+ 
 void CLevel::ProcessSpawnQueue ()
 	{
 	if (SpawnQueue.empty ())

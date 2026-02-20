@@ -1,4 +1,3 @@
-// main.cpp
 #include "Core/Engine.h"
 #include <iostream>
 #include "CoreMinimal.h"

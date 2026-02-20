@@ -81,9 +81,6 @@
     <ClCompile Include="Source\Engine\Core\CollisionSystem.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Include\tests.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Engine\GameFramework\Components\Collisions\SphereComponent.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
@@ -111,9 +108,6 @@
     <ClCompile Include="Source\Engine\GameFramework\Components\Collisions\BoxComponent.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Include\TestCubeActor.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Engine\GameFramework\Components\Collisions\CapsuleComponent.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
@@ -130,45 +124,6 @@
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\GameFramework\Components\Collisions\ConeComponent.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Engine\Render\VulkanRenderer.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Engine\Render\Vulkan\VulkanContext.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Engine\Render\GLFWWindow.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Engine\Render\Vulkan\InstanceVK.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Engine\Render\Vulkan\VulkanDevice.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Engine\GameFramework\Components\MeshComponent.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Engine\GameFramework\Components\StaticMeshComponent.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Engine\Render\Vulkan\PipelineManager.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Engine\Render\Vulkan\SyncManager.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Engine\Render\Vulkan\CommandManager.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Engine\Render\Vulkan\BufferManager.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Engine\Render\Vulkan\SwapChainManager.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Engine\Render\Vulkan\ImageManager.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\Core\InputSystem.cpp">
@@ -227,9 +182,6 @@
     <ClInclude Include="Include\Engine\GameFramework\Components\BaseComponent.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="Include\tests.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
     <ClInclude Include="Include\Engine\GameFramework\Components\SceneComponent.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
@@ -278,9 +230,6 @@
     <ClInclude Include="Include\Engine\GameFramework\Components\Collisions\BoxComponent.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="Include\TestCubeActor.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
     <ClInclude Include="Include\Engine\GameFramework\Components\Collisions\CapsuleComponent.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
@@ -302,61 +251,13 @@
     <ClInclude Include="Include\Engine\GameFramework\Components\Collisions\ConeComponent.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="Include\Engine\Render\RenderInterFace.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\Engine\Render\RenderInfo.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\Engine\Render\Vulkan\VulkanRenderer.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\Engine\Render\Vulkan\VulkanContext.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\Engine\Render\WindowInterface.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\Engine\Render\GLFWWindow.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\Engine\Render\Vulkan\InstanceVK.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\Engine\Render\Vulkan\VulkanDevice.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\Engine\GameFramework\Components\MeshComponent.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\Engine\GameFramework\Components\StaticMeshComponent.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\Engine\Render\Mesh.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\Engine\Render\Vulkan\PipelineManager.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\Engine\Render\Vulkan\SyncManager.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\Engine\Render\Vulkan\CommandManager.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\Engine\Render\Vulkan\BufferManager.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\Engine\Render\Vulkan\SwapChainManager.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\Engine\Render\Vulkan\ImageManager.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
     <ClInclude Include="Include\Engine\GameFramework\Actors\Character.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="Include\Engine\Core\InputSystem.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Engine\Core\EngineInfo.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>

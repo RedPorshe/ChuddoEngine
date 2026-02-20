@@ -2,8 +2,7 @@
 #include "World/Level.h"
 #include "World/World.h"
 #include "GameInstance.h"
-#include "Render/RenderInfo.h"
-#include "Components/MeshComponent.h"
+
 #include "Components/Collisions/TerrainComponent.h"
 #include "GameFramework/Components/BaseComponent.h"
 #include "Components/SceneComponent.h"
@@ -108,60 +107,6 @@ CWorld * CActor::GetWorld () const
 	return CGameInstance::Get ().GetWorld ();
 	}
 
-void CActor::RequestRenderData ( RenderScene & outScene )
-	{
-    if (IsHiddenInGame ())
-		{
-		m_DebugTimer += outScene.DeltaTime;
-		if (m_DebugTimer >= 1.f)
-			{
-			LOG_DEBUG ( "[ACTOR] Actor '", GetName (), "' is hidden in game, skipping render data request" );
-			m_DebugTimer = 0.f;
-			}
-		return;
-		}
-
-	// 1) Collect mesh components attached to this actor
-	for (CBaseComponent * comp : ActorComponents)
-		{
-		if (!comp) continue;
-
-		// Mesh components
-		if (CMeshComponent * meshComp = dynamic_cast< CMeshComponent * >( comp ))
-			{
-			Mesh * mesh = meshComp->GetMesh ();
-			if (mesh)
-				{
-				RenderObject obj;
-				obj.MeshPtr = mesh;
-				// use component transform (world)
-				if (CTransformComponent * tc = dynamic_cast< CTransformComponent * >( meshComp ))
-					obj.Transform = tc->GetTransform ();
-				else if (RootComponent)
-					obj.Transform = RootComponent->GetTransform ();
-				obj.Visible = !bIsHiddenInGame;
-				outScene.Objects.push_back ( obj );
-				}
-			}
-
-		// Terrain component (may generate its own render mesh)
-		if (CTerrainComponent * terrain = dynamic_cast< CTerrainComponent * >( comp ))
-			{
-			if (CStaticMesh * tmesh = terrain->GetRenderMesh ())
-				{
-				RenderObject obj;
-				obj.MeshPtr = tmesh;
-				// Terrain mesh is generated in world space; use identity or actor root
-				if (RootComponent)
-					obj.Transform = RootComponent->GetTransform ();
-				else
-					obj.Transform = FTransform::Identity ();
-				obj.Visible = true;
-				outScene.Objects.push_back ( obj );
-				}
-			}
-		}
-	}
 
 void CActor::SetRootComponent ( CTransformComponent * NewRoot )
 	{

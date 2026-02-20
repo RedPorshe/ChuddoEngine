@@ -4,7 +4,7 @@
 class CActor;
 class CCollisionSystem;
 class CGameInstance;
-class IRenderer;
+
 class CInputSystem;
 
 
@@ -26,10 +26,10 @@ class CEngine
 
         void Start ();
         void RequestExit ();
-
+        
         // GameInstance access
         CGameInstance & GetGameInstance (); 
-
+      
     protected:
         void MainLoop ();
         void Tick ( float deltaTime );
@@ -41,9 +41,8 @@ class CEngine
         void * Window = nullptr; // Окно для использования в инпуте , берется из рендера для передачи в инпут систему, чтобы не создавать отдельное окно для инпута
         void CreateTestWorld ();
 
-        std::unique_ptr< IRenderer>  Renderer = nullptr;
         CCollisionSystem & CollisionSystem;
         CInputSystem & InputSystem;
-
+         
         CEngine ();
     };

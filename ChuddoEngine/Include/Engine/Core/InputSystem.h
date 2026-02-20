@@ -16,8 +16,6 @@ using InputAxisDelegate = std::function<void ( float )>;
 
 class CInputSystem 
     {
-   
-
     public:
         // Singleton access
         static CInputSystem * GetInstance ();

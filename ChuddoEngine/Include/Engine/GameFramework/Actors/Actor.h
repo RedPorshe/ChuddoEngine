@@ -9,7 +9,7 @@ class CBaseComponent;
 class CTransformComponent;
 class CBaseCollisionComponent;
 class CGravityComponent;
-struct RenderScene;
+
 
 class CActor : public CObject
 	{
@@ -30,7 +30,7 @@ class CActor : public CObject
 		CLevel * GetLevel () const;
 		CWorld * GetWorld () const;
 
-		void RequestRenderData ( RenderScene & outScene );
+		
 
 		template<typename T>
 		T * FindComponent () const

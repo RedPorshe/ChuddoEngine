@@ -2,7 +2,7 @@
 #include "World/World.h"
 #include "GameFramework/GameMode.h"
 #include "Engine/Core/Engine.h"
-#include "Render/RenderInfo.h"
+
 
 
 #include <filesystem>
@@ -150,20 +150,7 @@ void CGameInstance::Shutdown ()
 		DestroyWorld ();
 		}
 	}
-
-void CGameInstance::RequestRenderData ( RenderScene & outScene )
-	{	
-	if (GetWorld () != nullptr)
-		{
-		 // Simulate time passing (assuming ~60 FPS)
-			GetWorld()->RequestRenderData( outScene );
-		}
-	else
-		{
-		LOG_WARN ( "[GAME] No world available to provide render data!" );
-		}
-	}
-
+ 
 void CGameInstance::SaveGameInstanceState ()
 	{
 	LOG_DEBUG ( "Proccessing save gameinstance '", GetName (), "' state " );

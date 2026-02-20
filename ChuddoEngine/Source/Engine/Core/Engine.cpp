@@ -3,18 +3,13 @@
 #include "GameFramework/GameInstance.h"
 #include "GameFramework/World/World.h"
 #include "GameFramework/World/Level.h"
+
 #include "GameFramework/Actors/Actor.h"
 #include "GameFramework/GameMode.h"
 #include "Components/Collisions/BaseCollisionComponent.h"
 
 #include "Core/CollisionSystem.h"
-#include "Render/RenderInterFace.h"
-#include "Render/RenderInfo.h"
-#include "Render/GLFWWindow.h"
-#include "Render/Vulkan/VulkanRenderer.h"
-#include "Render/Vulkan/VulkanContext.h"
 
-#include "tests.h"
 #include <iostream>
 #include <fstream>
 
@@ -49,12 +44,12 @@ bool CEngine::InitializeEngine ()
 void CEngine::ShutdownEngine ()
 	{
 	COLLISION_SYSTEM.Shutdown ();
-	
+
 	if (Instance)
 		{
 		delete Instance;
 		Instance = nullptr;
-		}	
+		}
 
 	}
 
@@ -66,43 +61,28 @@ bool CEngine::Initialize ()
 		return true;
 		}
 
+		
+	//LOG_DEBUG ( "[ENGINE] Initializing InputSystem..." );
+	//if (!INPUT_SYSTEM->Initialize ( static_cast< GLFWwindow * >( Window ) ))
+	//	{
+	//	LOG_FATAL ( "Failed to initialize InputSystem" );
+	//	ShutdownEngine ();
+	//	return false;
+	//	}
+
+		// Создаём GameInstance
 	if (!CGameInstance::Create ())
 		{
 		LOG_FATAL ( "Failed to create GameInstance" );
+		ShutdownEngine ();
 		return false;
 		}
-	VulkanContextInfo InfoForRenderer {};
-	InfoForRenderer.AppName = "Chuddo Engine v1.0.0";
-	InfoForRenderer.EngineName = "ChuddoEngine";
-	InfoForRenderer.AppVersionMajor = 1;
-	InfoForRenderer.AppVersionMinor = 0;
-	InfoForRenderer.AppVersionPatch = 0;
-	InfoForRenderer.EngineVersionMajor = 1;
-	InfoForRenderer.EngineVersionMinor = 0;
-	InfoForRenderer.EngineVersionPatch = 0;
-	InfoForRenderer.WindowWidth = 1024;
-	InfoForRenderer.WindowHeight = 768;
 
-	Renderer = std::make_unique<VulkanRenderer> ( InfoForRenderer );
-	if (Renderer)
-		{
-		if (!Renderer->Initialize ())
-			{
-			LOG_FATAL ( "Failed to initialize Renderer" );
-			return false;
-			}
-		}
-	Window = Renderer->GetWindow ();
-	if (Window == nullptr)
-		{
-		LOG_ERROR ( "Failed to get window from Renderer" );
-		return false;
-		}
+		// Инициализируем CollisionSystem
 	COLLISION_SYSTEM;
-	GLFWwindow * glfwWindow = static_cast<GLFWwindow *>( Window );
-	INPUT_SYSTEM->Initialize ( glfwWindow );
+
 	bIsInitialized = true;
-	LOG_INFO ( "Engine initialized" );
+	LOG_INFO ( "Engine initialized successfully" );
 	return true;
 	}
 
@@ -113,16 +93,6 @@ void CEngine::Shutdown ()
 
 	LOG_INFO ( "Engine shutting down..." );
 
-	// Shutdown Renderer first to ensure all rendering/Vulkan resources are freed
-	// before tearing down game objects which may reference them.
-	if (Renderer != nullptr)
-		{
-		LOG_DEBUG ( "Engine::Shutdown() - calling Renderer->Shutdown()" );
-		Renderer.get ()->Shutdown ();
-		LOG_DEBUG ( "Engine::Shutdown() - Renderer shutdown returned" );
-		}
-
-	// Shutdown GameInstance after renderer has been stopped
 	auto & GameInstance = CGameInstance::Get ();
 
 	if (GameInstance.IsMustSaveState ())
@@ -133,6 +103,14 @@ void CEngine::Shutdown ()
 
 	GameInstance.Shutdown ();
 	CGameInstance::Destroy ();
+	  
+	if (INPUT_SYSTEM)
+		{
+		INPUT_SYSTEM->ShutdownSystem ();
+		}
+
+		
+	
 	bIsInitialized = false;
 	bIsRunning = false;
 
@@ -165,40 +143,50 @@ CGameInstance & CEngine::GetGameInstance ()
 
 void CEngine::MainLoop ()
 	{
-
-	RenderScene * scene = new RenderScene (); // Пакет данных инициализация для передачи в гейм-инстанс и получения оттуда для рендера
 	bIsRunning = true;
-	int MaxFrames = 1000; // Ограничим для теста
-	VulkanRenderer * vulkanRenderer = dynamic_cast< VulkanRenderer * >( Renderer.get () );
 
+	// Засекаем реальное время
+	auto realStartTime = std::chrono::steady_clock::now ();
+	float gameTime = 0.0f;
 
-	while (bIsRunning && !vulkanRenderer->GetWindowPtr ().get ()->ShouldClose())
+	while (bIsRunning)
 		{
-		vulkanRenderer->GetWindowPtr ().get ()->PollEvents (); // Poll events to handle window close and other input
+			// Проверяем, не запрошено ли закрытие окна
+	
+
 		CalculateDeltaTime ();
-		INPUT_SYSTEM->Update ( m_DeltaTime );
 		Tick ( m_DeltaTime );
-		if(!bIsRunning)
-			{ break; }
-		scene->DeltaTime = m_DeltaTime;
-		GetGameInstance ().RequestRenderData ( *scene );
-		Renderer->Render ( *scene );
-		// Автоматический выход после 10 секунд
-		static float TotalTime = 0;
-		TotalTime += m_DeltaTime;
-		if (TotalTime > 10.0f)
+
+		gameTime += m_DeltaTime;
+
+		// Для теста - выход через 10 секунд
+		if (gameTime > 10.0f)
 			{
-			LOG_DEBUG ( "[ENGINE] Auto exit after 10 seconds" );
+			LOG_DEBUG ( "[ENGINE] Auto exit after 10 game seconds" );
 			RequestExit ();
-			break;
 			}
 		}
 	}
 
 void CEngine::Tick ( float deltaTime )
 	{
+	// Обновляем InputSystem
+	INPUT_SYSTEM->Update ( deltaTime );
+
+	// Обрабатываем ввод для PlayerController (если есть)
+	// TODO: Получить текущего PlayerController и обработать его ввод
+	// INPUT_SYSTEM->ProcessControllerInput(PlayerController, deltaTime);
+
+	// Обновляем GameInstance
 	CGameInstance::Get ().Tick ( deltaTime );
+
+	// Обновляем CollisionSystem
 	CollisionSystem.Update ( deltaTime );
+
+	// Здесь будет рендер
+	// Renderer->Render();
+
+	
 	}
 
 void CEngine::CalculateDeltaTime ()
@@ -207,18 +195,25 @@ void CEngine::CalculateDeltaTime ()
 
 	if (m_LastFrameTime.time_since_epoch ().count () != 0)
 		{
+			// Явно указываем типы
 		auto delta = std::chrono::duration_cast< std::chrono::microseconds >(
 			currentTime - m_LastFrameTime
 		).count ();
 
-		m_DeltaTime = delta * 0.000001f;
+		
+		m_DeltaTime = static_cast< float >( delta ) / 1000000.0f;
 
-		if (m_DeltaTime > 0.033f)
-			m_DeltaTime = 0.033f;
+		
+		constexpr float MAX_DELTA = 1.0f / 10.0f;  
+		constexpr float MIN_DELTA = 1.0f / 244.0f; // 244 FPS максимум
+
+		m_DeltaTime = std::clamp ( m_DeltaTime, MIN_DELTA, MAX_DELTA );
+
 		}
 	else
 		{
-		m_DeltaTime = 0.016f;
+			// Первый кадр
+		m_DeltaTime = 1.0f / 60.0f;
 		}
 
 	m_LastFrameTime = currentTime;
@@ -229,10 +224,14 @@ void CEngine::CreateTestWorld ()
 	auto world = CGameInstance::Get ().CreateWorld ( "Super" );
 	if (world)
 		{
-		world->CreateLevel<CTestLevel> ( "SuperLevel" );
+		world->CreateLevel<CLevel> ( "SuperLevel" );
 		LOG_DEBUG ( "[ENGINE] Test world created: Super with level: SuperLevel" );
 		}
 	}
 
-CEngine::CEngine () : CollisionSystem ( COLLISION_SYSTEM ) , InputSystem ( *INPUT_SYSTEM )
-	{}
+CEngine::CEngine () :
+	CollisionSystem ( COLLISION_SYSTEM ),
+	InputSystem ( *INPUT_SYSTEM )
+	
+	{
+	}

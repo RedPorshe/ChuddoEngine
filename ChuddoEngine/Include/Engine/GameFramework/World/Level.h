@@ -65,7 +65,7 @@ class CLevel : public CObject
                 }
             }
 
-        void RequestRenderData ( RenderScene & outScene );
+       
 
         void ProcessSpawnQueue ();
         void SetMaxActorsPerTick ( size_t max ) { MaxActorsPerTick = max; }

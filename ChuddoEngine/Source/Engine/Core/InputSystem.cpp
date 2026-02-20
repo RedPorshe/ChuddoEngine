@@ -88,8 +88,7 @@ void CInputSystem::ShutdownSystem ()
     }
 
 void CInputSystem::Update ( float DeltaTime )
-    {
-   
+    {   
     if (!m_pWindow)
         return;
 

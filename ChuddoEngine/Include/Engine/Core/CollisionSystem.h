@@ -228,9 +228,7 @@ class CCollisionSystem : public CObject
 		int32 m_LastFrameCollisions = 0;
 		float m_UpdateRate = 60.0f;        // Hz
 		float m_AccumulatedTime = 0.0f;
-		float m_AccumulatedTime2 = 0.0f;
-		float m_AccumulatedTime3 = 0.0f;
-		float m_AccumulatedTime4 = 0.0f;
+		
 
 		// Static instance for singleton
 		static std::unique_ptr<CCollisionSystem> s_Instance;
