@@ -34,6 +34,7 @@ void CActor::BeginPlay ()
 
 void CActor::Tick ( float deltaTime )
 	{
+	
 	if (this == nullptr) return;
 	if (IsPendingToDestroy ()) return;
 		// Обработка интерполяции позиции
@@ -48,9 +49,7 @@ void CActor::Tick ( float deltaTime )
 			bIsLerpingLocation = false;
 			bIsMovin = false;
 			RootComponent->SetLocation ( TargetLocation );
-			LOG_DEBUG ( "[ACTOR] Location lerp completed for: ", GetName (),
-						" final position=(", TargetLocation.x, ", ",
-						TargetLocation.y, ", ", TargetLocation.z, ")" );
+			
 			}
 		else
 			{
@@ -70,8 +69,7 @@ void CActor::Tick ( float deltaTime )
 				// Интерполяция завершена
 			RotationLerpAlpha = 1.0f;
 			bIsLerpingRotation = false;
-			RootComponent->SetRotation ( TargetRotation );
-			LOG_DEBUG ( "[ACTOR] Rotation lerp completed for: ", GetName () );
+			RootComponent->SetRotation ( TargetRotation );			
 			}
 		else
 			{
@@ -90,6 +88,7 @@ void CActor::Tick ( float deltaTime )
 			comp->Tick ( deltaTime );
 			}
 		}
+	
 	}
 
 void CActor::EndPlay ()
@@ -182,7 +181,12 @@ CBaseComponent * CActor::AddDefaultSubObject ( const std::string & className, co
 FVector CActor::GetActorLocation ()
 	{
 	FVector result {};
-	if (GetRootComponent () != nullptr) result = RootComponent->GetLocation ();
+	
+	if (GetRootComponent () != nullptr)
+		{
+		return  RootComponent->GetLocation ();
+		}
+	
 	return result;
 	}
 
@@ -253,6 +257,7 @@ void CActor::SetActorLocation ( const FVector & InLocation )
 		// Сбрасываем интерполяцию позиции
 		bIsLerpingLocation = false;
 		LocationLerpAlpha = 0.0f;
+		RootComponent->MarkTransformDirty ();
 		}
 	}
 
@@ -347,14 +352,18 @@ void CActor::MoveActor ( const FVector & Delta, bool Interpolate )
 		return;
 
 	if (!Interpolate)
-		{
+		{	
 
 		FVector currentLocation = RootComponent->GetLocation ();
-		RootComponent->SetLocation ( currentLocation + Delta );
+		
+		FVector NewLocation = currentLocation + Delta;
+		
+		RootComponent->SetLocation ( NewLocation );
+		
 		return;
 		}
 
-		// Интерполированное перемещение
+		
 	FVector currentLocation = RootComponent->GetLocation ();
 	TargetLocation = currentLocation + Delta;
 	LerpStartLocation = currentLocation;
@@ -369,7 +378,6 @@ void CActor::RotateActor ( const FVector & DeltaRotation, bool Interpolate )
 	if (!RootComponent)
 		return;
 
-	// Конвертируем дельту вращения в кватернион
 	FQuat deltaQuat = FQuat::FromEulerAngles (
 		CEMath::DegreesToRadians ( DeltaRotation.x ),
 		CEMath::DegreesToRadians ( DeltaRotation.y ),
@@ -384,38 +392,36 @@ void CActor::RotateActor ( const FQuat & DeltaRotation, bool Interpolate )
 	if (!RootComponent)
 		return;
 
-	LOG_DEBUG ( "[ACTOR] RotateActor called for: ", GetName (),
-				" Interpolate=", Interpolate );
+	
 
-	  // Получаем текущее вращение
+	  
 	FQuat currentQuat = RootComponent->GetRotationQuat ();
 
-	// Вычисляем целевое вращение (УМНОЖАЕМ СПРАВА для локального вращения)
+	
 	FQuat targetQuat = currentQuat * DeltaRotation;
 	targetQuat.Normalize ();
 
 	if (!Interpolate)
 		{
-			// Мгновенное вращение
+			
 		RootComponent->SetRotation ( targetQuat );
-		LOG_DEBUG ( "[ACTOR] Instant rotation to new quaternion" );
+		
 		return;
 		}
 
-		// Интерполированное вращение
 	TargetRotation = targetQuat;
 	LerpStartRotation = currentQuat;
 	RotationLerpAlpha = 0.0f;
 	bIsLerpingRotation = true;
 
-	LOG_DEBUG ( "[ACTOR] Starting rotation lerp" );
+	
 	}
 
 
 
 void CActor::AddActorWorldOffset ( const FVector & DeltaLocation, bool Interpolate )
 	{
-		// Мировое смещение - просто добавляем к мировой позиции
+		
 	MoveActor ( DeltaLocation, Interpolate );
 	}
 
@@ -424,18 +430,12 @@ void CActor::AddActorLocalOffset ( const FVector & DeltaLocation, bool Interpola
 	if (!RootComponent)
 		return;
 
-	LOG_DEBUG ( "[ACTOR] AddActorLocalOffset: ", GetName (),
-				" DeltaLocation=(", DeltaLocation.x, ", ", DeltaLocation.y, ", ", DeltaLocation.z, ")",
-				" Interpolate=", Interpolate );
-
-	  // Локальное смещение: учитываем вращение актора
 	FQuat rotation = RootComponent->GetRotationQuat ();
 	rotation.Normalize ();
 
-	// Преобразуем локальное смещение в мировое пространство
-	FVector worldDelta = rotation * DeltaLocation;
+		FVector worldDelta = rotation * DeltaLocation;
 
-	// Добавляем смещение в мировом пространстве
+	
 	AddActorWorldOffset ( worldDelta, Interpolate );
 	}
 
@@ -444,10 +444,10 @@ void CActor::AddActorWorldRotation ( const FQuat & DeltaRotation, bool Interpola
 	if (!RootComponent)
 		return;
 
-	// Получаем текущее вращение
+	
 	FQuat currentQuat = RootComponent->GetRotationQuat ();
 
-	// МИРОВОЕ вращение: умножаем СПРАВА (q' = q * Δq)
+	
 	FQuat newRotation = currentQuat * DeltaRotation;
 	newRotation.Normalize ();
 
@@ -464,7 +464,6 @@ void CActor::AddActorWorldRotation ( const FQuat & DeltaRotation, bool Interpola
 	RotationLerpAlpha = 0.0f;
 	bIsLerpingRotation = true;
 
-	LOG_DEBUG ( "[ACTOR] Starting world rotation lerp" );
 	}
 
 void CActor::AddActorLocalRotation ( const FQuat & DeltaRotation, bool Interpolate )
@@ -482,17 +481,17 @@ void CActor::AddActorLocalRotation ( const FQuat & DeltaRotation, bool Interpola
 	if (!Interpolate)
 		{
 		RootComponent->SetRotation ( newRotation );
-		LOG_DEBUG ( "[ACTOR] Instant local rotation" );
+		
 		return;
 		}
 
-		// Интерполированное вращение
+		
 	TargetRotation = newRotation;
 	LerpStartRotation = currentQuat;
 	RotationLerpAlpha = 0.0f;
 	bIsLerpingRotation = true;
 
-	LOG_DEBUG ( "[ACTOR] Starting local rotation lerp" );
+	
 	}
 
 	// ============================================================================
@@ -504,9 +503,7 @@ void CActor::MoveActorInDirection ( const FVector & Direction, float Distance, b
 	if (!RootComponent || Direction.IsZero ())
 		return;
 
-	LOG_DEBUG ( "[ACTOR] MoveActorInDirection: ", GetName (),
-				" Direction=(", Direction.x, ", ", Direction.y, ", ", Direction.z, ")",
-				" Distance=", Distance, " Interpolate=", Interpolate );
+	
 
 	  // Нормализуем направление и умножаем на расстояние
 	FVector normalizedDir = Direction.Normalized ();
@@ -520,11 +517,6 @@ void CActor::RotateAroundAxis ( const FVector & Axis, float AngleDegrees, bool I
 	if (!RootComponent || Axis.IsZero ())
 		return;
 
-	LOG_DEBUG ( "[ACTOR] RotateAroundAxis: ", GetName (),
-				" Axis=(", Axis.x, ", ", Axis.y, ", ", Axis.z, ")",
-				" AngleDegrees=", AngleDegrees, " Interpolate=", Interpolate );
-
-	  // Создаем кватернион вращения вокруг оси
 	FQuat rotationQuat ( Axis.Normalized (), CEMath::DegreesToRadians ( AngleDegrees ) );
 
 	AddActorLocalRotation ( rotationQuat, Interpolate );
@@ -622,7 +614,7 @@ void CActor::OnComponentEndOverlap ( CBaseCollisionComponent * other )
 	{
 	if (other == nullptr) return;
 	LOG_ERROR ( "OnComponentEndOverlap with : ", other->GetOwnerActor ()->GetName (), " for ", GetName () );
-	LOG_ERROR ( "stub implementation OnComponentEndOverlap TODO: implement real implementation" );
+	
 	}
 
 void CActor::OnComponentHit ( CBaseCollisionComponent * other )

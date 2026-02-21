@@ -154,7 +154,7 @@ class CActor : public CObject
 		bool bIsLerpingRotation = false;
 		float LerpSpeed = 10.0f;
 		CGravityComponent * m_Gravity = nullptr;
-		float m_MoveSpeed = 5.0f;
+		
 
 		bool bIsHiddenInGame = false;
 		// Временная переменная

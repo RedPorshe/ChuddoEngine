@@ -125,7 +125,9 @@ void CPlayerController::SetOwningGameMode ( CGameMode * inGameMode )
 void CPlayerController::ProcessPlayerInput ( float DeltaTime )
     {
     if (!bInputEnabled || !ControlledPawn)
+        {       
         return;
+        }
 
     auto * InputSystem = CInputSystem::GetInstance ();
     if (InputSystem)

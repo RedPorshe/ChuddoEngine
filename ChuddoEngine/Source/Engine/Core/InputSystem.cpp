@@ -282,7 +282,7 @@ void CInputSystem::ProcessActions ( float DeltaTime )
 
             if (binding.delegate)
                 {
-                binding.delegate ( DeltaTime );                
+                binding.delegate ( 1.f );                
                 }
             else
                 {

@@ -238,17 +238,6 @@ void CEngine::CalculateDeltaTime ()
     m_LastFrameTime = currentTime;
     }
 
-void CEngine::CreateTestWorld ()
-    {
-    auto world = CGameInstance::Get ().CreateWorld ( "Super" );
-    if (world)
-        {
-        auto gameMode = world->CreateGameMode<CGameMode> ( "SuperGameMode" );
-        world->CreateLevel<CLevel> ( "Level" )->SpawnActor<CPlayerStart>("playStart");
-        gameMode->SetDefaultPawnClass ( "CPawn" );
-        LOG_DEBUG ( "[ENGINE] Test world created: Super with level: SuperLevel" );
-        }
-    }
 
 CEngine::CEngine ( FEngineInfo & EngineInfo ) :
     CollisionSystem ( COLLISION_SYSTEM ),
@@ -256,4 +245,22 @@ CEngine::CEngine ( FEngineInfo & EngineInfo ) :
     Info ( EngineInfo )
     {
     m_LastFrameTime = std::chrono::steady_clock::now ();
+    }
+
+
+#include "Actors/TerrainActor.h"
+void CEngine::CreateTestWorld ()
+    {
+    auto world = CGameInstance::Get ().CreateWorld ( "Super" );
+    if (world)
+        {
+        auto gameMode = world->CreateGameMode<CGameMode> ( "SuperGameMode" );
+        world->CreateLevel<CLevel> ( "Level" )->SpawnActor<CPlayerStart> ( "playStart" );
+        auto level = world->GetCurrentLevel ();
+        auto terra = level->SpawnActor<CTerrainActor> ( "Terrain" );
+        terra->SetActorLocation ( 0.f, -100.f, 0.f );
+        terra->GenerateFlat(800,600,45.f,6.f);
+            gameMode->SetDefaultPawnClass ( "CPawn" );
+        LOG_DEBUG ( "[ENGINE] Test world created: Super with level: SuperLevel" );
+        }
     }

@@ -235,12 +235,8 @@ CPawn * CGameMode::SpawnDefaultPawnForController ( CPlayerController * Controlle
 		// Генерируем уникальное имя для pawn
 	std::string PawnName = Controller->GetName () + "_Pawn";
 
-	// Используем фабрику для создания Pawn
-	CObject * NewPawnObj = OBJECT_FACTORY.Create (
-		Settings->DefaultPawnClassName,
-		CurrentLevel,
-		PawnName
-	);
+	
+	auto NewPawnObj = CurrentLevel->SpawnActorByClass ( Settings->DefaultPawnClassName, PawnName );
 
 	CPawn * NewPawn = dynamic_cast< CPawn * >( NewPawnObj );
 

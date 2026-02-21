@@ -21,7 +21,7 @@ class CPawn : public CActor
 		virtual void SetupPlayerInputComponent (  CInputComponent * InputComponent );
 		virtual void ProcessPlayerInput ( float DeltaTime );
 
-
+		void Jump (float val);
 
 		void AddMovementInput ( const FVector & WorldDirection, float ScaleValue = 1.0f );
 		bool IsInputEnabled () const;
@@ -43,8 +43,7 @@ class CPawn : public CActor
 		// Input state
 		bool bInputEnabled = true;
 
-		void MoveForward ( float axis );
-
+		
 	};
 
 REGISTER_CLASS_FACTORY ( CPawn );

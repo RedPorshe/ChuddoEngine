@@ -29,40 +29,55 @@ void CGravityComponent::Tick ( float DeltaTime )
 
     FVector currentPos = owner->GetActorLocation ();
 
-    // Защита от улетания по Y
-    
-    if (!m_bIsGrounded)
-        {            
+    if (!bIsOnGround)
+        {
+            // Гравитация: v = v - g * dt
         m_VerticalVelocity -= m_GravityStrength * m_GravityScale * DeltaTime;
 
+        // Смещение = скорость * dt
+        float verticalDelta = m_VerticalVelocity * DeltaTime;
+
+        // Применяем смещение
         FVector newPos = currentPos;
-        newPos.y += m_VerticalVelocity * DeltaTime;
+        newPos.y += verticalDelta;
 
-        FVector finalPos = ResolveTerrainCollision ( newPos, currentPos );
-        owner->SetActorLocation ( finalPos );
+        // Проверяем коллизию и получаем безопасную позицию
+        FVector safePos = ResolveTerrainCollision ( newPos, currentPos );
 
-        // Логируем изменение состояния
-        if (m_bIsGrounded != m_bWasGrounded)
+        // Вычисляем фактическое смещение от текущей позиции
+        FVector finalDelta = safePos - currentPos;
+
+        // Перемещаем актора на это смещение
+        if (!finalDelta.IsZero ())
+            {
+            owner->MoveActor ( finalDelta, false );  // false = мгновенное перемещение
+            }
+
+            // Логируем изменение состояния
+        if (bIsOnGround != m_bWasGrounded)
             {
             LOG_DEBUG ( "[GRAVITY] ", owner->GetName (),
-                        m_bIsGrounded ? " landed" : " left ground" );
-            m_bWasGrounded = m_bIsGrounded;
+                        bIsOnGround ? " landed" : " left ground" );
+            m_bWasGrounded = bIsOnGround;
             }
-        if (CEMath::Abs ( currentPos.y ) > 100000.0f)
-            {
-            LOG_ERROR ( "[GRAVITY] Actor ", owner->GetName (), " at impossible Y position: ", currentPos.y );
-            currentPos.y = 100.0f;
-            owner->SetActorLocation ( currentPos );
-            m_VerticalVelocity = 0.0f;
-            return;
-            }
-       
         }
-    
+
+        // Проверка kill zone
     if (currentPos.y <= m_KillZone)
         {
         LOG_DEBUG ( "Reached kill zone : ", m_KillZone );
         GetOwnerActor ()->SetPendingToDestroy ();
+        return;
+        }
+
+        // Проверка на бесконечные координаты
+    if (CEMath::Abs ( currentPos.y ) > 100000.0f)
+        {
+        LOG_ERROR ( "[GRAVITY] Actor ", owner->GetName (),
+                    " at impossible Y position: ", currentPos.y );
+        currentPos.y = 100.0f;
+        owner->SetActorLocation ( currentPos );
+        m_VerticalVelocity = 0.0f;
         return;
         }
     }
@@ -73,15 +88,7 @@ void CGravityComponent::OnBeginPlay ()
     Super::OnBeginPlay ();
     }
 
-void CGravityComponent::Jump ( float jumpForce )
-    {
-    if (m_bIsGrounded)
-        {
-        m_VerticalVelocity = jumpForce;
-        m_bIsGrounded = false;
-        LOG_DEBUG ( "[GRAVITY] ", GetOwnerActor ()->GetName (), " jumped with force ", jumpForce );
-        }
-    }
+
 
 void CGravityComponent::CheckGrounded ()
     {
@@ -94,7 +101,7 @@ void CGravityComponent::CheckGrounded ()
     // Делаем рейкаст вниз
     auto result = COLLISION_SYSTEM.Raycast ( start, end, "All" );
 
-    m_bIsGrounded = result.bHit &&
+    bIsOnGround = result.bHit &&
         result.HitComponent &&
         result.HitComponent->GetShapeType () == ECollisionShape::TERRAIN &&
         result.Distance <= m_GroundCheckDistance;
