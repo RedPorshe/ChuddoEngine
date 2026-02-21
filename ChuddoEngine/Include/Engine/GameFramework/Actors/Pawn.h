@@ -18,7 +18,7 @@ class CPawn : public CActor
 		bool IsPlayerControlled () const { return Controller != nullptr; }
 
 		// ========== INPUT ==========
-		virtual void SetupPlayerInputComponent ( const CInputComponent & InputComponent );
+		virtual void SetupPlayerInputComponent (  CInputComponent * InputComponent );
 		virtual void ProcessPlayerInput ( float DeltaTime );
 
 
@@ -35,7 +35,7 @@ class CPawn : public CActor
 		virtual void OnUnpossessed ( CPlayerController * OldController );
 		void OnPossess ();
 		CInputComponent* GetInputComponent () const { return m_InputComponent; }
-		void SetInputComponent ( CInputComponent* NewInputComponent ) { m_InputComponent = NewInputComponent; }
+		
 
 	protected:
 		CPlayerController * Controller = nullptr;
@@ -43,7 +43,7 @@ class CPawn : public CActor
 		// Input state
 		bool bInputEnabled = true;
 
-		void testfuncinput ( float axis );
+		void MoveForward ( float axis );
 
 	};
 

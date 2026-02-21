@@ -18,7 +18,7 @@ class CInputComponent : public CBaseComponent
         virtual void InitComponent () override;
         virtual void Tick ( float DeltaTime ) override;
         virtual void OnBeginPlay () override;
-        virtual void onEndPlay () ;
+        virtual void onEndPlay ();
 
         // Input query methods
         bool IsKeyPressed ( int key ) const;
@@ -28,8 +28,8 @@ class CInputComponent : public CBaseComponent
         FVector2D GetMouseDelta () const;
         FVector2D GetScrollDelta () const;
 
-        // Input binding methods
-        void BindAction ( const std::string & actionName, int key, std::function<void ( float )> callback );
+        // ЕДИНЫЙ BindAction для всего!
+        void BindAction ( const std::string & actionName, int button, std::function<void ( float )> callback );
         void BindAxis ( const std::string & axisName, int positiveKey, int negativeKey, std::function<void ( float )> callback );
 
         void UnbindAction ( const std::string & actionName );

@@ -19,7 +19,7 @@
 
 std::unique_ptr<CCollisionSystem> CCollisionSystem::s_Instance = nullptr;
 bool CCollisionSystem::s_IsInitialized = false;
-
+static bool bIsAlreadyShuttingDown = false;
 // ============================================================================
 // Constructors & Destructor
 // ============================================================================
@@ -32,16 +32,59 @@ CCollisionSystem::CCollisionSystem ( CObject * inOwner, const std::string & inDi
 
 CCollisionSystem::~CCollisionSystem ()
 	{
-	m_CollisionComponents.clear ();
-	m_SpatialGrid.clear ();
-	m_Callbacks.clear ();
-	m_LastPositions.clear ();
-	m_PreviousFrameCollisions.clear ();
-	m_CurrentFrameCollisions.clear ();
+	if (!m_CollisionComponents.empty ())
+		{
+		LOG_WARN ( "CollisionSystem destroyed with ",
+				   m_CollisionComponents.size (),
+				   " components still registered!" );
+		  // Автоматическая очистка на всякий случай
+		Shutdown ();
+		}
 	}
 
 void CCollisionSystem::Shutdown ()
 	{
+	
+	if (!bIsAlreadyShuttingDown)
+		{
+
+		LOG_DEBUG ( "Collision System shutting down..." );
+
+		// Очищаем все коллизионные компоненты
+		for (CBaseCollisionComponent * comp : m_CollisionComponents)
+			{
+			if (comp)
+				{
+					// Удаляем компонент из системы
+				comp->SetCollisionEnabled ( false );
+				// Если компонент хранит указатель на систему, обнуляем его
+				// comp->SetCollisionSystem(nullptr);
+				}
+			}
+
+			// Очищаем все контейнеры
+		m_CollisionComponents.clear ();
+		m_SpatialGrid.clear ();
+		m_Callbacks.clear ();
+		m_LastPositions.clear ();
+		m_PreviousFrameCollisions.clear ();
+		m_CurrentFrameCollisions.clear ();
+
+		// Сбрасываем флаги
+		bDebugDraw = false;
+		m_LastFrameCollisions = 0;
+		m_AccumulatedTime = 0.0f;
+
+		// Опционально: уничтожаем синглтон
+		if (s_Instance)
+			{
+			s_Instance.reset ();
+			s_IsInitialized = false;
+			}
+
+		LOG_DEBUG ( "Collision System shutdown complete" );
+		bIsAlreadyShuttingDown = true;
+		}
 	}
 
 	// ============================================================================
@@ -50,7 +93,7 @@ void CCollisionSystem::Shutdown ()
 
 CCollisionSystem & CCollisionSystem::Get ()
 	{
-	if (!s_Instance)
+	if (!s_Instance && !s_IsInitialized && !bIsAlreadyShuttingDown)
 		{
 		s_Instance = std::make_unique<CCollisionSystem> ( nullptr, "GlobalCollisionSystem" );
 		s_IsInitialized = true;
@@ -121,7 +164,7 @@ void CCollisionSystem::UnregisterCollisionComponent ( CBaseCollisionComponent * 
 
 void CCollisionSystem::Update ( float deltaTime )
 	{
-	m_AccumulatedTime += deltaTime;	
+	m_AccumulatedTime += deltaTime;
 
 	float updateInterval = 1.0f / m_UpdateRate;
 
@@ -471,21 +514,21 @@ void CCollisionSystem::ProcessComponentPair ( const FCollisionInfo & collisionIn
 
 	bool bShouldBlock = compA->ShouldBlockWith ( compB ) || compB->ShouldBlockWith ( compA );
 	bool bShouldOverlap = compA->ShouldOverlapWith ( compB ) && compB->ShouldOverlapWith ( compA );
-	
+
 	if (bShouldBlock)
 		{
 		ResolveCollision ( collisionInfo );
 		}
 
 	if (bShouldOverlap && !bWasColliding)
-		{		
+		{
 		compA->OnBeginOverlap ( compB );
 		compB->OnBeginOverlap ( compA );
 
 		FireCollisionEvent ( ECollisionEventType::BEGIN_OVERLAP, collisionInfo );
 		}
 	else if (bShouldBlock && !bWasColliding)
-		{		
+		{
 		compA->OnHit ( compB );
 		compB->OnHit ( compA );
 
@@ -1291,8 +1334,8 @@ bool CCollisionSystem::CheckSphereTerrain ( CBaseCollisionComponent * sphere,
 	}
 
 
-bool CCollisionSystem::CheckBoxTerrain (  CBaseCollisionComponent * box,
-										  CBaseCollisionComponent * terrain,
+bool CCollisionSystem::CheckBoxTerrain ( CBaseCollisionComponent * box,
+										 CBaseCollisionComponent * terrain,
 										 FCollisionInfo & outInfo ) const
 	{
 	CBoxComponent * boxComp = dynamic_cast< CBoxComponent * >( box );

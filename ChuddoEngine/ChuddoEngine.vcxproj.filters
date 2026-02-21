@@ -261,10 +261,7 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
-  <ItemGroup>
-    <None Include="USAGE.md" />
-    <None Include="BUILD.md" />
-    <None Include="CONTRIBUTING.md" />
+  <ItemGroup>   
     <None Include="Assets\Shaders\Mesh.vert" />
     <None Include="Assets\Shaders\Mesh.frag" />
   </ItemGroup>

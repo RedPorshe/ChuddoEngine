@@ -9,30 +9,34 @@
 // Forward declarations
 class CPlayerController;
 class CInputComponent;
+struct FEngineInfo;
 
-// Input action delegate
 using InputActionDelegate = std::function<void ( float )>;
 using InputAxisDelegate = std::function<void ( float )>;
 
-class CInputSystem 
+class CInputSystem
     {
     public:
         // Singleton access
         static CInputSystem * GetInstance ();
 
-        CInputSystem ( );
+        CInputSystem ( FEngineInfo & info );
         virtual ~CInputSystem ();
 
         // System overrides
-         bool Initialize ( GLFWwindow * window ) ;
-         void ShutdownSystem () ;
-         void Update ( float DeltaTime ) ;
-         bool IsInitialized () const { return bIsInitialized; }
-        // GLFW window association
-        void SetWindow ( GLFWwindow * window );
-        GLFWwindow * GetWindow () const { return m_pWindow; }
+        bool Initialize ( FEngineInfo & info );
+        void ShutdownSystem ();
+        void Update ( float DeltaTime );
+        bool IsInitialized () const { return bIsInitialized; }
 
-        // Input state queries
+        // GLFW window association
+        GLFWwindow * GetWindow () const;
+        void SetWindow ( GLFWwindow * window ) {
+            m_WindowHandle = window;
+            Info.WindowHandle = window; // синхронизируем
+            }
+
+            // Input state queries
         bool IsKeyPressed ( int key ) const;
         bool IsKeyJustPressed ( int key ) const;
         bool IsKeyReleased ( int key ) const;
@@ -51,8 +55,9 @@ class CInputSystem
         void ProcessControllerInput ( CPlayerController * Controller, float DeltaTime );
 
         // Input binding for components
-        void BindAction ( const std::string & actionName, int key, InputActionDelegate delegate, CInputComponent * component = nullptr );
-        void BindAxis ( const std::string & axisName, int positiveKey, int negativeKey, InputAxisDelegate delegate, CInputComponent * component = nullptr );
+        void BindAction ( const std::string & actionName, int button, InputActionDelegate delegate, CInputComponent * component );
+        void BindAxis ( const std::string & axisName, int positiveKey, int negativeKey,
+                        InputAxisDelegate delegate, CInputComponent * component = nullptr );
 
         void UnbindAction ( const std::string & actionName, CInputComponent * component = nullptr );
         void UnbindAxis ( const std::string & axisName, CInputComponent * component = nullptr );
@@ -61,22 +66,35 @@ class CInputSystem
         void RegisterInputComponent ( CInputComponent * Component );
         void UnregisterInputComponent ( CInputComponent * Component );
 
+        // Callback handlers (public для доступа из диспетчера)
+        void HandleKey ( int key, int scancode, int action, int mods );
+        void HandleMouseButton ( int button, int action, int mods );
+        void HandleMouseMove ( double xpos, double ypos );
+        void HandleScroll ( double xoffset, double yoffset );
+
     private:
+        GLFWwindow * m_WindowHandle = nullptr;  // Локальная копия
+        FEngineInfo & Info;  // ссылка на внешнюю структуру
+
         struct KeyState
             {
             bool current = false;
             bool previous = false;
+            bool justPressed = false;  // Флаг для однократного нажатия
+            bool justReleased = false; // Флаг для однократного отпускания
             };
 
         struct MouseButtonState
             {
             bool current = false;
             bool previous = false;
+            bool justPressed = false;  // Флаг для однократного нажатия
+            bool justReleased = false; // Флаг для однократного отпускания
             };
 
         struct ActionBinding
             {
-            int key;
+            int button;
             InputActionDelegate delegate;
             CInputComponent * owner = nullptr;
             };
@@ -90,13 +108,6 @@ class CInputSystem
             float value = 0.0f;
             };
 
-            // Static GLFW callbacks
-        static void KeyCallback ( GLFWwindow * window, int key, int scancode, int action, int mods );
-        static void MouseButtonCallback ( GLFWwindow * window, int button, int action, int mods );
-        static void CursorPositionCallback ( GLFWwindow * window, double xpos, double ypos );
-        static void ScrollCallback ( GLFWwindow * window, double xoffset, double yoffset );
-
-        void UpdateKeyStates ();
         void UpdateMouseState ();
         void ProcessActions ( float DeltaTime );
         void ProcessAxes ( float DeltaTime );
@@ -104,8 +115,8 @@ class CInputSystem
     private:
         static CInputSystem * s_Instance;
 
-        GLFWwindow * m_pWindow = nullptr;
         bool bIsInitialized = false;
+
         // Input state
         std::unordered_map<int, KeyState> m_KeyStates;
         std::unordered_map<int, MouseButtonState> m_MouseButtonStates;
@@ -114,7 +125,7 @@ class CInputSystem
         FVector2D m_MouseDelta = FVector2D ( 0.0f );
         FVector2D m_ScrollDelta = FVector2D ( 0.0f );
 
-        // Input bindings (global and per-component)
+        // Input bindings
         std::unordered_map<std::string, ActionBinding> m_ActionBindings;
         std::unordered_map<std::string, AxisBinding> m_AxisBindings;
 
@@ -124,4 +135,4 @@ class CInputSystem
         friend class CInputComponent;
     };
 
-#define INPUT_SYSTEM CInputSystem::GetInstance ()
+#define INPUT_SYSTEM CInputSystem::GetInstance()

@@ -60,9 +60,9 @@ void CPlayerController::Possess ( CPawn * PawnToPossess )
 
     ControlledPawn = PawnToPossess;
     ControlledPawn->SetController ( this );
-
+    ControlledPawn->OnPossessed ( this );
     ViewTarget = ControlledPawn;
-
+    ControlledPawn->OnPossess ();
     LOG_DEBUG ( "[PLAYERCONTROLLER] Possessed pawn: ", ControlledPawn->GetName (),
                 " for controller: ", GetName () );
     }

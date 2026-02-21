@@ -17,10 +17,15 @@ int main ()
     LOG_SET_LEVEL ( CE::CLogger::CLogLevel::INFO );
     LOG_INFO ( "RELEASE CONFIG" );
 #endif
-   
+    FEngineInfo *engineInfo = new FEngineInfo();
+    engineInfo->EngineName = "ChuddoEngine";
+    engineInfo->WindowInfo.Title = "ChuddoEngine - Vulkan Test";
+    engineInfo->WindowInfo.Width = 1280;
+    engineInfo->WindowInfo.Height = 720;
+
 
     LOG_INFO ( "Initializing engine..." );
-    if (!CEngine::InitializeEngine ())
+    if (!CEngine::InitializeEngine ( *engineInfo ))
         {
         LOG_FATAL ( "Failed to initialize engine!" );
         LOG_SHUTDOWN ();

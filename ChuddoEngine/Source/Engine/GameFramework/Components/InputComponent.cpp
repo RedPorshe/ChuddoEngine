@@ -26,7 +26,6 @@ void CInputComponent::InitComponent ()
 void CInputComponent::Tick ( float DeltaTime )
     {
     Super::Tick ( DeltaTime );
-    // Component-specific input processing can go here
     }
 
 void CInputComponent::OnBeginPlay ()
@@ -36,7 +35,7 @@ void CInputComponent::OnBeginPlay ()
 
 void CInputComponent::onEndPlay ()
     {
-    UnbindAll ();    
+    UnbindAll ();
     }
 
 bool CInputComponent::IsKeyPressed ( int key ) const
@@ -75,13 +74,19 @@ FVector2D CInputComponent::GetScrollDelta () const
     return inputSystem ? inputSystem->GetScrollDelta () : FVector2D ( 0.0f );
     }
 
-void CInputComponent::BindAction ( const std::string & actionName, int key, std::function<void ( float )> callback )
+    // ЕДИНЫЙ BindAction - ОДИНАКОВЫЙ ДЛЯ КЛАВИАТУРЫ И МЫШИ!
+void CInputComponent::BindAction ( const std::string & actionName, int button, std::function<void ( float )> callback )
     {
     auto * inputSystem = GetInputSystem ();
     if (inputSystem)
         {
-        inputSystem->BindAction ( actionName, key, callback, this );
+        inputSystem->BindAction ( actionName, button, callback, this );
         m_BoundActions.push_back ( actionName );
+
+        // Для отладки определим тип
+        const char * typeStr = ( button >= GLFW_MOUSE_BUTTON_1 && button <= GLFW_MOUSE_BUTTON_LAST ) ?
+            "mouse button" : "key";
+        LOG_DEBUG ( "[INPUTCOMPONENT] Bound action: ", actionName, " (", typeStr, ": ", button, ")" );
         }
     }
 

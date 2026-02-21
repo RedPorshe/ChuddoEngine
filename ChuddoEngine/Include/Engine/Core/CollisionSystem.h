@@ -71,7 +71,7 @@ class CCollisionSystem : public CObject
 		// Delete copy/move constructors and assignment operators
 		CCollisionSystem ( const CCollisionSystem & ) = delete;
 		CCollisionSystem & operator=( const CCollisionSystem & ) = delete;
-		static void Shutdown ();
+		 void Shutdown ();
 		// ------------------------------------------------------------------------
 		// Singleton Access
 		// ------------------------------------------------------------------------

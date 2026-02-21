@@ -155,6 +155,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Source\Engine\Render\Window.cpp" />
+    <ClCompile Include="Include\Test.cpp" />
     <ClCompile Include="Source\Engine\Core\InputSystem.cpp" />
     <ClCompile Include="Source\Engine\GameFramework\Actors\HUD.cpp" />
     <ClCompile Include="Source\Engine\GameFramework\Actors\Pawn.cpp" />
@@ -198,8 +200,8 @@
     <ClInclude Include="Include\Engine\Core\Collision.h" />
     <ClInclude Include="Include\Engine\Core\CollisionSystem.h" />
     <ClInclude Include="Include\Engine\Core\EngineInfo.h" />
+    <ClInclude Include="Include\Engine\Core\GLFWDispatcher.h" />
     <ClInclude Include="Include\Engine\Core\InputSystem.h" />
-    <ClInclude Include="Include\Engine\GameFramework\Actors\Character.h" />
     <ClInclude Include="Include\Engine\Core\Engine.h" />
     <ClInclude Include="Include\CoreMinimal.h" />
     <ClInclude Include="Include\Engine\Core\ObjectFactory.h" />
@@ -227,6 +229,8 @@
     <ClInclude Include="Include\Engine\GameFramework\GameModeSettings.h" />
     <ClInclude Include="Include\Engine\GameFramework\World\Level.h" />
     <ClInclude Include="Include\Engine\GameFramework\World\World.h" />
+    <ClInclude Include="Include\Engine\Render\Window.h" />
+    <ClInclude Include="Include\Test.h" />
     <ClInclude Include="Include\Utils\Logger.h" />
     <ClInclude Include="Include\Utils\MathGLMConverters.h" />
     <ClInclude Include="Include\Utils\Math\CE_MathConstants.h" />
@@ -242,9 +246,6 @@
   <ItemGroup>
     <None Include="Assets\Shaders\Mesh.frag" />
     <None Include="Assets\Shaders\Mesh.vert" />
-    <None Include="BUILD.md" />
-    <None Include="CONTRIBUTING.md" />
-    <None Include="USAGE.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

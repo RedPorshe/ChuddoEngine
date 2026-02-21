@@ -1,7 +1,9 @@
 #pragma once
-#include <string>
 
-struct WindowInfo
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
+
+struct FWindowInfo
 	{
     std::string Title = "Game Window";
     int Width = 1280;
@@ -15,3 +17,11 @@ struct WindowInfo
     // Параметры Vulkan
     bool UseVulkan = true;  // Флаг использования Vulkan
 	};
+
+struct FEngineInfo
+    {
+    std::string EngineName = "ChuddoEngine";
+    FWindowInfo WindowInfo;
+    GLFWwindow * WindowHandle = nullptr;
+    VkInstance vkInstance = VK_NULL_HANDLE;
+    };

@@ -3,235 +3,257 @@
 #include "GameFramework/GameInstance.h"
 #include "GameFramework/World/World.h"
 #include "GameFramework/World/Level.h"
-
+#include "Render/Window.h"
 #include "GameFramework/Actors/Actor.h"
+#include "GameFramework/Actors/PlayerStart.h"
 #include "GameFramework/GameMode.h"
 #include "Components/Collisions/BaseCollisionComponent.h"
-
 #include "Core/CollisionSystem.h"
+#include "Core/GLFWDispatcher.h"  
 
 #include <iostream>
 #include <fstream>
+#include <thread>
 
 CEngine * CEngine::Instance = nullptr;
 
 CEngine::~CEngine ()
-	{
-	if (bIsInitialized)
-		{
-		Shutdown ();
-		}
-	LOG_INFO ( "Engine destroyed" );
-	}
+    {
+    if (bIsInitialized)
+        {
+        Shutdown ();
+        }
+    LOG_INFO ( "Engine destroyed" );
+    }
 
 CEngine & CEngine::Get ()
-	{
-	return *Instance;
-	}
+    {
+    return *Instance;
+    }
 
-bool CEngine::InitializeEngine ()
-	{
-	if (Instance)
-		{
-		LOG_ERROR ( "Engine already initialized!" );
-		return false;
-		}
+bool CEngine::InitializeEngine ( FEngineInfo & EngineInfo )
+    {
+    if (Instance)
+        {
+        LOG_ERROR ( "Engine already initialized!" );
+        return false;
+        }
 
-	Instance = new CEngine ();
-	return Instance->Initialize ();
-	}
+    Instance = new CEngine ( EngineInfo );
+    return Instance->Initialize ();
+    }
 
 void CEngine::ShutdownEngine ()
-	{
-	COLLISION_SYSTEM.Shutdown ();
+    {
+    COLLISION_SYSTEM.Shutdown ();
 
-	if (Instance)
-		{
-		delete Instance;
-		Instance = nullptr;
-		}
-
-	}
+    if (Instance)
+        {
+        delete Instance;
+        Instance = nullptr;
+        }
+    }
 
 bool CEngine::Initialize ()
-	{
-	if (bIsInitialized)
-		{
-		LOG_WARN ( "Engine already initialized" );
-		return true;
-		}
+    {
+    if (bIsInitialized)
+        {
+        LOG_WARN ( "Engine already initialized" );
+        return true;
+        }
+    m_LastFrameTime = std::chrono::steady_clock::now ();
 
-		
-	//LOG_DEBUG ( "[ENGINE] Initializing InputSystem..." );
-	//if (!INPUT_SYSTEM->Initialize ( static_cast< GLFWwindow * >( Window ) ))
-	//	{
-	//	LOG_FATAL ( "Failed to initialize InputSystem" );
-	//	ShutdownEngine ();
-	//	return false;
-	//	}
+    // Инициализируем Window
+    Window = std::make_unique<CWindow> ( Info );
+    if (!Window->Initialize ())
+        {
+        LOG_FATAL ( "Failed to initialize Window" );
+        return false;
+        }
 
-		// Создаём GameInstance
-	if (!CGameInstance::Create ())
-		{
-		LOG_FATAL ( "Failed to create GameInstance" );
-		ShutdownEngine ();
-		return false;
-		}
+        // ВАЖНО: Info.WindowHandle должен быть установлен в CWindow::Initialize()
+    LOG_DEBUG ( "Window handle in Engine::Initialize: ", Info.WindowHandle );
 
-		// Инициализируем CollisionSystem
-	COLLISION_SYSTEM;
+    // Инициализируем InputSystem
+    LOG_DEBUG ( "[ENGINE] Initializing InputSystem..." );
+    if (!INPUT_SYSTEM->Initialize ( Info ))
+        {
+        LOG_FATAL ( "Failed to initialize InputSystem" );
+        return false;
+        }
 
-	bIsInitialized = true;
-	LOG_INFO ( "Engine initialized successfully" );
-	return true;
-	}
+        // СОЗДАЕМ И НАСТРАИВАЕМ ДИСПЕТЧЕР
+    auto * dispatcher = new FGLFWDispatcher ();
+    dispatcher->Window = Window.get ();
+    dispatcher->InputSystem = INPUT_SYSTEM;
+
+    // Устанавливаем единый user pointer
+    glfwSetWindowUserPointer ( Info.WindowHandle, dispatcher );
+
+    // Устанавливаем все колбэки через диспетчер
+    glfwSetKeyCallback ( Info.WindowHandle, FGLFWDispatcher::KeyCallback );
+    glfwSetMouseButtonCallback ( Info.WindowHandle, FGLFWDispatcher::MouseButtonCallback );
+    glfwSetCursorPosCallback ( Info.WindowHandle, FGLFWDispatcher::CursorPositionCallback );
+    glfwSetScrollCallback ( Info.WindowHandle, FGLFWDispatcher::ScrollCallback );
+    glfwSetWindowSizeCallback ( Info.WindowHandle, FGLFWDispatcher::WindowSizeCallback );
+    glfwSetWindowCloseCallback ( Info.WindowHandle, FGLFWDispatcher::WindowCloseCallback );
+
+    // Создаём GameInstance
+    if (!CGameInstance::Create ())
+        {
+        LOG_FATAL ( "Failed to create GameInstance" );
+        return false;
+        }
+
+        // Инициализируем CollisionSystem
+    COLLISION_SYSTEM;
+
+    bIsInitialized = true;
+    LOG_INFO ( "Engine initialized successfully" );
+    return true;
+    }
 
 void CEngine::Shutdown ()
-	{
-	if (!bIsInitialized)
-		return;
+    {
+    LOG_INFO ( "Engine shutting down..." );
 
-	LOG_INFO ( "Engine shutting down..." );
+    // 1. Сначала игровая логика
+    auto & GameInstance = CGameInstance::Get ();
+    GameInstance.Shutdown ();
+    CGameInstance::Destroy ();
 
-	auto & GameInstance = CGameInstance::Get ();
+    // 2. Потом системы, которые используют игровые объекты
+    if (INPUT_SYSTEM)
+        {
+// Важно: сначала обнуляем window handle в InputSystem
+        INPUT_SYSTEM->SetWindow ( nullptr );
+        INPUT_SYSTEM->ShutdownSystem ();
+        }
 
-	if (GameInstance.IsMustSaveState ())
-		{
-		LOG_INFO ( "saving gameInstance state" );
-		GameInstance.SaveGameInstanceState ();
-		}
+        // 3. Система коллизий
+    COLLISION_SYSTEM.Shutdown ();
 
-	GameInstance.Shutdown ();
-	CGameInstance::Destroy ();
-	  
-	if (INPUT_SYSTEM)
-		{
-		INPUT_SYSTEM->ShutdownSystem ();
-		}
+    // 4. Очищаем диспетчер
+    if (Info.WindowHandle)
+        {
+        FGLFWDispatcher * dispatcher = static_cast< FGLFWDispatcher * >( glfwGetWindowUserPointer ( Info.WindowHandle ) );
+        if (dispatcher)
+            {
+            delete dispatcher;
+            glfwSetWindowUserPointer ( Info.WindowHandle, nullptr );
+            }
+        }
 
-		
-	
-	bIsInitialized = false;
-	bIsRunning = false;
+        // 5. Окно последним
+    if (Window)
+        {
+        Window->Shutdown ();
+        Info.WindowHandle = nullptr;  // Важно: обнуляем после уничтожения окна
+        }
 
-	LOG_DEBUG ( "Engine shutdown complete" );
-	}
+    bIsInitialized = false;
+    bIsRunning = false;
+
+    LOG_DEBUG ( "Engine shutdown complete" );
+    }
 
 void CEngine::Start ()
-	{
+    {
+    CreateTestWorld ();
 
-	CreateTestWorld ();
+    auto & GameInstance = CGameInstance::Get ();
+    GameInstance.Init ();
 
-	auto & GameInstance = CGameInstance::Get ();
-	GameInstance.Init ();
-
-
-	MainLoop ();
-	}
+    MainLoop ();
+    }
 
 void CEngine::RequestExit ()
-	{
-	LOG_DEBUG ( "Exit requested from window or by reached 10 sec" );
-	bIsRunning = false;
-	}
+    {
+    LOG_DEBUG ( "Exit requested from window or by reached 10 sec" );
+    bIsRunning = false;
+    }
 
 CGameInstance & CEngine::GetGameInstance ()
-
-	{
-	return CGameInstance::Get ();
-	}
+    {
+    return CGameInstance::Get ();
+    }
 
 void CEngine::MainLoop ()
-	{
-	bIsRunning = true;
+    {
+    bIsRunning = true;
 
-	// Засекаем реальное время
-	auto realStartTime = std::chrono::steady_clock::now ();
-	float gameTime = 0.0f;
+    auto realStartTime = std::chrono::steady_clock::now ();
+    float gameTime = 0.0f;
 
-	while (bIsRunning)
-		{
-			// Проверяем, не запрошено ли закрытие окна
-	
-
-		CalculateDeltaTime ();
-		Tick ( m_DeltaTime );
-
-		gameTime += m_DeltaTime;
-
-		// Для теста - выход через 10 секунд
-		if (gameTime > 10.0f)
-			{
-			LOG_DEBUG ( "[ENGINE] Auto exit after 10 game seconds" );
-			RequestExit ();
-			}
-		}
-	}
+    while (bIsRunning && !glfwWindowShouldClose ( Info.WindowHandle ))
+        {
+        CalculateDeltaTime ();
+        Tick ( m_DeltaTime );
+        }
+    }
 
 void CEngine::Tick ( float deltaTime )
-	{
-	// Обновляем InputSystem
-	INPUT_SYSTEM->Update ( deltaTime );
+    {
+    glfwPollEvents ();
 
-	// Обрабатываем ввод для PlayerController (если есть)
-	// TODO: Получить текущего PlayerController и обработать его ввод
-	// INPUT_SYSTEM->ProcessControllerInput(PlayerController, deltaTime);
+    // Проверка нажатия ESC (дублируется с InputSystem, но оставим для надежности)
+    if (glfwGetKey ( Info.WindowHandle, GLFW_KEY_ESCAPE ) == GLFW_PRESS)
+        {
+        LOG_DEBUG ( "[ENGINE] ESC pressed, exiting..." );
+        RequestExit ();
+        return;
+        }
 
-	// Обновляем GameInstance
-	CGameInstance::Get ().Tick ( deltaTime );
+        // Обновляем InputSystem
+    INPUT_SYSTEM->Update ( deltaTime );
 
-	// Обновляем CollisionSystem
-	CollisionSystem.Update ( deltaTime );
+    // Обновляем GameInstance
+    CGameInstance::Get ().Tick ( deltaTime );
 
-	// Здесь будет рендер
-	// Renderer->Render();
-
-	
-	}
+    // Обновляем CollisionSystem
+    CollisionSystem.Update ( deltaTime );
+    }
 
 void CEngine::CalculateDeltaTime ()
-	{
-	auto currentTime = std::chrono::steady_clock::now ();
+    {
+    auto currentTime = std::chrono::steady_clock::now ();
 
-	if (m_LastFrameTime.time_since_epoch ().count () != 0)
-		{
-			// Явно указываем типы
-		auto delta = std::chrono::duration_cast< std::chrono::microseconds >(
-			currentTime - m_LastFrameTime
-		).count ();
+    if (m_LastFrameTime.time_since_epoch ().count () != 0)
+        {
+        auto delta = std::chrono::duration_cast< std::chrono::microseconds >(
+            currentTime - m_LastFrameTime ).count ();
 
-		
-		m_DeltaTime = static_cast< float >( delta ) / 1000000.0f;
+        m_DeltaTime = static_cast< float >( delta ) / 1000000.0f;
 
-		
-		constexpr float MAX_DELTA = 1.0f / 10.0f;  
-		constexpr float MIN_DELTA = 1.0f / 244.0f; // 244 FPS максимум
+        constexpr float MAX_DELTA = 1.0f / 10.0f;
+        constexpr float MIN_DELTA = 1.0f / 244.0f;
 
-		m_DeltaTime = std::clamp ( m_DeltaTime, MIN_DELTA, MAX_DELTA );
+        m_DeltaTime = std::clamp ( m_DeltaTime, MIN_DELTA, MAX_DELTA );
+        }
+    else
+        {
+        m_DeltaTime = 1.0f / 60.0f;
+        }
 
-		}
-	else
-		{
-			// Первый кадр
-		m_DeltaTime = 1.0f / 60.0f;
-		}
-
-	m_LastFrameTime = currentTime;
-	}
+    m_LastFrameTime = currentTime;
+    }
 
 void CEngine::CreateTestWorld ()
-	{
-	auto world = CGameInstance::Get ().CreateWorld ( "Super" );
-	if (world)
-		{
-		world->CreateLevel<CLevel> ( "SuperLevel" );
-		LOG_DEBUG ( "[ENGINE] Test world created: Super with level: SuperLevel" );
-		}
-	}
+    {
+    auto world = CGameInstance::Get ().CreateWorld ( "Super" );
+    if (world)
+        {
+        auto gameMode = world->CreateGameMode<CGameMode> ( "SuperGameMode" );
+        world->CreateLevel<CLevel> ( "Level" )->SpawnActor<CPlayerStart>("playStart");
+        gameMode->SetDefaultPawnClass ( "CPawn" );
+        LOG_DEBUG ( "[ENGINE] Test world created: Super with level: SuperLevel" );
+        }
+    }
 
-CEngine::CEngine () :
-	CollisionSystem ( COLLISION_SYSTEM ),
-	InputSystem ( *INPUT_SYSTEM )
-	
-	{
-	}
+CEngine::CEngine ( FEngineInfo & EngineInfo ) :
+    CollisionSystem ( COLLISION_SYSTEM ),
+    InputSystem ( *INPUT_SYSTEM ),
+    Info ( EngineInfo )
+    {
+    m_LastFrameTime = std::chrono::steady_clock::now ();
+    }

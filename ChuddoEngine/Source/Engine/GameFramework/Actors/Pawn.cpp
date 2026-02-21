@@ -7,7 +7,7 @@
 CPawn::CPawn ( CObject * inOwner, const std::string & inDisplayName )
     : Super ( inOwner, inDisplayName )
     {
-    m_InputComponent = AddDefaultSubObject<CInputComponent> ( "InputComponent" );
+    m_InputComponent = AddDefaultSubObject<CInputComponent> ( "InputComponent_"+GetName() );
     LOG_DEBUG ( "[PAWN] Created: ", GetName () );
     }
 
@@ -31,7 +31,8 @@ void CPawn::AddMovementInput ( const FVector & WorldDirection, float ScaleValue 
     {
     if (!bInputEnabled) return;
     FVector Movement = WorldDirection * ScaleValue;
-    MoveActor(Movement);
+   
+    MoveActor( Movement,false );
     }
 
 bool CPawn::IsInputEnabled () const
@@ -50,14 +51,7 @@ void CPawn::ProcessPlayerInput ( float DeltaTime )
     {
     if (!Controller || !bInputEnabled)
         return;
-    //stub implementation need check buttons
-    static int warncount = 0;
-    if (warncount < 1)
-        {
-        LOG_WARN ( "stub implementation ProcessPlayerInput ( float DeltaTime ) need check buttons" );
-        warncount++;
-        }
-    
+  
     }
  
 void CPawn::Tick ( float DeltaTime )
@@ -89,7 +83,7 @@ void CPawn::OnPossessed ( CPlayerController * NewController )
     {
     if (NewController == nullptr) return;
     SetController ( NewController );
-    SetupPlayerInputComponent (m_InputComponent);
+   
     }
 
 void CPawn::OnUnpossessed ( CPlayerController * OldController )
@@ -107,21 +101,37 @@ void CPawn::OnPossess ()
     SetupPlayerInputComponent ( m_InputComponent );
     }
 
-void CPawn::testfuncinput ( float axis )
+void CPawn::MoveForward ( float axis )
     {
-    LOG_DEBUG ( "testfuncinput called with axis value: ", axis );
+    LOG_DEBUG ( "Current location : ", GetActorLocation () );
+    if (axis != 0.0f)
+        {           
+        FVector Forward = GetActorForwardVector ();
+
+        FVector NewLocation = GetActorLocation () + Forward * 100.0f; // 100.0f - скорость движения
+        
+        AddMovementInput ( NewLocation, axis );
+        }
     }
 
 #include <GLFW/glfw3.h>
-void CPawn::SetupPlayerInputComponent ( const CInputComponent & InputComponent )
+void CPawn::SetupPlayerInputComponent ( CInputComponent * InputComponent )
     {
-    m_InputComponent = const_cast< CInputComponent * >( &InputComponent );
     LOG_DEBUG ( "[PAWN] SetupPlayerInputComponent for: ", GetName () );
-    if (m_InputComponent)
+
+    if (InputComponent)
         {
-        m_InputComponent->BindAction ( "MoveForward", GLFW_KEY_W, [ this ] ( float value )
+       
+                                     // Оси движения
+        InputComponent->BindAxis ( "MoveForward", GLFW_KEY_W, GLFW_KEY_S,
+                                   [ this ] ( float value )
+                                   {
+                                   if (value != 0.0f)
                                        {
-                                       testfuncinput(value);
-                                       } );
+                                       MoveForward ( value );
+                                       }
+                                   } );
+
+        m_InputComponent = InputComponent;
         }
     }

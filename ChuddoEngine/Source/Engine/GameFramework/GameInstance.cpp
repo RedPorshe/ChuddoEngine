@@ -77,7 +77,7 @@ CWorld * CGameInstance::CreateWorld ( const std::string & worldName )
 
 	CurrentWorld = new CWorld ( this, worldName );
 	AddOwnedObject ( CurrentWorld );
-
+	
 	LOG_DEBUG ( "[GAME] World created: ", worldName );
 	return CurrentWorld;
 	}

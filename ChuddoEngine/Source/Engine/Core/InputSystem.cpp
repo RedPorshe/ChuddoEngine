@@ -1,23 +1,27 @@
 #include "Core/InputSystem.h"
 #include "Components/InputComponent.h"
 #include "Actors/PlayerController.h"
+#include "Core/Engine.h"
 #include "Actors/Pawn.h"
 #include <GLFW/glfw3.h>
 
-// Initialize singleton instance
 CInputSystem * CInputSystem::s_Instance = nullptr;
 
 CInputSystem * CInputSystem::GetInstance ()
     {
     if (s_Instance == nullptr)
         {
-        s_Instance = new CInputSystem ();
+        FEngineInfo Inform {};
+        Inform.vkInstance = VK_NULL_HANDLE;
+        Inform.WindowHandle = nullptr;
+        s_Instance = new CInputSystem ( Inform );
         }
     return s_Instance;
     }
 
-CInputSystem::CInputSystem ( )   
+CInputSystem::CInputSystem ( FEngineInfo & info ) : Info ( info )
     {
+    m_WindowHandle = info.WindowHandle;
     if (!s_Instance)
         {
         s_Instance = this;
@@ -33,31 +37,10 @@ CInputSystem::~CInputSystem ()
         }
     }
 
-bool CInputSystem::Initialize ( GLFWwindow * window )
+bool CInputSystem::Initialize ( FEngineInfo & info )
     {
-    if (window == nullptr)
-        {
-        LOG_ERROR ( "[INPUTSYSTEM] Cannot initialize input system without a valid GLFW window!" );
-        return false;
-        }
-    m_pWindow = window;
-
-    LOG_DEBUG ( "[INPUTSYSTEM] Initializing input system" );
-
-    if (!m_pWindow)
-        {
-        LOG_ERROR ( "[INPUTSYSTEM] No window associated with input system!" );
-        return false;
-        }
-
-        // Set GLFW callbacks
-    glfwSetKeyCallback ( m_pWindow, KeyCallback );
-    glfwSetMouseButtonCallback ( m_pWindow, MouseButtonCallback );
-    glfwSetCursorPosCallback ( m_pWindow, CursorPositionCallback );
-    glfwSetScrollCallback ( m_pWindow, ScrollCallback );
-
-    // Store this instance in GLFW user pointer for callbacks
-    glfwSetWindowUserPointer ( m_pWindow, this );
+    m_WindowHandle = info.WindowHandle;
+    LOG_DEBUG ( "Window handle in CInputSystem::Initialize: ", m_WindowHandle );
     bIsInitialized = true;
     LOG_DEBUG ( "[INPUTSYSTEM] Input system initialized successfully" );
     return true;
@@ -66,72 +49,71 @@ bool CInputSystem::Initialize ( GLFWwindow * window )
 void CInputSystem::ShutdownSystem ()
     {
     LOG_DEBUG ( "[INPUTSYSTEM] Shutting down input system" );
-
-    // Clear all bindings
     m_ActionBindings.clear ();
     m_AxisBindings.clear ();
     m_KeyStates.clear ();
     m_MouseButtonStates.clear ();
     m_InputComponents.clear ();
-
-    if (m_pWindow)
-        {
-            // Reset GLFW callbacks
-        glfwSetKeyCallback ( m_pWindow, nullptr );
-        glfwSetMouseButtonCallback ( m_pWindow, nullptr );
-        glfwSetCursorPosCallback ( m_pWindow, nullptr );
-        glfwSetScrollCallback ( m_pWindow, nullptr );
-        glfwSetWindowUserPointer ( m_pWindow, nullptr );
-        }
-
-    
     }
 
 void CInputSystem::Update ( float DeltaTime )
-    {   
-    if (!m_pWindow)
+    {
+    if (!m_WindowHandle)
+        {
+        LOG_WARN ( "[INPUTSYSTEM] Cannot update - m_WindowHandle is null" );
         return;
+        }
 
-    // Update input states
-    UpdateKeyStates ();
+    if (glfwWindowShouldClose ( m_WindowHandle ))
+        {
+        return;
+        }
+
+    if (glfwGetKey ( m_WindowHandle, GLFW_KEY_ESCAPE ) == GLFW_PRESS)
+        {
+        LOG_DEBUG ( "[INPUTSYSTEM] ESC pressed, exiting..." );
+        if (CEngine::Get ().IsRunning ())
+            {
+            CEngine::Get ().RequestExit ();
+            }
+        return;
+        }
+
+  
     UpdateMouseState ();
-
-    // Process global bindings
     ProcessActions ( DeltaTime );
     ProcessAxes ( DeltaTime );
 
-    // Reset scroll delta each frame
     m_ScrollDelta = FVector2D ( 0.0f );
+        // Сбрасываем флаги justPressed/justReleased в начале каждого кадра
+    for (auto & [key, state] : m_KeyStates)
+        {
+        state.justPressed = false;
+        state.justReleased = false;
+        }
+
+    for (auto & [button, state] : m_MouseButtonStates)
+        {
+        state.justPressed = false;
+        state.justReleased = false;
+        }
     }
 
-void CInputSystem::SetWindow ( GLFWwindow * window )
+GLFWwindow * CInputSystem::GetWindow () const
     {
-    m_pWindow = window;
-    if (m_pWindow && IsInitialized ())
-        {
-            // Re-setup callbacks if system is already initialized
-        glfwSetKeyCallback ( m_pWindow, KeyCallback );
-        glfwSetMouseButtonCallback ( m_pWindow, MouseButtonCallback );
-        glfwSetCursorPosCallback ( m_pWindow, CursorPositionCallback );
-        glfwSetScrollCallback ( m_pWindow, ScrollCallback );
-        glfwSetWindowUserPointer ( m_pWindow, this );
-        }
+    return m_WindowHandle;
     }
 
 void CInputSystem::ProcessControllerInput ( CPlayerController * Controller, float DeltaTime )
     {
-    if (!Controller || !Controller->IsInputEnabled ())
-        return;
+    if (!Controller || !Controller->IsInputEnabled ()) return;
 
     CPawn * ControlledPawn = Controller->GetPawn ();
-    if (!ControlledPawn || !ControlledPawn->IsInputEnabled ())
-        return;
+    if (!ControlledPawn || !ControlledPawn->IsInputEnabled ()) return;
 
     CInputComponent * InputComp = ControlledPawn->GetInputComponent ();
-    if (!InputComp )
-        return;
+    if (InputComp == nullptr) return;
 
-    // Let the input component process input
     InputComp->Tick ( DeltaTime );
     }
 
@@ -144,13 +126,13 @@ bool CInputSystem::IsKeyPressed ( int key ) const
 bool CInputSystem::IsKeyJustPressed ( int key ) const
     {
     auto it = m_KeyStates.find ( key );
-    return it != m_KeyStates.end () && it->second.current && !it->second.previous;
+    return it != m_KeyStates.end () && it->second.justPressed;
     }
 
 bool CInputSystem::IsKeyReleased ( int key ) const
     {
     auto it = m_KeyStates.find ( key );
-    return it != m_KeyStates.end () && !it->second.current && it->second.previous;
+    return it != m_KeyStates.end () && it->second.justReleased;
     }
 
 bool CInputSystem::IsMouseButtonPressed ( int button ) const
@@ -162,7 +144,7 @@ bool CInputSystem::IsMouseButtonPressed ( int button ) const
 bool CInputSystem::IsMouseButtonJustPressed ( int button ) const
     {
     auto it = m_MouseButtonStates.find ( button );
-    return it != m_MouseButtonStates.end () && it->second.current && !it->second.previous;
+    return it != m_MouseButtonStates.end () && it->second.justPressed;
     }
 
 FVector2D CInputSystem::GetMousePosition () const
@@ -182,30 +164,33 @@ FVector2D CInputSystem::GetScrollDelta () const
 
 void CInputSystem::SetMouseCursorVisible ( bool visible )
     {
-    if (m_pWindow)
+    if (m_WindowHandle)
         {
-        glfwSetInputMode ( m_pWindow, GLFW_CURSOR,
+        glfwSetInputMode ( m_WindowHandle, GLFW_CURSOR,
                            visible ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED );
         }
     }
 
 void CInputSystem::SetMousePosition ( const FVector2D & position )
     {
-    if (m_pWindow)
+    if (m_WindowHandle)
         {
-        glfwSetCursorPos ( m_pWindow, position.x, position.y );
+        glfwSetCursorPos ( m_WindowHandle, position.x, position.y );
         }
     }
 
-void CInputSystem::BindAction ( const std::string & actionName, int key, InputActionDelegate delegate, CInputComponent * component )
+    // ЕДИНЫЙ BindAction для всего!
+void CInputSystem::BindAction ( const std::string & actionName, int button, InputActionDelegate delegate, CInputComponent * component )
     {
     ActionBinding binding;
-    binding.key = key;
+    binding.button = button;
     binding.delegate = delegate;
     binding.owner = component;
     m_ActionBindings[ actionName ] = binding;
 
-    LOG_DEBUG ( "[INPUTSYSTEM] Bound action: ", actionName, " to key: ", key );
+    // Определяем тип по значению для отладки
+    const char * typeStr = ( button >= GLFW_MOUSE_BUTTON_1 && button <= GLFW_MOUSE_BUTTON_LAST ) ? "mouse button" : "key";
+    LOG_DEBUG ( "[INPUTSYSTEM] Bound action: ", actionName, " to ", typeStr, ": ", button );
     }
 
 void CInputSystem::BindAxis ( const std::string & axisName, int positiveKey, int negativeKey, InputAxisDelegate delegate, CInputComponent * component )
@@ -260,25 +245,15 @@ void CInputSystem::UnregisterInputComponent ( CInputComponent * Component )
         }
     }
 
-void CInputSystem::UpdateKeyStates ()
-    {
-    for (auto & [key, state] : m_KeyStates)
-        {
-        state.previous = state.current;
-        state.current = glfwGetKey ( m_pWindow, key ) == GLFW_PRESS;
-        }
-    }
-
 void CInputSystem::UpdateMouseState ()
     {
-        // Update mouse button states
+        // Обновляем только current/previous, но НЕ justPressed/justReleased
     for (auto & [button, state] : m_MouseButtonStates)
         {
         state.previous = state.current;
-        state.current = glfwGetMouseButton ( m_pWindow, button ) == GLFW_PRESS;
+        state.current = glfwGetMouseButton ( m_WindowHandle, button ) == GLFW_PRESS;
         }
 
-        // Calculate mouse delta
     m_MouseDelta = m_MousePosition - m_LastMousePosition;
     m_LastMousePosition = m_MousePosition;
     }
@@ -287,9 +262,32 @@ void CInputSystem::ProcessActions ( float DeltaTime )
     {
     for (const auto & [actionName, binding] : m_ActionBindings)
         {
-        if (IsKeyJustPressed ( binding.key ))
+        bool triggered = false;
+
+        // Проверяем - это кнопка мыши или клавиатуры?
+        if (binding.button >= GLFW_MOUSE_BUTTON_1 && binding.button <= GLFW_MOUSE_BUTTON_LAST)
             {
-            binding.delegate ( DeltaTime );
+                // Это кнопка мыши
+            triggered = IsMouseButtonJustPressed ( binding.button );
+            }
+        else
+            {
+                // Это клавиша клавиатуры
+            triggered = IsKeyJustPressed ( binding.button );
+            }
+
+        if (triggered)
+            {
+           
+
+            if (binding.delegate)
+                {
+                binding.delegate ( DeltaTime );                
+                }
+            else
+                {
+                LOG_ERROR ( "[INPUTSYSTEM] >>> Delegate is null for action: ", actionName );
+                }
             }
         }
     }
@@ -300,62 +298,64 @@ void CInputSystem::ProcessAxes ( float DeltaTime )
         {
         float value = 0.0f;
 
-        if (IsKeyPressed ( binding.positiveKey ))
-            value += 1.0f;
-        if (IsKeyPressed ( binding.negativeKey ))
-            value -= 1.0f;
+        if (IsKeyPressed ( binding.positiveKey )) value += 1.0f;
+        if (IsKeyPressed ( binding.negativeKey )) value -= 1.0f;
 
-        if (value != binding.value)
+       
+        float previousValue = binding.value;
+        binding.value = value;
+
+        if (value != previousValue || value != 0.0f)
             {
-            binding.value = value;
             binding.delegate ( value );
             }
         }
     }
 
-    // Static GLFW callbacks
-void CInputSystem::KeyCallback ( GLFWwindow * window, int key, int scancode, int action, int mods )
+void CInputSystem::HandleKey ( int key, int scancode, int action, int mods )
     {
-    CInputSystem * system = static_cast< CInputSystem * >( glfwGetWindowUserPointer ( window ) );
-    if (!system)
-        return;
-
-    if (action == GLFW_PRESS || action == GLFW_RELEASE)
+    if (action == GLFW_PRESS)
         {
-        bool pressed = ( action == GLFW_PRESS );
-        system->m_KeyStates[ key ].previous = system->m_KeyStates[ key ].current;
-        system->m_KeyStates[ key ].current = pressed;
+        m_KeyStates[ key ].previous = m_KeyStates[ key ].current;
+        m_KeyStates[ key ].current = true;
+        m_KeyStates[ key ].justPressed = true; 
+        m_KeyStates[ key ].justReleased = false;        
+        }
+    else if (action == GLFW_RELEASE)
+        {        
+        m_KeyStates[ key ].previous = m_KeyStates[ key ].current;
+        m_KeyStates[ key ].current = false;
+        m_KeyStates[ key ].justPressed = false;
+        m_KeyStates[ key ].justReleased = true;
+        }
+        // GLFW_REPEAT игнорируем для состояний
+    }
+
+void CInputSystem::HandleMouseButton ( int button, int action, int mods )
+    {
+    if (action == GLFW_PRESS)
+        {
+        m_MouseButtonStates[ button ].previous = m_MouseButtonStates[ button ].current;
+        m_MouseButtonStates[ button ].current = true;
+        m_MouseButtonStates[ button ].justPressed = true;
+        m_MouseButtonStates[ button ].justReleased = false;
+       
+        }
+    else if (action == GLFW_RELEASE)
+        {
+        m_MouseButtonStates[ button ].previous = m_MouseButtonStates[ button ].current;
+        m_MouseButtonStates[ button ].current = false;
+        m_MouseButtonStates[ button ].justPressed = false;
+        m_MouseButtonStates[ button ].justReleased = true;
         }
     }
 
-void CInputSystem::MouseButtonCallback ( GLFWwindow * window, int button, int action, int mods )
+void CInputSystem::HandleMouseMove ( double xpos, double ypos )
     {
-    CInputSystem * system = static_cast< CInputSystem * >( glfwGetWindowUserPointer ( window ) );
-    if (!system)
-        return;
-
-    if (action == GLFW_PRESS || action == GLFW_RELEASE)
-        {
-        bool pressed = ( action == GLFW_PRESS );
-        system->m_MouseButtonStates[ button ].previous = system->m_MouseButtonStates[ button ].current;
-        system->m_MouseButtonStates[ button ].current = pressed;
-        }
+    m_MousePosition = FVector2D ( static_cast< float >( xpos ), static_cast< float >( ypos ) );
     }
 
-void CInputSystem::CursorPositionCallback ( GLFWwindow * window, double xpos, double ypos )
+void CInputSystem::HandleScroll ( double xoffset, double yoffset )
     {
-    CInputSystem * system = static_cast< CInputSystem * >( glfwGetWindowUserPointer ( window ) );
-    if (!system)
-        return;
-
-    system->m_MousePosition = FVector2D ( static_cast< float >( xpos ), static_cast< float >( ypos ) );
-    }
-
-void CInputSystem::ScrollCallback ( GLFWwindow * window, double xoffset, double yoffset )
-    {
-    CInputSystem * system = static_cast< CInputSystem * >( glfwGetWindowUserPointer ( window ) );
-    if (!system)
-        return;
-
-    system->m_ScrollDelta = FVector2D ( static_cast< float >( xoffset ), static_cast< float >( yoffset ) );
+    m_ScrollDelta = FVector2D ( static_cast< float >( xoffset ), static_cast< float >( yoffset ) );
     }
