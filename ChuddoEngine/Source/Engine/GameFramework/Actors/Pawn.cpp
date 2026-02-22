@@ -101,7 +101,7 @@ void CPawn::EndPlay ()
 		{
 		if (comp == m_InputComponent)
 			{
-			m_InputComponent->onEndPlay ();
+			m_InputComponent->OnEndPlay ();
 			}
 		}
 	}

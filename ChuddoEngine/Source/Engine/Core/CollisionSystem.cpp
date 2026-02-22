@@ -129,7 +129,7 @@ void CCollisionSystem::UnregisterCollisionComponent ( CBaseCollisionComponent * 
 	{
 	if (!component)
 		return;
-
+	
 	auto it = std::find ( m_CollisionComponents.begin (), m_CollisionComponents.end (), component );
 
 	if (it != m_CollisionComponents.end ())

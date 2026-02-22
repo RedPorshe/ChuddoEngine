@@ -2,6 +2,8 @@
 #include "Actors/Pawn.h"
 #include "Actors/PlayerController.h"
 #include "Core/InputSystem.h"
+#include <GLFW/glfw3.h>
+#include <algorithm>
 
 CInputComponent::CInputComponent ( CObject * inOwner, const std::string & inDisplayName )
     : Super ( inOwner, inDisplayName )
@@ -33,10 +35,12 @@ void CInputComponent::OnBeginPlay ()
     Super::OnBeginPlay ();
     }
 
-void CInputComponent::onEndPlay ()
+void CInputComponent::OnEndPlay ()
     {
     UnbindAll ();
     }
+
+    // ========== Input query methods ==========
 
 bool CInputComponent::IsKeyPressed ( int key ) const
     {
@@ -50,10 +54,40 @@ bool CInputComponent::IsKeyJustPressed ( int key ) const
     return inputSystem ? inputSystem->IsKeyJustPressed ( key ) : false;
     }
 
+bool CInputComponent::IsKeyJustReleased ( int key ) const
+    {
+    auto * inputSystem = GetInputSystem ();
+    return inputSystem ? inputSystem->IsKeyJustReleased ( key ) : false;
+    }
+
+bool CInputComponent::IsKeyHeld ( int key ) const
+    {
+    auto * inputSystem = GetInputSystem ();
+    return inputSystem ? inputSystem->IsKeyHeld ( key ) : false;
+    }
+
 bool CInputComponent::IsMouseButtonPressed ( int button ) const
     {
     auto * inputSystem = GetInputSystem ();
     return inputSystem ? inputSystem->IsMouseButtonPressed ( button ) : false;
+    }
+
+bool CInputComponent::IsMouseButtonJustPressed ( int button ) const
+    {
+    auto * inputSystem = GetInputSystem ();
+    return inputSystem ? inputSystem->IsMouseButtonJustPressed ( button ) : false;
+    }
+
+bool CInputComponent::IsMouseButtonJustReleased ( int button ) const
+    {
+    auto * inputSystem = GetInputSystem ();
+    return inputSystem ? inputSystem->IsMouseButtonJustReleased ( button ) : false;
+    }
+
+bool CInputComponent::IsMouseButtonHeld ( int button ) const
+    {
+    auto * inputSystem = GetInputSystem ();
+    return inputSystem ? inputSystem->IsMouseButtonHeld ( button ) : false;
     }
 
 FVector2D CInputComponent::GetMousePosition () const
@@ -74,30 +108,97 @@ FVector2D CInputComponent::GetScrollDelta () const
     return inputSystem ? inputSystem->GetScrollDelta () : FVector2D ( 0.0f );
     }
 
-    // ЕДИНЫЙ BindAction - ОДИНАКОВЫЙ ДЛЯ КЛАВИАТУРЫ И МЫШИ!
-void CInputComponent::BindAction ( const std::string & actionName, int button, std::function<void ( float )> callback )
+    // ========== Binding methods ==========
+
+void CInputComponent::BindAction ( const std::string & actionName, int button, EInputEvent eventType,
+                                   std::function<void ()> callback )
     {
     auto * inputSystem = GetInputSystem ();
     if (inputSystem)
         {
-        inputSystem->BindAction ( actionName, button, callback, this );
+        inputSystem->BindAction ( actionName, button, eventType, callback, this );
         m_BoundActions.push_back ( actionName );
 
-        // Для отладки определим тип
         const char * typeStr = ( button >= GLFW_MOUSE_BUTTON_1 && button <= GLFW_MOUSE_BUTTON_LAST ) ?
             "mouse button" : "key";
-        LOG_DEBUG ( "[INPUTCOMPONENT] Bound action: ", actionName, " (", typeStr, ": ", button, ")" );
+        const char * eventStr = "";
+        switch (eventType)
+            {
+                case EInputEvent::IE_Pressed: eventStr = "Pressed"; break;
+                case EInputEvent::IE_Released: eventStr = "Released"; break;
+                case EInputEvent::IE_Repeat: eventStr = "Repeat"; break;
+                case EInputEvent::IE_DoubleClick: eventStr = "DoubleClick"; break;
+            }
+
+        LOG_DEBUG ( "[INPUTCOMPONENT] Bound action: ", actionName, " (", eventStr, ") to ",
+                    typeStr, ": ", button );
         }
     }
 
-void CInputComponent::BindAxis ( const std::string & axisName, int positiveKey, int negativeKey, std::function<void ( float )> callback )
+void CInputComponent::BindAxis ( const std::string & axisName, int positiveKey, int negativeKey,
+                                 std::function<void ( float )> callback )
     {
     auto * inputSystem = GetInputSystem ();
     if (inputSystem)
         {
         inputSystem->BindAxis ( axisName, positiveKey, negativeKey, callback, this );
         m_BoundAxes.push_back ( axisName );
+        LOG_DEBUG ( "[INPUTCOMPONENT] Bound axis: ", axisName, " to keys: ",
+                    positiveKey, " / ", negativeKey );
         }
+    }
+
+void CInputComponent::BindMouseAxisX ( const std::string & axisName, std::function<void ( float )> callback )
+    {
+    auto * inputSystem = GetInputSystem ();
+    if (inputSystem)
+        {
+        inputSystem->BindMouseAxis ( axisName, EMouseAxis::MouseX, callback, this );
+        m_BoundAxes.push_back ( axisName );
+        LOG_DEBUG ( "[INPUTCOMPONENT] Bound mouse X axis: ", axisName );
+        }
+    }
+
+void CInputComponent::BindMouseAxisY ( const std::string & axisName, std::function<void ( float )> callback )
+    {
+    auto * inputSystem = GetInputSystem ();
+    if (inputSystem)
+        {
+        inputSystem->BindMouseAxis ( axisName, EMouseAxis::MouseY, callback, this );
+        m_BoundAxes.push_back ( axisName );
+        LOG_DEBUG ( "[INPUTCOMPONENT] Bound mouse Y axis: ", axisName );
+        }
+    }
+
+void CInputComponent::BindMouseScroll ( const std::string & axisName, std::function<void ( float )> callback )
+    {
+    auto * inputSystem = GetInputSystem ();
+    if (inputSystem)
+        {
+        inputSystem->BindMouseAxis ( axisName, EMouseAxis::MouseScroll, callback, this );
+        m_BoundAxes.push_back ( axisName );
+        LOG_DEBUG ( "[INPUTCOMPONENT] Bound mouse scroll: ", axisName );
+        }
+    }
+
+void CInputComponent::BindMouseAxisXWithSensitivity ( const std::string & axisName,
+                                                      std::function<void ( float )> callback,
+                                                      float sensitivity )
+    {
+    BindMouseAxisX ( axisName, [ callback, sensitivity ] ( float Value )
+                     {
+                     callback ( Value * sensitivity );
+                     } );
+    }
+
+void CInputComponent::BindMouseAxisYWithSensitivity ( const std::string & axisName,
+                                                      std::function<void ( float )> callback,
+                                                      float sensitivity )
+    {
+    BindMouseAxisY ( axisName, [ callback, sensitivity ] ( float Value )
+                     {
+                     callback ( Value * sensitivity );
+                     } );
     }
 
 void CInputComponent::UnbindAction ( const std::string & actionName )
@@ -135,20 +236,15 @@ void CInputComponent::UnbindAll ()
     auto * inputSystem = GetInputSystem ();
     if (inputSystem)
         {
-        for (const auto & action : m_BoundActions)
-            {
-            inputSystem->UnbindAction ( action, this );
-            }
-
-        for (const auto & axis : m_BoundAxes)
-            {
-            inputSystem->UnbindAxis ( axis, this );
-            }
+        inputSystem->UnbindAllForComponent ( this );
         }
 
     m_BoundActions.clear ();
     m_BoundAxes.clear ();
+    LOG_DEBUG ( "[INPUTCOMPONENT] Unbound all actions and axes" );
     }
+
+    // ========== Mouse control ==========
 
 void CInputComponent::SetMouseCursorVisible ( bool visible )
     {
@@ -168,6 +264,17 @@ void CInputComponent::SetMousePosition ( const FVector2D & position )
         }
     }
 
+void CInputComponent::SetMouseSensitivity ( float sensitivity )
+    {
+    auto * inputSystem = GetInputSystem ();
+    if (inputSystem)
+        {
+        inputSystem->SetMouseSensitivity ( sensitivity );
+        }
+    }
+
+    // ========== Getters ==========
+
 CPawn * CInputComponent::GetOwningPawn () const
     {
     return dynamic_cast< CPawn * >( GetOwner () );
@@ -176,4 +283,24 @@ CPawn * CInputComponent::GetOwningPawn () const
 CInputSystem * CInputComponent::GetInputSystem () const
     {
     return CInputSystem::GetInstance ();
+    }
+
+    // ========== Debug methods ==========
+
+void CInputComponent::PrintBoundActions () const
+    {
+    LOG_DEBUG ( "[INPUTCOMPONENT] Bound actions for ", GetName (), ":" );
+    for (const auto & action : m_BoundActions)
+        {
+        LOG_DEBUG ( "  - ", action );
+        }
+    }
+
+void CInputComponent::PrintBoundAxes () const
+    {
+    LOG_DEBUG ( "[INPUTCOMPONENT] Bound axes for ", GetName (), ":" );
+    for (const auto & axis : m_BoundAxes)
+        {
+        LOG_DEBUG ( "  - ", axis );
+        }
     }

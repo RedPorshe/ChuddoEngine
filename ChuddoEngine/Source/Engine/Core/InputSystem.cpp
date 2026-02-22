@@ -4,6 +4,7 @@
 #include "Core/Engine.h"
 #include "Actors/Pawn.h"
 #include <GLFW/glfw3.h>
+#include <algorithm>
 
 CInputSystem * CInputSystem::s_Instance = nullptr;
 
@@ -40,7 +41,6 @@ CInputSystem::~CInputSystem ()
 bool CInputSystem::Initialize ( FEngineInfo & info )
     {
     m_WindowHandle = info.WindowHandle;
-    LOG_DEBUG ( "Window handle in CInputSystem::Initialize: ", m_WindowHandle );
     bIsInitialized = true;
     LOG_DEBUG ( "[INPUTSYSTEM] Input system initialized successfully" );
     return true;
@@ -60,7 +60,6 @@ void CInputSystem::Update ( float DeltaTime )
     {
     if (!m_WindowHandle)
         {
-        LOG_WARN ( "[INPUTSYSTEM] Cannot update - m_WindowHandle is null" );
         return;
         }
 
@@ -69,23 +68,39 @@ void CInputSystem::Update ( float DeltaTime )
         return;
         }
 
-    if (glfwGetKey ( m_WindowHandle, GLFW_KEY_ESCAPE ) == GLFW_PRESS)
+        // Обновляем время удержания для клавиш
+    for (auto & [key, state] : m_KeyStates)
         {
-        LOG_DEBUG ( "[INPUTSYSTEM] ESC pressed, exiting..." );
-        if (CEngine::Get ().IsRunning ())
+        if (state.current)
             {
-            CEngine::Get ().RequestExit ();
+            state.heldTime += DeltaTime;
             }
-        return;
+        else
+            {
+            state.heldTime = 0.0f;
+            }
         }
 
-  
+        // Обновляем время удержания для кнопок мыши
+    for (auto & [button, state] : m_MouseButtonStates)
+        {
+        if (state.current)
+            {
+            state.heldTime += DeltaTime;
+            }
+        else
+            {
+            state.heldTime = 0.0f;
+            }
+        }
+
     UpdateMouseState ();
     ProcessActions ( DeltaTime );
     ProcessAxes ( DeltaTime );
 
     m_ScrollDelta = FVector2D ( 0.0f );
-        // Сбрасываем флаги justPressed/justReleased в начале каждого кадра
+
+    // Сбрасываем флаги justPressed/justReleased в начале каждого кадра
     for (auto & [key, state] : m_KeyStates)
         {
         state.justPressed = false;
@@ -117,6 +132,8 @@ void CInputSystem::ProcessControllerInput ( CPlayerController * Controller, floa
     InputComp->Tick ( DeltaTime );
     }
 
+    // ========== State queries ==========
+
 bool CInputSystem::IsKeyPressed ( int key ) const
     {
     auto it = m_KeyStates.find ( key );
@@ -129,10 +146,16 @@ bool CInputSystem::IsKeyJustPressed ( int key ) const
     return it != m_KeyStates.end () && it->second.justPressed;
     }
 
-bool CInputSystem::IsKeyReleased ( int key ) const
+bool CInputSystem::IsKeyJustReleased ( int key ) const
     {
     auto it = m_KeyStates.find ( key );
     return it != m_KeyStates.end () && it->second.justReleased;
+    }
+
+bool CInputSystem::IsKeyHeld ( int key ) const
+    {
+    auto it = m_KeyStates.find ( key );
+    return it != m_KeyStates.end () && it->second.current && it->second.heldTime > 0.1f;
     }
 
 bool CInputSystem::IsMouseButtonPressed ( int button ) const
@@ -145,6 +168,18 @@ bool CInputSystem::IsMouseButtonJustPressed ( int button ) const
     {
     auto it = m_MouseButtonStates.find ( button );
     return it != m_MouseButtonStates.end () && it->second.justPressed;
+    }
+
+bool CInputSystem::IsMouseButtonJustReleased ( int button ) const
+    {
+    auto it = m_MouseButtonStates.find ( button );
+    return it != m_MouseButtonStates.end () && it->second.justReleased;
+    }
+
+bool CInputSystem::IsMouseButtonHeld ( int button ) const
+    {
+    auto it = m_MouseButtonStates.find ( button );
+    return it != m_MouseButtonStates.end () && it->second.current && it->second.heldTime > 0.1f;
     }
 
 FVector2D CInputSystem::GetMousePosition () const
@@ -179,31 +214,70 @@ void CInputSystem::SetMousePosition ( const FVector2D & position )
         }
     }
 
-    // ЕДИНЫЙ BindAction для всего!
-void CInputSystem::BindAction ( const std::string & actionName, int button, InputActionDelegate delegate, CInputComponent * component )
+    // ========== Binding methods ==========
+
+void CInputSystem::BindAction ( const std::string & actionName, int button, EInputEvent eventType,
+                                InputActionDelegate delegate, CInputComponent * component )
     {
     ActionBinding binding;
     binding.button = button;
+    binding.eventType = eventType;
     binding.delegate = delegate;
     binding.owner = component;
     m_ActionBindings[ actionName ] = binding;
 
-    // Определяем тип по значению для отладки
-    const char * typeStr = ( button >= GLFW_MOUSE_BUTTON_1 && button <= GLFW_MOUSE_BUTTON_LAST ) ? "mouse button" : "key";
-    LOG_DEBUG ( "[INPUTSYSTEM] Bound action: ", actionName, " to ", typeStr, ": ", button );
+    const char * typeStr = ( button >= GLFW_MOUSE_BUTTON_1 && button <= GLFW_MOUSE_BUTTON_LAST ) ?
+        "mouse button" : "key";
+    const char * eventStr = "";
+    switch (eventType)
+        {
+            case EInputEvent::IE_Pressed: eventStr = "Pressed"; break;
+            case EInputEvent::IE_Released: eventStr = "Released"; break;
+            case EInputEvent::IE_Repeat: eventStr = "Repeat"; break;
+            case EInputEvent::IE_DoubleClick: eventStr = "DoubleClick"; break;
+        }
+
+    LOG_DEBUG ( "[INPUTSYSTEM] Bound action: ", actionName, " (", eventStr, ") to ",
+                typeStr, ": ", button );
     }
 
-void CInputSystem::BindAxis ( const std::string & axisName, int positiveKey, int negativeKey, InputAxisDelegate delegate, CInputComponent * component )
+void CInputSystem::BindAxis ( const std::string & axisName, int positiveKey, int negativeKey,
+                              InputAxisDelegate delegate, CInputComponent * component )
     {
     AxisBinding binding;
     binding.positiveKey = positiveKey;
     binding.negativeKey = negativeKey;
+    binding.bIsMouseAxis = false;
     binding.delegate = delegate;
     binding.owner = component;
     binding.value = 0.0f;
     m_AxisBindings[ axisName ] = binding;
 
     LOG_DEBUG ( "[INPUTSYSTEM] Bound axis: ", axisName, " to keys: ", positiveKey, " / ", negativeKey );
+    }
+
+void CInputSystem::BindMouseAxis ( const std::string & axisName, int mouseAxis,
+                                   InputAxisDelegate delegate, CInputComponent * component )
+    {
+    AxisBinding binding;
+    binding.positiveKey = -1;
+    binding.negativeKey = -1;
+    binding.mouseAxis = mouseAxis;
+    binding.bIsMouseAxis = true;
+    binding.delegate = delegate;
+    binding.owner = component;
+    binding.value = 0.0f;
+    m_AxisBindings[ axisName ] = binding;
+
+    const char * axisStr = "";
+    switch (mouseAxis)
+        {
+            case EMouseAxis::MouseX: axisStr = "Mouse X"; break;
+            case EMouseAxis::MouseY: axisStr = "Mouse Y"; break;
+            case EMouseAxis::MouseScroll: axisStr = "Mouse Scroll"; break;
+        }
+
+    LOG_DEBUG ( "[INPUTSYSTEM] Bound mouse axis: ", axisName, " to ", axisStr );
     }
 
 void CInputSystem::UnbindAction ( const std::string & actionName, CInputComponent * component )
@@ -226,6 +300,31 @@ void CInputSystem::UnbindAxis ( const std::string & axisName, CInputComponent * 
         }
     }
 
+void CInputSystem::UnbindAllForComponent ( CInputComponent * component )
+    {
+    if (!component) return;
+
+    // Удаляем все action бинды для этого компонента
+    for (auto it = m_ActionBindings.begin (); it != m_ActionBindings.end ();)
+        {
+        if (it->second.owner == component)
+            it = m_ActionBindings.erase ( it );
+        else
+            ++it;
+        }
+
+        // Удаляем все axis бинды для этого компонента
+    for (auto it = m_AxisBindings.begin (); it != m_AxisBindings.end ();)
+        {
+        if (it->second.owner == component)
+            it = m_AxisBindings.erase ( it );
+        else
+            ++it;
+        }
+
+    LOG_DEBUG ( "[INPUTSYSTEM] Unbound all for component: ", component->GetName () );
+    }
+
 void CInputSystem::RegisterInputComponent ( CInputComponent * Component )
     {
     if (Component && std::find ( m_InputComponents.begin (), m_InputComponents.end (), Component ) == m_InputComponents.end ())
@@ -241,13 +340,16 @@ void CInputSystem::UnregisterInputComponent ( CInputComponent * Component )
     if (it != m_InputComponents.end ())
         {
         m_InputComponents.erase ( it );
+        UnbindAllForComponent ( Component );
         LOG_DEBUG ( "[INPUTSYSTEM] Unregistered input component: ", Component->GetName () );
         }
     }
 
+    // ========== Processing methods ==========
+
 void CInputSystem::UpdateMouseState ()
     {
-        // Обновляем только current/previous, но НЕ justPressed/justReleased
+        // Обновляем состояние кнопок мыши
     for (auto & [button, state] : m_MouseButtonStates)
         {
         state.previous = state.current;
@@ -262,32 +364,40 @@ void CInputSystem::ProcessActions ( float DeltaTime )
     {
     for (const auto & [actionName, binding] : m_ActionBindings)
         {
-        bool triggered = false;
+        bool shouldTrigger = false;
 
-        // Проверяем - это кнопка мыши или клавиатуры?
-        if (binding.button >= GLFW_MOUSE_BUTTON_1 && binding.button <= GLFW_MOUSE_BUTTON_LAST)
+        // Определяем тип ввода (клавиша или кнопка мыши)
+        bool isMouseButton = ( binding.button >= GLFW_MOUSE_BUTTON_1 &&
+                               binding.button <= GLFW_MOUSE_BUTTON_LAST );
+
+        switch (binding.eventType)
             {
-                // Это кнопка мыши
-            triggered = IsMouseButtonJustPressed ( binding.button );
+                case EInputEvent::IE_Pressed:
+                    shouldTrigger = isMouseButton ?
+                        IsMouseButtonJustPressed ( binding.button ) :
+                        IsKeyJustPressed ( binding.button );
+                    break;
+
+                case EInputEvent::IE_Released:
+                    shouldTrigger = isMouseButton ?
+                        IsMouseButtonJustReleased ( binding.button ) :
+                        IsKeyJustReleased ( binding.button );
+                    break;
+
+                case EInputEvent::IE_Repeat:
+                    shouldTrigger = isMouseButton ?
+                        IsMouseButtonHeld ( binding.button ) :
+                        IsKeyHeld ( binding.button );
+                    break;
+
+                case EInputEvent::IE_DoubleClick:
+                    // TODO: Implement double click detection
+                    break;
             }
-        else
-            {
-                // Это клавиша клавиатуры
-            triggered = IsKeyJustPressed ( binding.button );
-            }
 
-        if (triggered)
+        if (shouldTrigger && binding.delegate)
             {
-           
-
-            if (binding.delegate)
-                {
-                binding.delegate ( 1.f );                
-                }
-            else
-                {
-                LOG_ERROR ( "[INPUTSYSTEM] >>> Delegate is null for action: ", actionName );
-                }
+            binding.delegate ();
             }
         }
     }
@@ -298,10 +408,33 @@ void CInputSystem::ProcessAxes ( float DeltaTime )
         {
         float value = 0.0f;
 
-        if (IsKeyPressed ( binding.positiveKey )) value += 1.0f;
-        if (IsKeyPressed ( binding.negativeKey )) value -= 1.0f;
+        if (binding.bIsMouseAxis)
+            {
+                // Обработка осей мыши
+            switch (binding.mouseAxis)
+                {
+                    case EMouseAxis::MouseX:
+                        value = m_MouseDelta.x * m_MouseSensitivity;
+                        break;
+                    case EMouseAxis::MouseY:
+                        value = m_MouseDelta.y * m_MouseSensitivity;
+                        break;
+                    case EMouseAxis::MouseScroll:
+                        value = m_ScrollDelta.y;
+                        break;
+                    default:
+                        value = 0.0f;
+                }
+            }
+        else
+            {
+                // Обработка клавиатурных осей
+            if (binding.positiveKey != -1 && IsKeyPressed ( binding.positiveKey ))
+                value += 1.0f;
+            if (binding.negativeKey != -1 && IsKeyPressed ( binding.negativeKey ))
+                value -= 1.0f;
+            }
 
-       
         float previousValue = binding.value;
         binding.value = value;
 
@@ -312,23 +445,26 @@ void CInputSystem::ProcessAxes ( float DeltaTime )
         }
     }
 
+    // ========== Callback handlers ==========
+
 void CInputSystem::HandleKey ( int key, int scancode, int action, int mods )
     {
     if (action == GLFW_PRESS)
         {
         m_KeyStates[ key ].previous = m_KeyStates[ key ].current;
         m_KeyStates[ key ].current = true;
-        m_KeyStates[ key ].justPressed = true; 
-        m_KeyStates[ key ].justReleased = false;        
+        m_KeyStates[ key ].justPressed = true;
+        m_KeyStates[ key ].justReleased = false;
+        m_KeyStates[ key ].heldTime = 0.0f;
         }
     else if (action == GLFW_RELEASE)
-        {        
+        {
         m_KeyStates[ key ].previous = m_KeyStates[ key ].current;
         m_KeyStates[ key ].current = false;
         m_KeyStates[ key ].justPressed = false;
         m_KeyStates[ key ].justReleased = true;
         }
-        // GLFW_REPEAT игнорируем для состояний
+        // GLFW_REPEAT игнорируем для состояний, обрабатываем через heldTime
     }
 
 void CInputSystem::HandleMouseButton ( int button, int action, int mods )
@@ -339,7 +475,7 @@ void CInputSystem::HandleMouseButton ( int button, int action, int mods )
         m_MouseButtonStates[ button ].current = true;
         m_MouseButtonStates[ button ].justPressed = true;
         m_MouseButtonStates[ button ].justReleased = false;
-       
+        m_MouseButtonStates[ button ].heldTime = 0.0f;
         }
     else if (action == GLFW_RELEASE)
         {

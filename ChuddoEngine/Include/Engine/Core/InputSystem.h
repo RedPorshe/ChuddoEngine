@@ -11,8 +11,27 @@ class CPlayerController;
 class CInputComponent;
 struct FEngineInfo;
 
-using InputActionDelegate = std::function<void ( float )>;
+// Типы событий для действий
+enum class EInputEvent
+    {
+    IE_Pressed,     // Однократное нажатие
+    IE_Released,    // Однократное отпускание
+    IE_Repeat,      // Зажато (повторяется каждый кадр)
+    IE_DoubleClick  // Двойной клик (если понадобится)
+    };
+
+    // Делегаты
+using InputActionDelegate = std::function<void ()>;  // Для IE_Pressed/IE_Released
 using InputAxisDelegate = std::function<void ( float )>;
+using InputRepeatDelegate = std::function<void ()>;  // Для зажатых клавиш
+
+// Константы для осей мыши
+namespace EMouseAxis
+    {
+    const int MouseX = 1000;
+    const int MouseY = 1001;
+    const int MouseScroll = 1002;
+    }
 
 class CInputSystem
     {
@@ -33,16 +52,20 @@ class CInputSystem
         GLFWwindow * GetWindow () const;
         void SetWindow ( GLFWwindow * window ) {
             m_WindowHandle = window;
-            Info.WindowHandle = window; // синхронизируем
+            Info.WindowHandle = window;
             }
 
             // Input state queries
         bool IsKeyPressed ( int key ) const;
         bool IsKeyJustPressed ( int key ) const;
-        bool IsKeyReleased ( int key ) const;
+        bool IsKeyJustReleased ( int key ) const;
+        bool IsKeyHeld ( int key ) const;  // Зажата (для repeat)
 
         bool IsMouseButtonPressed ( int button ) const;
         bool IsMouseButtonJustPressed ( int button ) const;
+        bool IsMouseButtonJustReleased ( int button ) const;
+        bool IsMouseButtonHeld ( int button ) const;  // Зажата
+
         FVector2D GetMousePosition () const;
         FVector2D GetMouseDelta () const;
         FVector2D GetScrollDelta () const;
@@ -50,17 +73,27 @@ class CInputSystem
         // Mouse control
         void SetMouseCursorVisible ( bool visible );
         void SetMousePosition ( const FVector2D & position );
+        void SetMouseSensitivity ( float Sensitivity ) { m_MouseSensitivity = Sensitivity; }
+        float GetMouseSensitivity () const { return m_MouseSensitivity; }
 
         // Controller input processing
         void ProcessControllerInput ( CPlayerController * Controller, float DeltaTime );
 
-        // Input binding for components
-        void BindAction ( const std::string & actionName, int button, InputActionDelegate delegate, CInputComponent * component );
+        // ЕДИНЫЙ BindAction для всего!
+        void BindAction ( const std::string & actionName, int button, EInputEvent eventType,
+                          InputActionDelegate delegate, CInputComponent * component = nullptr );
+
+        // BindAxis для клавиатуры
         void BindAxis ( const std::string & axisName, int positiveKey, int negativeKey,
                         InputAxisDelegate delegate, CInputComponent * component = nullptr );
 
+        // BindMouseAxis для мыши
+        void BindMouseAxis ( const std::string & axisName, int mouseAxis,
+                             InputAxisDelegate delegate, CInputComponent * component = nullptr );
+
         void UnbindAction ( const std::string & actionName, CInputComponent * component = nullptr );
         void UnbindAxis ( const std::string & axisName, CInputComponent * component = nullptr );
+        void UnbindAllForComponent ( CInputComponent * component );
 
         // Component registration
         void RegisterInputComponent ( CInputComponent * Component );
@@ -73,36 +106,41 @@ class CInputSystem
         void HandleScroll ( double xoffset, double yoffset );
 
     private:
-        GLFWwindow * m_WindowHandle = nullptr;  // Локальная копия
-        FEngineInfo & Info;  // ссылка на внешнюю структуру
+        GLFWwindow * m_WindowHandle = nullptr;
+        FEngineInfo & Info;
 
         struct KeyState
             {
             bool current = false;
             bool previous = false;
-            bool justPressed = false;  // Флаг для однократного нажатия
-            bool justReleased = false; // Флаг для однократного отпускания
+            bool justPressed = false;
+            bool justReleased = false;
+            float heldTime = 0.0f;  // Время удержания
             };
 
         struct MouseButtonState
             {
             bool current = false;
             bool previous = false;
-            bool justPressed = false;  // Флаг для однократного нажатия
-            bool justReleased = false; // Флаг для однократного отпускания
+            bool justPressed = false;
+            bool justReleased = false;
+            float heldTime = 0.0f;
             };
 
         struct ActionBinding
             {
             int button;
+            EInputEvent eventType;
             InputActionDelegate delegate;
             CInputComponent * owner = nullptr;
             };
 
         struct AxisBinding
             {
-            int positiveKey;
-            int negativeKey;
+            int positiveKey = -1;
+            int negativeKey = -1;
+            int mouseAxis = -1;
+            bool bIsMouseAxis = false;
             InputAxisDelegate delegate;
             CInputComponent * owner = nullptr;
             float value = 0.0f;
@@ -116,6 +154,7 @@ class CInputSystem
         static CInputSystem * s_Instance;
 
         bool bIsInitialized = false;
+        float m_MouseSensitivity = 0.1f;
 
         // Input state
         std::unordered_map<int, KeyState> m_KeyStates;

@@ -62,7 +62,7 @@ CTerrainComponent::CTerrainComponent ( CObject * inOwner, const std::string & In
 
 CTerrainComponent::~CTerrainComponent ()
     {
-   // COLLISION_SYSTEM.UnregisterCollisionComponent ( this );
+    COLLISION_SYSTEM.UnregisterCollisionComponent ( this );
     m_TerrainData.Heights.clear ();
     }
 
