@@ -7,6 +7,9 @@ class CGameInstance;
 class CWindow;
 class CInputSystem;
 
+class CRenderer;
+
+struct FEngineInfo;
 
 class CEngine
     {
@@ -29,7 +32,7 @@ class CEngine
         bool IsRunning () const { return bIsRunning; }
         // GameInstance access
         CGameInstance & GetGameInstance (); 
-      
+        CWindow* GetWindow () const { return Window.get(); }
     protected:
         void MainLoop ();
         void Tick ( float deltaTime );
@@ -40,8 +43,10 @@ class CEngine
         std::chrono::steady_clock::time_point m_LastFrameTime;
         bool bIsInitialized = false;
         bool bIsRunning = false;
+
         
         std::unique_ptr<CWindow>  Window = nullptr;
+        std::unique_ptr<CRenderer>  Renderer = nullptr;
         CCollisionSystem & CollisionSystem;
         CInputSystem & InputSystem;
         FEngineInfo & Info;

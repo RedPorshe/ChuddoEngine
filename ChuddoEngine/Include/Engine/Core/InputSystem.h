@@ -50,10 +50,7 @@ class CInputSystem
 
         // GLFW window association
         GLFWwindow * GetWindow () const;
-        void SetWindow ( GLFWwindow * window ) {
-            m_WindowHandle = window;
-            Info.WindowHandle = window;
-            }
+        void SetWindow ( GLFWwindow * window );
 
             // Input state queries
         bool IsKeyPressed ( int key ) const;

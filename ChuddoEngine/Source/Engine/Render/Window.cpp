@@ -76,6 +76,7 @@ bool CWindow::Initialize ()
     }
 
 void CWindow::Shutdown () {
+   
     if (m_info.WindowHandle)
         {
         LOG_DEBUG ( "Destroying GLFW window..." );
@@ -87,14 +88,14 @@ void CWindow::Shutdown () {
     }
 
 VkSurfaceKHR CWindow::CreateVulkanSurface () const {
-    if (!m_info.WindowHandle || !m_info.vkInstance)
+    if (!m_info.WindowHandle || !m_info.HasVulkanContext())
         {
         LOG_ERROR ( "Cannot create Vulkan surface: invalid window or instance" );
         return VK_NULL_HANDLE;
         }
 
     VkSurfaceKHR surface;
-    VkResult result = glfwCreateWindowSurface ( m_info.vkInstance, m_info.WindowHandle, nullptr, &surface );
+    VkResult result = glfwCreateWindowSurface ( m_info.Vulkan.Instance, m_info.WindowHandle, nullptr, &surface );
 
     if (result != VK_SUCCESS)
         {
@@ -103,6 +104,7 @@ VkSurfaceKHR CWindow::CreateVulkanSurface () const {
         }
 
     LOG_DEBUG ( "Vulkan surface created successfully" );
+    m_info.Vulkan.Surface = surface;
     return surface;
     }
 

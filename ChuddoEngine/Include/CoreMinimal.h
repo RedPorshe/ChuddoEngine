@@ -16,7 +16,7 @@
 #include "Utils/Logger.h"
 #include "Utils/MathGLMConverters.h"
 #include "Core/Collision.h"
-#include "Core/EngineInfo.h"
+
 // Forward declarations
 class CObject;
 class CObjectFactory;

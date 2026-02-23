@@ -6,6 +6,9 @@
 #include <string>
 #include <functional>
 
+
+#include "Core/EngineInfo.h"
+
 class CWindow
     {
     public:

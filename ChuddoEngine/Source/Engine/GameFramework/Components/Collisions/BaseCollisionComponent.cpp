@@ -3,256 +3,272 @@
 #include "Core/CollisionSystem.h"
 
 CBaseCollisionComponent::CBaseCollisionComponent ( CObject * inOwner,
-												   const std::string & inDisplayName )
-	: Super ( inOwner, inDisplayName )	  
-	{	
-	CCollisionSystem::Get ().RegisterCollisionComponent ( this );
-	}
+                                                   const std::string & inDisplayName )
+    : Super ( inOwner, inDisplayName )
+    {
+        // Проверяем, можно ли регистрироваться в системе
+    if (CCollisionSystem::s_IsInitialized &&
+         CCollisionSystem::s_Instance &&
+         !CCollisionSystem::IsShuttingDown ())
+        {
+        CCollisionSystem::Get ().RegisterCollisionComponent ( this );
+        }
+    else
+        {
+        LOG_WARN ( "[COLLISION] Cannot register component '", GetName (), "' - CollisionSystem not available" );
+        }
+    }
 
 CBaseCollisionComponent::~CBaseCollisionComponent ()
-	{
-	CCollisionSystem::Get ().UnregisterCollisionComponent ( this );
-	OverlappingComponents.clear ();
-	}
+    {
+        // Проверяем, можно ли отписываться от системы
+    if (CCollisionSystem::s_IsInitialized &&
+         CCollisionSystem::s_Instance &&
+         !CCollisionSystem::IsShuttingDown ())
+        {
+        CCollisionSystem::Get ().UnregisterCollisionComponent ( this );
+        }
 
+    OverlappingComponents.clear ();
+    }
 
-FVector CBaseCollisionComponent::GetWorldLocation () 
-	{		
-	CActor * ownerActor = GetOwnerActor ();
-	if (ownerActor)
-		{
-		FVector pos = ownerActor->GetActorLocation ();		
-		return pos;
-		}
+FVector CBaseCollisionComponent::GetWorldLocation ()
+    {
+    CActor * ownerActor = GetOwnerActor ();
+    if (ownerActor)
+        {
+        FVector pos = ownerActor->GetActorLocation ();
+        return pos;
+        }
 
-	CObject * owner = GetOwner ();
-	int depth = 0;
-	while (owner && depth < 10) // Ограничиваем глубину чтобы не зациклиться
-		{
-		if (CActor * actor = dynamic_cast< CActor * > ( owner ))
-			{
-			FVector pos = actor->GetActorLocation ();			
-			return pos;
-			}
-					
-		if (CTransformComponent * transform = dynamic_cast< CTransformComponent * >( owner ))
-			{
-			FVector pos = transform->GetLocation ();			
-			return pos;
-			}
+    CObject * owner = GetOwner ();
+    int depth = 0;
+    while (owner && depth < 10) // Ограничиваем глубину чтобы не зациклиться
+        {
+        if (CActor * actor = dynamic_cast< CActor * > ( owner ))
+            {
+            FVector pos = actor->GetActorLocation ();
+            return pos;
+            }
 
-		owner = owner->GetOwner ();
-		depth++;
-		}
+        if (CTransformComponent * transform = dynamic_cast< CTransformComponent * > ( owner ))
+            {
+            FVector pos = transform->GetLocation ();
+            return pos;
+            }
 
-	LOG_WARN ( "[COLLISION] ", GetName (), " GetWorldLocation() failed - no valid owner found" );
-	return FVector::Zero ();
-	}
+        owner = owner->GetOwner ();
+        depth++;
+        }
+
+    LOG_WARN ( "[COLLISION] ", GetName (), " GetWorldLocation() failed - no valid owner found" );
+    return FVector::Zero ();
+    }
 
 FVector CBaseCollisionComponent::GetWorldLocation () const
-	{
-	const CActor * ownerActor = GetOwnerActor ();
-	if (ownerActor)
-		{
-		return ownerActor->GetActorLocation ();
-		}
+    {
+    const CActor * ownerActor = GetOwnerActor ();
+    if (ownerActor)
+        {
+        return ownerActor->GetActorLocation ();
+        }
 
-	const CObject * owner = GetOwner ();
-	int depth = 0;
-	while (owner && depth < 10)
-		{
-		if (const CActor * actor = dynamic_cast< const CActor * > ( owner ))
-			{
-			return actor->GetActorLocation ();
-			}
+    const CObject * owner = GetOwner ();
+    int depth = 0;
+    while (owner && depth < 10)
+        {
+        if (const CActor * actor = dynamic_cast< const CActor * > ( owner ))
+            {
+            return actor->GetActorLocation ();
+            }
 
-		if (const CTransformComponent * transform = dynamic_cast< const CTransformComponent * > ( owner ))
-			{
-			return transform->GetLocation ();
-			}
+        if (const CTransformComponent * transform = dynamic_cast< const CTransformComponent * > ( owner ))
+            {
+            return transform->GetLocation ();
+            }
 
-		owner = owner->GetOwner ();
-		depth++;
-		}
+        owner = owner->GetOwner ();
+        depth++;
+        }
 
-	return FVector::Zero ();
-	}
+    return FVector::Zero ();
+    }
 
 void CBaseCollisionComponent::InitComponent ()
-	{
-	Super::InitComponent ();
-	}
+    {
+    Super::InitComponent ();
+    }
 
 void CBaseCollisionComponent::Tick ( float DeltaTime )
-	{
-	Super::Tick ( DeltaTime );
-	}
+    {
+    Super::Tick ( DeltaTime );
+    }
 
 void CBaseCollisionComponent::OnBeginPlay ()
-	{
-	Super::OnBeginPlay ();
+    {
+    Super::OnBeginPlay ();
 
-	if (bIsCollisionEnabled)
-		{
-		LOG_DEBUG ( "Collision component '", GetName (), "' enabled with channel: ", m_CollisionChannel.GetName () );
-		}
-	}
+    if (bIsCollisionEnabled)
+        {
+        LOG_DEBUG ( "Collision component '", GetName (), "' enabled with channel: ", m_CollisionChannel.GetName () );
+        }
+    }
 
 bool CBaseCollisionComponent::CheckCollision ( CBaseCollisionComponent * other, FCollisionInfo & outInfo ) const
-	{
-	LOG_DEBUG ( "Collision this CBaseCollisionComponent always ignore and return false" );
-	return false;
-	}
+    {
+    LOG_DEBUG ( "Collision this CBaseCollisionComponent always ignore and return false" );
+    return false;
+    }
 
 void CBaseCollisionComponent::SetShapeType ( const ECollisionShape & inShape )
-	{
-	m_CollisionShape = inShape;
-	}
+    {
+    m_CollisionShape = inShape;
+    }
 
 void CBaseCollisionComponent::SetCollisionChannel ( const FCollisionChannel & channel )
-	{
-	m_CollisionChannel = channel;	
-	}
+    {
+    m_CollisionChannel = channel;
+    }
 
 void CBaseCollisionComponent::SetCollisionChannel ( const std::string & channelName )
-	{
-	m_CollisionChannel = FCollisionChannel::Create ( channelName );	
-	}
+    {
+    m_CollisionChannel = FCollisionChannel::Create ( channelName );
+    }
 
 void CBaseCollisionComponent::SetChannelAsStatic ()
-	{
-	m_CollisionChannel.SetupAsStatic ();
-	LOG_DEBUG ( "Channel set as Static" );
-	}
+    {
+    m_CollisionChannel.SetupAsStatic ();
+    LOG_DEBUG ( "Channel set as Static" );
+    }
 
 void CBaseCollisionComponent::SetChannelAsDynamic ()
-	{
-	m_CollisionChannel.SetupAsDynamic ();
-	LOG_DEBUG ( "Channel set as Dynamic" );
-	}
+    {
+    m_CollisionChannel.SetupAsDynamic ();
+    LOG_DEBUG ( "Channel set as Dynamic" );
+    }
 
 void CBaseCollisionComponent::SetChannelAsCharacter ()
-	{
-	m_CollisionChannel.SetupAsCharacter ();
-	LOG_DEBUG ( "Channel set as Character" );
-	}
+    {
+    m_CollisionChannel.SetupAsCharacter ();
+    LOG_DEBUG ( "Channel set as Character" );
+    }
 
 void CBaseCollisionComponent::SetChannelAsTrigger ()
-	{
-	m_CollisionChannel.SetupAsTrigger ();
-	LOG_DEBUG ( "Channel set as Trigger" );
-	}
+    {
+    m_CollisionChannel.SetupAsTrigger ();
+    LOG_DEBUG ( "Channel set as Trigger" );
+    }
 
 void CBaseCollisionComponent::SetChannelAsPawn ()
-	{
-	m_CollisionChannel.SetupAsPawn ();
-	LOG_DEBUG ( "Channel set as Pawn" );
-	}
+    {
+    m_CollisionChannel.SetupAsPawn ();
+    LOG_DEBUG ( "Channel set as Pawn" );
+    }
 
 void CBaseCollisionComponent::SetChannelAsVehicle ()
-	{
-	m_CollisionChannel.SetupAsVehicle ();
-	LOG_DEBUG ( "Channel set as Vehicle" );
-	}
+    {
+    m_CollisionChannel.SetupAsVehicle ();
+    LOG_DEBUG ( "Channel set as Vehicle" );
+    }
 
 void CBaseCollisionComponent::SetChannelAsInteractable ()
-	{
-	m_CollisionChannel.SetupAsInteractable ();
-	LOG_DEBUG ( "Channel set as Interactable" );
-	}
+    {
+    m_CollisionChannel.SetupAsInteractable ();
+    LOG_DEBUG ( "Channel set as Interactable" );
+    }
 
 void CBaseCollisionComponent::SetChannelAsCustom ( const std::string & channelName,
-												   ECollisionResponse defaultResponse )
-	{
-	m_CollisionChannel = FCollisionChannel::Create ( channelName, defaultResponse );	
-	}
+                                                   ECollisionResponse defaultResponse )
+    {
+    m_CollisionChannel = FCollisionChannel::Create ( channelName, defaultResponse );
+    }
 
 void CBaseCollisionComponent::SetResponseToChannel ( const std::string & otherChannelName,
-													 ECollisionResponse response )
-	{
-	m_CollisionChannel.SetResponseTo ( otherChannelName, response );	
-	}
+                                                     ECollisionResponse response )
+    {
+    m_CollisionChannel.SetResponseTo ( otherChannelName, response );
+    }
 
 void CBaseCollisionComponent::SetResponseToChannel ( ECollisionChannel otherChannel,
-													 ECollisionResponse response )
-	{
-	m_CollisionChannel.SetResponseTo ( otherChannel, response );	
-	}
+                                                     ECollisionResponse response )
+    {
+    m_CollisionChannel.SetResponseTo ( otherChannel, response );
+    }
 
 bool CBaseCollisionComponent::CanCollideWith ( const CBaseCollisionComponent * other ) const
-	{
-	if (!other || !bIsCollisionEnabled || !other->bIsCollisionEnabled)
-		return false;
+    {
+    if (!other || !bIsCollisionEnabled || !other->bIsCollisionEnabled)
+        return false;
 
-	return m_CollisionChannel.CanCollideWith ( other->m_CollisionChannel.GetChannel () );
-	}
+    return m_CollisionChannel.CanCollideWith ( other->m_CollisionChannel.GetChannel () );
+    }
 
 bool CBaseCollisionComponent::CanCollideWith ( const std::string & otherChannelName ) const
-	{
-	if (!bIsCollisionEnabled)
-		return false;
+    {
+    if (!bIsCollisionEnabled)
+        return false;
 
-	return m_CollisionChannel.CanCollideWith ( otherChannelName );
-	}
+    return m_CollisionChannel.CanCollideWith ( otherChannelName );
+    }
 
 bool CBaseCollisionComponent::ShouldBlockWith ( const CBaseCollisionComponent * other ) const
-	{
-	if (!other || !bIsCollisionEnabled || !other->bIsCollisionEnabled)
-		return false;
+    {
+    if (!other || !bIsCollisionEnabled || !other->bIsCollisionEnabled)
+        return false;
 
-	return m_CollisionChannel.ShouldBlock ( other->m_CollisionChannel.GetChannel () );
-	}
+    return m_CollisionChannel.ShouldBlock ( other->m_CollisionChannel.GetChannel () );
+    }
 
 bool CBaseCollisionComponent::ShouldOverlapWith ( const CBaseCollisionComponent * other ) const
-	{
-	if (!other || !bIsCollisionEnabled || !other->bIsCollisionEnabled)
-		return false;
+    {
+    if (!other || !bIsCollisionEnabled || !other->bIsCollisionEnabled)
+        return false;
 
-	return m_CollisionChannel.ShouldOverlap ( other->m_CollisionChannel.GetChannel () );
-	}
+    return m_CollisionChannel.ShouldOverlap ( other->m_CollisionChannel.GetChannel () );
+    }
 
 void CBaseCollisionComponent::OnBeginOverlap ( CBaseCollisionComponent * other )
-	{
-	if (!other || !GetOwnerActor ())
-		return;
-	
-	
-	if (OverlappingComponents.find ( other ) != OverlappingComponents.end ())
-		return; 
+    {
+    if (!other || !GetOwnerActor ())
+        return;
 
-	OverlappingComponents.insert ( other );
 
-	if (other->OverlappingComponents.find ( this ) == other->OverlappingComponents.end ())
-		{
-		other->OverlappingComponents.insert ( this );
-		other->OnBeginOverlap ( this ); 
-		}	
-	GetOwnerActor ()->OnComponentBeginOverlap ( other );
-	}
+    if (OverlappingComponents.find ( other ) != OverlappingComponents.end ())
+        return;
+
+    OverlappingComponents.insert ( other );
+
+    if (other->OverlappingComponents.find ( this ) == other->OverlappingComponents.end ())
+        {
+        other->OverlappingComponents.insert ( this );
+        other->OnBeginOverlap ( this );
+        }
+    GetOwnerActor ()->OnComponentBeginOverlap ( other );
+    }
 
 void CBaseCollisionComponent::OnEndOverlap ( CBaseCollisionComponent * other )
-	{
-	if (!other || !GetOwnerActor ())
-		return;
+    {
+    if (!other || !GetOwnerActor ())
+        return;
 
-	if (OverlappingComponents.find ( other ) == OverlappingComponents.end ())
-		return; 
-	
-	OverlappingComponents.erase ( other );
+    if (OverlappingComponents.find ( other ) == OverlappingComponents.end ())
+        return;
 
-	if (other->OverlappingComponents.find ( this ) != other->OverlappingComponents.end ())
-		{
-		other->OverlappingComponents.erase ( this );
-		other->OnEndOverlap ( this );
-		}
-	LOG_ERROR ( "End overlaping ", GetName () );
-	GetOwnerActor ()->OnComponentEndOverlap ( other );
-	}
+    OverlappingComponents.erase ( other );
+
+    if (other->OverlappingComponents.find ( this ) != other->OverlappingComponents.end ())
+        {
+        other->OverlappingComponents.erase ( this );
+        other->OnEndOverlap ( this );
+        }
+    LOG_ERROR ( "End overlaping ", GetName () );
+    GetOwnerActor ()->OnComponentEndOverlap ( other );
+    }
 
 void CBaseCollisionComponent::OnHit ( CBaseCollisionComponent * other )
-	{
-	if (GetOwnerActor () != nullptr)
-		{
-		GetOwnerActor ()->OnComponentHit ( other );
-		}
-	}
+    {
+    if (GetOwnerActor () != nullptr)
+        {
+        GetOwnerActor ()->OnComponentHit ( other );
+        }
+    }

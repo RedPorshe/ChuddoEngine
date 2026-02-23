@@ -101,6 +101,9 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>C:\VulkanSDK\Lib;E:\Libs\glfw-3.4.bin.WIN64\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy /Y "$(ProjectDir)Assets\Shaders\*.spv" "$(TargetDir)Assets\Shaders\"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -119,6 +122,9 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>C:\VulkanSDK\Lib;E:\Libs\glfw-3.4.bin.WIN64\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy /Y "$(ProjectDir)Assets\Shaders\*.spv" "$(TargetDir)Assets\Shaders\"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -135,6 +141,9 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>C:\VulkanSDK\Lib;E:\Libs\glfw-3.4.bin.WIN64\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy /Y "$(ProjectDir)Assets\Shaders\*.spv" "$(TargetDir)Assets\Shaders\"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -153,8 +162,22 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>C:\VulkanSDK\Lib;E:\Libs\glfw-3.4.bin.WIN64\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy /Y "$(ProjectDir)Assets\Shaders\*.spv" "$(TargetDir)Assets\Shaders\"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Include\Engine\Render\RenderInfo.cpp" />
+    <ClCompile Include="Source\Engine\Render\Renderer.cpp" />
+    <ClCompile Include="Source\Engine\Core\EngineInfo.cpp" />
+    <ClCompile Include="Source\Engine\Render\Vulkan\Managers\BufferManager.cpp" />
+    <ClCompile Include="Source\Engine\Render\Vulkan\Managers\CommandManager.cpp" />
+    <ClCompile Include="Source\Engine\Render\Vulkan\Managers\DeviceManager.cpp" />
+    <ClCompile Include="Source\Engine\Render\Vulkan\Managers\PipelineManager.cpp" />
+    <ClCompile Include="Source\Engine\Render\Vulkan\Managers\RenderPassManager.cpp" />
+    <ClCompile Include="Source\Engine\Render\Vulkan\Managers\SwapChainManager.cpp" />
+    <ClCompile Include="Source\Engine\Render\Vulkan\Managers\SyncManager.cpp" />
+    <ClCompile Include="Source\Engine\Render\Vulkan\VulkanContext.cpp" />
     <ClCompile Include="Source\Engine\Render\Window.cpp" />
     <ClCompile Include="Include\Test.cpp" />
     <ClCompile Include="Source\Engine\Core\InputSystem.cpp" />
@@ -229,6 +252,17 @@
     <ClInclude Include="Include\Engine\GameFramework\GameModeSettings.h" />
     <ClInclude Include="Include\Engine\GameFramework\World\Level.h" />
     <ClInclude Include="Include\Engine\GameFramework\World\World.h" />
+    <ClInclude Include="Include\Engine\Render\Renderer.h" />
+    <ClInclude Include="Include\Engine\Render\RenderInfo.h" />
+    <ClInclude Include="Include\Engine\Render\Vulkan\Managers\BufferManager.h" />
+    <ClInclude Include="Include\Engine\Render\Vulkan\Managers\CommandManager.h" />
+    <ClInclude Include="Include\Engine\Render\Vulkan\Managers\DeviceManager.h" />
+    <ClInclude Include="Include\Engine\Render\Vulkan\Managers\PipelineManager.h" />
+    <ClInclude Include="Include\Engine\Render\Vulkan\Managers\RenderPassManager.h" />
+    <ClInclude Include="Include\Engine\Render\Vulkan\Managers\SwapChainManager.h" />
+    <ClInclude Include="Include\Engine\Render\Vulkan\Managers\SyncManager.h" />
+    <ClInclude Include="Include\Engine\Render\Vulkan\VulkanContext.h" />
+    <ClInclude Include="Include\Engine\Render\Vulkan\VulkanInterface.h" />
     <ClInclude Include="Include\Engine\Render\Window.h" />
     <ClInclude Include="Include\Test.h" />
     <ClInclude Include="Include\Utils\Logger.h" />
@@ -246,6 +280,10 @@
   <ItemGroup>
     <None Include="Assets\Shaders\Mesh.frag" />
     <None Include="Assets\Shaders\Mesh.vert" />
+    <None Include="Assets\Shaders\Minimal.frag" />
+    <None Include="Assets\Shaders\Minimal.vert" />
+    <None Include="Assets\Shaders\Test.frag" />
+    <None Include="Assets\Shaders\Test.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

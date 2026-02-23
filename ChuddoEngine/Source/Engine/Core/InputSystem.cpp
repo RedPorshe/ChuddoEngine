@@ -1,4 +1,5 @@
 #include "Core/InputSystem.h"
+#include "Core/EngineInfo.h"
 #include "Components/InputComponent.h"
 #include "Actors/PlayerController.h"
 #include "Core/Engine.h"
@@ -12,8 +13,7 @@ CInputSystem * CInputSystem::GetInstance ()
     {
     if (s_Instance == nullptr)
         {
-        FEngineInfo Inform {};
-        Inform.vkInstance = VK_NULL_HANDLE;
+        FEngineInfo Inform {};       
         Inform.WindowHandle = nullptr;
         s_Instance = new CInputSystem ( Inform );
         }
@@ -117,6 +117,12 @@ void CInputSystem::Update ( float DeltaTime )
 GLFWwindow * CInputSystem::GetWindow () const
     {
     return m_WindowHandle;
+    }
+
+void CInputSystem::SetWindow ( GLFWwindow * window )
+    {
+    m_WindowHandle = window;
+    Info.WindowHandle = window;
     }
 
 void CInputSystem::ProcessControllerInput ( CPlayerController * Controller, float DeltaTime )
