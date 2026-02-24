@@ -306,7 +306,9 @@ void CEngine::CreateTestWorld ()
 FRenderInfo CEngine::UpdateRenderInfo ()
 	{
 	FRenderInfo Info {};
-	Info.HasInfo = false;
+	//here collect info for render! WIP
+
+	Info.HasInfo = !Info.RenderMeshes.empty();
 	static int WarnCount = 0;
 	if (WarnCount <= 10)
 		{
