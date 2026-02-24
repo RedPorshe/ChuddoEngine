@@ -202,7 +202,7 @@ void CEngine::MainLoop ()
 		Tick ( m_DeltaTime );
 		//after tick call function to collect render info, and set info to renderer
 		//FRenderInfo RenderInfo = CGameInstance::Get ().GetWorld ()->CollectRenderInfo ();
-		InfoForRender = UpdateRenderInfo (); //stub 
+		InfoForRender = UpdateRenderInfo (); //stub 		
 		Renderer.get ()->SetInfoForRender ( InfoForRender );
 		if (!Renderer.get ()->RenderScene ())
 			{
@@ -308,11 +308,17 @@ FRenderInfo CEngine::UpdateRenderInfo ()
 	FRenderInfo Info {};
 	Info.HasInfo = false;
 	static int WarnCount = 0;
-	if (WarnCount >= 500)
+	if (WarnCount <= 10)
 		{
-		LOG_WARN ( "Render in Stub mode rendering Default Trinangle" );
-		WarnCount = 0;
+		if (!Info.HasInfo)LOG_WARN ( "Render in Stub mode rendering Default Trinangle" );
+		else LOG_WARN ( "Rendering World in stub" );		
 		}
-	WarnCount++;
+
+	if(WarnCount < 11)	WarnCount++; 
+	if (WarnCount == 11) 
+		{
+		LOG_WARN ( "Further stub render warnings suppressed" );
+		WarnCount++;
+		}
 	return Info;
 	}

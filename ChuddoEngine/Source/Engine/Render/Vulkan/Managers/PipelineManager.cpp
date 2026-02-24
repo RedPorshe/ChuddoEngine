@@ -8,901 +8,1062 @@
 #include <shaderc/shaderc.hpp>
 
 CPipelineManager::CPipelineManager ( FEngineInfo & Info )
-	: IVulkanManager ( Info )
-	{}
+    : IVulkanManager ( Info )
+    {}
 
 CPipelineManager::~CPipelineManager ()
-	{
-	Shutdown ();
-	LogDebug ( GetManagerName (), " destroyed" );
-	}
+    {
+    Shutdown ();
+    LogDebug ( GetManagerName (), " destroyed" );
+    }
 
 bool CPipelineManager::Initialize ()
-	{
-	LogDebug ( "Initializing PipelineManager..." );
+    {
+    LogDebug ( "Initializing PipelineManager..." );
 
-	auto * deviceMgr = static_cast< CDeviceManager * >( m_Info.Vulkan.DeviceManager.get () );
-	if (!deviceMgr || !deviceMgr->IsInitialized ())
-		{
-		LogError ( "DeviceManager not initialized" );
-		return false;
-		}
+    auto * deviceMgr = static_cast< CDeviceManager * >( m_Info.Vulkan.DeviceManager.get () );
+    if (!deviceMgr || !deviceMgr->IsInitialized ())
+        {
+        LogError ( "DeviceManager not initialized" );
+        return false;
+        }
 
-	LogDebug ( "PipelineManager initialized successfully" );
-	m_bInitialized = true;
-	return true;
-	}
+    LogDebug ( "PipelineManager initialized successfully" );
+    m_bInitialized = true;
+    return true;
+    }
 
 void CPipelineManager::Shutdown ()
-	{
-	if (!m_bInitialized) return;
+    {
+    if (!m_bInitialized) return;
 
-	LogDebug ( "Shutting down PipelineManager..." );
+    LogDebug ( "Shutting down PipelineManager..." );
 
-	auto * deviceMgr = static_cast< CDeviceManager * >( m_Info.Vulkan.DeviceManager.get () );
-	if (deviceMgr)
-		{
-		VkDevice device = deviceMgr->GetDevice ();
+    auto * deviceMgr = static_cast< CDeviceManager * >( m_Info.Vulkan.DeviceManager.get () );
+    if (!deviceMgr)
+        {
+        LogDebug ( "  DeviceManager not available, clearing caches" );
+        m_PipelineResources.clear ();
+        m_PipelineLayouts.clear ();
+        m_ShaderCache.clear ();
+        m_bInitialized = false;
+        LogDebug ( "PipelineManager shutdown complete (skipped)" );
+        return;
+        }
 
-		// Destroy triangle pipeline
-		if (m_TrianglePipeline != VK_NULL_HANDLE)
-			{
-			vkDestroyPipeline ( device, m_TrianglePipeline, nullptr );
-			m_TrianglePipeline = VK_NULL_HANDLE;
-			}
+    VkDevice device = deviceMgr->GetDevice ();
+    if (device == VK_NULL_HANDLE)
+        {
+        LogDebug ( "  Device is null, clearing caches" );
+        m_PipelineResources.clear ();
+        m_PipelineLayouts.clear ();
+        m_ShaderCache.clear ();
+        m_bInitialized = false;
+        LogDebug ( "PipelineManager shutdown complete (skipped)" );
+        return;
+        }
 
-		// Destroy triangle pipeline layout
-		if (m_TrianglePipelineLayout != VK_NULL_HANDLE)
-			{
-			vkDestroyPipelineLayout ( device, m_TrianglePipelineLayout, nullptr );
-			m_TrianglePipelineLayout = VK_NULL_HANDLE;
-			}
+    // Destroy all pipelines
+    LogDebug ( "  Destroying all pipelines: ", m_PipelineResources.size () );
+    for (auto & [name, resource] : m_PipelineResources)
+        {
+        if (resource.Pipeline != VK_NULL_HANDLE)
+            {
+            LogDebug ( "    Destroying pipeline: ", name.c_str () );
+            vkDestroyPipeline ( device, resource.Pipeline, nullptr );
+            }
+        }
+    m_PipelineResources.clear ();
 
-		// Destroy cached shaders
-		for (auto & [name, module] : m_ShaderCache)
-			{
-			if (module != VK_NULL_HANDLE)
-				{				
-				vkDestroyShaderModule ( device, module, nullptr );
-				}
-			}
-		m_ShaderCache.clear ();
-		}
+    // Destroy all pipeline layouts
+    LogDebug ( "  Destroying all pipeline layouts: ", m_PipelineLayouts.size () );
+    for (auto & [name, layout] : m_PipelineLayouts)
+        {
+        if (layout != VK_NULL_HANDLE)
+            {
+            LogDebug ( "    Destroying layout: ", name.c_str () );
+            vkDestroyPipelineLayout ( device, layout, nullptr );
+            }
+        }
+    m_PipelineLayouts.clear ();
 
-	m_bInitialized = false;
-	LogDebug ( "PipelineManager shutdown complete" );
-	}
+    // Destroy all shader modules
+    LogDebug ( "  Destroying shader modules, count: ", m_ShaderCache.size () );
+    for (auto it = m_ShaderCache.begin (); it != m_ShaderCache.end (); ++it)
+        {
+        if (it->second != VK_NULL_HANDLE)
+            {
+            LogDebug ( "    Destroying shader: ", it->first.c_str () );
+            vkDestroyShaderModule ( device, it->second, nullptr );
+            }
+        }
+    m_ShaderCache.clear ();
+
+    m_bInitialized = false;
+    LogDebug ( "PipelineManager shutdown complete" );
+    }
 
 const char * CPipelineManager::GetManagerName () const
-	{
-	return "PipelineManager";
-	}
+    {
+    return "PipelineManager";
+    }
 
-// Shader loading
+//=============================================================================
+// Register Default Pipelines
+//=============================================================================
+
+bool CPipelineManager::RegisterDefaultPipelines ( VkRenderPass MainRenderPass )
+    {
+    LogDebug ( "Registering default pipelines..." );
+
+    // Create triangle pipeline
+    if (CreateTrianglePipeline ( MainRenderPass ) == VK_NULL_HANDLE)
+        {
+        LogError ( "Failed to create triangle pipeline" );
+        return false;
+        }
+    if (CreateMeshPipeLine ( MainRenderPass ) == VK_NULL_HANDLE)
+        {
+        LogError ( "Failed to create Mesh pipeline" );
+        return false;
+        }
+    // Здесь можно добавить другие стандартные пайплайны
+    // CreateUIPipeline(MainRenderPass);
+    // CreateSkyboxPipeline(MainRenderPass);
+    // CreateDebugPipeline(MainRenderPass);
+
+    LogDebug ( "Default pipelines registered successfully" );
+    return true;
+    }
+
+//=============================================================================
+// Shader Loading
+//=============================================================================
+
 VkShaderModule CPipelineManager::CreateShaderModule ( const std::vector<char> & Code )
-	{
-	auto * deviceMgr = static_cast< CDeviceManager * >( m_Info.Vulkan.DeviceManager.get () );
-	VkDevice device = deviceMgr->GetDevice ();
+    {
+    auto * deviceMgr = static_cast< CDeviceManager * >( m_Info.Vulkan.DeviceManager.get () );
+    VkDevice device = deviceMgr->GetDevice ();
 
-	VkShaderModuleCreateInfo createInfo {};
-	createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-	createInfo.codeSize = Code.size ();
-	createInfo.pCode = reinterpret_cast< const uint32_t * >( Code.data () );
+    VkShaderModuleCreateInfo createInfo {};
+    createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+    createInfo.codeSize = Code.size ();
+    createInfo.pCode = reinterpret_cast< const uint32_t * >( Code.data () );
 
-	VkShaderModule shaderModule;
-	VkResult result = vkCreateShaderModule ( device, &createInfo, nullptr, &shaderModule );
-	if (result != VK_SUCCESS)
-		{
-		LogError ( "Failed to create shader module: ", static_cast< int >( result ) );
-		return VK_NULL_HANDLE;
-		}
+    VkShaderModule shaderModule;
+    VkResult result = vkCreateShaderModule ( device, &createInfo, nullptr, &shaderModule );
+    if (result != VK_SUCCESS)
+        {
+        LogError ( "Failed to create shader module: ", static_cast< int >( result ) );
+        return VK_NULL_HANDLE;
+        }
 
-	return shaderModule;
-	}
-  
+    return shaderModule;
+    }
+
 VkShaderModule CPipelineManager::LoadShader ( const std::string & Filename )
-	{
-	LogDebug ( "Loading compiled shader: ", Filename );
+    {
+    auto it = m_ShaderCache.find ( Filename );
+    if (it != m_ShaderCache.end ())
+        {
+        return it->second;
+        }
 
-	// Check cache first
-	auto it = m_ShaderCache.find ( Filename );
-	if (it != m_ShaderCache.end ())
-		{
-		return it->second;
-		}
+    std::ifstream file ( Filename, std::ios::ate | std::ios::binary );
+    if (!file.is_open ())
+        {
+        LogError ( "Failed to open shader file: ", Filename );
+        return VK_NULL_HANDLE;
+        }
 
-	// Read file
-	std::ifstream file ( Filename, std::ios::ate | std::ios::binary );
-	if (!file.is_open ())
-		{
-		LogError ( "Failed to open shader file: ", Filename );
-		return VK_NULL_HANDLE;
-		}
+    size_t fileSize = static_cast< size_t >( file.tellg () );
+    std::vector<char> buffer ( fileSize );
 
-	size_t fileSize = static_cast< size_t >( file.tellg () );
-	std::vector<char> buffer ( fileSize );
+    file.seekg ( 0 );
+    file.read ( buffer.data (), fileSize );
+    file.close ();
 
-	file.seekg ( 0 );
-	file.read ( buffer.data (), fileSize );
-	file.close ();
+    VkShaderModule module = CreateShaderModule ( buffer );
+    if (module != VK_NULL_HANDLE)
+        {
+        m_ShaderCache[ Filename ] = module;
+        // Можно оставить один лог при первой загрузке
+        LogDebug ( "Cached shader: ", Filename, " (", fileSize, " bytes)" );
+        }
 
-	// Create shader module
-	VkShaderModule module = CreateShaderModule ( buffer );
-	if (module != VK_NULL_HANDLE)
-		{
-		m_ShaderCache[ Filename ] = module;
-		LogDebug ( "Loaded compiled shader: ", Filename );
-		}
-
-	return module;
-	}
+    return module;
+    }
 
 FShaderModule CPipelineManager::LoadShaderModule ( const std::string & Filename, VkShaderStageFlagBits Stage )
-	{
-	FShaderModule result;
-	result.Stage = Stage;
-	result.EntryPoint = "main";
+    {
+    FShaderModule result;
+    result.Stage = Stage;
+    result.EntryPoint = "main";
 
-	// Определяем пути для исходного и скомпилированного файлов
-	std::string spvFilename = Filename + ".spv";
+    // Определяем пути для исходного и скомпилированного файлов
+    std::string sourceFilename = Filename;
+    std::string spvFilename = Filename + ".spv";
 
-	// Проверяем, нужно ли компилировать
-	bool needCompile = true;
+    // Проверяем существование исходного файла
+    std::ifstream sourceFile ( sourceFilename );
+    bool sourceExists = sourceFile.good ();
+    sourceFile.close ();
 
-	// Проверяем существование .spv файла
-	std::ifstream spvFile ( spvFilename );
-	if (spvFile.good ())
-		{
-		// .spv существует, проверяем дату изменения исходника
-		auto srcTime = std::filesystem::last_write_time ( Filename );
-		auto spvTime = std::filesystem::last_write_time ( spvFilename );
+    // Проверяем существование .spv файла
+    std::ifstream spvFile ( spvFilename );
+    bool spvExists = spvFile.good ();
+    spvFile.close ();
 
-		if (spvTime >= srcTime)
-			{
-			needCompile = false;  // .spv новее или равен исходнику
-			}
-		spvFile.close ();
-		}
+    LogDebug ( "Loading shader module: ", Filename );
+    LogDebug ( "  Source exists: ", sourceExists ? "Yes" : "No" );
+    LogDebug ( "  SPV exists: ", spvExists ? "Yes" : "No" );
 
-	// Компилируем если нужно
-	if (needCompile)
-		{
-		LogDebug ( "Compiling shader: ", Filename );
+   
+    if (sourceExists)
+        {
+        LogDebug ( "  Source file found: ", sourceFilename );
 
-		std::string command = "glslc \"" + Filename + "\" -o \"" + spvFilename + "\"";
-		int compileResult = system ( command.c_str () );
+        bool needCompile = true;
 
-		if (compileResult != 0)
-			{
-			LogError ( "Failed to compile shader: ", Filename );
-			return result;
-			}
+        // Если есть .spv файл, проверяем даты
+        if (spvExists)
+            {
+            try
+                {
+                auto srcTime = std::filesystem::last_write_time ( sourceFilename );
+                auto spvTime = std::filesystem::last_write_time ( spvFilename );
 
-		LogDebug ( "Shader compiled successfully: ", spvFilename );
-		}
+                if (spvTime >= srcTime)
+                    {
+                    needCompile = false;  // .spv новее или равен исходнику
+                    LogDebug ( "  SPV is up to date (",
+                               std::filesystem::file_size ( spvFilename ), " bytes)" );
+                    }
+                else
+                    {
+                    LogDebug ( "  SPV is older than source, recompiling..." );
+                    }
+                }
+                catch (const std::exception & e)
+                    {
+                    LogDebug ( "  Could not check file times: ", e.what () );
+                    // Если не можем проверить даты, компилируем
+                    needCompile = true;
+                    }
+            }
+        else
+            {
+            LogDebug ( "  No SPV file found, will compile" );
+            }
 
-	// Загружаем скомпилированный .spv файл
-	result.Module = LoadShader ( spvFilename );
+            // Компилируем если нужно
+        if (needCompile)
+            {
+            LogDebug ( "  Compiling shader: ", sourceFilename );
 
-	if (result.Module == VK_NULL_HANDLE)
-		{
-		LogError ( "Failed to load compiled shader: ", spvFilename );
-		}
+            std::string command = "glslc \"" + sourceFilename + "\" -o \"" + spvFilename + "\"";
+            int compileResult = system ( command.c_str () );
 
-	return result;
-	}
-// Pipeline layout
+            if (compileResult != 0)
+                {
+                LogError ( "Failed to compile shader: ", sourceFilename );
+                return result;
+                }
+
+            LogDebug ( "  Shader compiled successfully: ", spvFilename,
+                       " (", std::filesystem::file_size ( spvFilename ), " bytes)" );
+            }
+        }
+      
+    else if (spvExists)
+        {
+        LogDebug ( "  No source file, but SPV exists - using cached SPV" );
+        }       
+    else
+        {
+        LogError ( "  No source or SPV file found for shader: ", Filename );
+        return result;
+        }
+       
+    result.Module = LoadShader ( spvFilename );
+
+    if (result.Module == VK_NULL_HANDLE)
+        {
+        LogError ( "Failed to load compiled shader: ", spvFilename );
+        }
+    else
+        {
+        LogDebug ( "  Shader module loaded successfully: ", ( void * ) result.Module );
+        }
+
+    return result;
+    }
+
+//=============================================================================
+// Pipeline Layout Creation
+//=============================================================================
+
 VkPipelineLayout CPipelineManager::CreatePipelineLayout (
-	const std::vector<VkDescriptorSetLayout> & DescSetLayouts,
-	const std::vector<VkPushConstantRange> & PushConstants )
-	{
-	auto * deviceMgr = static_cast< CDeviceManager * >( m_Info.Vulkan.DeviceManager.get () );
-	VkDevice device = deviceMgr->GetDevice ();
+    const std::string & LayoutName,
+    const std::vector<VkDescriptorSetLayout> & DescSetLayouts,
+    const std::vector<VkPushConstantRange> & PushConstants )
+    {
+    // Check if layout already exists
+    auto it = m_PipelineLayouts.find ( LayoutName );
+    if (it != m_PipelineLayouts.end ())
+        {
+        LogDebug ( "  Using existing pipeline layout: ", LayoutName );
+        return it->second;
+        }
 
-	VkPipelineLayoutCreateInfo layoutInfo {};
-	layoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	layoutInfo.setLayoutCount = static_cast< uint32_t >( DescSetLayouts.size () );
-	layoutInfo.pSetLayouts = DescSetLayouts.data ();
-	layoutInfo.pushConstantRangeCount = static_cast< uint32_t >( PushConstants.size () );
-	layoutInfo.pPushConstantRanges = PushConstants.data ();
+    LogDebug ( "Creating new pipeline layout: ", LayoutName );
 
-	VkPipelineLayout layout;
-	VkResult result = vkCreatePipelineLayout ( device, &layoutInfo, nullptr, &layout );
-	if (result != VK_SUCCESS)
-		{
-		LogError ( "Failed to create pipeline layout: ", static_cast< int >( result ) );
-		return VK_NULL_HANDLE;
-		}
+    auto * deviceMgr = static_cast< CDeviceManager * >( m_Info.Vulkan.DeviceManager.get () );
+    VkDevice device = deviceMgr->GetDevice ();
 
-	return layout;
-	}
+    VkPipelineLayoutCreateInfo layoutInfo {};
+    layoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    layoutInfo.setLayoutCount = static_cast< uint32_t >( DescSetLayouts.size () );
+    layoutInfo.pSetLayouts = DescSetLayouts.data ();
+    layoutInfo.pushConstantRangeCount = static_cast< uint32_t >( PushConstants.size () );
+    layoutInfo.pPushConstantRanges = PushConstants.data ();
+
+    VkPipelineLayout layout;
+    VkResult result = vkCreatePipelineLayout ( device, &layoutInfo, nullptr, &layout );
+    if (result != VK_SUCCESS)
+        {
+        LogError ( "Failed to create pipeline layout: ", static_cast< int >( result ) );
+        return VK_NULL_HANDLE;
+        }
+
+    // Save to cache
+    m_PipelineLayouts[ LayoutName ] = layout;
+    LogDebug ( "  Pipeline layout created and cached: ", LayoutName, " (", ( void * ) layout, ")" );
+
+    return layout;
+    }
+
+//=============================================================================
+// Graphics Pipeline Creation
+//=============================================================================
 
 VkPipeline CPipelineManager::CreateGraphicsPipeline (
-	const std::vector<FShaderModule> & Shaders,
-	VkPipelineLayout Layout,
-	VkRenderPass RenderPass,
-	const FGraphicsPipelineConfig & Config,
-	uint32_t Subpass )
-	{
-	if (Shaders.empty ())
-		{
-		LogError ( "No shaders provided for graphics pipeline" );
-		return VK_NULL_HANDLE;
-		}
-
-	auto * deviceMgr = static_cast< CDeviceManager * >( m_Info.Vulkan.DeviceManager.get () );
-	VkDevice device = deviceMgr->GetDevice ();
-
-	// ПРОВЕРКА 1: Pipeline layout
-	if (Layout == VK_NULL_HANDLE)
-		{
-		LogError ( "Pipeline layout is null" );
-		return VK_NULL_HANDLE;
-		}
-	LogDebug ( "  Pipeline layout is valid" );
-
-	// ПРОВЕРКА 2: Render pass
-	if (RenderPass == VK_NULL_HANDLE)
-		{
-		LogError ( "Render pass is null" );
-		return VK_NULL_HANDLE;
-		}
-	LogDebug ( "  Render pass is valid" );
-
-	// Shader stages
-	std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
-	for (const auto & shader : Shaders)
-		{
-		if (!shader.IsValid ())
-			{
-			LogError ( "Invalid shader module" );
-			return VK_NULL_HANDLE;
-			}
-		shaderStages.push_back ( GetShaderStageInfo ( shader ) );
-		}
-	LogDebug ( "  Shader stages: ", shaderStages.size () );
-
-	// Проверка шейдерных модулей
-	for (size_t i = 0; i < shaderStages.size (); i++)
-		{
-		if (shaderStages[ i ].module == VK_NULL_HANDLE)
-			{
-			LogError ( "  Shader stage ", i, " has null module" );
-			return VK_NULL_HANDLE;
-			}
-		LogDebug ( "  Shader stage ", i, " module: ", ( void * ) shaderStages[ i ].module );
-		}
-
-	// Fixed function states
-	VkPipelineVertexInputStateCreateInfo vertexInputInfo = GetVertexInputState ( Config.VertexInput );
-	
-	VkPipelineInputAssemblyStateCreateInfo inputAssembly = GetInputAssemblyState ( Config );
-	VkPipelineRasterizationStateCreateInfo rasterizer = GetRasterizationState ( Config );
-	VkPipelineMultisampleStateCreateInfo multisampling = GetMultisampleState ( Config );
-	VkPipelineDepthStencilStateCreateInfo depthStencil = GetDepthStencilState ( Config );
-
-	VkPipelineColorBlendAttachmentState colorBlendAttachment = GetColorBlendAttachment ( Config );
-	VkPipelineColorBlendStateCreateInfo colorBlending = GetColorBlendState ( Config );
-
-	VkPipelineDynamicStateCreateInfo dynamicState = GetDynamicState ( Config );
-
-	// Viewport state (dynamic)
-	VkPipelineViewportStateCreateInfo viewportState {};
-	viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-	viewportState.viewportCount = 1;
-	viewportState.scissorCount = 1;
-
-	LogDebug ( "  Created all pipeline state structures" );
-
-	VkGraphicsPipelineCreateInfo pipelineInfo {};
-	pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-	pipelineInfo.stageCount = static_cast< uint32_t >( shaderStages.size () );
-	pipelineInfo.pStages = shaderStages.data ();
-	pipelineInfo.pVertexInputState = &vertexInputInfo;
-	
-	pipelineInfo.pInputAssemblyState = &inputAssembly;
-	pipelineInfo.pViewportState = &viewportState;
-	pipelineInfo.pRasterizationState = &rasterizer;
-	pipelineInfo.pMultisampleState = &multisampling;
-	pipelineInfo.pDepthStencilState = &depthStencil;
-	pipelineInfo.pColorBlendState = &colorBlending;
-	pipelineInfo.pDynamicState = &dynamicState;
-	pipelineInfo.layout = Layout;
-	pipelineInfo.renderPass = RenderPass;
-	pipelineInfo.subpass = Subpass;
-	pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
-	pipelineInfo.basePipelineIndex = -1;
-
-	LogDebug ( "  Created pipelineInfo, calling vkCreateGraphicsPipelines..." );
-	LogDebug ( "    pStages: ", ( void * ) pipelineInfo.pStages );
-	LogDebug ( "    pVertexInputState: ", ( void * ) pipelineInfo.pVertexInputState );
-	LogDebug ( "    pInputAssemblyState: ", ( void * ) pipelineInfo.pInputAssemblyState );
-	LogDebug ( "    pViewportState: ", ( void * ) pipelineInfo.pViewportState );
-	LogDebug ( "    pRasterizationState: ", ( void * ) pipelineInfo.pRasterizationState );
-	LogDebug ( "    pMultisampleState: ", ( void * ) pipelineInfo.pMultisampleState );
-	LogDebug ( "    pDepthStencilState: ", ( void * ) pipelineInfo.pDepthStencilState );
-	LogDebug ( "    pColorBlendState: ", ( void * ) pipelineInfo.pColorBlendState );
-	LogDebug ( "    pDynamicState: ", ( void * ) pipelineInfo.pDynamicState );
-	LogDebug ( "    layout: ", ( void * ) pipelineInfo.layout );
-	LogDebug ( "    renderPass: ", ( void * ) pipelineInfo.renderPass );
-
-	// Проверка на валидность всех указателей перед вызовом
-	if (!pipelineInfo.pStages || !pipelineInfo.pVertexInputState || !pipelineInfo.pInputAssemblyState ||
-		 !pipelineInfo.pViewportState || !pipelineInfo.pRasterizationState || !pipelineInfo.pMultisampleState ||
-		 !pipelineInfo.pDepthStencilState || !pipelineInfo.pColorBlendState || !pipelineInfo.pDynamicState)
-		{
-		LogError ( "  One or more pipeline state pointers are null!" );
-		return VK_NULL_HANDLE;
-		}
-
-	LogDebug ( "Checking shader interface compatibility..." );
-	for (const auto & attr : Config.VertexInput.Attributes)
-		{
-		LogDebug ( "  Input attribute: location=", attr.location,
-				   ", format=", attr.format,
-				   ", offset=", attr.offset );
-		}
-
-	VkPipeline pipeline = VK_NULL_HANDLE;
-	
-	VkResult result = vkCreateGraphicsPipelines ( device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline );
-
-	if (result != VK_SUCCESS)
-		{
-		LogError ( "Failed to create graphics pipeline: ", static_cast< int >( result ) );
-
-		// Подробная диагностика ошибки
-		switch (result)
-			{
-				case VK_ERROR_OUT_OF_HOST_MEMORY:
-					LogError ( "  Out of host memory" );
-					break;
-				case VK_ERROR_OUT_OF_DEVICE_MEMORY:
-					LogError ( "  Out of device memory" );
-					break;
-				case VK_ERROR_INVALID_SHADER_NV:
-					LogError ( "  Invalid shader - check shader compilation and entry points" );
-					break;
-				default:
-					LogError ( "  Unknown error code" );
-					break;
-			}
-		return VK_NULL_HANDLE;
-		}
-
-	LogDebug ( "  Pipeline created successfully: ", ( void * ) pipeline );
-	return pipeline;
-	}
-
-// Triangle pipeline helpers
-   
-	VkPipeline CPipelineManager::CreateTrianglePipeline ( VkRenderPass RenderPass )
-		{
-		LogDebug ( "Creating SIMPLE triangle pipeline..." );
-		VkDevice device = VK_NULL_HANDLE;
-		if (CDeviceManager * devmng = static_cast< CDeviceManager * >( m_Info.Vulkan.DeviceManager.get () ))
-			{
-			device = devmng->GetDevice ();
-			}
-		if (device == VK_NULL_HANDLE)
-			{
-			LogError ( "Device is null" );
-			return VK_NULL_HANDLE;
-			}
-		// 1. Создаем pipeline layout
-		VkPipelineLayout layout = CreatePipelineLayout ();
-		if (layout == VK_NULL_HANDLE)
-			{
-			LogError ( "Failed to create pipeline layout" );
-			return VK_NULL_HANDLE;
-			}
-		m_TrianglePipelineLayout = layout;
-		// 2. Загружаем шейдеры
-		FShaderModule vertShader = LoadShaderModule ( "Assets/Shaders/Mesh.vert", VK_SHADER_STAGE_VERTEX_BIT );
-		FShaderModule fragShader = LoadShaderModule ( "Assets/Shaders/Mesh.frag", VK_SHADER_STAGE_FRAGMENT_BIT );
-
-		if (!vertShader.IsValid () || !fragShader.IsValid ())
-			{
-			LogError ( "Failed to load shaders" );
-			vkDestroyPipelineLayout ( device, layout, nullptr );
-			return VK_NULL_HANDLE;
-			}
-
-		// 3. Vertex input (максимально простой - один атрибут)
-		VkVertexInputBindingDescription binding {};
-		binding.binding = 0;
-		binding.stride = 6 * sizeof ( float );
-		binding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-		VkVertexInputAttributeDescription attributes[ 2 ];
-		attributes[ 0 ].binding = 0;
-		attributes[ 0 ].location = 0;
-		attributes[ 0 ].format = VK_FORMAT_R32G32B32_SFLOAT;
-		attributes[ 0 ].offset = 0;
-
-		attributes[ 1 ].binding = 0;
-		attributes[ 1 ].location = 1;
-		attributes[ 1 ].format = VK_FORMAT_R32G32B32_SFLOAT;
-		attributes[ 1 ].offset = 3 * sizeof ( float );
-
-		VkPipelineVertexInputStateCreateInfo vertexInput {};
-		vertexInput.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-		vertexInput.vertexBindingDescriptionCount = 1;
-		vertexInput.pVertexBindingDescriptions = &binding;
-		vertexInput.vertexAttributeDescriptionCount = 2;
-		vertexInput.pVertexAttributeDescriptions = attributes;
-
-		// 4. Input assembly
-		VkPipelineInputAssemblyStateCreateInfo inputAssembly {};
-		inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-		inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-
-		// 5. Viewport state
-		VkPipelineViewportStateCreateInfo viewportState {};
-		viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-		viewportState.viewportCount = 1;
-		viewportState.scissorCount = 1;
-
-		// 6. Rasterization
-		VkPipelineRasterizationStateCreateInfo rasterizer {};
-		rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-		rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
-		rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-		rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
-		rasterizer.lineWidth = 1.0f;
-
-		// 7. Multisampling
-		VkPipelineMultisampleStateCreateInfo multisampling {};
-		multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-		multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
-
-		// 8. Depth/stencil
-		VkPipelineDepthStencilStateCreateInfo depthStencil {};
-		depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-		depthStencil.depthTestEnable = VK_TRUE;
-		depthStencil.depthWriteEnable = VK_TRUE;
-		depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
-
-		// 9. Color blend
-		VkPipelineColorBlendAttachmentState colorBlend {};
-		colorBlend.colorWriteMask = 0xF;
-		colorBlend.blendEnable = VK_FALSE;
-
-		VkPipelineColorBlendStateCreateInfo colorBlending {};
-		colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-		colorBlending.attachmentCount = 1;
-		colorBlending.pAttachments = &colorBlend;
-
-		// 10. Dynamic states
-		VkDynamicState dynamicStates [] = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
-		VkPipelineDynamicStateCreateInfo dynamicState {};
-		dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-		dynamicState.dynamicStateCount = 2;
-		dynamicState.pDynamicStates = dynamicStates;
-
-		// 11. Shader stages
-		VkPipelineShaderStageCreateInfo shaderStages [] = {
-			GetShaderStageInfo ( vertShader ),
-			GetShaderStageInfo ( fragShader )
-			};
-
-			// 12. Pipeline info
-		VkGraphicsPipelineCreateInfo pipelineInfo {};
-		pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-		pipelineInfo.stageCount = 2;
-		pipelineInfo.pStages = shaderStages;
-		pipelineInfo.pVertexInputState = &vertexInput;
-		pipelineInfo.pInputAssemblyState = &inputAssembly;
-		pipelineInfo.pViewportState = &viewportState;
-		pipelineInfo.pRasterizationState = &rasterizer;
-		pipelineInfo.pMultisampleState = &multisampling;
-		pipelineInfo.pDepthStencilState = &depthStencil;
-		pipelineInfo.pColorBlendState = &colorBlending;
-		pipelineInfo.pDynamicState = &dynamicState;
-		pipelineInfo.layout = layout;
-		pipelineInfo.renderPass = RenderPass;
-
-		LogDebug ( "Calling vkCreateGraphicsPipelines..." );
-
-		VkPipeline pipeline;
-		VkResult result = vkCreateGraphicsPipelines ( device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline );
-
-		if (result != VK_SUCCESS)
-			{
-			LogError ( "Failed to create triangle pipeline: ", ( int ) result );
-			vkDestroyPipelineLayout ( device, layout, nullptr );
-			return VK_NULL_HANDLE;
-			}
-
-		LogDebug ( "Triangle pipeline created successfully!" );
-		return pipeline;
-		}
-
-// State creation helpers
-VkPipelineShaderStageCreateInfo CPipelineManager::GetShaderStageInfo ( const FShaderModule & Module ) const
-	{
-	VkPipelineShaderStageCreateInfo info {};
-	info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-	info.stage = Module.Stage;
-	info.module = Module.Module;
-	info.pName = Module.EntryPoint.c_str ();
-	return info;
-	}
-
-VkPipelineVertexInputStateCreateInfo CPipelineManager::GetVertexInputState ( const FVertexInputDescription & Desc ) const
-	{
-	LogDebug ( "    VertexInput: ", Desc.Bindings.size (), " bindings, ", Desc.Attributes.size (), " attributes" );
-
-	for (size_t i = 0; i < Desc.Bindings.size (); i++)
-		{
-		LogDebug ( "      Binding ", i, ": stride=", Desc.Bindings[ i ].stride );
-		}
-
-	for (size_t i = 0; i < Desc.Attributes.size (); i++)
-		{
-		LogDebug ( "      Attribute ", i, ": location=", Desc.Attributes[ i ].location,
-				   ", offset=", Desc.Attributes[ i ].offset,
-				   ", format=", Desc.Attributes[ i ].format );
-		}
-
-	VkPipelineVertexInputStateCreateInfo info {};
-	info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-	info.vertexBindingDescriptionCount = static_cast< uint32_t > ( Desc.Bindings.size () );
-	info.pVertexBindingDescriptions = Desc.Bindings.data ();
-	info.vertexAttributeDescriptionCount = static_cast< uint32_t >( Desc.Attributes.size () );
-	info.pVertexAttributeDescriptions = Desc.Attributes.data ();
-	return info;
-	}
-
-VkPipelineInputAssemblyStateCreateInfo CPipelineManager::GetInputAssemblyState ( const FGraphicsPipelineConfig & Config ) const
-	{
-	VkPipelineInputAssemblyStateCreateInfo info {};
-	info.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-	info.topology = Config.Topology;
-	info.primitiveRestartEnable = Config.PrimitiveRestartEnable;
-	return info;
-	}
-
-VkPipelineRasterizationStateCreateInfo CPipelineManager::GetRasterizationState ( const FGraphicsPipelineConfig & Config ) const
-	{
-	LogDebug ( "    Rasterization: polygonMode=", Config.PolygonMode,
-			   ", cullMode=", Config.CullMode,
-			   ", frontFace=", Config.FrontFace );
-
-	VkPipelineRasterizationStateCreateInfo info {};
-	info.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-	info.depthClampEnable = VK_FALSE;
-	info.rasterizerDiscardEnable = VK_FALSE;
-	info.polygonMode = Config.PolygonMode;
-	info.lineWidth = Config.LineWidth;
-	info.cullMode = Config.CullMode;
-	info.frontFace = Config.FrontFace;
-	info.depthBiasEnable = Config.DepthBiasEnable;
-	info.depthBiasConstantFactor = Config.DepthBiasConstantFactor;
-	info.depthBiasClamp = Config.DepthBiasClamp;
-	info.depthBiasSlopeFactor = Config.DepthBiasSlopeFactor;
-	return info;
-	}
-
-VkPipelineMultisampleStateCreateInfo CPipelineManager::GetMultisampleState ( const FGraphicsPipelineConfig & Config ) const
-	{
-	VkPipelineMultisampleStateCreateInfo info {};
-	info.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-	info.sampleShadingEnable = Config.SampleShadingEnable;
-	info.rasterizationSamples = Config.Samples;
-	info.minSampleShading = Config.MinSampleShading;
-	info.pSampleMask = nullptr;
-	info.alphaToCoverageEnable = VK_FALSE;
-	info.alphaToOneEnable = VK_FALSE;
-	return info;
-	}
-
-VkPipelineDepthStencilStateCreateInfo CPipelineManager::GetDepthStencilState ( const FGraphicsPipelineConfig & Config ) const
-	{
-	LogDebug ( "    DepthStencil: test=", Config.DepthTestEnable,
-			   ", write=", Config.DepthWriteEnable,
-			   ", compareOp=", Config.DepthCompareOp );
-
-	VkPipelineDepthStencilStateCreateInfo info {};
-	info.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-	info.depthTestEnable = Config.DepthTestEnable;
-	info.depthWriteEnable = Config.DepthWriteEnable;
-	info.depthCompareOp = Config.DepthCompareOp;
-	info.depthBoundsTestEnable = Config.DepthBoundsTestEnable;
-	info.stencilTestEnable = Config.StencilTestEnable;
-	info.front = {};
-	info.back = {};
-	info.minDepthBounds = 0.0f;
-	info.maxDepthBounds = 1.0f;
-	return info;
-	}
-
-VkPipelineColorBlendAttachmentState CPipelineManager::GetColorBlendAttachment ( const FGraphicsPipelineConfig & Config ) const
-	{
-	VkPipelineColorBlendAttachmentState attachment {};
-	attachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
-		VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-	attachment.blendEnable = Config.BlendEnable;
-	attachment.srcColorBlendFactor = Config.SrcColorBlendFactor;
-	attachment.dstColorBlendFactor = Config.DstColorBlendFactor;
-	attachment.colorBlendOp = Config.ColorBlendOp;
-	attachment.srcAlphaBlendFactor = Config.SrcAlphaBlendFactor;
-	attachment.dstAlphaBlendFactor = Config.DstAlphaBlendFactor;
-	attachment.alphaBlendOp = Config.AlphaBlendOp;
-	return attachment;
-	}
-
-VkPipelineColorBlendStateCreateInfo CPipelineManager::GetColorBlendState ( const FGraphicsPipelineConfig & Config ) const
-	{
-	VkPipelineColorBlendAttachmentState attachment = GetColorBlendAttachment ( Config );
-
-	VkPipelineColorBlendStateCreateInfo info {};
-	info.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-	info.logicOpEnable = VK_FALSE;
-	info.logicOp = VK_LOGIC_OP_COPY;
-	info.attachmentCount = 1;
-	info.pAttachments = &attachment;
-	info.blendConstants[ 0 ] = 0.0f;
-	info.blendConstants[ 1 ] = 0.0f;
-	info.blendConstants[ 2 ] = 0.0f;
-	info.blendConstants[ 3 ] = 0.0f;
-	return info;
-	}
-
-VkPipelineDynamicStateCreateInfo CPipelineManager::GetDynamicState ( const FGraphicsPipelineConfig & Config ) const
-	{
-	VkPipelineDynamicStateCreateInfo info {};
-	info.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-
-	std::vector<VkDynamicState> dynamicStates = Config.DynamicStates;
-	if (dynamicStates.empty ())
-		{
-		dynamicStates = GetDefaultDynamicStates ();
-		}
-
-	info.dynamicStateCount = static_cast< uint32_t >( dynamicStates.size () );
-	info.pDynamicStates = dynamicStates.data ();
-	return info;
-	}
-
-std::vector<VkDynamicState> CPipelineManager::GetDefaultDynamicStates () const
-	{
-	return { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
-	}
-
-// Vertex input for triangle (position + color)
-FVertexInputDescription CPipelineManager::GetTriangleVertexInput () const
-	{
-	FVertexInputDescription desc;
-
-	// Binding description
-	VkVertexInputBindingDescription binding {};
-	binding.binding = 0;
-	binding.stride = 6 * sizeof ( float );  // position: vec2, color: vec3 = 5 floats
-	binding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-	desc.Bindings.push_back ( binding );
-
-	// Attribute descriptions - ИСПРАВЛЕНО!
-	VkVertexInputAttributeDescription positionAttr {};
-	positionAttr.binding = 0;
-	positionAttr.location = 0;
-	positionAttr.format = VK_FORMAT_R32G32B32_SFLOAT;  // Было R32G32B32_SFLOAT, но stride не совпадает!
-	positionAttr.offset = 0;
-	desc.Attributes.push_back ( positionAttr );
-
-	VkVertexInputAttributeDescription colorAttr {};
-	colorAttr.binding = 0;
-	colorAttr.location = 1;
-	colorAttr.format = VK_FORMAT_R32G32B32_SFLOAT;
-	colorAttr.offset = 3 * sizeof ( float );  // после vec2 (2 floats)
-	desc.Attributes.push_back ( colorAttr );
-
-	return desc;
-	}
-
-VkPipeline CPipelineManager::CreatePipeline (
-	VkRenderPass RenderPass,
-	const std::string & VertShaderPath,
-	const std::string & FragShaderPath,
-	const FVertexInputDescription & VertexInput,
-	const FGraphicsPipelineConfig & Config )
-	{
-	LogDebug ( "Creating pipeline with shaders: ", VertShaderPath, ", ", FragShaderPath );
-
-	// Create pipeline layout
-	VkPipelineLayout layout = CreatePipelineLayout ();
-	if (layout == VK_NULL_HANDLE)
-		{
-		LogError ( "Failed to create pipeline layout" );
-		return VK_NULL_HANDLE;
-		}
-
-	// Load shaders
-	FShaderModule vertShader = LoadShaderModule ( VertShaderPath, VK_SHADER_STAGE_VERTEX_BIT );
-	FShaderModule fragShader = LoadShaderModule ( FragShaderPath, VK_SHADER_STAGE_FRAGMENT_BIT );
-	CDeviceManager * devicManager = static_cast< CDeviceManager * >( m_Info.Vulkan.DeviceManager.get () );
-	auto device = devicManager->GetDevice ();
-
-	if (!vertShader.IsValid () || !fragShader.IsValid ())
-		{
-		LogError ( "Failed to load shaders" );
-		vkDestroyPipelineLayout ( device, layout, nullptr );
-		return VK_NULL_HANDLE;
-		}
-
-	// Create pipeline
-	std::vector<FShaderModule> shaders = { vertShader, fragShader };
-	VkPipeline pipeline = CreateGraphicsPipeline ( shaders, layout, RenderPass, Config );
-
-	if (pipeline == VK_NULL_HANDLE)
-		{
-		LogError ( "Failed to create pipeline" );
-		vkDestroyPipelineLayout ( device, layout, nullptr );
-		return VK_NULL_HANDLE;
-		}
-
-	LogDebug ( "Pipeline created successfully" );
-	return pipeline;
-	}
-	// Cleanup
+    const std::string & PipelineName,
+    const std::vector<FShaderModule> & Shaders,
+    VkPipelineLayout Layout,
+    VkRenderPass RenderPass,
+    const FGraphicsPipelineConfig & Config,
+    uint32_t Subpass )
+    {
+    // Check if pipeline already exists
+    auto it = m_PipelineResources.find ( PipelineName );
+    if (it != m_PipelineResources.end () && it->second.IsValid ())
+        {
+        LogDebug ( "  Using existing pipeline: ", PipelineName );
+        return it->second.Pipeline;
+        }
+
+    LogDebug ( "Creating new graphics pipeline: ", PipelineName );
+
+    if (Shaders.empty ())
+        {
+        LogError ( "No shaders provided for graphics pipeline" );
+        return VK_NULL_HANDLE;
+        }
+
+    auto * deviceMgr = static_cast< CDeviceManager * >( m_Info.Vulkan.DeviceManager.get () );
+    VkDevice device = deviceMgr->GetDevice ();
+
+    // Check Layout
+    if (Layout == VK_NULL_HANDLE)
+        {
+        LogError ( "Pipeline layout is null" );
+        return VK_NULL_HANDLE;
+        }
+
+    // Check Render pass
+    if (RenderPass == VK_NULL_HANDLE)
+        {
+        LogError ( "Render pass is null" );
+        return VK_NULL_HANDLE;
+        }
+
+    // Shader stages
+    std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
+    for (const auto & shader : Shaders)
+        {
+        if (!shader.IsValid ())
+            {
+            LogError ( "Invalid shader module" );
+            return VK_NULL_HANDLE;
+            }
+        shaderStages.push_back ( GetShaderStageInfo ( shader ) );
+        }
+
+    // Check shader modules
+    for (size_t i = 0; i < shaderStages.size (); i++)
+        {
+        if (shaderStages[ i ].module == VK_NULL_HANDLE)
+            {
+            LogError ( "  Shader stage ", i, " has null module" );
+            return VK_NULL_HANDLE;
+            }
+        }
+
+    // Fixed function states
+    VkPipelineVertexInputStateCreateInfo vertexInputInfo = GetVertexInputState ( Config.VertexInput );
+    VkPipelineInputAssemblyStateCreateInfo inputAssembly = GetInputAssemblyState ( Config );
+    VkPipelineRasterizationStateCreateInfo rasterizer = GetRasterizationState ( Config );
+    VkPipelineMultisampleStateCreateInfo multisampling = GetMultisampleState ( Config );
+    VkPipelineDepthStencilStateCreateInfo depthStencil = GetDepthStencilState ( Config );
+    VkPipelineColorBlendAttachmentState colorBlendAttachment = GetColorBlendAttachment ( Config );
+    VkPipelineColorBlendStateCreateInfo colorBlending = GetColorBlendState ( Config );
+    VkPipelineDynamicStateCreateInfo dynamicState = GetDynamicState ( Config );
+
+    // Viewport state (dynamic)
+    VkPipelineViewportStateCreateInfo viewportState {};
+    viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+    viewportState.viewportCount = 1;
+    viewportState.scissorCount = 1;
+
+    VkGraphicsPipelineCreateInfo pipelineInfo {};
+    pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+    pipelineInfo.stageCount = static_cast< uint32_t >( shaderStages.size () );
+    pipelineInfo.pStages = shaderStages.data ();
+    pipelineInfo.pVertexInputState = &vertexInputInfo;
+    pipelineInfo.pInputAssemblyState = &inputAssembly;
+    pipelineInfo.pViewportState = &viewportState;
+    pipelineInfo.pRasterizationState = &rasterizer;
+    pipelineInfo.pMultisampleState = &multisampling;
+    pipelineInfo.pDepthStencilState = &depthStencil;
+    pipelineInfo.pColorBlendState = &colorBlending;
+    pipelineInfo.pDynamicState = &dynamicState;
+    pipelineInfo.layout = Layout;
+    pipelineInfo.renderPass = RenderPass;
+    pipelineInfo.subpass = Subpass;
+    pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
+    pipelineInfo.basePipelineIndex = -1;
+
+    // Check all pointers
+    if (!pipelineInfo.pStages || !pipelineInfo.pVertexInputState || !pipelineInfo.pInputAssemblyState ||
+         !pipelineInfo.pViewportState || !pipelineInfo.pRasterizationState || !pipelineInfo.pMultisampleState ||
+         !pipelineInfo.pDepthStencilState || !pipelineInfo.pColorBlendState || !pipelineInfo.pDynamicState)
+        {
+        LogError ( "  One or more pipeline state pointers are null!" );
+        return VK_NULL_HANDLE;
+        }
+
+    if (pipelineInfo.pStages == nullptr)
+        {
+        LogError ( "  FATAL: pStages is NULL!" );
+        return VK_NULL_HANDLE;
+        } 
+
+    for (uint32_t i = 0; i < pipelineInfo.stageCount; i++)
+        {
+        if (pipelineInfo.pStages[ i ].module == VK_NULL_HANDLE)
+            {
+            LogError ( "  FATAL: Shader module ", i, " is VK_NULL_HANDLE!" );
+            return VK_NULL_HANDLE;
+            }
+        if (pipelineInfo.pStages[ i ].pName == nullptr)
+            {
+            LogError ( "  FATAL: Shader entry point ", i, " is NULL!" );
+            return VK_NULL_HANDLE;
+            }
+        }
+     
+    if (pipelineInfo.pVertexInputState == nullptr)
+        {
+        LogError ( "  FATAL: pVertexInputState is NULL!" );
+        return VK_NULL_HANDLE;
+        }
+     
+    if (pipelineInfo.pVertexInputState->vertexBindingDescriptionCount > 0 &&
+         pipelineInfo.pVertexInputState->pVertexBindingDescriptions == nullptr)
+        {
+        LogError ( "  FATAL: pVertexBindingDescriptions is NULL but count > 0!" );
+        return VK_NULL_HANDLE;
+        }
+
+    if (pipelineInfo.pVertexInputState->vertexAttributeDescriptionCount > 0 &&
+         pipelineInfo.pVertexInputState->pVertexAttributeDescriptions == nullptr)
+        {
+        LogError ( "  FATAL: pVertexAttributeDescriptions is NULL but count > 0!" );
+        return VK_NULL_HANDLE;
+        }
+     
+    if (pipelineInfo.pInputAssemblyState == nullptr)
+        {
+        LogError ( "  FATAL: pInputAssemblyState is NULL!" );
+        return VK_NULL_HANDLE;
+        }
+
+    if (pipelineInfo.pViewportState == nullptr)
+        {
+        LogError ( "  FATAL: pViewportState is NULL!" );
+        return VK_NULL_HANDLE;
+        }
+
+    if (pipelineInfo.pRasterizationState == nullptr)
+        {
+        LogError ( "  FATAL: pRasterizationState is NULL!" );
+        return VK_NULL_HANDLE;
+        }
+
+    if (pipelineInfo.pMultisampleState == nullptr)
+        {
+        LogError ( "  FATAL: pMultisampleState is NULL!" );
+        return VK_NULL_HANDLE;
+        }
+
+    if (pipelineInfo.pDepthStencilState == nullptr)
+        {
+        LogError ( "  FATAL: pDepthStencilState is NULL!" );
+        return VK_NULL_HANDLE;
+        }
+
+    if (pipelineInfo.pColorBlendState == nullptr)
+        {
+        LogError ( "  FATAL: pColorBlendState is NULL!" );
+        return VK_NULL_HANDLE;
+        }
+     
+    if (pipelineInfo.pColorBlendState->attachmentCount > 0 &&
+         pipelineInfo.pColorBlendState->pAttachments == nullptr)
+        {
+        LogError ( "  FATAL: pAttachments is NULL but attachmentCount > 0!" );
+        return VK_NULL_HANDLE;
+        }
+
+    if (pipelineInfo.pDynamicState == nullptr)
+        {
+        LogError ( "  FATAL: pDynamicState is NULL!" );
+        return VK_NULL_HANDLE;
+        }
+     
+    if (pipelineInfo.pDynamicState->dynamicStateCount > 0 &&
+         pipelineInfo.pDynamicState->pDynamicStates == nullptr)
+        {
+        LogError ( "  FATAL: pDynamicStates is NULL but dynamicStateCount > 0!" );
+        return VK_NULL_HANDLE;
+        }
+     
+    if (pipelineInfo.layout == VK_NULL_HANDLE)
+        {
+        LogError ( "  FATAL: layout is VK_NULL_HANDLE!" );
+        return VK_NULL_HANDLE;
+        }
+
+    if (pipelineInfo.renderPass == VK_NULL_HANDLE)
+        {
+        LogError ( "  FATAL: renderPass is VK_NULL_HANDLE!" );
+        return VK_NULL_HANDLE;
+        }
+     
+
+    VkPipeline pipeline = VK_NULL_HANDLE;
+    VkResult result = vkCreateGraphicsPipelines ( device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline );
+
+    if (result != VK_SUCCESS)
+        {
+        LogError ( "Failed to create graphics pipeline: ", static_cast< int >( result ) );
+
+        switch (result)
+            {
+                case VK_ERROR_OUT_OF_HOST_MEMORY:
+                    LogError ( "  Out of host memory" );
+                    break;
+                case VK_ERROR_OUT_OF_DEVICE_MEMORY:
+                    LogError ( "  Out of device memory" );
+                    break;
+                case VK_ERROR_INVALID_SHADER_NV:
+                    LogError ( "  Invalid shader - check shader compilation and entry points" );
+                    break;
+                default:
+                    LogError ( "  Unknown error code" );
+                    break;
+            }
+        return VK_NULL_HANDLE;
+        }
+
+    // Save to cache
+    FPipelineResource resource;
+    resource.Pipeline = pipeline;
+    resource.Layout = Layout;
+    resource.Name = PipelineName;
+    resource.RenderPass = RenderPass;
+    resource.Config = Config;
+    resource.bIsValid = true;
+
+    m_PipelineResources[ PipelineName ] = resource;
+
+    LogDebug ( "  Pipeline created and cached: ", PipelineName, " (", ( void * ) pipeline, ")" );
+    return pipeline;
+    }
+
+//=============================================================================
+// Get Pipeline Methods
+//=============================================================================
+
+VkPipeline CPipelineManager::GetPipeline ( const std::string & Name ) const
+    {
+    auto it = m_PipelineResources.find ( Name );
+    if (it != m_PipelineResources.end () && it->second.IsValid ())
+        {
+        return it->second.Pipeline;
+        }
+    LogError ( "Pipeline not found: ", Name );
+    return VK_NULL_HANDLE;
+    }
+
+VkPipelineLayout CPipelineManager::GetPipelineLayout ( const std::string & Name ) const
+    {
+    auto it = m_PipelineLayouts.find ( Name );
+    if (it != m_PipelineLayouts.end ())
+        {
+        return it->second;
+        }
+    LogError ( "Pipeline layout not found: ", Name );
+    return VK_NULL_HANDLE;
+    }
+
+FPipelineResource CPipelineManager::GetPipelineResource ( const std::string & Name ) const
+    {
+    auto it = m_PipelineResources.find ( Name );
+    if (it != m_PipelineResources.end ())
+        {
+        return it->second;
+        }
+    return FPipelineResource ();
+    }
+
+bool CPipelineManager::HasPipeline ( const std::string & Name ) const
+    {
+    auto it = m_PipelineResources.find ( Name );
+    return ( it != m_PipelineResources.end () && it->second.IsValid () );
+    }
+
+bool CPipelineManager::HasPipelineLayout ( const std::string & Name ) const
+    {
+    return ( m_PipelineLayouts.find ( Name ) != m_PipelineLayouts.end () );
+    }
+
+//=============================================================================
+// Destroy Specific Resources
+//=============================================================================
+
+bool CPipelineManager::DestroyPipeline ( const std::string & Name )
+    {
+    auto it = m_PipelineResources.find ( Name );
+    if (it == m_PipelineResources.end ())
+        {
+        LogError ( "Cannot destroy pipeline - not found: ", Name );
+        return false;
+        }
+
+    auto * deviceMgr = static_cast< CDeviceManager * >( m_Info.Vulkan.DeviceManager.get () );
+    if (!deviceMgr) return false;
+
+    VkDevice device = deviceMgr->GetDevice ();
+    if (device == VK_NULL_HANDLE) return false;
+
+    LogDebug ( "Destroying pipeline: ", Name );
+
+    if (it->second.Pipeline != VK_NULL_HANDLE)
+        {
+        vkDestroyPipeline ( device, it->second.Pipeline, nullptr );
+        }
+
+    m_PipelineResources.erase ( it );
+    return true;
+    }
+
+bool CPipelineManager::DestroyPipelineLayout ( const std::string & Name )
+    {
+    auto it = m_PipelineLayouts.find ( Name );
+    if (it == m_PipelineLayouts.end ())
+        {
+        LogError ( "Cannot destroy layout - not found: ", Name );
+        return false;
+        }
+
+    auto * deviceMgr = static_cast< CDeviceManager * >( m_Info.Vulkan.DeviceManager.get () );
+    if (!deviceMgr) return false;
+
+    VkDevice device = deviceMgr->GetDevice ();
+    if (device == VK_NULL_HANDLE) return false;
+
+    LogDebug ( "Destroying pipeline layout: ", Name );
+
+    vkDestroyPipelineLayout ( device, it->second, nullptr );
+    m_PipelineLayouts.erase ( it );
+    return true;
+    }
+
 void CPipelineManager::DestroyShaderModule ( VkShaderModule Module )
-	{
-	if (Module == VK_NULL_HANDLE) return;
+    {
+    if (Module == VK_NULL_HANDLE) return;
 
-	auto * deviceMgr = static_cast< CDeviceManager * >( m_Info.Vulkan.DeviceManager.get () );
-	VkDevice device = deviceMgr->GetDevice ();
+    auto * deviceMgr = static_cast< CDeviceManager * >( m_Info.Vulkan.DeviceManager.get () );
+    VkDevice device = deviceMgr->GetDevice ();
 
-	vkDestroyShaderModule ( device, Module, nullptr );
-	}
+    vkDestroyShaderModule ( device, Module, nullptr );
+    }
 
 void CPipelineManager::DestroyPipelineLayout ( VkPipelineLayout Layout )
-	{
-	if (Layout == VK_NULL_HANDLE) return;
+    {
+    if (Layout == VK_NULL_HANDLE) return;
 
-	auto * deviceMgr = static_cast< CDeviceManager * >( m_Info.Vulkan.DeviceManager.get () );
-	VkDevice device = deviceMgr->GetDevice ();
+    auto * deviceMgr = static_cast< CDeviceManager * >( m_Info.Vulkan.DeviceManager.get () );
+    VkDevice device = deviceMgr->GetDevice ();
 
-	vkDestroyPipelineLayout ( device, Layout, nullptr );
-	}
+    vkDestroyPipelineLayout ( device, Layout, nullptr );
+    }
 
 void CPipelineManager::DestroyPipeline ( VkPipeline Pipeline )
-	{
-	if (Pipeline == VK_NULL_HANDLE) return;
+    {
+    if (Pipeline == VK_NULL_HANDLE) return;
 
-	auto * deviceMgr = static_cast< CDeviceManager * >( m_Info.Vulkan.DeviceManager.get () );
-	VkDevice device = deviceMgr->GetDevice ();
+    auto * deviceMgr = static_cast< CDeviceManager * >( m_Info.Vulkan.DeviceManager.get () );
+    VkDevice device = deviceMgr->GetDevice ();
 
-	vkDestroyPipeline ( device, Pipeline, nullptr );
-	}
+    vkDestroyPipeline ( device, Pipeline, nullptr );
+    }
 
+//=============================================================================
+// Triangle Pipeline
+//=============================================================================
 
-VkPipeline CPipelineManager::CreateMinimalPipeline ( VkRenderPass RenderPass )
-	{
-	LogDebug ( "Creating SIMPLE pipeline..." );
+VkPipeline CPipelineManager::CreateTrianglePipeline ( VkRenderPass RenderPass )
+    {   
+    if (HasPipeline ( "TrianglePipeline" ))
+        {         
+        return GetPipeline ( "TrianglePipeline" );
+        }
+     
+    VkPipelineLayout layout = CreatePipelineLayout ( "TriangleLayout" );
+    if (layout == VK_NULL_HANDLE)
+        {
+        LogError ( "Failed to create triangle pipeline layout" );
+        return VK_NULL_HANDLE;
+        }
+ 
+    FShaderModule vertShader = LoadShaderModule ( "Assets/Shaders/Triangle.vert", VK_SHADER_STAGE_VERTEX_BIT );
+    FShaderModule fragShader = LoadShaderModule ( "Assets/Shaders/Triangle.frag", VK_SHADER_STAGE_FRAGMENT_BIT );
+ 
 
-	// 1. Сначала создаем pipeline layout
-	VkPipelineLayoutCreateInfo layoutInfo {};
-	layoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	layoutInfo.setLayoutCount = 0;
-	layoutInfo.pushConstantRangeCount = 0;
+    if (vertShader.Module == VK_NULL_HANDLE || fragShader.Module == VK_NULL_HANDLE)
+        {
+        LogError ( "  Shader modules are invalid!" );
+        return VK_NULL_HANDLE;
+        }
 
-	VkPipelineLayout layout;
-	CDeviceManager * devicemanager = static_cast< CDeviceManager * >( m_Info.Vulkan.DeviceManager.get() );
-	VkResult result = vkCreatePipelineLayout ( devicemanager->GetDevice (), &layoutInfo, nullptr, &layout );
-	if (result != VK_SUCCESS)
-		{
-		LogError ( "Failed to create pipeline layout: ", result );
-		return VK_NULL_HANDLE;
-		}
+    if (!vertShader.IsValid () || !fragShader.IsValid ())
+        {
+        LogError ( "Failed to load shaders for triangle pipeline" );
+        return VK_NULL_HANDLE;
+        }
 
-	// 2. Загружаем шейдеры
-	VkShaderModule vertModule = LoadShaderModule ( "Assets/Shaders/Mesh.vert",VK_SHADER_STAGE_VERTEX_BIT ).Module;
-	VkShaderModule fragModule = LoadShaderModule ( "Assets/Shaders/Mesh.frag", VK_SHADER_STAGE_FRAGMENT_BIT ).Module;
+   
+    FGraphicsPipelineConfig config;
+    config.VertexInput = GetTriangleVertexInput ();
+    config.Topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+    config.PolygonMode = VK_POLYGON_MODE_FILL;
+    config.CullMode = VK_CULL_MODE_BACK_BIT;
+    config.FrontFace = VK_FRONT_FACE_CLOCKWISE;
+    config.DepthTestEnable = VK_TRUE;
+    config.DepthWriteEnable = VK_TRUE;
+    config.DepthCompareOp = VK_COMPARE_OP_LESS;
+    config.BlendEnable = VK_FALSE;
+    config.DynamicStates = GetDefaultDynamicStates ();
 
-	if (vertModule == VK_NULL_HANDLE || fragModule == VK_NULL_HANDLE)
-		{
-		LogError ( "Failed to load shaders" );
-		vkDestroyPipelineLayout ( devicemanager->GetDevice (), layout, nullptr );
-		return VK_NULL_HANDLE;
-		}
+    std::vector<FShaderModule> shaders = { vertShader, fragShader };
+ 
+    return CreateGraphicsPipeline ( "TrianglePipeline", shaders, layout, RenderPass, config );
+    }
 
-	// 3. Shader stages
-	VkPipelineShaderStageCreateInfo vertStage {};
-	vertStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-	vertStage.stage = VK_SHADER_STAGE_VERTEX_BIT;
-	vertStage.module = vertModule;
-	vertStage.pName = "main";
+//=============================================================================
+// Vertex Input Helpers
+//=============================================================================
 
-	VkPipelineShaderStageCreateInfo fragStage {};
-	fragStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-	fragStage.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-	fragStage.module = fragModule;
-	fragStage.pName = "main";
+VkPipeline CPipelineManager::CreateMeshPipeLine ( VkRenderPass RenderPass )
+    {
+    
+    if (HasPipeline ( "StaticMesh" ))
+        {
+        
+        return GetPipeline ( "StaticMesh" );
+        }
+     // Create pipeline layout (if not exists)
+    VkPipelineLayout layout = CreatePipelineLayout ( "StaticMeshLayout" );
+    if (layout == VK_NULL_HANDLE)
+        {
+        LogError ( "Failed to create StaticMesh pipeline layout" );
+        return VK_NULL_HANDLE;
+        }
+     // Load shaders
+    FShaderModule vertShader = LoadShaderModule ( "Assets/Shaders/Mesh.vert", VK_SHADER_STAGE_VERTEX_BIT );
+    FShaderModule fragShader = LoadShaderModule ( "Assets/Shaders/Mesh.frag", VK_SHADER_STAGE_FRAGMENT_BIT );
+    
+    if (vertShader.Module == VK_NULL_HANDLE || fragShader.Module == VK_NULL_HANDLE)
+        {
+        LogError ( "  Shader modules are invalid!" );
+        return VK_NULL_HANDLE;
+        }
 
-	VkPipelineShaderStageCreateInfo stages [] = { vertStage, fragStage };
+    if (!vertShader.IsValid () || !fragShader.IsValid ())
+        {
+        LogError ( "Failed to load shaders for StaticMesh pipeline" );
+        return VK_NULL_HANDLE;
+        }
+    FGraphicsPipelineConfig config;
+    config.VertexInput = GetTriangleVertexInput ();
+    config.Topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+    config.PolygonMode = VK_POLYGON_MODE_FILL;
+    config.CullMode = VK_CULL_MODE_BACK_BIT;
+    config.FrontFace = VK_FRONT_FACE_CLOCKWISE;
+    config.DepthTestEnable = VK_TRUE;
+    config.DepthWriteEnable = VK_TRUE;
+    config.DepthCompareOp = VK_COMPARE_OP_LESS;
+    config.BlendEnable = VK_FALSE;
+    config.DynamicStates = GetDefaultDynamicStates ();
+    std::vector<FShaderModule> shaders = { vertShader, fragShader };
+ 
+    return CreateGraphicsPipeline ( "StaticMesh", shaders, layout, RenderPass, config );
+    }
 
-	// 4. Vertex input state - ПУСТОЙ!
-	VkPipelineVertexInputStateCreateInfo vertexInput {};
-	vertexInput.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+FVertexInputDescription CPipelineManager::GetTriangleVertexInput () const
+    {
+    FVertexInputDescription desc;
 
-	// 5. Input assembly
-	VkPipelineInputAssemblyStateCreateInfo inputAssembly {};
-	inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-	inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+    // Binding description
+    VkVertexInputBindingDescription binding {};
+    binding.binding = 0;
+    binding.stride = 6 * sizeof ( float );  // position (3) + color (3)
+    binding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+    desc.Bindings.push_back ( binding );
 
-	// 6. Viewport state (dynamic)
-	VkPipelineViewportStateCreateInfo viewportState {};
-	viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-	viewportState.viewportCount = 1;
-	viewportState.scissorCount = 1;
+    // Position attribute (location 0)
+    VkVertexInputAttributeDescription positionAttr {};
+    positionAttr.binding = 0;
+    positionAttr.location = 0;
+    positionAttr.format = VK_FORMAT_R32G32B32_SFLOAT;
+    positionAttr.offset = 0;
+    desc.Attributes.push_back ( positionAttr );
 
-	// 7. Rasterization state - МАКСИМАЛЬНО ПРОСТОЙ
-	VkPipelineRasterizationStateCreateInfo rasterizer {};
-	rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-	rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
-	rasterizer.cullMode = VK_CULL_MODE_NONE;  // NO CULLING!
-	rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
-	rasterizer.lineWidth = 1.0f;
+    // Color attribute (location 1)
+    VkVertexInputAttributeDescription colorAttr {};
+    colorAttr.binding = 0;
+    colorAttr.location = 1;
+    colorAttr.format = VK_FORMAT_R32G32B32_SFLOAT;
+    colorAttr.offset = 3 * sizeof ( float );
+    desc.Attributes.push_back ( colorAttr );
 
-	// 8. Multisampling - отключаем
-	VkPipelineMultisampleStateCreateInfo multisampling {};
-	multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-	multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+    return desc;
+    }
 
-	// 9. Depth/stencil - отключаем
-	VkPipelineDepthStencilStateCreateInfo depthStencil {};
-	depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-	depthStencil.depthTestEnable = VK_FALSE;
-	depthStencil.depthWriteEnable = VK_FALSE;
+FVertexInputDescription CPipelineManager::GetUIVertexInput () const
+    {
+    FVertexInputDescription desc;
 
-	// 10. Color blend
-	VkPipelineColorBlendAttachmentState colorBlend {};
-	colorBlend.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
-		VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+    // For UI elements (2D position + UV)
+    VkVertexInputBindingDescription binding {};
+    binding.binding = 0;
+    binding.stride = 4 * sizeof ( float );  // position (2) + uv (2)
+    binding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+    desc.Bindings.push_back ( binding );
 
-	VkPipelineColorBlendStateCreateInfo colorBlending {};
-	colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-	colorBlending.attachmentCount = 1;
-	colorBlending.pAttachments = &colorBlend;
+    VkVertexInputAttributeDescription positionAttr {};
+    positionAttr.binding = 0;
+    positionAttr.location = 0;
+    positionAttr.format = VK_FORMAT_R32G32_SFLOAT;
+    positionAttr.offset = 0;
+    desc.Attributes.push_back ( positionAttr );
 
-	// 11. Dynamic states
-	VkDynamicState dynamicStates [] = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
-	VkPipelineDynamicStateCreateInfo dynamicState {};
-	dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-	dynamicState.dynamicStateCount = 2;
-	dynamicState.pDynamicStates = dynamicStates;
+    VkVertexInputAttributeDescription uvAttr {};
+    uvAttr.binding = 0;
+    uvAttr.location = 1;
+    uvAttr.format = VK_FORMAT_R32G32_SFLOAT;
+    uvAttr.offset = 2 * sizeof ( float );
+    desc.Attributes.push_back ( uvAttr );
 
-	// 12. Финальный pipeline info
-	VkGraphicsPipelineCreateInfo pipelineInfo {};
-	pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-	pipelineInfo.stageCount = 2;
-	pipelineInfo.pStages = stages;
-	pipelineInfo.pVertexInputState = &vertexInput;
-	pipelineInfo.pInputAssemblyState = &inputAssembly;
-	pipelineInfo.pViewportState = &viewportState;
-	pipelineInfo.pRasterizationState = &rasterizer;
-	pipelineInfo.pMultisampleState = &multisampling;
-	pipelineInfo.pDepthStencilState = &depthStencil;
-	pipelineInfo.pColorBlendState = &colorBlending;
-	pipelineInfo.pDynamicState = &dynamicState;
-	pipelineInfo.layout = layout;
-	pipelineInfo.renderPass = RenderPass;
-	pipelineInfo.subpass = 0;
+    return desc;
+    }
 
-	LogDebug ( "Calling vkCreateGraphicsPipelines with SIMPLE config..." );
+FVertexInputDescription CPipelineManager::GetSkyboxVertexInput () const
+    {
+    FVertexInputDescription desc;
 
-	VkPipeline pipeline;
-	result = vkCreateGraphicsPipelines ( devicemanager->GetDevice (), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline );
+    // Skybox uses only position (3D)
+    VkVertexInputBindingDescription binding {};
+    binding.binding = 0;
+    binding.stride = 3 * sizeof ( float );
+    binding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+    desc.Bindings.push_back ( binding );
 
-//cleanup shadermodules in destructor (or delete clean shader modules in destructor)
+    VkVertexInputAttributeDescription positionAttr {};
+    positionAttr.binding = 0;
+    positionAttr.location = 0;
+    positionAttr.format = VK_FORMAT_R32G32B32_SFLOAT;
+    positionAttr.offset = 0;
+    desc.Attributes.push_back ( positionAttr );
 
-	if (result != VK_SUCCESS)
-		{
-		LogError ( "Failed to create simple pipeline: ", result );
-		vkDestroyPipelineLayout ( devicemanager->GetDevice (), layout, nullptr );
-		return VK_NULL_HANDLE;
-		}
+    return desc;
+    }
 
-	LogDebug ( "SIMPLE pipeline created successfully!" );
-	return pipeline;
-	}
+//=============================================================================
+// State Creation Helpers
+//=============================================================================
+
+std::vector<VkDynamicState> CPipelineManager::GetDefaultDynamicStates () const
+    {
+    return { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
+    }
+
+VkPipelineShaderStageCreateInfo CPipelineManager::GetShaderStageInfo ( const FShaderModule & Module ) const
+    {
+    VkPipelineShaderStageCreateInfo info {};
+    info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    info.stage = Module.Stage;
+    info.module = Module.Module;
+    info.pName = Module.EntryPoint.c_str ();
+    return info;
+    }
+
+VkPipelineVertexInputStateCreateInfo CPipelineManager::GetVertexInputState ( const FVertexInputDescription & Desc ) const
+    {
+    VkPipelineVertexInputStateCreateInfo info {};
+    info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+    info.vertexBindingDescriptionCount = static_cast< uint32_t >( Desc.Bindings.size () );
+    info.pVertexBindingDescriptions = Desc.Bindings.data ();
+    info.vertexAttributeDescriptionCount = static_cast< uint32_t >( Desc.Attributes.size () );
+    info.pVertexAttributeDescriptions = Desc.Attributes.data ();
+    return info;
+    }
+
+VkPipelineInputAssemblyStateCreateInfo CPipelineManager::GetInputAssemblyState ( const FGraphicsPipelineConfig & Config ) const
+    {
+    VkPipelineInputAssemblyStateCreateInfo info {};
+    info.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+    info.topology = Config.Topology;
+    info.primitiveRestartEnable = Config.PrimitiveRestartEnable;
+    return info;
+    }
+
+VkPipelineRasterizationStateCreateInfo CPipelineManager::GetRasterizationState ( const FGraphicsPipelineConfig & Config ) const
+    {
+    VkPipelineRasterizationStateCreateInfo info {};
+    info.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+    info.depthClampEnable = VK_FALSE;
+    info.rasterizerDiscardEnable = VK_FALSE;
+    info.polygonMode = Config.PolygonMode;
+    info.lineWidth = Config.LineWidth;
+    info.cullMode = Config.CullMode;
+    info.frontFace = Config.FrontFace;
+    info.depthBiasEnable = Config.DepthBiasEnable;
+    info.depthBiasConstantFactor = Config.DepthBiasConstantFactor;
+    info.depthBiasClamp = Config.DepthBiasClamp;
+    info.depthBiasSlopeFactor = Config.DepthBiasSlopeFactor;
+    return info;
+    }
+
+VkPipelineMultisampleStateCreateInfo CPipelineManager::GetMultisampleState ( const FGraphicsPipelineConfig & Config ) const
+    {
+    VkPipelineMultisampleStateCreateInfo info {};
+    info.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+    info.pNext = NULL;
+    info.sampleShadingEnable = Config.SampleShadingEnable;
+    info.rasterizationSamples = Config.Samples;
+    info.minSampleShading = Config.MinSampleShading;
+    info.pSampleMask = nullptr;
+    info.alphaToCoverageEnable = VK_FALSE;
+    info.alphaToOneEnable = VK_FALSE;
+    return info;
+    }
+
+VkPipelineDepthStencilStateCreateInfo CPipelineManager::GetDepthStencilState ( const FGraphicsPipelineConfig & Config ) const
+    {
+    VkPipelineDepthStencilStateCreateInfo info {};
+    info.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+    info.pNext = nullptr;
+    info.depthTestEnable = Config.DepthTestEnable;
+    info.depthWriteEnable = Config.DepthWriteEnable;
+    info.depthCompareOp = Config.DepthCompareOp;
+    info.depthBoundsTestEnable = Config.DepthBoundsTestEnable;
+    info.stencilTestEnable = Config.StencilTestEnable;
+ 
+    VkStencilOpState stencilOp {};
+    stencilOp.failOp = VK_STENCIL_OP_KEEP;
+    stencilOp.passOp = VK_STENCIL_OP_KEEP;
+    stencilOp.depthFailOp = VK_STENCIL_OP_KEEP;
+    stencilOp.compareOp = VK_COMPARE_OP_ALWAYS;
+    stencilOp.compareMask = 0;
+    stencilOp.writeMask = 0;
+    stencilOp.reference = 0;
+
+    info.front = stencilOp;
+    info.back = stencilOp;
+
+    info.minDepthBounds = 0.0f;
+    info.maxDepthBounds = 1.0f;
+    return info;
+    }
+
+VkPipelineColorBlendAttachmentState CPipelineManager::GetColorBlendAttachment ( const FGraphicsPipelineConfig & Config ) const
+    {
+    VkPipelineColorBlendAttachmentState attachment {};
+    attachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
+        VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+    attachment.blendEnable = Config.BlendEnable;
+    attachment.srcColorBlendFactor = Config.SrcColorBlendFactor;
+    attachment.dstColorBlendFactor = Config.DstColorBlendFactor;
+    attachment.colorBlendOp = Config.ColorBlendOp;
+    attachment.srcAlphaBlendFactor = Config.SrcAlphaBlendFactor;
+    attachment.dstAlphaBlendFactor = Config.DstAlphaBlendFactor;
+    attachment.alphaBlendOp = Config.AlphaBlendOp;
+    return attachment;
+    }
+
+VkPipelineColorBlendStateCreateInfo CPipelineManager::GetColorBlendState ( const FGraphicsPipelineConfig & Config ) const
+    {
+    VkPipelineColorBlendAttachmentState attachment = GetColorBlendAttachment ( Config );
+
+    VkPipelineColorBlendStateCreateInfo info {};
+    info.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+    info.pNext = nullptr;
+    info.logicOpEnable = VK_FALSE;
+    info.logicOp = VK_LOGIC_OP_COPY;
+    info.attachmentCount = 1;
+    info.pAttachments = &attachment;
+     
+    info.blendConstants[ 0 ] = 0.0f;
+    info.blendConstants[ 1 ] = 0.0f;
+    info.blendConstants[ 2 ] = 0.0f;
+    info.blendConstants[ 3 ] = 0.0f;
+
+    return info;
+    }
+
+VkPipelineDynamicStateCreateInfo CPipelineManager::GetDynamicState ( const FGraphicsPipelineConfig & Config ) const
+    {
+    VkPipelineDynamicStateCreateInfo info {};
+    info.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+    info.pNext = nullptr;
+
+    // ВАЖНО: создаём локальный массив, который будет жить достаточно долго
+    static VkDynamicState defaultStates [] = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
+
+    if (Config.DynamicStates.empty ())
+        {
+        info.dynamicStateCount = 2;
+        info.pDynamicStates = defaultStates;
+        }
+    else
+        {
+        info.dynamicStateCount = static_cast< uint32_t >( Config.DynamicStates.size () );
+        info.pDynamicStates = Config.DynamicStates.data ();
+        }
+
+    return info;
+    }

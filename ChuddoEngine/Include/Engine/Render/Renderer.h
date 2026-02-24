@@ -32,7 +32,8 @@ class CRenderer : public IVulkanManager
         bool CreateCommandBuffers ();
         bool RecordCommandBuffer ( VkCommandBuffer CommandBuffer, uint32_t ImageIndex );
         bool RecreateSwapChainResources ();
-        void TriangleStub ( VkCommandBuffer CommandBuffer );
+        void TriangleStub ( VkCommandBuffer CommandBuffer, uint32_t ImageIndex );
+        void RenderWorld ( VkCommandBuffer CommandBuffer );
     private:
         // Managers (cached for fast access)
         FRenderInfo m_RenderInfo;

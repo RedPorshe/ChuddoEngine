@@ -165,7 +165,7 @@
     <ClCompile Include="Source\Engine\Render\Vulkan\Managers\BufferManager.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Include\Engine\Render\RenderInfo.cpp">
+    <ClCompile Include="Source\Engine\Render\RenderInfo.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>
@@ -342,9 +342,7 @@
   <ItemGroup>
     <None Include="Assets\Shaders\Mesh.vert" />
     <None Include="Assets\Shaders\Mesh.frag" />
-    <None Include="Assets\Shaders\Test.vert" />
-    <None Include="Assets\Shaders\Test.frag" />
-    <None Include="Assets\Shaders\Minimal.vert" />
-    <None Include="Assets\Shaders\Minimal.frag" />
+    <None Include="Assets\Shaders\Triangle.vert" />
+    <None Include="Assets\Shaders\Triangle.frag" />
   </ItemGroup>
 </Project>

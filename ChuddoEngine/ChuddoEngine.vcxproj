@@ -167,7 +167,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Include\Engine\Render\RenderInfo.cpp" />
+    <ClCompile Include="Source\Engine\Render\RenderInfo.cpp" />
     <ClCompile Include="Source\Engine\Render\Renderer.cpp" />
     <ClCompile Include="Source\Engine\Core\EngineInfo.cpp" />
     <ClCompile Include="Source\Engine\Render\Vulkan\Managers\BufferManager.cpp" />
@@ -280,10 +280,8 @@
   <ItemGroup>
     <None Include="Assets\Shaders\Mesh.frag" />
     <None Include="Assets\Shaders\Mesh.vert" />
-    <None Include="Assets\Shaders\Minimal.frag" />
-    <None Include="Assets\Shaders\Minimal.vert" />
-    <None Include="Assets\Shaders\Test.frag" />
-    <None Include="Assets\Shaders\Test.vert" />
+    <None Include="Assets\Shaders\Triangle.frag" />
+    <None Include="Assets\Shaders\Triangle.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
