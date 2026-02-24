@@ -96,7 +96,7 @@ class CPipelineManager final : public IVulkanManager
 
         // Triangle pipeline helpers
         VkPipeline CreateTrianglePipeline ( VkRenderPass RenderPass );
-        VkPipelineLayout GetTrianglePipelineLayout () const { return m_TrianglePipelineLayout; }
+        VkPipelineLayout GetTrianglePipelineLayout () const { return m_TrianglePipelineLayout; }  // ДОБАВЛЕНО!
 
         // Cleanup
         void DestroyShaderModule ( VkShaderModule Module );
@@ -120,7 +120,7 @@ class CPipelineManager final : public IVulkanManager
             const std::string & FragShaderPath,
             const FVertexInputDescription & VertexInput,
             const FGraphicsPipelineConfig & Config );
-            
+
     private:
         // Default vertex input for triangle (position + color)
         FVertexInputDescription GetTriangleVertexInput () const;

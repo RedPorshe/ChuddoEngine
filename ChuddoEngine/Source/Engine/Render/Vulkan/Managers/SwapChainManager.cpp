@@ -264,7 +264,24 @@ bool CSwapChainManager::AcquireNextImage ( VkSemaphore SignalSemaphore, uint32_t
 bool CSwapChainManager::Present ( VkSemaphore WaitSemaphore, uint32_t ImageIndex )
     {
     auto * deviceMgr = static_cast< CDeviceManager * >( m_Info.Vulkan.DeviceManager.get () );
+    if (!deviceMgr)
+        {
+        LogError ( "Present: deviceMgr is null" );
+        return false;
+        }
+
     VkQueue presentQueue = deviceMgr->GetPresentQueue ();
+    if (presentQueue == VK_NULL_HANDLE)
+        {
+        LogError ( "Present: presentQueue is null" );
+        return false;
+        }
+
+    if (m_SwapChain == VK_NULL_HANDLE)
+        {
+        LogError ( "Present: swapchain is null" );
+        return false;
+        }
 
     VkPresentInfoKHR presentInfo {};
     presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -299,12 +316,11 @@ bool CSwapChainManager::RecreateSwapChain ()
     if (!deviceMgr) return false;
 
     VkDevice device = deviceMgr->GetDevice ();
-    if (device == VK_NULL_HANDLE) return false;
 
     // Wait for device idle
     vkDeviceWaitIdle ( device );
 
-    // Store old swapchain before cleanup
+    // Store old swapchain
     VkSwapchainKHR oldSwapchain = m_SwapChain;
 
     // Clean up views only (not the swapchain itself)
@@ -315,7 +331,7 @@ bool CSwapChainManager::RecreateSwapChain ()
     m_ImageViews.clear ();
     m_Images.clear ();
 
-    // Reset swapchain handle but keep old one for reuse
+    // Reset swapchain handle
     m_SwapChain = VK_NULL_HANDLE;
 
     // Recreate with old swapchain
@@ -343,6 +359,7 @@ bool CSwapChainManager::RecreateSwapChain ()
             }
 
         LogDebug ( "Swapchain recreated successfully" );
+        SetSwapChainRecreated ( true );
         return true;
     }
 

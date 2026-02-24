@@ -100,13 +100,75 @@ VkFramebuffer CRenderPassManager::GetFramebuffer ( uint32_t Index ) const
         LogError ( "Framebuffer index ", Index, " out of range (max: ", m_Framebuffers.size () - 1, ")" );
         return VK_NULL_HANDLE;
         }
-    return m_Framebuffers[ Index ];
+
+    VkFramebuffer fb = m_Framebuffers[ Index ];
+    if (fb == VK_NULL_HANDLE)
+        {
+        LogError ( "Framebuffer at index ", Index, " is null" );
+        }
+
+    return fb;
+    }
+
+bool CRenderPassManager::RecreateForSwapChain ()
+    {
+    LogDebug ( "Recreating render pass for new swapchain..." );
+
+    auto * deviceMgr = static_cast< CDeviceManager * >( m_Info.Vulkan.DeviceManager.get () );
+    if (!deviceMgr) return false;
+
+    VkDevice device = deviceMgr->GetDevice ();
+
+    // Ждём пока GPU закончит работу
+    vkDeviceWaitIdle ( device );
+
+    // Уничтожаем старые ресурсы
+    DestroySwapChainResources ();
+
+    // Уничтожаем старый render pass
+    if (m_MainRenderPass != VK_NULL_HANDLE)
+        {
+        vkDestroyRenderPass ( device, m_MainRenderPass, nullptr );
+        m_MainRenderPass = VK_NULL_HANDLE;
+        }
+
+    try
+        {
+            // Создаём новый render pass с актуальным форматом из swapchain
+        CreateMainRenderPass ();
+
+        // Создаём новые depth resources
+        CreateDepthResources ();
+
+        // Создаём новые framebuffers
+        CreateFramebuffers ();
+        }
+        catch (const std::exception & e)
+            {
+            LogError ( "Failed to recreate render pass: ", e.what () );
+            return false;
+            }
+
+        LogDebug ( "Render pass recreated successfully" );
+        return true;
     }
 
 void CRenderPassManager::CreateMainRenderPass ()
     {
+    LogDebug ( "Creating MAIN render pass..." ); // Добавьте эту строку
+
     auto * swapChainMgr = static_cast< CSwapChainManager * >( m_Info.Vulkan.SwapChainManager.get () );
+    if (!swapChainMgr)
+        {
+        LogError ( "CreateMainRenderPass: SwapChainManager is null" );
+        throw std::runtime_error ( "SwapChainManager is null" );
+        }
+
     VkFormat colorFormat = swapChainMgr->GetImageFormat ();
+    VkExtent2D extent = swapChainMgr->GetExtent (); // Получаем текущий размер!
+
+    LogDebug ( "  Creating render pass for size: ", extent.width, "x", extent.height,
+               ", format: ", static_cast< int >( colorFormat ) );
 
     // Color attachment
     VkAttachmentDescription colorAttachment {};
@@ -315,9 +377,36 @@ void CRenderPassManager::DestroyDepthResources ()
 void CRenderPassManager::CreateFramebuffers ()
     {
     auto * swapChainMgr = static_cast< CSwapChainManager * >( m_Info.Vulkan.SwapChainManager.get () );
+    if (!swapChainMgr)
+        {
+        LogError ( "CreateFramebuffers: SwapChainManager is null" );
+        throw std::runtime_error ( "SwapChainManager is null" );
+        }
+
     const auto & imageViews = swapChainMgr->GetImageViews ();
     VkExtent2D extent = swapChainMgr->GetExtent ();
 
+    if (imageViews.empty ())
+        {
+        LogError ( "CreateFramebuffers: No image views from swapchain" );
+        throw std::runtime_error ( "No image views" );
+        }
+
+    LogDebug ( "  Creating framebuffers with extent: ", extent.width, "x", extent.height );
+    LogDebug ( "  Number of image views: ", imageViews.size () );
+
+    // Уничтожаем старые framebuffers если есть
+    for (auto fb : m_Framebuffers)
+        {
+        if (fb != VK_NULL_HANDLE)
+            {
+            auto * deviceMgr = static_cast< CDeviceManager * >( m_Info.Vulkan.DeviceManager.get () );
+            vkDestroyFramebuffer ( deviceMgr->GetDevice (), fb, nullptr );
+            }
+        }
+    m_Framebuffers.clear ();
+
+    // Создаем новые framebuffers
     m_Framebuffers.resize ( imageViews.size () );
 
     for (size_t i = 0; i < imageViews.size (); i++)
@@ -345,20 +434,50 @@ void CRenderPassManager::CreateFramebuffers ()
             LogError ( "Failed to create framebuffer for image ", i, ": ", static_cast< int >( result ) );
             throw std::runtime_error ( "Failed to create framebuffer" );
             }
+
+        LogDebug ( "    Created framebuffer ", i, ": ", ( void * ) m_Framebuffers[ i ] );
         }
 
-    LogDebug ( "Created ", m_Framebuffers.size (), " framebuffers" );
+    LogDebug ( "  Created ", m_Framebuffers.size (), " framebuffers" );
     }
 
 bool CRenderPassManager::CreateSwapChainResources ()
     {
-    LogDebug ( "Recreating swapchain resources..." );
+    LogDebug ( "RenderPassManager recreating swapchain resources..." );
+    LogDebug ( "  Current framebuffers count: ", m_Framebuffers.size () );
 
+    auto * deviceMgr = static_cast< CDeviceManager * >( m_Info.Vulkan.DeviceManager.get () );
+    VkDevice device = deviceMgr->GetDevice ();
+
+    // Получаем новый размер из swapchain
+    auto * swapChainMgr = static_cast< CSwapChainManager * >( m_Info.Vulkan.SwapChainManager.get () );
+    if (swapChainMgr)
+        {
+        VkExtent2D extent = swapChainMgr->GetExtent ();
+        m_Width = extent.width;
+        m_Height = extent.height;
+        LogDebug ( "  New extent from swapchain: ", m_Width, "x", m_Height );
+        }
+
+    // ПРИНУДИТЕЛЬНО уничтожаем старые ресурсы
     DestroySwapChainResources ();
+
+    // Уничтожаем старый render pass
+    if (m_MainRenderPass != VK_NULL_HANDLE)
+        {
+        vkDestroyRenderPass ( device, m_MainRenderPass, nullptr );
+        m_MainRenderPass = VK_NULL_HANDLE;
+        }
 
     try
         {
+        // Создаем НОВЫЙ render pass (на всякий случай)
+        CreateMainRenderPass ();
+
+        // Создаем новые depth resources с новым размером
         CreateDepthResources ();
+
+        // Создаем новые framebuffers с новым размером
         CreateFramebuffers ();
         }
         catch (const std::exception & e)
@@ -367,7 +486,13 @@ bool CRenderPassManager::CreateSwapChainResources ()
             return false;
             }
 
-        LogDebug ( "Swapchain resources recreated successfully" );
+        LogDebug ( "  New framebuffers count: ", m_Framebuffers.size () );
+        if (m_Framebuffers.size () > 0)
+            {
+            LogDebug ( "  New framebuffer 0: ", ( void * ) m_Framebuffers[ 0 ] );
+            }
+
+        LogDebug ( "RenderPassManager swapchain resources recreated successfully" );
         return true;
     }
 

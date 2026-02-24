@@ -28,12 +28,14 @@ class CSwapChainManager final : public IVulkanManager
         bool AcquireNextImage ( VkSemaphore SignalSemaphore, uint32_t & ImageIndex );
         bool Present ( VkSemaphore WaitSemaphore, uint32_t ImageIndex );
         bool RecreateSwapChain ();
-
+        bool IsSwapChainRecreated () const { return bIsSwapchainRecreated; }
+        void SetSwapChainRecreated ( bool val ) { bIsSwapchainRecreated = val; }
     private:
         void CreateSwapChain ( VkSwapchainKHR OldSwapchain = VK_NULL_HANDLE );
         void CreateImageViews ();
         void CleanupSwapChain ();
-
+       
+       
         VkSurfaceFormatKHR ChooseSurfaceFormat ( const std::vector<VkSurfaceFormatKHR> & AvailableFormats ) const;
         VkPresentModeKHR ChoosePresentMode ( const std::vector<VkPresentModeKHR> & AvailableModes ) const;
         VkExtent2D ChooseExtent ( const VkSurfaceCapabilitiesKHR & Capabilities ) const;
@@ -43,7 +45,7 @@ class CSwapChainManager final : public IVulkanManager
         VkSwapchainKHR m_SwapChain = VK_NULL_HANDLE;
         VkFormat m_ImageFormat = VK_FORMAT_UNDEFINED;
         VkExtent2D m_Extent = { 0, 0 };
-
+        bool bIsSwapchainRecreated = false;
         // Images and views
         std::vector<VkImage> m_Images;
         std::vector<VkImageView> m_ImageViews;

@@ -47,7 +47,7 @@ class CRenderPassManager final : public IVulkanManager
         VkImageView GetDepthImageView () const { return m_DepthImageView; }
         VkImage GetDepthImage () const { return m_DepthImage; }
         bool HasDepthAttachment () const { return m_DepthImageView != VK_NULL_HANDLE; }
-
+        bool RecreateForSwapChain ();
     private:
         void CreateMainRenderPass ();
         void CreateFramebuffers ();

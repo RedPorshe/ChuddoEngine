@@ -396,7 +396,7 @@ VkPipeline CPipelineManager::CreateGraphicsPipeline (
 			LogError ( "Failed to create pipeline layout" );
 			return VK_NULL_HANDLE;
 			}
-
+		m_TrianglePipelineLayout = layout;
 		// 2. Загружаем шейдеры
 		FShaderModule vertShader = LoadShaderModule ( "Assets/Shaders/Mesh.vert", VK_SHADER_STAGE_VERTEX_BIT );
 		FShaderModule fragShader = LoadShaderModule ( "Assets/Shaders/Mesh.frag", VK_SHADER_STAGE_FRAGMENT_BIT );

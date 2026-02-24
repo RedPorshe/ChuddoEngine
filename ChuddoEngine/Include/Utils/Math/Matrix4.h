@@ -14,11 +14,10 @@ namespace CEMath
 {
     struct Matrix4x4
     {
-		//4x4 matrix, stored in column-major order for OpenGL compatibility
-		// m[col][row] or m[column * 4 + row]
+		
         
         float m[16];
-        //constructors
+        
         
         Matrix4x4();
         Matrix4x4(float diagonal);

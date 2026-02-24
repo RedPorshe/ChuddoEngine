@@ -202,7 +202,7 @@ void CEngine::MainLoop ()
 		Tick ( m_DeltaTime );
 		//after tick call function to collect render info, and set info to renderer
 		//FRenderInfo RenderInfo = CGameInstance::Get ().GetWorld ()->CollectRenderInfo ();
-		InfoForRender.HasInfo = false; //stub 
+		InfoForRender = UpdateRenderInfo (); //stub 
 		Renderer.get ()->SetInfoForRender ( InfoForRender );
 		if (!Renderer.get ()->RenderScene ())
 			{
@@ -301,4 +301,18 @@ void CEngine::CreateTestWorld ()
 		gameMode->SetDefaultPawnClass ( "CPawn" );
 		LOG_DEBUG ( "[ENGINE] Test world created: Super with level: SuperLevel" );
 		}
+	}
+
+FRenderInfo CEngine::UpdateRenderInfo ()
+	{
+	FRenderInfo Info {};
+	Info.HasInfo = false;
+	static int WarnCount = 0;
+	if (WarnCount >= 500)
+		{
+		LOG_WARN ( "Render in Stub mode rendering Default Trinangle" );
+		WarnCount = 0;
+		}
+	WarnCount++;
+	return Info;
 	}

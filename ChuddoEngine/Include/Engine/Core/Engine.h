@@ -8,7 +8,7 @@ class CWindow;
 class CInputSystem;
 
 class CRenderer;
-
+struct FRenderInfo;
 struct FEngineInfo;
 
 class CEngine
@@ -43,7 +43,7 @@ class CEngine
         std::chrono::steady_clock::time_point m_LastFrameTime;
         bool bIsInitialized = false;
         bool bIsRunning = false;
-
+        FRenderInfo UpdateRenderInfo ();
         
         std::unique_ptr<CWindow>  Window = nullptr;
         std::unique_ptr<CRenderer>  Renderer = nullptr;
