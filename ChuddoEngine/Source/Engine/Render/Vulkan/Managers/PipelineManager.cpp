@@ -2,6 +2,7 @@
 #include "Core/EngineInfo.h"
 #include "Render/Vulkan/Managers/DeviceManager.h"
 #include "Render/Vulkan/Managers/RenderPassManager.h"
+#include "Components/Meshes/BaseMeshComponent.h"
 #include <filesystem>
 #include <fstream>
 #include <vector>
@@ -303,45 +304,61 @@ FShaderModule CPipelineManager::LoadShaderModule ( const std::string & Filename,
 // Pipeline Layout Creation
 //=============================================================================
 
-VkPipelineLayout CPipelineManager::CreatePipelineLayout (
-    const std::string & LayoutName,
-    const std::vector<VkDescriptorSetLayout> & DescSetLayouts,
-    const std::vector<VkPushConstantRange> & PushConstants )
-    {
-    // Check if layout already exists
-    auto it = m_PipelineLayouts.find ( LayoutName );
-    if (it != m_PipelineLayouts.end ())
+    VkPipelineLayout CPipelineManager::CreatePipelineLayout (
+        const std::string & LayoutName,
+        const std::vector<VkDescriptorSetLayout> & DescSetLayouts,
+        const std::vector<VkPushConstantRange> & PushConstants )
         {
-        LogDebug ( "  Using existing pipeline layout: ", LayoutName );
-        return it->second;
+            // Check if layout already exists
+        auto it = m_PipelineLayouts.find ( LayoutName );
+        if (it != m_PipelineLayouts.end ())
+            {
+            LogDebug ( "  Using existing pipeline layout: ", LayoutName );
+            return it->second;
+            }
+
+        LogDebug ( "Creating new pipeline layout: ", LayoutName );
+
+        auto * deviceMgr = static_cast< CDeviceManager * >( m_Info.Vulkan.DeviceManager.get () );
+        VkDevice device = deviceMgr->GetDevice ();
+
+        VkPipelineLayoutCreateInfo layoutInfo {};
+        layoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+        layoutInfo.setLayoutCount = static_cast< uint32_t >( DescSetLayouts.size () );
+        layoutInfo.pSetLayouts = DescSetLayouts.data ();
+
+        // Добавляем push constants, если они переданы
+        if (!PushConstants.empty ())
+            {
+            layoutInfo.pushConstantRangeCount = static_cast< uint32_t >( PushConstants.size () );
+            layoutInfo.pPushConstantRanges = PushConstants.data ();
+            }
+        else
+            {
+                // Если не переданы, создаём push constants по умолчанию
+            static VkPushConstantRange defaultPushConstants[ 1 ] = {};
+            defaultPushConstants[ 0 ].stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+            defaultPushConstants[ 0 ].offset = 0;
+            defaultPushConstants[ 0 ].size = 3 * sizeof ( FMat4 ); // view, projection, model
+
+            layoutInfo.pushConstantRangeCount = 1;
+            layoutInfo.pPushConstantRanges = defaultPushConstants;
+            }
+
+        VkPipelineLayout layout;
+        VkResult result = vkCreatePipelineLayout ( device, &layoutInfo, nullptr, &layout );
+        if (result != VK_SUCCESS)
+            {
+            LogError ( "Failed to create pipeline layout: ", static_cast< int >( result ) );
+            return VK_NULL_HANDLE;
+            }
+
+            // Save to cache
+        m_PipelineLayouts[ LayoutName ] = layout;
+        LogDebug ( "  Pipeline layout created and cached: ", LayoutName, " (", ( void * ) layout, ")" );
+
+        return layout;
         }
-
-    LogDebug ( "Creating new pipeline layout: ", LayoutName );
-
-    auto * deviceMgr = static_cast< CDeviceManager * >( m_Info.Vulkan.DeviceManager.get () );
-    VkDevice device = deviceMgr->GetDevice ();
-
-    VkPipelineLayoutCreateInfo layoutInfo {};
-    layoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    layoutInfo.setLayoutCount = static_cast< uint32_t >( DescSetLayouts.size () );
-    layoutInfo.pSetLayouts = DescSetLayouts.data ();
-    layoutInfo.pushConstantRangeCount = static_cast< uint32_t >( PushConstants.size () );
-    layoutInfo.pPushConstantRanges = PushConstants.data ();
-
-    VkPipelineLayout layout;
-    VkResult result = vkCreatePipelineLayout ( device, &layoutInfo, nullptr, &layout );
-    if (result != VK_SUCCESS)
-        {
-        LogError ( "Failed to create pipeline layout: ", static_cast< int >( result ) );
-        return VK_NULL_HANDLE;
-        }
-
-    // Save to cache
-    m_PipelineLayouts[ LayoutName ] = layout;
-    LogDebug ( "  Pipeline layout created and cached: ", LayoutName, " (", ( void * ) layout, ")" );
-
-    return layout;
-    }
 
 //=============================================================================
 // Graphics Pipeline Creation
@@ -792,33 +809,76 @@ VkPipeline CPipelineManager::CreateMeshPipeLine ( VkRenderPass RenderPass )
     
     if (HasPipeline ( "StaticMesh" ))
         {
-        
         return GetPipeline ( "StaticMesh" );
         }
-     // Create pipeline layout (if not exists)
-    VkPipelineLayout layout = CreatePipelineLayout ( "StaticMeshLayout" );
+
+        // Создаём push constants для матриц
+    std::vector<VkPushConstantRange> pushConstants ( 1 );
+    pushConstants[ 0 ].stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+    pushConstants[ 0 ].offset = 0;
+    pushConstants[ 0 ].size = 3 * sizeof ( FMat4 ); // view, projection, model
+
+    // Create pipeline layout with push constants
+    VkPipelineLayout layout = CreatePipelineLayout ( "StaticMeshLayout", {}, pushConstants );
     if (layout == VK_NULL_HANDLE)
         {
         LogError ( "Failed to create StaticMesh pipeline layout" );
         return VK_NULL_HANDLE;
         }
-     // Load shaders
+
+        // Load shaders
     FShaderModule vertShader = LoadShaderModule ( "Assets/Shaders/Mesh.vert", VK_SHADER_STAGE_VERTEX_BIT );
     FShaderModule fragShader = LoadShaderModule ( "Assets/Shaders/Mesh.frag", VK_SHADER_STAGE_FRAGMENT_BIT );
-    
+
     if (vertShader.Module == VK_NULL_HANDLE || fragShader.Module == VK_NULL_HANDLE)
         {
-        LogError ( "  Shader modules are invalid!" );
+        LogError ( "Shader modules are invalid!" );
         return VK_NULL_HANDLE;
         }
 
-    if (!vertShader.IsValid () || !fragShader.IsValid ())
-        {
-        LogError ( "Failed to load shaders for StaticMesh pipeline" );
-        return VK_NULL_HANDLE;
-        }
+        // Настраиваем vertex input для FMeshVertex
+    FVertexInputDescription vertexInput;
+
+    VkVertexInputBindingDescription binding {};
+    binding.binding = 0;
+    binding.stride = sizeof ( FMeshVertex );
+    binding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+    vertexInput.Bindings.push_back ( binding );
+
+    // Position (location 0)
+    VkVertexInputAttributeDescription posAttr {};
+    posAttr.binding = 0;
+    posAttr.location = 0;
+    posAttr.format = VK_FORMAT_R32G32B32_SFLOAT;
+    posAttr.offset = offsetof ( FMeshVertex, Position );
+    vertexInput.Attributes.push_back ( posAttr );
+
+    // Color (location 1)
+    VkVertexInputAttributeDescription colorAttr {};
+    colorAttr.binding = 0;
+    colorAttr.location = 1;
+    colorAttr.format = VK_FORMAT_R32G32B32_SFLOAT;
+    colorAttr.offset = offsetof ( FMeshVertex, Color );
+    vertexInput.Attributes.push_back ( colorAttr );
+
+    // Normal (location 2)
+    VkVertexInputAttributeDescription normalAttr {};
+    normalAttr.binding = 0;
+    normalAttr.location = 2;
+    normalAttr.format = VK_FORMAT_R32G32B32_SFLOAT;
+    normalAttr.offset = offsetof ( FMeshVertex, Normal );
+    vertexInput.Attributes.push_back ( normalAttr );
+
+    // UV (location 3)
+    VkVertexInputAttributeDescription uvAttr {};
+    uvAttr.binding = 0;
+    uvAttr.location = 3;
+    uvAttr.format = VK_FORMAT_R32G32_SFLOAT;
+    uvAttr.offset = offsetof ( FMeshVertex, UV );
+    vertexInput.Attributes.push_back ( uvAttr );
+
     FGraphicsPipelineConfig config;
-    config.VertexInput = GetTriangleVertexInput ();
+    config.VertexInput = vertexInput;
     config.Topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
     config.PolygonMode = VK_POLYGON_MODE_FILL;
     config.CullMode = VK_CULL_MODE_BACK_BIT;
@@ -828,8 +888,9 @@ VkPipeline CPipelineManager::CreateMeshPipeLine ( VkRenderPass RenderPass )
     config.DepthCompareOp = VK_COMPARE_OP_LESS;
     config.BlendEnable = VK_FALSE;
     config.DynamicStates = GetDefaultDynamicStates ();
+
     std::vector<FShaderModule> shaders = { vertShader, fragShader };
- 
+
     return CreateGraphicsPipeline ( "StaticMesh", shaders, layout, RenderPass, config );
     }
 

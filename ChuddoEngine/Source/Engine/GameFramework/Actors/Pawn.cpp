@@ -3,13 +3,18 @@
 #include "Components/TransformComponent.h"
 #include "Components/GravityComponent.h"
 #include "Components/InputComponent.h"
+#include "Components/Meshes/StaticMeshComponent.h"
 #include "Utils/Math/Quaternion.h"
+#include "World/World.h"
+#include "World/Level.h"
 
 CPawn::CPawn ( CObject * inOwner, const std::string & inDisplayName )
 	: Super ( inOwner, inDisplayName )
 	{
 	m_InputComponent = AddDefaultSubObject<CInputComponent> ( "InputComponent_" + GetName () );
 	LOG_DEBUG ( "[PAWN] Created: ", GetName () );
+	Mesh = AddDefaultSubObject< CStaticMeshComponent> ( "PawnCube" );
+	Mesh->AttachTo ( RootComponent );
 	}
 
 CPawn::~CPawn ()
@@ -67,14 +72,19 @@ void CPawn::ProcessPlayerInput ( float DeltaTime )
 	Controller->ProcessPlayerInput ( DeltaTime );
 	}
 
-void CPawn::Jump ( float val )
+void CPawn::Jump (  )
 	{
-	( void ) val;
-	LOG_DEBUG ( " Jump value =", val );
-	LOG_DEBUG ( "Check Pawn location." );
-	LOG_DEBUG ( this->GetActorLocation (), " for actor" );
-	LOG_DEBUG ( this->GetActorRotation (), " actor rotation FVector" );
-	LOG_DEBUG ( this->GetActorRotationQuat (), " actor rotation FQuat" );
+	LOG_DEBUG (
+		"Spawning actor by pressing space bar! ^_^"
+	);
+	float dist = 25.f;
+	FVector location = GetActorLocation ();
+	FVector direction = FVector::Forward ()*dist;
+	FVector spawnlocation = location + direction;
+	auto spawned =GetWorld ()->GetCurrentLevel ()->SpawnActorAtLocation ("CActor","TEST", spawnlocation );
+	CStaticMeshComponent* spawnedmesh = spawned->AddDefaultSubObject<CStaticMeshComponent> ( "SpawnedCube" );
+	spawnedmesh->AttachTo ( spawned->GetRootComponent () );
+	spawned->BeginPlay ();
 	}
 
 void CPawn::Tick ( float DeltaTime )
@@ -121,11 +131,30 @@ void CPawn::OnUnpossessed ( CPlayerController * OldController )
 		SetController ( nullptr );
 		}
 	}
-
+#include "Camera/CameraComponent.h"
 void CPawn::OnPossess ()
 	{
+	CCameraComponent* camera = AddDefaultSubObject<CCameraComponent> (  "Camera" );
+	camera->AttachTo ( Mesh );
+	camera->SetRelativeLocation ( 0.f, 0.f, -5.f );
 	if (m_InputComponent)
 		SetupPlayerInputComponent ( m_InputComponent );
+	}
+
+void CPawn::MoveForward ( float Value )
+	{
+	float scale = 150.f * Value* GetWorld()->GetDeltaSeconds();
+	FVector Direction = GetActorRotationQuat () * FVector::Forward ();
+	AddMovementInput ( Direction, scale );
+	}
+
+void CPawn::MoveRight ( float Value )
+	{	
+	float scale = 150 * Value * GetWorld ()->GetDeltaSeconds ();
+	
+	auto rightDirection = GetActorRotationQuat () * FVector::Right ();
+	
+	AddMovementInput ( rightDirection, scale );
 	}
 
 #include <GLFW/glfw3.h>
@@ -135,6 +164,10 @@ void CPawn::SetupPlayerInputComponent ( CInputComponent * InputComponent )
 
 	if (InputComponent)
 		{
+		InputComponent->BindAxis ( "MoveForward", GLFW_KEY_W, GLFW_KEY_S, [ this ] ( float value ) { MoveForward ( value ); } );
+		InputComponent->BindAxis ( "MoveRight", GLFW_KEY_A, GLFW_KEY_D, [ this ] ( float value ) { MoveRight ( value ); } );
+		InputComponent->BindAction ( "SpawnCube", GLFW_KEY_SPACE, EInputEvent::IE_Pressed, [ this ] () { Jump (); } );
 		m_InputComponent = InputComponent;
+		
 		}
 	}

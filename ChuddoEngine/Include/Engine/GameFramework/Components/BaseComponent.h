@@ -28,7 +28,7 @@ class CBaseComponent : public CObject
 		std::vector<CActor *> AttachedActors;
 		bool bIsComponentTick { false };
 		bool bIsInitialized { false };
-		bool bIsAutoInit { false };
+		bool bIsAutoInit { true };
 		CActor * ActorOwner = nullptr;
 
 	};

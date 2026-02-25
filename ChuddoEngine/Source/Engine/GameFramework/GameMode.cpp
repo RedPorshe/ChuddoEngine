@@ -243,6 +243,7 @@ CPawn * CGameMode::SpawnDefaultPawnForController ( CPlayerController * Controlle
 	if (NewPawn)
 		{
 		CTransformComponent * PawnTransform = NewPawn->GetRootComponent ();
+		
 		if (PawnTransform)
 			{
 			PawnTransform->SetTransform ( SpawnTransform );
@@ -261,7 +262,7 @@ CPawn * CGameMode::SpawnDefaultPawnForController ( CPlayerController * Controlle
 			delete NewPawnObj;
 			}
 		}
-
+	
 	return NewPawn;
 	}
 

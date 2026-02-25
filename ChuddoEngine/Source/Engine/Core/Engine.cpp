@@ -9,6 +9,8 @@
 #include "GameFramework/Actors/PlayerStart.h"
 #include "GameFramework/GameMode.h"
 #include "Components/Collisions/BaseCollisionComponent.h"
+#include "Components/Meshes/StaticMeshComponent.h"
+#include "Camera/CameraComponent.h"
 #include "Core/CollisionSystem.h"
 #include "Core/GLFWDispatcher.h"  
 #include "Actors/TerrainActor.h"
@@ -196,13 +198,16 @@ void CEngine::MainLoop ()
 	auto realStartTime = std::chrono::steady_clock::now ();
 	float gameTime = 0.0f;
 	static int frameCount = 0;
+	
 	while (bIsRunning && !glfwWindowShouldClose ( Info.WindowHandle ))
 		{
 		CalculateDeltaTime ();
 		Tick ( m_DeltaTime );
-		//after tick call function to collect render info, and set info to renderer
-		//FRenderInfo RenderInfo = CGameInstance::Get ().GetWorld ()->CollectRenderInfo ();
-		InfoForRender = UpdateRenderInfo (); //stub 		
+		
+		
+	
+
+		InfoForRender = UpdateRenderInfo (); 		
 		Renderer.get ()->SetInfoForRender ( InfoForRender );
 		if (!Renderer.get ()->RenderScene ())
 			{
@@ -214,6 +219,7 @@ void CEngine::MainLoop ()
 				RequestExit ();
 				}
 			}
+		
 		frameCount++;
 		InfoForRender.Clear ();
 		}
@@ -288,39 +294,30 @@ void CEngine::CreateTestWorld ()
 	if (world)
 		{
 		auto gameMode = world->CreateGameMode<CGameMode> ( "SuperGameMode" );
-		world->CreateLevel<CLevel> ( "Level" )->SpawnActor<CPlayerStart> ( "playStart" );
+		world->CreateLevel<CLevel> ( "Level" )->SpawnActor<CPlayerStart> ( "playStart" )->SetActorLocation( 0.f, 0.f, 20.f );
 		auto level = world->GetCurrentLevel ();
+
+		// Террейн
 		auto terra = level->SpawnActor<CTerrainActor> ( "Terrain" );
-		terra->SetActorLocation ( 0.f, -100.f, 0.f );
-		terra->GenerateFlat ( 800, 600, 45.f, 6.f );
-		auto terra2 = level->SpawnActor<CTerrainActor> ( "Terrain2" );
-		terra2->SetActorLocation ( 0.f, -1000.f, 0.f );
-		terra2->GenerateFlat ( 800, 600, 45.f, 6.f );
-		auto kkk = level->SpawnActorByClass ( "CPawn", "kkk" );
-		kkk->SetActorLocation ( 50.f, 500.f, 0.f );
+		terra->GenerateHilly ( 100, 100, 15.f, 30.f, 0.03f );
+		terra->SetActorLocation ( 0.f, -5.f, 0.f );  // Центрируем террейн
+
+		// Куб для теста - ставим на террейн
+		auto cubeActor = level->SpawnActor<CActor> ( "TestCubeActor" );
+		cubeActor->SetActorScale ( 25.f );
+		auto cubemesh = cubeActor->AddDefaultSubObject<CStaticMeshComponent> ( "CubeMesh" );
+		cubeActor->SetActorLocation ( 0.f, 0.f, 10.f );  // На террейне
+
+		//auto CameraActor = level->SpawnActorByClass ( "CActor", "CameraActor" );
+		//auto Camera = CameraActor->AddDefaultSubObject ( "CCameraComponent", "Camera" );
+		//CameraActor->SetActorLocation ( 0.f, 0.f, 20.f );
 		gameMode->SetDefaultPawnClass ( "CPawn" );
-		LOG_DEBUG ( "[ENGINE] Test world created: Super with level: SuperLevel" );
+
+		LOG_DEBUG ( "[ENGINE] Test world created with camera" );
 		}
 	}
 
 FRenderInfo CEngine::UpdateRenderInfo ()
-	{
-	FRenderInfo Info {};
-	//here collect info for render! WIP
-
-	Info.HasInfo = !Info.RenderMeshes.empty();
-	static int WarnCount = 0;
-	if (WarnCount <= 10)
-		{
-		if (!Info.HasInfo)LOG_WARN ( "Render in Stub mode rendering Default Trinangle" );
-		else LOG_WARN ( "Rendering World in stub" );		
-		}
-
-	if(WarnCount < 11)	WarnCount++; 
-	if (WarnCount == 11) 
-		{
-		LOG_WARN ( "Further stub render warnings suppressed" );
-		WarnCount++;
-		}
-	return Info;
+	{	
+	return CGameInstance::Get ().GetWorld ()->CollectRenderInfo ();
 	}

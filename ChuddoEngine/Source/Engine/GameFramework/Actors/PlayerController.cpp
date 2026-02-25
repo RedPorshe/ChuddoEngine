@@ -14,12 +14,7 @@ CPlayerController::CPlayerController ( CObject * inOwner, const std::string & in
     if (m_Gravity)
         {
 
-        auto it = std::find ( ActorComponents.begin (), ActorComponents.end (), m_Gravity );
-        if (it != ActorComponents.end ())
-            {
-            ActorComponents.erase ( it );
-            }
-
+        DestroyGravity ();
 
         RemoveOwnedObject ( m_Gravity->GetName () );
 

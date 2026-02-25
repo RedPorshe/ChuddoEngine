@@ -29,10 +29,10 @@ class CGravityComponent : public CBaseComponent
       
 
     protected:
-        float m_GravityScale = .1f;        
-        float m_GravityStrength = 0.98f;      
+        float m_GravityScale = 1.1f;        
+        float m_GravityStrength = 9.8f;      
         float m_VerticalVelocity = 0.0f;      
-        float m_KillZone = -10000.0f;      // Killzone
+        float m_KillZone = -1000.0f;      // Killzone
         float m_GroundCheckDistance = 1.5f;    
         bool bIsOnGround = false;           
         bool m_bWasGrounded = false;           

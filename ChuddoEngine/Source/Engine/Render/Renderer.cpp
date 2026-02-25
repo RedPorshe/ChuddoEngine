@@ -141,7 +141,7 @@ bool CRenderer::RenderScene ()
 		// Start frame
 		if (!StartFrame ( imageIndex ))
 			{
-			LOG_WARN ("[",GetManagerName (), "] StartFrame failed, will recreate resources");
+			LOG_WARN ( "[", GetManagerName (), "] StartFrame failed, will recreate resources" );
 
 			// Ждем завершения всех операций
 			auto * deviceMgr = static_cast< CDeviceManager * >( m_Info.Vulkan.DeviceManager.get () );
@@ -218,7 +218,7 @@ bool CRenderer::StartFrame ( uint32_t & ImageIndex )
 bool CRenderer::EndFrame ( uint32_t ImageIndex )
 	{
 	uint32_t currentFrame = m_SyncManager->GetCurrentFrame ();
-	
+
 	VkSemaphore imageAvailableSemaphore = m_SyncManager->GetImageAvailableSemaphore ( currentFrame );
 	VkSemaphore renderFinishedSemaphore = m_SyncManager->GetRenderFinishedSemaphore ( currentFrame );
 	VkFence fence = m_SyncManager->GetInFlightFence ( currentFrame );
@@ -343,16 +343,13 @@ bool CRenderer::RecordCommandBuffer ( VkCommandBuffer CommandBuffer, uint32_t Im
 	if (!m_RenderInfo.HasInfo)
 		{
 		TriangleStub ( CommandBuffer, ImageIndex );
+		vkCmdEndRenderPass ( CommandBuffer );
+		m_CommandManager->EndCommandBuffer ( CommandBuffer );
 		}
 	else
 		{
-		RenderWorld ( CommandBuffer );
-		LOG_DEBUG ( "Rendering world" );
-		}
-
-	vkCmdEndRenderPass ( CommandBuffer );
-	m_CommandManager->EndCommandBuffer ( CommandBuffer );
-	 
+		RenderWorld ( CommandBuffer, ImageIndex );		
+		} 
 	return true;
 	}
 
@@ -399,11 +396,17 @@ bool CRenderer::RecreateSwapChainResources ()
 
 void CRenderer::TriangleStub ( VkCommandBuffer CommandBuffer, uint32_t ImageIndex )
 	{
+	static int WarnCount = 0;
+	if (WarnCount < 1)
+		{
+		LOG_WARN ( "Nothing to render Call Fallback Triangle" );
+		WarnCount++;
+		}
 	if (CommandBuffer == VK_NULL_HANDLE)
 		{
 		LogError ( "RecordCommandBuffer: CommandBuffer is null" );
 		return;
-		} 
+		}
 
 	if (!m_TriangleVertexBuffer.IsValid ())
 		{
@@ -461,7 +464,7 @@ void CRenderer::TriangleStub ( VkCommandBuffer CommandBuffer, uint32_t ImageInde
 
 
 	vkCmdBeginRenderPass ( CommandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE );
-	
+
 
 	if (!m_TriangleVertexBuffer.IsValid ())
 		{
@@ -477,11 +480,11 @@ void CRenderer::TriangleStub ( VkCommandBuffer CommandBuffer, uint32_t ImageInde
 
 	// Bind pipeline
 	vkCmdBindPipeline ( CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_TrianglePipeline );
-	
+
 	VkBuffer vertexBuffers [] = { m_TriangleVertexBuffer.Buffer };
 	VkDeviceSize offsets [] = { 0 };
 	vkCmdBindVertexBuffers ( CommandBuffer, 0, 1, vertexBuffers, offsets );
-	
+
 	VkViewport viewport {};
 	viewport.x = 0.0f;
 	viewport.y = 0.0f;
@@ -490,23 +493,130 @@ void CRenderer::TriangleStub ( VkCommandBuffer CommandBuffer, uint32_t ImageInde
 	viewport.minDepth = 0.0f;
 	viewport.maxDepth = 1.0f;
 	vkCmdSetViewport ( CommandBuffer, 0, 1, &viewport );
-	
+
 	VkRect2D scissor {};
 	scissor.offset = { 0, 0 };
 	scissor.extent = m_SwapChainManager->GetExtent ();
 	vkCmdSetScissor ( CommandBuffer, 0, 1, &scissor );
 
 	// Draw triangle
-	vkCmdDraw ( CommandBuffer, 3, 1, 0, 0 );	
+	vkCmdDraw ( CommandBuffer, 3, 1, 0, 0 );
 	}
 
-void CRenderer::RenderWorld ( VkCommandBuffer CommandBuffer )
+void CRenderer::RenderWorld ( VkCommandBuffer CommandBuffer, uint32_t ImageIndex )
 	{
-	if (!m_RenderInfo.IsValid ()) return;
-	auto StaticMeshPipeline = m_PipelineManager->GetPipeline ( "StaticMesh" );
-	if (StaticMeshPipeline == VK_NULL_HANDLE) return;
+	if (!m_RenderInfo.IsValid ())
+		{
+		LOG_WARN ( "RenderWorld called but no valid render info" );
+		return;
+		}
+	
+	VkPipeline staticMeshPipeline = m_PipelineManager->GetPipeline ( "StaticMesh" );
+	VkPipelineLayout staticMeshLayout = m_PipelineManager->GetPipelineLayout ( "StaticMeshLayout" );
 
-	static int count = 0;
-	if (count >= 100) { LogDebug ( "Rendering works!!" ); count = 0; }
-	count++;
+	if (staticMeshPipeline == VK_NULL_HANDLE || staticMeshLayout == VK_NULL_HANDLE)
+		{
+		LogError ( "StaticMesh pipeline or layout not found!" );
+		return;
+		}
+
+	VkExtent2D extent = m_SwapChainManager->GetExtent ();
+	if (extent.width == 0 || extent.height == 0)
+		{
+		LogError ( "Invalid swapchain extent" );
+		return;
+		}
+
+	m_CommandManager->BeginCommandBuffer ( CommandBuffer );
+
+	VkRenderPassBeginInfo renderPassInfo {};
+	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	renderPassInfo.renderPass = m_RenderPassManager->GetMainRenderPass ();
+	renderPassInfo.framebuffer = m_RenderPassManager->GetFramebuffer ( ImageIndex );
+	renderPassInfo.renderArea.offset = { 0, 0 };
+	renderPassInfo.renderArea.extent = extent;
+
+	VkClearValue clearValues[ 2 ];
+	clearValues[ 0 ].color = { {0.2f, 0.2f, 0.2f, 1.0f} };
+	clearValues[ 1 ].depthStencil = { 1.0f, 0 };
+
+	renderPassInfo.clearValueCount = 2;
+	renderPassInfo.pClearValues = clearValues;
+
+	vkCmdBeginRenderPass ( CommandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE );
+	vkCmdBindPipeline ( CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, staticMeshPipeline );
+
+	VkViewport viewport {};
+	viewport.x = 0.0f;
+	viewport.y = 0.0f;
+	viewport.width = static_cast< float >( extent.width );
+	viewport.height = static_cast< float >( extent.height );
+	viewport.minDepth = 0.0f;
+	viewport.maxDepth = 1.0f;
+	vkCmdSetViewport ( CommandBuffer, 0, 1, &viewport );
+
+	VkRect2D scissor {};
+	scissor.offset = { 0, 0 };
+	scissor.extent = extent;
+	vkCmdSetScissor ( CommandBuffer, 0, 1, &scissor );
+
+	struct FPushConstants
+		{
+		FMat4 view;
+		FMat4 projection;
+		FMat4 model;
+		} pushConstants;
+
+		// Получаем матрицы из камеры
+	pushConstants.view = m_RenderInfo.Camera.GetViewMatrix ();
+	pushConstants.projection = m_RenderInfo.Camera.GetProjectionMatrix ();
+
+	const auto & meshes = m_RenderInfo.RenderMeshes;
+	for (size_t i = 0; i < meshes.size (); i++)
+		{
+		const FMeshInfo & mesh = meshes[ i ];
+
+		if (!mesh.IsValid ())
+			{
+			LOG_WARN ( "Skipping invalid mesh at index ", i );
+			continue;
+			}
+
+			// Устанавливаем модельную матрицу для этого меша
+		pushConstants.model = mesh.Model;
+
+		// Передаём push constants
+		vkCmdPushConstants (
+			CommandBuffer,
+			staticMeshLayout,
+			VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+			0,
+			sizeof ( FPushConstants ),
+			&pushConstants
+		);
+
+		VkBuffer vertexBuffers [] = { mesh.VertexBuffer };
+		VkDeviceSize offsets [] = { 0 };
+		vkCmdBindVertexBuffers ( CommandBuffer, 0, 1, vertexBuffers, offsets );
+
+		if (mesh.IndexBuffer != VK_NULL_HANDLE && mesh.IndexCount > 0)
+			{
+			vkCmdBindIndexBuffer ( CommandBuffer, mesh.IndexBuffer, 0, VK_INDEX_TYPE_UINT32 );
+			vkCmdDrawIndexed ( CommandBuffer, mesh.IndexCount, 1, 0, 0, 0 );
+			}
+		else
+			{
+			vkCmdDraw ( CommandBuffer, mesh.VertexCount, 1, 0, 0 );
+			}
+		}
+
+	static int frameCount = 0;
+	frameCount++;
+	if (frameCount % 60 == 0)
+		{
+		LOG_DEBUG ( "Rendered ", meshes.size (), " meshes" );
+		}
+
+	vkCmdEndRenderPass ( CommandBuffer );
+	m_CommandManager->EndCommandBuffer ( CommandBuffer );
 	}

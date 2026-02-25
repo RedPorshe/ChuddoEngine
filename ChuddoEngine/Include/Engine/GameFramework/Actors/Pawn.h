@@ -4,6 +4,8 @@
 
 class CPlayerController;
 class CInputComponent;
+class CStaticMeshComponent;
+
 class CPawn : public CActor
 	{
 	CHUDDO_DECLARE_CLASS ( CPawn, CActor );
@@ -21,7 +23,7 @@ class CPawn : public CActor
 		virtual void SetupPlayerInputComponent (  CInputComponent * InputComponent );
 		virtual void ProcessPlayerInput ( float DeltaTime );
 
-		void Jump (float val);
+		void Jump ();
 
 		void AddMovementInput ( const FVector & WorldDirection, float ScaleValue = 1.0f );
 		bool IsInputEnabled () const;
@@ -36,13 +38,14 @@ class CPawn : public CActor
 		void OnPossess ();
 		CInputComponent* GetInputComponent () const { return m_InputComponent; }
 		
-
+		void MoveForward ( float Value );
+		void MoveRight ( float Value );
 	protected:
 		CPlayerController * Controller = nullptr;
 		CInputComponent * m_InputComponent = nullptr;
 		// Input state
 		bool bInputEnabled = true;
-
+		CStaticMeshComponent * Mesh = nullptr;
 		
 	};
 

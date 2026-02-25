@@ -2,9 +2,10 @@
 #include "World/Level.h"
 #include "World/World.h"
 #include "GameInstance.h"
-
+#include "Render/RenderInfo.h"
 #include "Components/Collisions/TerrainComponent.h"
 #include "GameFramework/Components/BaseComponent.h"
+#include "Components/Meshes/BaseMeshComponent.h"
 #include "Components/SceneComponent.h"
 #include "Components/Collisions/BaseCollisionComponent.h"
 #include "Components/GravityComponent.h"
@@ -26,7 +27,7 @@ void CActor::BeginPlay ()
 	{
 	LOG_DEBUG ( "[ACTOR] BeginPlay: ", GetName () );
 	for (auto comp : ActorComponents)
-		{
+		{		
 		comp->OnBeginPlay ();
 		}
 	if (RootComponent) RootComponent->SetCollisionEnabled ( bIsCollisionEnabled );
@@ -34,7 +35,7 @@ void CActor::BeginPlay ()
 
 void CActor::Tick ( float deltaTime )
 	{
-	
+
 	if (this == nullptr) return;
 	if (IsPendingToDestroy ()) return;
 		// Обработка интерполяции позиции
@@ -49,7 +50,7 @@ void CActor::Tick ( float deltaTime )
 			bIsLerpingLocation = false;
 			bIsMovin = false;
 			RootComponent->SetLocation ( TargetLocation );
-			
+
 			}
 		else
 			{
@@ -69,7 +70,7 @@ void CActor::Tick ( float deltaTime )
 				// Интерполяция завершена
 			RotationLerpAlpha = 1.0f;
 			bIsLerpingRotation = false;
-			RootComponent->SetRotation ( TargetRotation );			
+			RootComponent->SetRotation ( TargetRotation );
 			}
 		else
 			{
@@ -88,7 +89,7 @@ void CActor::Tick ( float deltaTime )
 			comp->Tick ( deltaTime );
 			}
 		}
-	
+
 	}
 
 void CActor::EndPlay ()
@@ -104,6 +105,27 @@ CLevel * CActor::GetLevel () const
 CWorld * CActor::GetWorld () const
 	{
 	return CGameInstance::Get ().GetWorld ();
+	}
+
+std::vector<FMeshInfo> CActor::GetRenderMeshes () const
+	{
+	std::vector<FMeshInfo> RenderMeshes;
+	std::vector<CBaseComponent *> Components = ActorComponents;
+	for (auto & comp : Components)
+		{
+		if (CBaseMeshComponent * mesh = dynamic_cast< CBaseMeshComponent * >( comp ))
+			{
+			if (mesh->IsReadyForRender ())
+				{
+				auto info = mesh->GetMeshInfo ();
+				RenderMeshes.push_back ( info );
+				}
+			}
+		}
+
+	Components.clear ();
+
+	return RenderMeshes;
 	}
 
 
@@ -181,12 +203,12 @@ CBaseComponent * CActor::AddDefaultSubObject ( const std::string & className, co
 FVector CActor::GetActorLocation ()
 	{
 	FVector result {};
-	
+
 	if (GetRootComponent () != nullptr)
 		{
 		return  RootComponent->GetLocation ();
 		}
-	
+
 	return result;
 	}
 
@@ -344,6 +366,15 @@ void CActor::SetActorRotationImmediately ( float inX, float inY, float inZ )
 	SetActorRotationImmediately ( FVector ( inX, inY, inZ ) );
 	}
 
+void CActor::DestroyGravity ()
+	{
+	auto it = std::find ( ActorComponents.begin (), ActorComponents.end (), m_Gravity );
+	if (it != ActorComponents.end ())
+		{
+		ActorComponents.erase ( it );
+		}
+	}
+
 
 
 void CActor::MoveActor ( const FVector & Delta, bool Interpolate )
@@ -352,18 +383,18 @@ void CActor::MoveActor ( const FVector & Delta, bool Interpolate )
 		return;
 
 	if (!Interpolate)
-		{	
+		{
 
 		FVector currentLocation = RootComponent->GetLocation ();
-		
+
 		FVector NewLocation = currentLocation + Delta;
-		
+
 		RootComponent->SetLocation ( NewLocation );
-		
+
 		return;
 		}
 
-		
+
 	FVector currentLocation = RootComponent->GetLocation ();
 	TargetLocation = currentLocation + Delta;
 	LerpStartLocation = currentLocation;
@@ -392,20 +423,20 @@ void CActor::RotateActor ( const FQuat & DeltaRotation, bool Interpolate )
 	if (!RootComponent)
 		return;
 
-	
 
-	  
+
+
 	FQuat currentQuat = RootComponent->GetRotationQuat ();
 
-	
+
 	FQuat targetQuat = currentQuat * DeltaRotation;
 	targetQuat.Normalize ();
 
 	if (!Interpolate)
 		{
-			
+
 		RootComponent->SetRotation ( targetQuat );
-		
+
 		return;
 		}
 
@@ -414,14 +445,14 @@ void CActor::RotateActor ( const FQuat & DeltaRotation, bool Interpolate )
 	RotationLerpAlpha = 0.0f;
 	bIsLerpingRotation = true;
 
-	
+
 	}
 
 
 
 void CActor::AddActorWorldOffset ( const FVector & DeltaLocation, bool Interpolate )
 	{
-		
+
 	MoveActor ( DeltaLocation, Interpolate );
 	}
 
@@ -433,9 +464,9 @@ void CActor::AddActorLocalOffset ( const FVector & DeltaLocation, bool Interpola
 	FQuat rotation = RootComponent->GetRotationQuat ();
 	rotation.Normalize ();
 
-		FVector worldDelta = rotation * DeltaLocation;
+	FVector worldDelta = rotation * DeltaLocation;
 
-	
+
 	AddActorWorldOffset ( worldDelta, Interpolate );
 	}
 
@@ -444,17 +475,17 @@ void CActor::AddActorWorldRotation ( const FQuat & DeltaRotation, bool Interpola
 	if (!RootComponent)
 		return;
 
-	
+
 	FQuat currentQuat = RootComponent->GetRotationQuat ();
 
-	
+
 	FQuat newRotation = currentQuat * DeltaRotation;
 	newRotation.Normalize ();
 
 	if (!Interpolate)
 		{
 		RootComponent->SetRotation ( newRotation );
-		LOG_DEBUG ( "[ACTOR] Instant world rotation" );
+		
 		return;
 		}
 
@@ -481,17 +512,17 @@ void CActor::AddActorLocalRotation ( const FQuat & DeltaRotation, bool Interpola
 	if (!Interpolate)
 		{
 		RootComponent->SetRotation ( newRotation );
-		
+
 		return;
 		}
 
-		
+
 	TargetRotation = newRotation;
 	LerpStartRotation = currentQuat;
 	RotationLerpAlpha = 0.0f;
 	bIsLerpingRotation = true;
 
-	
+
 	}
 
 	// ============================================================================
@@ -503,7 +534,7 @@ void CActor::MoveActorInDirection ( const FVector & Direction, float Distance, b
 	if (!RootComponent || Direction.IsZero ())
 		return;
 
-	
+
 
 	  // Нормализуем направление и умножаем на расстояние
 	FVector normalizedDir = Direction.Normalized ();
@@ -541,7 +572,6 @@ FVector CActor::GetActorLocation () const
 	FVector result {};
 	if (GetRootComponent () != nullptr)
 		{
-			// Здесь нужно вызвать const версию GetLocation() у CTransformComponent
 		result = RootComponent->GetLocation ();
 		}
 	return result;
@@ -562,7 +592,6 @@ FVector CActor::GetActorScale () const
 	FVector result {};
 	if (GetRootComponent () != nullptr)
 		{
-			// Здесь нужно вызвать const версию GetScale() у CTransformComponent
 		result = RootComponent->GetScale ();
 		}
 	return result;
@@ -573,7 +602,7 @@ FQuat CActor::GetActorRotationQuat () const
 	FQuat result {};
 	if (GetRootComponent () != nullptr)
 		{
-			// Здесь нужно вызвать const версию GetRotationQuat() у CTransformComponent
+
 		result = RootComponent->GetRotationQuat ();
 		}
 	return result;
@@ -614,7 +643,7 @@ void CActor::OnComponentEndOverlap ( CBaseCollisionComponent * other )
 	{
 	if (other == nullptr) return;
 	LOG_ERROR ( "OnComponentEndOverlap with : ", other->GetOwnerActor ()->GetName (), " for ", GetName () );
-	
+
 	}
 
 void CActor::OnComponentHit ( CBaseCollisionComponent * other )

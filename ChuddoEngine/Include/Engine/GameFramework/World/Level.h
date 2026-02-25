@@ -12,7 +12,7 @@
 class CWorld;
 class CActor;
 class CTerrainActor;
-struct RenderScene;
+
 
 class CLevel : public CObject
     {

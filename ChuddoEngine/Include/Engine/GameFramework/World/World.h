@@ -7,7 +7,9 @@
 class CGameInstance;
 class CLevel;
 class CGameMode;
-struct RenderScene;
+struct FRenderInfo;
+struct FCameraInfo;
+
 
 class CWorld : public CObject
     {
@@ -39,8 +41,9 @@ class CWorld : public CObject
         CLevel * GetCurrentLevel () const { return CurrentLevel; }
         size_t GetNumLevels () const { return Levels.size (); }
         bool HasLevels () const { return !Levels.empty (); }
-
-
+        //Render info collecting
+        FRenderInfo CollectRenderInfo ();
+        FCameraInfo FindActiveCamera ();
         // ========== GAME MODE MANAGEMENT ==========
         // World СОЗДАЕТ GameMode!
         template<typename GameModeType, typename... Args>

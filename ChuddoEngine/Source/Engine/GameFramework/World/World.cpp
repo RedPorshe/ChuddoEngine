@@ -2,7 +2,13 @@
 #include "GameFramework/GameInstance.h"
 #include "GameFramework/World/Level.h"
 #include "GameFramework/GameMode.h"
+#include "Render/RenderInfo.h"
+#include "Render/Window.h"
+#include "Actors/Actor.h"
+#include "Camera/CameraComponent.h"
+#include "Core/Engine.h"
 #include <algorithm>
+
 
 CWorld::CWorld ( CObject * inOwner, const std::string & displayName )
 	: Super ( inOwner, displayName )
@@ -165,6 +171,84 @@ void CWorld::SetCurrentLevel ( CLevel * level )
 		}
 
 	LOG_DEBUG ( "[WORLD] Current level set to: ", level->GetName () );
+	}
+
+FRenderInfo CWorld::CollectRenderInfo ()
+	{
+	FRenderInfo Info {};
+
+	// 1. Собираем камеру
+	Info.Camera = FindActiveCamera ();
+
+	// 2. Собираем меши для рендера
+	if (CurrentLevel)
+		{
+			// Проходим по всем акторам в уровне и собираем их меши
+		const auto & actors = CurrentLevel->GetActors ();
+
+		for (CActor * actor : actors)
+			{
+			if (!actor || actor->IsHiddenInGame ()) continue;
+
+			// Получаем компоненты с мешами (нужно будет реализовать)
+			std::vector<FMeshInfo> actorMeshes = actor->GetRenderMeshes ();
+
+			// Добавляем все меши актора в общий список
+			for (const auto & mesh : actorMeshes)
+				{
+				if (mesh.IsValid ())
+					{
+					Info.AddMesh ( mesh );
+					}
+				}
+			}
+		}
+
+		// 3. Устанавливаем флаг наличия данных
+	Info.HasInfo = !Info.RenderMeshes.empty ();
+
+	return Info;
+	}
+
+FCameraInfo CWorld::FindActiveCamera ()
+	{
+	FCameraInfo Info {};
+
+	if (CurrentLevel)
+		{
+		const auto & actors = CurrentLevel->GetActors ();
+		for (CActor * actor : actors)
+			{
+			CCameraComponent * camera = actor->FindComponent<CCameraComponent> ();
+			if (camera && camera->IsVisible ())
+				{
+					// ПОЛУЧАЕМ РЕАЛЬНЫЙ ASPECT RATIO ИЗ ОКНА!
+				float aspectRatio = CEngine::Get ().GetWindow ()->GetAspectRatio ();
+				if (aspectRatio <= 0.0f) aspectRatio = 16.0f / 9.0f; // fallback
+				
+				return camera->GetCameraInfo ( aspectRatio );
+				}
+			}
+		}
+
+		// Тестовая камера (тоже используем реальный aspect ratio)
+	float aspectRatio = CEngine::Get ().GetWindow ()->GetAspectRatio ();
+	if (aspectRatio <= 0.0001f) aspectRatio = 16.0f / 9.0f;
+
+	Info.Location = { 10.f, 5.f, 10.f };
+	Info.ViewTarget = { 0.f, 0.f, 0.f };
+	Info.NearPlane = 0.1f;
+	Info.FarPlane = 1000.f;
+	Info.FOV = 90.f;
+	Info.ViewMatrix = FMat4::LookAtMatrix ( Info.Location, Info.ViewTarget, -FVector::Up () );
+	Info.ProjectionMatrix = FMat4::PerspectiveMatrix (
+		Info.FOV * CEMath::DEG_TO_RAD,
+		aspectRatio,
+		Info.NearPlane,
+		Info.FarPlane
+	);
+
+	return Info;
 	}
 
 // ========== GAME MODE MANAGEMENT ==========

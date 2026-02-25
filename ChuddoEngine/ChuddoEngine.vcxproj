@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -167,6 +167,9 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Source\Engine\GameFramework\Components\Meshes\BaseMeshComponent.cpp" />
+    <ClCompile Include="Source\Engine\GameFramework\Components\Meshes\StaticMeshComponent.cpp" />
+    <ClCompile Include="Source\Engine\GameFramework\Components\Meshes\TerrainMeshComponent.cpp" />
     <ClCompile Include="Source\Engine\Render\RenderInfo.cpp" />
     <ClCompile Include="Source\Engine\Render\Renderer.cpp" />
     <ClCompile Include="Source\Engine\Core\EngineInfo.cpp" />
@@ -244,6 +247,9 @@
     <ClInclude Include="Include\Engine\GameFramework\Components\Collisions\TerrainComponent.h" />
     <ClInclude Include="Include\Engine\GameFramework\Components\GravityComponent.h" />
     <ClInclude Include="Include\Engine\GameFramework\Components\InputComponent.h" />
+    <ClInclude Include="Include\Engine\GameFramework\Components\Meshes\BaseMeshComponent.h" />
+    <ClInclude Include="Include\Engine\GameFramework\Components\Meshes\StaticMeshComponent.h" />
+    <ClInclude Include="Include\Engine\GameFramework\Components\Meshes\TerrainMeshComponent.h" />
     <ClInclude Include="Include\Engine\GameFramework\Components\SceneComponent.h" />
     <ClInclude Include="Include\Engine\GameFramework\Components\Collisions\SphereComponent.h" />
     <ClInclude Include="Include\Engine\GameFramework\Components\TransformComponent.h" />

@@ -703,21 +703,47 @@ namespace CEMath
         );
     }
 
-    Matrix4x4 Matrix4x4::LookAtMatrix(const Vector3D& eye, const Vector3D& target, const Vector3D& up)
-    {
-        
-        Vector3D zAxis = (eye - target).Normalized();  
-        Vector3D xAxis = up.Cross(zAxis).Normalized();
-        Vector3D yAxis = zAxis.Cross(xAxis);
+    Matrix4x4 Matrix4x4::LookAtMatrix ( const Vector3D & eye, const Vector3D & target, const Vector3D & up )
+        {
+            // Вычисляем направление взгляда
+        Vector3D zAxis = eye - target;
 
-        
-        return Matrix4x4(
+        // Защита от нулевого вектора
+        float len = zAxis.Length ();
+        if (CEMath::IsZero ( len ))
+            {
+            zAxis = Vector3D ( 0.0f, 0.0f, 1.0f ); // Смотрим вдоль Z по умолчанию
+            }
+        else
+            {
+            zAxis.Normalize ();
+            }
+
+            // Вычисляем правую ось
+        Vector3D xAxis = up.Cross ( zAxis );
+        len = xAxis.Length ();
+        if (CEMath::IsZero ( len ))
+            {
+                // Если up и zAxis коллинеарны (смотрим строго вверх/вниз)
+                // Используем стандартную правую ось
+            xAxis = Vector3D ( 1.0f, 0.0f, 0.0f );
+            }
+        else
+            {
+            xAxis.Normalize ();
+            }
+
+            // Вычисляем верхнюю ось (ортогональную к xAxis и zAxis)
+        Vector3D yAxis = zAxis.Cross ( xAxis );
+        // yAxis автоматически нормализован
+
+        return Matrix4x4 (
             xAxis.x, yAxis.x, zAxis.x, 0.0f,
             xAxis.y, yAxis.y, zAxis.y, 0.0f,
             xAxis.z, yAxis.z, zAxis.z, 0.0f,
-            -xAxis.Dot(eye), -yAxis.Dot(eye), -zAxis.Dot(eye), 1.0f
+            -xAxis.Dot ( eye ), -yAxis.Dot ( eye ), -zAxis.Dot ( eye ), 1.0f
         );
-    }
+        }
 
     Matrix4x4 Matrix4x4::PerspectiveMatrix(float fovY, float aspect, float zNear, float zFar)
     {

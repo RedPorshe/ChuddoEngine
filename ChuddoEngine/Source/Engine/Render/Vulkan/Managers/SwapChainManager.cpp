@@ -317,7 +317,36 @@ bool CSwapChainManager::RecreateSwapChain ()
 
     VkDevice device = deviceMgr->GetDevice ();
 
-    // Wait for device idle
+    VkSurfaceCapabilitiesKHR capabilities;
+    vkGetPhysicalDeviceSurfaceCapabilitiesKHR ( deviceMgr->GetPhysicalDevice (), m_Info.Vulkan.Surface, &capabilities );
+
+    // Ждём, пока окно не будет восстановлено
+    while (capabilities.currentExtent.width == 0 || capabilities.currentExtent.height == 0)
+        {
+            // Проверяем, не закрыто ли окно
+        if (glfwWindowShouldClose ( m_Info.WindowHandle ))
+            {
+            return false;
+            }
+
+            // Проверяем состояние окна (иконфицировано/свёрнуто)
+        if (glfwGetWindowAttrib ( m_Info.WindowHandle, GLFW_ICONIFIED ))
+            {
+                // Окно свёрнуто - ждём
+            std::this_thread::sleep_for ( std::chrono::milliseconds ( 16 ) );
+            }
+        else
+            {
+                // Окно не свёрнуто, но размер 0 - возможно, ошибка
+            LogDebug ( "  Window not iconified but size is 0, waiting..." );
+            std::this_thread::sleep_for ( std::chrono::milliseconds ( 16 ) );
+            }
+        glfwPollEvents ();
+            // Обновляем capabilities
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR ( deviceMgr->GetPhysicalDevice (), m_Info.Vulkan.Surface, &capabilities );
+        }
+
+        // Wait for device idle
     vkDeviceWaitIdle ( device );
 
     // Store old swapchain

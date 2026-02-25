@@ -31,6 +31,7 @@ class CEngine
         void RequestExit ();
         bool IsRunning () const { return bIsRunning; }
         // GameInstance access
+        CRenderer* GetRenderer () { return Renderer.get (); }
         CGameInstance & GetGameInstance (); 
         CWindow* GetWindow () const { return Window.get(); }
     protected:

@@ -24,7 +24,7 @@ class CRenderer : public IVulkanManager
         const char * GetManagerName () const override;
         void SetInfoForRender ( const FRenderInfo & RenderInfo );
         bool RenderScene ();
-
+        CBufferManager * GetBufferManager () { return m_BufferManager; }
     private:
         bool StartFrame ( uint32_t & ImageIndex );
         bool EndFrame ( uint32_t ImageIndex );
@@ -33,7 +33,8 @@ class CRenderer : public IVulkanManager
         bool RecordCommandBuffer ( VkCommandBuffer CommandBuffer, uint32_t ImageIndex );
         bool RecreateSwapChainResources ();
         void TriangleStub ( VkCommandBuffer CommandBuffer, uint32_t ImageIndex );
-        void RenderWorld ( VkCommandBuffer CommandBuffer );
+        void RenderWorld ( VkCommandBuffer CommandBuffer, uint32_t ImageIndex );
+        
     private:
         // Managers (cached for fast access)
         FRenderInfo m_RenderInfo;

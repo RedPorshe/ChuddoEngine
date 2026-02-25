@@ -9,7 +9,7 @@ class CBaseComponent;
 class CTransformComponent;
 class CBaseCollisionComponent;
 class CGravityComponent;
-
+struct FMeshInfo;
 
 class CActor : public CObject
 	{
@@ -30,6 +30,7 @@ class CActor : public CObject
 		CLevel * GetLevel () const;
 		CWorld * GetWorld () const;
 
+		virtual std::vector<FMeshInfo> GetRenderMeshes () const;
 		
 
 		template<typename T>
@@ -122,11 +123,11 @@ class CActor : public CObject
 		void SetActorRotationImmediately ( const FQuat & NewRotation );
 		void SetActorRotationImmediately ( const FVector & NewRotation );
 		void SetActorRotationImmediately ( float inX, float inY, float inZ );
-
+		void DestroyGravity ();
 		void SetCollisionEnabled ( bool value = true );
 
-		void OnComponentBeginOverlap ( CBaseCollisionComponent * other );
-		void OnComponentEndOverlap ( CBaseCollisionComponent * other );
+		virtual void OnComponentBeginOverlap ( CBaseCollisionComponent * other );
+		virtual void OnComponentEndOverlap ( CBaseCollisionComponent * other );
 		virtual void OnComponentHit ( CBaseCollisionComponent * other );
 		void SetHiddenInGame ( bool value ) { bIsHiddenInGame = value; }
 		bool IsHiddenInGame () const { return bIsHiddenInGame; }
@@ -157,9 +158,7 @@ class CActor : public CObject
 		
 
 		bool bIsHiddenInGame = false;
-		// Временная переменная
-		float m_DebugTimer = 0.f;
-
+		
 	};
 
 	// Inline template implementation

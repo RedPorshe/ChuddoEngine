@@ -1,0 +1,168 @@
+#include "Components/Meshes/BaseMeshComponent.h"
+#include "Actors/Actor.h"
+#include "Render/Vulkan/Managers/BufferManager.h"
+#include "Render/Vulkan/Managers/PipelineManager.h" 
+#include "Render/Renderer.h"
+#include "Core/Engine.h"
+
+CBaseMeshComponent::CBaseMeshComponent ( CObject * inOwner, const std::string & inDisplayName )
+    : Super ( inOwner, inDisplayName )
+    {
+    LOG_DEBUG ( "BaseMeshComponent created: ", GetName () );
+    }
+
+CBaseMeshComponent::~CBaseMeshComponent ()
+    {
+    DestroyRenderResources ();
+    }
+
+void CBaseMeshComponent::InitComponent ()
+    {
+    Super::InitComponent ();
+     
+    CEngine::Get ();
+    if (CEngine::Get ().GetRenderer ())
+        {
+        CBufferManager * bufferManager = CEngine::Get ().GetRenderer ()->GetBufferManager ();
+        if (bufferManager)
+            {
+            CreateRenderResources ( bufferManager );
+            }
+        }
+    }
+
+void CBaseMeshComponent::Tick ( float DeltaTime )
+    {
+    Super::Tick ( DeltaTime );
+    }
+
+void CBaseMeshComponent::OnBeginPlay ()
+    {
+    Super::OnBeginPlay ();
+
+ 
+    }
+
+FMeshInfo CBaseMeshComponent::GetMeshInfo () const
+    {
+    FMeshInfo meshInfo;
+
+    if (!IsReadyForRender ())
+        {
+        return meshInfo;
+        }
+
+    meshInfo.VertexBuffer = m_VertexBuffer;
+    meshInfo.VertexCount = m_VertexCount;
+    meshInfo.IndexBuffer = m_IndexBuffer;
+    meshInfo.IndexCount = m_IndexCount;
+
+    
+    meshInfo.Model = GetTransformMatrix ();
+    meshInfo.MaterialId = m_MaterialID;
+
+    return meshInfo;
+    }
+
+bool CBaseMeshComponent::IsReadyForRender () const
+    {
+    return m_bVisible &&
+        HasRenderResources () &&
+        m_bRenderResourcesCreated;
+    }
+
+void CBaseMeshComponent::CreateRenderResources ( CBufferManager * BufferManager )
+    {
+    if (!BufferManager)
+        {
+        LOG_ERROR ( "[", GetName (), "] BufferManager is null!" );
+        return;
+        }
+
+    if (m_bRenderResourcesCreated)
+        {
+        LOG_WARN ( "[", GetName (), "] Render resources already created!" );
+        return;
+        }
+
+    std::vector<FMeshVertex> vertices;
+    GenerateVertices ( vertices );
+    m_VertexCount = static_cast< uint32_t >( vertices.size () );
+
+    if (m_VertexCount == 0)
+        {
+        LOG_WARN ( "[", GetName (), "] No vertices generated!" );
+        return;
+        }
+
+        // Создаём вершинный буфер
+    FBuffer vertexBuffer = BufferManager->CreateVertexBuffer ( vertices );
+    if (vertexBuffer.IsValid ())
+        {
+        m_VertexBuffer = vertexBuffer.Buffer;
+        LOG_DEBUG ( "[", GetName (), "] Vertex buffer created: ", m_VertexCount, " vertices" );
+        }
+    else
+        {
+        LOG_ERROR ( "[", GetName (), "] Failed to create vertex buffer!" );
+        return;
+        }
+
+        // Генерируем индексы
+    std::vector<uint32_t> indices;
+    GenerateIndices ( indices );
+    m_IndexCount = static_cast< uint32_t >( indices.size () );
+
+    // Создаём индексный буфер (если есть индексы)
+    if (m_IndexCount > 0)
+        {
+        FBuffer indexBuffer = BufferManager->CreateIndexBuffer ( indices );
+        if (indexBuffer.IsValid ())
+            {
+            m_IndexBuffer = indexBuffer.Buffer;
+            LOG_DEBUG ( "[", GetName (), "] Index buffer created: ", m_IndexCount, " indices" );
+            }
+        else
+            {
+            LOG_ERROR ( "[", GetName (), "] Failed to create index buffer!" );
+            }
+        }
+
+    m_bRenderResourcesCreated = true;
+    LOG_DEBUG ( "[", GetName (), "] Render resources created successfully" );
+    }
+
+void CBaseMeshComponent::DestroyRenderResources ()
+    {
+        // Буферы удаляются BufferManager'ом, мы только обнуляем указатели
+    m_VertexBuffer = VK_NULL_HANDLE;
+    m_IndexBuffer = VK_NULL_HANDLE;
+    m_VertexCount = 0;
+    m_IndexCount = 0;
+    m_bRenderResourcesCreated = false;
+    }
+
+void CBaseMeshComponent::GenerateVertices ( std::vector<FMeshVertex> & OutVertices ) const
+    {
+    
+    OutVertices.clear ();
+    }
+
+void CBaseMeshComponent::GenerateIndices ( std::vector<uint32_t> & OutIndices ) const
+    {
+    
+    OutIndices.clear ();
+    }
+
+FVertexInputDescription CBaseMeshComponent::GetVertexInputDescription () const
+    {
+    FVertexInputDescription desc;
+
+    VkVertexInputBindingDescription binding = FMeshVertex::GetBindingDescription ();
+    desc.Bindings.push_back ( binding );
+
+    auto attributes = FMeshVertex::GetAttributeDescriptions ();
+    desc.Attributes = attributes;
+
+    return desc;
+    }
