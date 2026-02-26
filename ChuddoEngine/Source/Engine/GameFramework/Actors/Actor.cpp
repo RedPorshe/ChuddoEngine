@@ -6,6 +6,7 @@
 #include "Components/Collisions/TerrainComponent.h"
 #include "GameFramework/Components/BaseComponent.h"
 #include "Components/Meshes/BaseMeshComponent.h"
+#include "Components/Meshes/TerrainMeshComponent.h"
 #include "Components/SceneComponent.h"
 #include "Components/Collisions/BaseCollisionComponent.h"
 #include "Components/GravityComponent.h"
@@ -16,8 +17,7 @@ CActor::CActor ( CObject * owner, const std::string & inName ) : CObject ( owner
 	RootComponent = AddDefaultSubObject<CTransformComponent> ( inName + "_Transform" );
 	m_Gravity = AddDefaultSubObject<CGravityComponent> ( GetName () + "_Gravity" );
 	if (RootComponent) RootComponent->SetCollisionEnabled ( bIsCollisionEnabled );
-	LerpSpeed = 10.f;
-	LOG_DEBUG ( "LerpSpeed set to: ", LerpSpeed, " for ", GetName());
+	
 	}
 
 CActor::~CActor ()
@@ -38,13 +38,13 @@ void CActor::BeginPlay ()
 void CActor::Tick ( float deltaTime )
 	{
 	if (IsPendingToDestroy ()) return;
-	
-	
+
+
 
 	// Сначала обновляем интерполяцию
 	if (bIsLerpingLocation && RootComponent)
 		{
-		
+
 
 		LocationLerpAlpha += deltaTime * LerpSpeed;
 
@@ -55,7 +55,7 @@ void CActor::Tick ( float deltaTime )
 			bIsLerpingLocation = false;
 			bIsMovin = false;
 			RootComponent->SetLocation ( TargetLocation );
-			
+
 			}
 		else
 			{
@@ -66,7 +66,7 @@ void CActor::Tick ( float deltaTime )
 				LocationLerpAlpha
 			);
 			RootComponent->SetLocation ( currentLocation );
-			
+
 			}
 		}
 
@@ -108,6 +108,40 @@ void CActor::EndPlay ()
 	{
 	LOG_DEBUG ( "[ACTOR] EndPlay: ", GetName () );
 	}
+FRenderCollection CActor::GetRenderInfo () const
+	{
+	FRenderCollection Collection;
+
+
+
+	for (auto * comp : ActorComponents)
+		{
+		if (CBaseMeshComponent * mesh = dynamic_cast< CBaseMeshComponent * >( comp ))
+			{
+			if (mesh->IsReadyForRender ())
+				{
+
+				if (CTerrainMeshComponent * terrain = dynamic_cast< CTerrainMeshComponent * >( mesh ))
+					{
+					FTerrainRenderInfo terrainInfo = terrain->GetTerrainInfo ();
+					if (terrainInfo.IsValid ())
+						{
+						Collection.Terrains.push_back ( terrainInfo );						
+						}
+					}
+				else
+					{
+					FMeshInfo meshInfo = mesh->GetMeshInfo ();
+					if (meshInfo.IsValid ())
+						{						
+						Collection.Meshes.push_back ( meshInfo );						
+						}
+					}
+				}
+			}
+		}	
+	return Collection;
+	}
 
 CLevel * CActor::GetLevel () const
 	{
@@ -131,12 +165,25 @@ std::vector<FMeshInfo> CActor::GetRenderMeshes () const
 				{
 				auto info = mesh->GetMeshInfo ();
 				RenderMeshes.push_back ( info );
+				static float timer = 0.f;
+				timer += 0.016f;
+				if (timer >= 1.f)
+					{
+					LOG_WARN ( "[", GetName(), "] Added mesh: ", mesh->GetName (), " to render list");
+					timer = 0.f;
+					}
 				}
 			}
 		}
 
 	Components.clear ();
-
+	static float tttt = 0.f;
+	tttt += 0.016f;
+	if (tttt >= 1.f)
+		{
+		LOG_WARN ( "[", GetName (), "] collected ",RenderMeshes.size(), " meshes");
+		tttt = 0.f;
+		}
 	return RenderMeshes;
 	}
 
@@ -392,9 +439,10 @@ void CActor::MoveActor ( const FVector & Delta, bool Interpolate )
 	{
 	if (!RootComponent)
 		return;
-
+	
 	FVector currentLocation = RootComponent->GetLocation ();
 	FVector newTarget = currentLocation + Delta;
+	
 
 	if (!Interpolate)
 		{
@@ -670,7 +718,7 @@ void CActor::OnComponentEndOverlap ( CBaseCollisionComponent * other )
 void CActor::OnComponentHit ( CBaseCollisionComponent * other )
 	{
 	if (!other || !m_Gravity || !RootComponent) return;
-	
+
 	if (CBaseCollisionComponent * Collision = dynamic_cast< CBaseCollisionComponent * >( RootComponent ))
 		{
 		if (Collision->ShouldBlockWith ( other ) ||

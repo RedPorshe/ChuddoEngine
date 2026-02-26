@@ -120,6 +120,7 @@ void FRenderInfo::Clear ()
     HasInfo = false;
     Camera.Clear ();
     RenderMeshes.clear ();
+    Terrains.clear ();
     }
 
 //=============================================================================

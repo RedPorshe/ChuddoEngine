@@ -1,7 +1,7 @@
 #include "Components/Meshes/BaseMeshComponent.h"
 #include "Actors/Actor.h"
 #include "Render/Vulkan/Managers/BufferManager.h"
-#include "Render/Vulkan/Managers/PipelineManager.h" 
+#include "Render/Vulkan/Managers/PipelineManager.h"
 #include "Render/Renderer.h"
 #include "Core/Engine.h"
 
@@ -19,14 +19,15 @@ CBaseMeshComponent::~CBaseMeshComponent ()
 void CBaseMeshComponent::InitComponent ()
     {
     Super::InitComponent ();
-     
+
     CEngine::Get ();
     if (CEngine::Get ().GetRenderer ())
         {
         CBufferManager * bufferManager = CEngine::Get ().GetRenderer ()->GetBufferManager ();
         if (bufferManager)
             {
-            CreateRenderResources ( bufferManager );
+                // Убираем создание ресурсов здесь - переносим в OnBeginPlay
+            LOG_DEBUG ( "[", GetName (), "] InitComponent - will create resources in OnBeginPlay" );
             }
         }
     }
@@ -40,7 +41,19 @@ void CBaseMeshComponent::OnBeginPlay ()
     {
     Super::OnBeginPlay ();
 
- 
+    // Создаём ресурсы здесь, когда всё готово
+    if (!m_bRenderResourcesCreated)
+        {
+        if (CEngine::Get ().GetRenderer ())
+            {
+            CBufferManager * bufferManager = CEngine::Get ().GetRenderer ()->GetBufferManager ();
+            if (bufferManager)
+                {
+                LOG_DEBUG ( "[", GetName (), "] Creating resources in OnBeginPlay" );
+                CreateRenderResources ( bufferManager );
+                }
+            }
+        }
     }
 
 FMeshInfo CBaseMeshComponent::GetMeshInfo () const
@@ -56,10 +69,9 @@ FMeshInfo CBaseMeshComponent::GetMeshInfo () const
     meshInfo.VertexCount = m_VertexCount;
     meshInfo.IndexBuffer = m_IndexBuffer;
     meshInfo.IndexCount = m_IndexCount;
-
-    
     meshInfo.Model = GetTransformMatrix ();
     meshInfo.MaterialId = m_MaterialID;
+    meshInfo.PipelineName = m_PipelineName;
 
     return meshInfo;
     }
@@ -79,9 +91,10 @@ void CBaseMeshComponent::CreateRenderResources ( CBufferManager * BufferManager 
         return;
         }
 
+        // Важно! Проверяем, не созданы ли уже ресурсы
     if (m_bRenderResourcesCreated)
         {
-        LOG_WARN ( "[", GetName (), "] Render resources already created!" );
+        LOG_DEBUG ( "[", GetName (), "] Render resources already created, skipping..." );
         return;
         }
 
@@ -100,7 +113,7 @@ void CBaseMeshComponent::CreateRenderResources ( CBufferManager * BufferManager 
     if (vertexBuffer.IsValid ())
         {
         m_VertexBuffer = vertexBuffer.Buffer;
-        LOG_DEBUG ( "[", GetName (), "] Vertex buffer created: ", m_VertexCount, " vertices" );
+        LOG_DEBUG ( "[", GetName (), "] Vertex buffer created: ", m_VertexCount, " vertices, handle: ", ( void * ) m_VertexBuffer );
         }
     else
         {
@@ -120,7 +133,7 @@ void CBaseMeshComponent::CreateRenderResources ( CBufferManager * BufferManager 
         if (indexBuffer.IsValid ())
             {
             m_IndexBuffer = indexBuffer.Buffer;
-            LOG_DEBUG ( "[", GetName (), "] Index buffer created: ", m_IndexCount, " indices" );
+            LOG_DEBUG ( "[", GetName (), "] Index buffer created: ", m_IndexCount, " indices, handle: ", ( void * ) m_IndexBuffer );
             }
         else
             {
@@ -144,13 +157,11 @@ void CBaseMeshComponent::DestroyRenderResources ()
 
 void CBaseMeshComponent::GenerateVertices ( std::vector<FMeshVertex> & OutVertices ) const
     {
-    
     OutVertices.clear ();
     }
 
 void CBaseMeshComponent::GenerateIndices ( std::vector<uint32_t> & OutIndices ) const
     {
-    
     OutIndices.clear ();
     }
 

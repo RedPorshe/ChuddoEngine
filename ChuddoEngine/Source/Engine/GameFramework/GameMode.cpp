@@ -236,9 +236,9 @@ CPawn * CGameMode::SpawnDefaultPawnForController ( CPlayerController * Controlle
 
 	if (NewPawn)
 		{
-		NewPawn->SetActorLocation ( SpawnTransform .Location);
-		NewPawn->SetActorRotation ( SpawnTransform.Rotation );
-		NewPawn->SetActorScale ( SpawnTransform.Scale );
+		NewPawn->GetRootComponent()->SetLocation ( SpawnTransform .Location);
+		NewPawn->GetRootComponent ()->SetRotation ( SpawnTransform.Rotation );
+		NewPawn->GetRootComponent ()->SetScale ( SpawnTransform.Scale );
 		/*CTransformComponent * PawnTransform = NewPawn->GetRootComponent ();
 		
 		if (PawnTransform)

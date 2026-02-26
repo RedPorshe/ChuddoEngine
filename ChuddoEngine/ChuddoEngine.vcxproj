@@ -288,6 +288,8 @@
   <ItemGroup>
     <None Include="Assets\Shaders\Mesh.frag" />
     <None Include="Assets\Shaders\Mesh.vert" />
+    <None Include="Assets\Shaders\Terrain.frag" />
+    <None Include="Assets\Shaders\Terrain.vert" />
     <None Include="Assets\Shaders\Triangle.frag" />
     <None Include="Assets\Shaders\Triangle.vert" />
   </ItemGroup>

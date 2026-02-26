@@ -2,8 +2,9 @@
 
 #include "Actor.h"
 #include "Render/RenderInfo.h"
+
 class CTerrainComponent;
-class CTerrainMeshComponent;  // Добавляем
+class CTerrainMeshComponent;
 
 class CTerrainActor : public CActor
     {
@@ -17,27 +18,40 @@ class CTerrainActor : public CActor
         virtual void Tick ( float deltaTime ) override;
         virtual void EndPlay () override;
 
-        // Переопределяем метод сбора мешей
-        virtual std::vector<FMeshInfo> GetRenderMeshes () const override;
+        // Переопределяем метод сбора рендер-информации
+       // virtual FRenderCollection GetRenderInfo () const override;
 
         // Доступ к компонентам
-        CTerrainComponent * GetTerrainComponent () const { return m_TerrainComponent; }
-        CTerrainMeshComponent * GetTerrainMeshComponent () const;  // Добавляем
+        CTerrainComponent * GetTerrainComponent () const;
+        CTerrainMeshComponent * GetTerrainMeshComponent () const;
 
-        // Удобные методы для создания террейна
+        // ========== МЕТОДЫ ГЕНЕРАЦИИ ТЕРРЕЙНА ==========
+        // Эти методы создают компоненты при первом вызове
+
+        // Плоский террейн
         void GenerateFlat ( int32 width, int32 height, float cellSize, float heightValue = 0.0f );
+
+        // Из карты высот
         void GenerateFromHeightmap ( const std::vector<float> & heights, int32 width, int32 height, float cellSize );
 
+        // Холмистый террейн (синусоидальный)
         void GenerateHilly ( int32 width, int32 height, float cellSize,
                              float amplitude = 50.0f, float frequency = 0.05f );
+
+          // Террейн на основе шума
         void GenerateNoise ( int32 width, int32 height, float cellSize, int32 seed = 0 );
+
+        // Террейн с кастомной функцией высоты
         void GenerateCustom ( int32 width, int32 height, float cellSize,
                               std::function<float ( int32 x, int32 z )> heightFunc );
 
+    private:
+        // Вспомогательный метод для создания компонентов
+        void CreateTerrainComponents ();
 
     private:
         CTerrainComponent * m_TerrainComponent = nullptr;
-        CTerrainMeshComponent * m_TerrainMeshComponent = nullptr;  // Добавляем
+        CTerrainMeshComponent * m_TerrainMeshComponent = nullptr;
     };
 
 REGISTER_CLASS_FACTORY ( CTerrainActor );

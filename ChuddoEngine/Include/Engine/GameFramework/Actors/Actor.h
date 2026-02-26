@@ -10,6 +10,13 @@ class CTransformComponent;
 class CBaseCollisionComponent;
 class CGravityComponent;
 struct FMeshInfo;
+struct FTerrainRenderInfo;
+
+struct FRenderCollection
+	{
+	std::vector<FMeshInfo> Meshes;
+	std::vector<FTerrainRenderInfo> Terrains;
+	};
 
 class CActor : public CObject
 	{
@@ -22,6 +29,8 @@ class CActor : public CObject
 		virtual void BeginPlay ();
 		virtual void Tick ( float deltaTime );
 		virtual void EndPlay ();
+
+		virtual FRenderCollection GetRenderInfo () const;
 
 		bool IsMIsMoving () const { return bIsMovin; }
 
@@ -155,7 +164,7 @@ class CActor : public CObject
 		bool bIsLerpingRotation = false;
 		float LerpSpeed = 10.0f;
 		CGravityComponent * m_Gravity = nullptr;
-		
+		bool bIsTerrain = false;
 
 		bool bIsHiddenInGame = false;
 		

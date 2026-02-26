@@ -14,6 +14,8 @@
 #include "Core/CollisionSystem.h"
 #include "Core/GLFWDispatcher.h"  
 #include "Actors/TerrainActor.h"
+#include "Actors/PlayerController.h"
+#include "Actors/Character.h"
 #include "Actors/Pawn.h"
 #include "Render/RenderInfo.h"
 #include "Render/Renderer.h"
@@ -285,7 +287,10 @@ CEngine::CEngine ( FEngineInfo & EngineInfo ) :
 	m_LastFrameTime = std::chrono::steady_clock::now ();
 	}
 
-
+FRenderInfo CEngine::UpdateRenderInfo ()
+	{
+	return CGameInstance::Get ().GetWorld ()->CollectRenderInfo ();
+	}
 
 void CEngine::CreateTestWorld ()
 	{
@@ -294,32 +299,26 @@ void CEngine::CreateTestWorld ()
 		{
 		auto level = world->CreateLevel<CLevel> ( "Level" );
 		auto start = level->SpawnActor<CPlayerStart> ( "playStart" );
-		start->SetActorLocation ( 1.f, 1.f, 3.f );
+		start->MoveActor ( { 500.f, 500.3322f, 500.f },false );
+		start->DestroyGravity ();
 
-		
+		// Создаём террейн - компоненты создадутся внутри GenerateHilly
 		auto Terrain = level->SpawnActor<CTerrainActor> ( "Terrain" );
-		Terrain->GenerateFlat ( 1000, 1000, 10.f, 2.f );
-		//Terrain->SetActorLocation ( 100.f, 0.f, 100.f );
-		// Спавним PlayerStart
 
+		// Генерируем холмистый террейн
+		Terrain->GenerateHilly ( 100, 100, 10.0f, 50.0f, 0.05f );
 
-
-
-
+		Terrain->SetActorLocation ( 0.f, 0.f, 0.f );
+		
+		auto player = level->SpawnActor<CCharacter> ( "Player" );
+		auto PlayerController = level->SpawnActor<CPlayerController> ();
+		PlayerController->Possess(player);
+		player->SetActorLocation ( { 500.f,500.f,500.f } );
+		PlayerController->SetActorLocation ( { 500.f,500.f,500.f } );
+		
 		LOG_DEBUG ( "Total actors after spawn: ", level->GetNumActors () );
 
-		// Тестовый куб
-		//auto cubeActor = level->SpawnActor<CActor> ( "TestCubeActor" );
-		//cubeActor->SetActorScale ( 25.f );
-		//auto cubemesh = cubeActor->AddDefaultSubObject<CStaticMeshComponent> ( "CubeMesh" );
-		//cubeActor->SetActorLocation ( 0.f, 1000.f, 0.f );
-
 		auto gameMode = world->CreateGameMode<CGameMode> ( "SuperGameMode" );
-		gameMode->SetDefaultPawnClass ( "CCharacter" );
+		gameMode->SetDefaultPawnClass ( "" );
 		}
-	}
-
-FRenderInfo CEngine::UpdateRenderInfo ()
-	{
-	return CGameInstance::Get ().GetWorld ()->CollectRenderInfo ();
 	}

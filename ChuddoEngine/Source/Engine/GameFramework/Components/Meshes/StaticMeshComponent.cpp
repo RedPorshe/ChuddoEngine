@@ -6,6 +6,7 @@ CStaticMeshComponent::CStaticMeshComponent ( CObject * inOwner, const std::strin
     : Super ( inOwner, inDisplayName )
     {
     LOG_DEBUG ( "StaticMeshComponent created: ", GetName () );
+   
     }
 
 CStaticMeshComponent::~CStaticMeshComponent ()
@@ -13,7 +14,12 @@ CStaticMeshComponent::~CStaticMeshComponent ()
 
 void CStaticMeshComponent::InitComponent ()
     {
+    if (this == nullptr) return;
     Super::InitComponent ();
+    LOG_DEBUG ( "Initializing Mesh component" );
+    SetPipelineName ( "StaticMesh" ); // Убедитесь, что это совпадает с именем в PipelineManager
+   // LOG_DEBUG ( "StaticMeshComponent created: ", GetName (),
+    //            ", pipeline: ", GetPipelineName () );
     auto * bufferManager = CEngine::Get ().GetRenderer ()->GetBufferManager ();
     if (bufferManager)
         {

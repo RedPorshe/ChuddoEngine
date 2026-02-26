@@ -26,5 +26,6 @@ class CCharacter : public CPawn
 		void MoveForward ( float Value );
 		void MoveUp ( float Value );
 		void Jump ();
+		void SpawnCube ();
 	};
 REGISTER_CLASS_FACTORY ( CCharacter );

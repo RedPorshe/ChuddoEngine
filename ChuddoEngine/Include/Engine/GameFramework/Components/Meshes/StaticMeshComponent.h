@@ -11,13 +11,13 @@ class CStaticMeshComponent : public CBaseMeshComponent
 		virtual void InitComponent () override;
 		virtual void Tick ( float DeltaTime ) override;
 		virtual void OnBeginPlay () override;
+		void CreateFallBackCube ();
 	protected:
 	// ========== Переопределённые методы из CBaseMeshComponent ==========
 		virtual void GenerateVertices ( std::vector<FMeshVertex> & OutVertices ) const override;
 		virtual void GenerateIndices ( std::vector<uint32_t> & OutIndices ) const override;
 		virtual const std::string & GetPipelineName () const override { return "StaticMesh"; }
 
-		void CreateFallBackCube ();
 		std::vector<FMeshVertex> StaticMesh_vertices;
 		std::vector<uint32_t> StaticMesh_indices;
 	};

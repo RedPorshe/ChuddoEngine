@@ -114,8 +114,7 @@ void CTransformComponent::UpdateTransformMatrix ()
 	// Вектор умножается на матрицу справа: v' = M * v
 	m_TransformMatrix = translationMatrix * rotationMatrix * scaleMatrix;
 
-	// Опционально: можно сохранить отдельно матрицу для нормалей (без трансляции)
-	// m_NormalMatrix = (rotationMatrix * scaleMatrix).Inversed().Transposed();
+	
 	}
 
 void CTransformComponent::SetTransform ( const FTransform & InTransform )

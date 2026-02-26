@@ -66,18 +66,23 @@ struct FMeshInfo
     // ID материала (для будущего использования)
     uint32_t MaterialId = 0;
 
+    // Имя пайплайна для рендера
+    std::string PipelineName = "StaticMesh";
+
     // Конструктор
     FMeshInfo () = default;
 
     FMeshInfo ( VkBuffer InVertexBuffer, uint32_t InVertexCount,
                 VkBuffer InIndexBuffer = VK_NULL_HANDLE, uint32_t InIndexCount = 0,
-                const FMat4 & InModel = FMat4 ( 1.f ) )
+                const FMat4 & InModel = FMat4 ( 1.f ),
+                const std::string & InPipelineName = "StaticMesh" )
         : Model ( InModel )
         , VertexBuffer ( InVertexBuffer )
         , IndexBuffer ( InIndexBuffer )
         , VertexCount ( InVertexCount )
         , IndexCount ( InIndexCount )
         , MaterialId ( 0 )
+        , PipelineName ( InPipelineName )
         {}
 
     // Метод очистки
@@ -89,6 +94,7 @@ struct FMeshInfo
         VertexCount = 0;
         IndexCount = 0;
         MaterialId = 0;
+        PipelineName.clear ();
         }
 
     // Проверка валидности
@@ -98,6 +104,75 @@ struct FMeshInfo
         }
     };
 
+struct FTerrainRenderInfo
+    {
+    // Vulkan буферы
+    VkBuffer VertexBuffer = VK_NULL_HANDLE;
+    VkBuffer IndexBuffer = VK_NULL_HANDLE;
+
+    // Количество вершин/индексов
+    uint32_t VertexCount = 0;
+    uint32_t IndexCount = 0;
+
+    // Матрица трансформации (обычно identity для террейна)
+    FMat4 Model = FMat4 ( 1.f );
+
+    // Размеры террейна в ячейках
+    int32 Width = 0;
+    int32 Height = 0;
+
+    // Размер ячейки в мировых единицах
+    float CellSize = 100.0f;
+
+    // Минимальная и максимальная высота
+    float MinHeight = 0.0f;
+    float MaxHeight = 0.0f;
+
+    // Параметры для шейдера (можно передавать как push constants)
+    struct FTerrainParams
+        {
+        float TilingFactor = 1.0f;      // Множитель UV
+        float HeightScale = 1.0f;       // Масштаб высоты
+        float FogDensity = 0.001f;      // Плотность тумана
+        float UseTexture = 0.0f;         // Использовать текстуры (0/1)
+
+        // Высоты для слоёв текстурирования
+        float SandHeight = 0.0f;
+        float GrassHeight = 30.0f;
+        float RockHeight = 60.0f;
+        float SnowHeight = 90.0f;
+        } Params;
+
+    // Имя пайплайна для рендера террейна
+    std::string PipelineName = "TerrainPipeline";
+
+    // Конструктор
+    FTerrainRenderInfo () = default;
+
+    // Проверка валидности
+    bool IsValid () const
+        {
+        return VertexBuffer != VK_NULL_HANDLE && VertexCount > 0 && Width > 0 && Height > 0;
+        }
+
+    // Очистка
+    void Clear ()
+        {
+        VertexBuffer = VK_NULL_HANDLE;
+        IndexBuffer = VK_NULL_HANDLE;
+        VertexCount = 0;
+        IndexCount = 0;
+        Model = FMat4 ( 1.f );
+        Width = 0;
+        Height = 0;
+        CellSize = 100.0f;
+        MinHeight = 0.0f;
+        MaxHeight = 0.0f;
+        Params = FTerrainParams ();
+        }
+    };
+
+
 struct FRenderInfo
     {
     // Флаг наличия данных
@@ -106,8 +181,11 @@ struct FRenderInfo
     // Камера для текущего кадра
     FCameraInfo Camera;
 
-    // Меши для отрисовки
+    // Меши для отрисовки (обычные статические меши)
     std::vector<FMeshInfo> RenderMeshes;
+
+    // НОВОЕ: Специализированные террейны для отрисовки
+    std::vector<FTerrainRenderInfo> Terrains;
 
     // Конструктор
     FRenderInfo () = default;
@@ -116,16 +194,26 @@ struct FRenderInfo
     void Clear ();
 
     // Вспомогательные методы
-    bool IsEmpty () const { return RenderMeshes.empty (); }
+    bool IsEmpty () const { return RenderMeshes.empty () && Terrains.empty (); }
     size_t GetMeshCount () const { return RenderMeshes.size (); }
-    void Reserve ( size_t Count ) { RenderMeshes.reserve ( Count ); }
+    size_t GetTerrainCount () const { return Terrains.size (); }
+
+    void Reserve ( size_t MeshCount, size_t TerrainCount = 0 )
+        {
+        RenderMeshes.reserve ( MeshCount );
+        Terrains.reserve ( TerrainCount );
+        }
 
     // Добавление меша
     void AddMesh ( const FMeshInfo & Mesh ) { RenderMeshes.push_back ( Mesh ); }
 
+    // НОВОЕ: Добавление террейна
+    void AddTerrain ( const FTerrainRenderInfo & Terrain ) { Terrains.push_back ( Terrain ); }
+
     // Проверка валидности
-    bool IsValid () const { return HasInfo && !RenderMeshes.empty (); }
+    bool IsValid () const { return HasInfo && ( !RenderMeshes.empty () || !Terrains.empty () ); }
     };
+
 
 // Вспомогательные функции для создания камер
 FCameraInfo CreatePerspectiveCamera ( const FVector & Position,

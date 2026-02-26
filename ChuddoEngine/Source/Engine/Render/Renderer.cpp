@@ -348,8 +348,8 @@ bool CRenderer::RecordCommandBuffer ( VkCommandBuffer CommandBuffer, uint32_t Im
 		}
 	else
 		{
-		RenderWorld ( CommandBuffer, ImageIndex );		
-		} 
+		RenderWorld ( CommandBuffer, ImageIndex );
+		}
 	return true;
 	}
 
@@ -510,15 +510,6 @@ void CRenderer::RenderWorld ( VkCommandBuffer CommandBuffer, uint32_t ImageIndex
 		LOG_WARN ( "RenderWorld called but no valid render info" );
 		return;
 		}
-	
-	VkPipeline staticMeshPipeline = m_PipelineManager->GetPipeline ( "StaticMesh" );
-	VkPipelineLayout staticMeshLayout = m_PipelineManager->GetPipelineLayout ( "StaticMeshLayout" );
-
-	if (staticMeshPipeline == VK_NULL_HANDLE || staticMeshLayout == VK_NULL_HANDLE)
-		{
-		LogError ( "StaticMesh pipeline or layout not found!" );
-		return;
-		}
 
 	VkExtent2D extent = m_SwapChainManager->GetExtent ();
 	if (extent.width == 0 || extent.height == 0)
@@ -529,6 +520,7 @@ void CRenderer::RenderWorld ( VkCommandBuffer CommandBuffer, uint32_t ImageIndex
 
 	m_CommandManager->BeginCommandBuffer ( CommandBuffer );
 
+	// Begin render pass
 	VkRenderPassBeginInfo renderPassInfo {};
 	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 	renderPassInfo.renderPass = m_RenderPassManager->GetMainRenderPass ();
@@ -537,15 +529,15 @@ void CRenderer::RenderWorld ( VkCommandBuffer CommandBuffer, uint32_t ImageIndex
 	renderPassInfo.renderArea.extent = extent;
 
 	VkClearValue clearValues[ 2 ];
-	clearValues[ 0 ].color = { {1.f, 1.f, 1.f, 1.0f} };
+	clearValues[ 0 ].color = { {0.2f, 0.3f, 0.4f, 1.0f} };
 	clearValues[ 1 ].depthStencil = { 1.0f, 0 };
 
 	renderPassInfo.clearValueCount = 2;
 	renderPassInfo.pClearValues = clearValues;
 
 	vkCmdBeginRenderPass ( CommandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE );
-	vkCmdBindPipeline ( CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, staticMeshPipeline );
 
+	// Устанавливаем viewport и scissor
 	VkViewport viewport {};
 	viewport.x = 0.0f;
 	viewport.y = 0.0f;
@@ -560,16 +552,32 @@ void CRenderer::RenderWorld ( VkCommandBuffer CommandBuffer, uint32_t ImageIndex
 	scissor.extent = extent;
 	vkCmdSetScissor ( CommandBuffer, 0, 1, &scissor );
 
-	struct FPushConstants
+	// Структуры для push constants
+	struct FCommonPushConstants
 		{
 		FMat4 view;
 		FMat4 projection;
 		FMat4 model;
+		// Дополнительные параметры в зависимости от типа
+		float params[ 8 ];
 		} pushConstants;
 
-		// Получаем матрицы из камеры
+	struct FMeshPushConstants
+		{
+		FMat4 view;
+		FMat4 projection;
+		FMat4 model;
+		} meshPushConstants;
+
 	pushConstants.view = m_RenderInfo.Camera.GetViewMatrix ();
 	pushConstants.projection = m_RenderInfo.Camera.GetProjectionMatrix ();
+	meshPushConstants.view = m_RenderInfo.Camera.GetViewMatrix ();
+	meshPushConstants.projection = m_RenderInfo.Camera.GetProjectionMatrix ();
+
+	// ========== РЕНДЕР СТАТИЧЕСКИХ МЕШЕЙ ==========
+	VkPipeline currentMeshPipeline = VK_NULL_HANDLE;
+	VkPipelineLayout currentMeshLayout = VK_NULL_HANDLE;
+	std::string currentMeshPipelineName;
 
 	const auto & meshes = m_RenderInfo.RenderMeshes;
 	for (size_t i = 0; i < meshes.size (); i++)
@@ -581,18 +589,31 @@ void CRenderer::RenderWorld ( VkCommandBuffer CommandBuffer, uint32_t ImageIndex
 			LOG_WARN ( "Skipping invalid mesh at index ", i );
 			continue;
 			}
+		currentMeshPipelineName = mesh.PipelineName;
 
-			// Устанавливаем модельную матрицу для этого меша
-		pushConstants.model = mesh.Model;
 
-		// Передаём push constants
+		currentMeshPipeline = m_PipelineManager->GetPipeline ( currentMeshPipelineName );
+		currentMeshLayout = m_PipelineManager->GetPipelineLayout ( currentMeshPipelineName + "Layout" );
+
+		if (currentMeshPipeline == VK_NULL_HANDLE || currentMeshLayout == VK_NULL_HANDLE)
+			{
+			LOG_ERROR ( "Pipeline or layout not found for: ", currentMeshPipelineName );
+			continue;
+			}
+
+
+		vkCmdBindPipeline ( CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, currentMeshPipeline );
+
+		meshPushConstants.model = mesh.Model;
+		
+
 		vkCmdPushConstants (
 			CommandBuffer,
-			staticMeshLayout,
+			currentMeshLayout,  // ВАЖНО: используем layout для мешей!
 			VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
 			0,
-			sizeof ( FPushConstants ),
-			&pushConstants
+			sizeof ( meshPushConstants ),
+			&meshPushConstants
 		);
 
 		VkBuffer vertexBuffers [] = { mesh.VertexBuffer };
@@ -610,13 +631,63 @@ void CRenderer::RenderWorld ( VkCommandBuffer CommandBuffer, uint32_t ImageIndex
 			}
 		}
 
-	static int frameCount = 0;
-	frameCount++;
-	if (frameCount % 120 == 0)
-		{
-		LOG_DEBUG ( "Rendered ", meshes.size (), " meshes" );		
-		}
+	// ========== РЕНДЕР ТЕРРЕЙНОВ ==========
+	// Используем отдельные переменные для террейна
+	VkPipeline terrainPipeline = m_PipelineManager->GetPipeline ( "TerrainPipeline" );
+	VkPipelineLayout terrainLayout = m_PipelineManager->GetPipelineLayout ( "TerrainLayout" );
 
+	if (terrainPipeline != VK_NULL_HANDLE && terrainLayout != VK_NULL_HANDLE)
+		{
+		vkCmdBindPipeline ( CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, terrainPipeline );
+
+		const auto & terrains = m_RenderInfo.Terrains;
+		for (size_t i = 0; i < terrains.size (); i++)
+			{
+			const FTerrainRenderInfo & terrain = terrains[ i ];
+
+			if (!terrain.IsValid ())
+				{
+				LOG_WARN ( "Skipping invalid terrain at index ", i );
+				continue;
+				}
+
+			pushConstants.model = terrain.Model;
+
+			// Заполняем параметры террейна
+			pushConstants.params[ 0 ] = terrain.Params.TilingFactor;
+			pushConstants.params[ 1 ] = terrain.Params.HeightScale;
+			pushConstants.params[ 2 ] = terrain.Params.FogDensity;
+			pushConstants.params[ 3 ] = terrain.Params.UseTexture;
+			pushConstants.params[ 4 ] = terrain.Params.SandHeight;
+			pushConstants.params[ 5 ] = terrain.Params.GrassHeight;
+			pushConstants.params[ 6 ] = terrain.Params.RockHeight;
+			pushConstants.params[ 7 ] = terrain.Params.SnowHeight;
+
+			vkCmdPushConstants (
+				CommandBuffer,
+				terrainLayout,  // ВАЖНО: используем layout для террейна!
+				VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+				0,
+				sizeof ( pushConstants ),
+				&pushConstants
+			);
+
+			VkBuffer vertexBuffers [] = { terrain.VertexBuffer };
+			VkDeviceSize offsets [] = { 0 };
+			vkCmdBindVertexBuffers ( CommandBuffer, 0, 1, vertexBuffers, offsets );
+
+			if (terrain.IndexBuffer != VK_NULL_HANDLE && terrain.IndexCount > 0)
+				{
+				vkCmdBindIndexBuffer ( CommandBuffer, terrain.IndexBuffer, 0, VK_INDEX_TYPE_UINT32 );
+				vkCmdDrawIndexed ( CommandBuffer, terrain.IndexCount, 1, 0, 0, 0 );
+				}
+			else
+				{
+				vkCmdDraw ( CommandBuffer, terrain.VertexCount, 1, 0, 0 );
+				}
+			}
+		}
 	vkCmdEndRenderPass ( CommandBuffer );
 	m_CommandManager->EndCommandBuffer ( CommandBuffer );
 	}
+

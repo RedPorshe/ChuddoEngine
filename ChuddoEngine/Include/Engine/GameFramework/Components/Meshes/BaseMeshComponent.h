@@ -31,7 +31,10 @@ class CBaseMeshComponent : public CSceneComponent
          * @return структура с информацией о меше
          */
         virtual FMeshInfo GetMeshInfo () const;
-
+        virtual FTerrainRenderInfo GetTerrainInfo () const
+            {
+            return FTerrainRenderInfo ();
+            }
         /**
          * Проверить, готов ли компонент к рендеру
          */

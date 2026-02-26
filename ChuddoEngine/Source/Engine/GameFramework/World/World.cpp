@@ -180,32 +180,41 @@ FRenderInfo CWorld::CollectRenderInfo ()
 	// 1. Собираем камеру
 	Info.Camera = FindActiveCamera ();
 
-	// 2. Собираем меши для рендера
+	// 2. Собираем меши и террейны для рендера
 	if (CurrentLevel)
 		{
-			// Проходим по всем акторам в уровне и собираем их меши
 		const auto & actors = CurrentLevel->GetActors ();
 
 		for (CActor * actor : actors)
 			{
 			if (!actor || actor->IsHiddenInGame ()) continue;
 
-			// Получаем компоненты с мешами (нужно будет реализовать)
-			std::vector<FMeshInfo> actorMeshes = actor->GetRenderMeshes ();
+			// Получаем все рендер-информацию от актора
+			auto [meshes, terrains] = actor->GetRenderInfo ();
 
-			// Добавляем все меши актора в общий список
-			for (const auto & mesh : actorMeshes)
+			// Добавляем меши
+			for (const auto & mesh : meshes)
 				{
 				if (mesh.IsValid ())
 					{
 					Info.AddMesh ( mesh );
 					}
 				}
+		
+			for (const auto & terrain : terrains)
+				{
+				if (terrain.IsValid ())
+					{
+					Info.AddTerrain ( terrain );
+					}
+				}
 			}
 		}
 
-		// 3. Устанавливаем флаг наличия данных
-	Info.HasInfo = !Info.RenderMeshes.empty ();
+	// 3. Устанавливаем флаг наличия данных
+	Info.HasInfo = !Info.RenderMeshes.empty () || !Info.Terrains.empty ();
+
+	
 
 	return Info;
 	}

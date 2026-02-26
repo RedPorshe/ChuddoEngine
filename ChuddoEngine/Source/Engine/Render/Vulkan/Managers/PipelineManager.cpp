@@ -2,6 +2,7 @@
 #include "Core/EngineInfo.h"
 #include "Render/Vulkan/Managers/DeviceManager.h"
 #include "Render/Vulkan/Managers/RenderPassManager.h"
+#include "Components/Collisions/TerrainComponent.h"
 #include "Components/Meshes/BaseMeshComponent.h"
 #include <filesystem>
 #include <fstream>
@@ -123,15 +124,20 @@ bool CPipelineManager::RegisterDefaultPipelines ( VkRenderPass MainRenderPass )
         LogError ( "Failed to create triangle pipeline" );
         return false;
         }
+
+        // Create mesh pipeline
     if (CreateMeshPipeLine ( MainRenderPass ) == VK_NULL_HANDLE)
         {
         LogError ( "Failed to create Mesh pipeline" );
         return false;
         }
-    // Здесь можно добавить другие стандартные пайплайны
-    // CreateUIPipeline(MainRenderPass);
-    // CreateSkyboxPipeline(MainRenderPass);
-    // CreateDebugPipeline(MainRenderPass);
+
+        // Create terrain pipeline - НОВЫЙ!
+    if (CreateTerrainPipeline ( MainRenderPass ) == VK_NULL_HANDLE)
+        {
+        LogError ( "Failed to create Terrain pipeline" );
+        return false;
+        }
 
     LogDebug ( "Default pipelines registered successfully" );
     return true;
@@ -788,7 +794,7 @@ VkPipeline CPipelineManager::CreateTrianglePipeline ( VkRenderPass RenderPass )
     config.Topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
     config.PolygonMode = VK_POLYGON_MODE_FILL;
     config.CullMode = VK_CULL_MODE_BACK_BIT;
-    config.FrontFace = VK_FRONT_FACE_CLOCKWISE;
+    config.FrontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
     config.DepthTestEnable = VK_TRUE;
     config.DepthWriteEnable = VK_TRUE;
     config.DepthCompareOp = VK_COMPARE_OP_LESS;
@@ -806,10 +812,10 @@ VkPipeline CPipelineManager::CreateTrianglePipeline ( VkRenderPass RenderPass )
 
 VkPipeline CPipelineManager::CreateMeshPipeLine ( VkRenderPass RenderPass )
     {
-    
-    if (HasPipeline ( "StaticMesh" ))
+    std::string PipelineName = "StaticMesh";
+    if (HasPipeline ( PipelineName ))
         {
-        return GetPipeline ( "StaticMesh" );
+        return GetPipeline ( PipelineName );
         }
 
         // Создаём push constants для матриц
@@ -819,7 +825,7 @@ VkPipeline CPipelineManager::CreateMeshPipeLine ( VkRenderPass RenderPass )
     pushConstants[ 0 ].size = 3 * sizeof ( FMat4 ); // view, projection, model
 
     // Create pipeline layout with push constants
-    VkPipelineLayout layout = CreatePipelineLayout ( "StaticMeshLayout", {}, pushConstants );
+    VkPipelineLayout layout = CreatePipelineLayout ( PipelineName+"Layout", {}, pushConstants );
     if (layout == VK_NULL_HANDLE)
         {
         LogError ( "Failed to create StaticMesh pipeline layout" );
@@ -835,54 +841,80 @@ VkPipeline CPipelineManager::CreateMeshPipeLine ( VkRenderPass RenderPass )
         LogError ( "Shader modules are invalid!" );
         return VK_NULL_HANDLE;
         }
-
-        // Настраиваем vertex input для FMeshVertex
+       
     FVertexInputDescription vertexInput;
 
-    VkVertexInputBindingDescription binding {};
-    binding.binding = 0;
-    binding.stride = sizeof ( FMeshVertex );
-    binding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-    vertexInput.Bindings.push_back ( binding );
+    vertexInput.Bindings.push_back( FMeshVertex::GetBindingDescription ());
+    vertexInput.Attributes = FMeshVertex::GetAttributeDescriptions ();
 
-    // Position (location 0)
-    VkVertexInputAttributeDescription posAttr {};
-    posAttr.binding = 0;
-    posAttr.location = 0;
-    posAttr.format = VK_FORMAT_R32G32B32_SFLOAT;
-    posAttr.offset = offsetof ( FMeshVertex, Position );
-    vertexInput.Attributes.push_back ( posAttr );
 
-    // Color (location 1)
-    VkVertexInputAttributeDescription colorAttr {};
-    colorAttr.binding = 0;
-    colorAttr.location = 1;
-    colorAttr.format = VK_FORMAT_R32G32B32_SFLOAT;
-    colorAttr.offset = offsetof ( FMeshVertex, Color );
-    vertexInput.Attributes.push_back ( colorAttr );
-
-    // Normal (location 2)
-    VkVertexInputAttributeDescription normalAttr {};
-    normalAttr.binding = 0;
-    normalAttr.location = 2;
-    normalAttr.format = VK_FORMAT_R32G32B32_SFLOAT;
-    normalAttr.offset = offsetof ( FMeshVertex, Normal );
-    vertexInput.Attributes.push_back ( normalAttr );
-
-    // UV (location 3)
-    VkVertexInputAttributeDescription uvAttr {};
-    uvAttr.binding = 0;
-    uvAttr.location = 3;
-    uvAttr.format = VK_FORMAT_R32G32_SFLOAT;
-    uvAttr.offset = offsetof ( FMeshVertex, UV );
-    vertexInput.Attributes.push_back ( uvAttr );
 
     FGraphicsPipelineConfig config;
     config.VertexInput = vertexInput;
     config.Topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
     config.PolygonMode = VK_POLYGON_MODE_FILL;
-    config.CullMode = VK_CULL_MODE_BACK_BIT;
+    config.CullMode = VK_CULL_MODE_NONE ;
     config.FrontFace = VK_FRONT_FACE_CLOCKWISE;
+    config.DepthTestEnable = VK_TRUE;
+    config.DepthWriteEnable = VK_TRUE;
+    config.DepthCompareOp = VK_COMPARE_OP_LESS;
+    config.BlendEnable = VK_TRUE;
+    config.DynamicStates = GetDefaultDynamicStates ();
+
+    std::vector<FShaderModule> shaders = { vertShader, fragShader };
+
+    return CreateGraphicsPipeline ( PipelineName, shaders, layout, RenderPass, config );
+    }
+
+VkPipeline CPipelineManager::CreateTerrainPipeline ( VkRenderPass RenderPass )
+    {
+    if (HasPipeline ( "TerrainPipeline" ))
+        {
+        return GetPipeline ( "TerrainPipeline" );
+        }
+
+        // Специальный vertex input для террейна (может быть оптимизирован)
+    FVertexInputDescription terrainVertexInput;
+
+    VkVertexInputBindingDescription binding {};
+    binding.binding = 0;
+    binding.stride = sizeof ( FTerrainVertex ); // или специальная структура FTerrainVertex
+    binding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+    terrainVertexInput.Bindings.push_back ( binding );
+     
+
+    // Push constants для террейна (может быть больше параметров)
+    std::vector<VkPushConstantRange> pushConstants ( 1 );
+    pushConstants[ 0 ].stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+    pushConstants[ 0 ].offset = 0;
+    pushConstants[ 0 ].size = sizeof ( FMat4 ) * 3 + sizeof ( float ) * 4; // view + proj + model + terrain params
+
+
+
+    VkPipelineLayout layout = CreatePipelineLayout ( "TerrainLayout", {}, pushConstants );
+    if (layout == VK_NULL_HANDLE)
+        {
+        LogError ( "Failed to create Terrain pipeline layout" );
+        return VK_NULL_HANDLE;
+        }
+
+    terrainVertexInput.Attributes = FTerrainVertex::GetAttributeDescriptions ();;
+        // Специальные шейдеры для террейна
+    FShaderModule vertShader = LoadShaderModule ( "Assets/Shaders/Terrain.vert", VK_SHADER_STAGE_VERTEX_BIT );
+    FShaderModule fragShader = LoadShaderModule ( "Assets/Shaders/Terrain.frag", VK_SHADER_STAGE_FRAGMENT_BIT );
+
+    if (!vertShader.IsValid () || !fragShader.IsValid ())
+        {
+        LogError ( "Failed to load terrain shaders" );
+        return VK_NULL_HANDLE;
+        }
+
+    FGraphicsPipelineConfig config;
+    config.VertexInput = terrainVertexInput;
+    config.Topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+    config.PolygonMode = VK_POLYGON_MODE_FILL;
+    config.CullMode = VK_CULL_MODE_FRONT_BIT  ;
+    config.FrontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE ;
     config.DepthTestEnable = VK_TRUE;
     config.DepthWriteEnable = VK_TRUE;
     config.DepthCompareOp = VK_COMPARE_OP_LESS;
@@ -891,7 +923,7 @@ VkPipeline CPipelineManager::CreateMeshPipeLine ( VkRenderPass RenderPass )
 
     std::vector<FShaderModule> shaders = { vertShader, fragShader };
 
-    return CreateGraphicsPipeline ( "StaticMesh", shaders, layout, RenderPass, config );
+    return CreateGraphicsPipeline ( "TerrainPipeline", shaders, layout, RenderPass, config );
     }
 
 FVertexInputDescription CPipelineManager::GetTriangleVertexInput () const

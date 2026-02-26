@@ -185,9 +185,30 @@ float CTerrainComponent::GetHeightAtLocal ( float localX, float localZ ) const
 
 FVector CTerrainComponent::GetWorldPositionAt ( int32 x, int32 z ) const
     {
-    float worldX = m_TerrainData.Origin.x + x * m_TerrainData.CellSize;
-    float worldZ = m_TerrainData.Origin.z + z * m_TerrainData.CellSize;
+    float worldX = m_TerrainData.Origin.x + ( x - ( m_TerrainData.Width - 1 ) * 0.5f ) * m_TerrainData.CellSize;
+    float worldZ = m_TerrainData.Origin.z + ( z - ( m_TerrainData.Height - 1 ) * 0.5f ) * m_TerrainData.CellSize;
     float worldY = m_TerrainData.GetHeight ( x, z );
+
+    // Отладка для первого кадра (только несколько точек)
+    static bool firstTime = true;
+    if (firstTime)
+        {
+        if (x == 50 && z == 50)
+            {
+            LOG_DEBUG ( "[TERRAIN] Center point (50,50): world=(",
+                        worldX, ",", worldY, ",", worldZ,
+                        "), height=", worldY );
+            }
+        if (x == 0 && z == 0)
+            {
+            LOG_DEBUG ( "[TERRAIN] Corner (0,0): height=", worldY );
+            }
+        if (x == 99 && z == 99)
+            {
+            LOG_DEBUG ( "[TERRAIN] Corner (99,99): height=", worldY );
+            firstTime = false;
+            }
+        }
 
     return FVector ( worldX, worldY, worldZ );
     }
@@ -463,8 +484,6 @@ void CTerrainComponent::GenerateIndices ( std::vector<uint32_t> & indices ) cons
         }
     }
 
-// Добавьте эти методы в CTerrainComponent.cpp
-
 void CTerrainComponent::GenerateHilly ( int32 width, int32 height, float cellSize,
                                         float amplitude, float frequency )
     {
@@ -481,17 +500,27 @@ void CTerrainComponent::GenerateHilly ( int32 width, int32 height, float cellSiz
     m_TerrainData.MinHeight = FLT_MAX;
     m_TerrainData.MaxHeight = -FLT_MAX;
 
-    // Генерируем холмы с помощью синусоид
+    LOG_DEBUG ( "[TERRAIN COMP] Generating hilly terrain: ", width, "x", height,
+                ", amp=", amplitude, ", freq=", frequency );
+
+      // Генерируем холмы с помощью синусоид
     for (int32 z = 0; z < height; ++z)
         {
         for (int32 x = 0; x < width; ++x)
             {
-                // Комбинация нескольких синусоид для более естественного вида
-            float h1 = sin ( x * frequency ) * cos ( z * frequency ) * amplitude;
-            float h2 = sin ( x * frequency * 2.3f ) * cos ( z * frequency * 2.3f ) * amplitude * 0.5f;
-            float h3 = sin ( x * frequency * 0.7f ) * cos ( z * frequency * 0.7f ) * amplitude * 0.8f;
+                // Нормализуем координаты для более равномерных холмов
+            float nx = ( float ) x / ( width - 1 ) - 0.5f;
+            float nz = ( float ) z / ( height - 1 ) - 0.5f;
 
-            float heightValue = h1 + h2 + h3 + amplitude * 0.5f; // Смещаем вверх
+            // Комбинация нескольких синусоид для более естественного вида
+            float h1 = sin ( nx * 10.0f * frequency ) * cos ( nz * 10.0f * frequency ) * amplitude;
+            float h2 = sin ( nx * 23.0f * frequency ) * cos ( nz * 23.0f * frequency ) * amplitude * 0.5f;
+            float h3 = sin ( nx * 7.0f * frequency ) * cos ( nz * 7.0f * frequency ) * amplitude * 0.8f;
+
+            // Добавляем шум для реалистичности
+            float noise = ( rand () % 1000 ) / 1000.0f * amplitude * 0.2f;
+
+            float heightValue = h1 + h2 + h3 + noise + amplitude * 0.5f;
 
             m_TerrainData.Heights[ z * width + x ] = heightValue;
 
@@ -506,11 +535,11 @@ void CTerrainComponent::GenerateHilly ( int32 width, int32 height, float cellSiz
     float totalHeight = ( height - 1 ) * cellSize;
     m_TerrainData.Origin = FVector ( totalWidth * 0.5f, 0.0f, totalHeight * 0.5f );
 
-    LOG_DEBUG ( "Hilly terrain generated: ", width, "x", height,
-                ", height range: ", m_TerrainData.MinHeight, " - ", m_TerrainData.MaxHeight );
+    LOG_DEBUG ( "[TERRAIN COMP] Generated height range: ",
+                m_TerrainData.MinHeight, " - ", m_TerrainData.MaxHeight );
     }
 
-    // Простая реализация шума (можно заменить на настоящий Perlin noise)
+// Простая реализация шума (можно заменить на настоящий Perlin noise)
 static float Noise ( int32 x, int32 y, int32 seed )
     {
     int32 n = x + y * 57 + seed * 131;

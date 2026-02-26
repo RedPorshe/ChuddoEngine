@@ -32,12 +32,12 @@ class CGravityComponent : public CBaseComponent
         float m_GravityScale = 1.1f;        
         float m_GravityStrength = 9.8f;      
         float m_VerticalVelocity = 0.0f;      
-        float m_KillZone = -1000.0f;      // Killzone
+        float m_KillZone = -10000.0f;      // Killzone
         float m_GroundCheckDistance = .01f;    
         bool bIsOnGround = false;           
         bool m_bWasGrounded = false;           
         void CheckGrounded ();
-        FVector ResolveCollision ( const FVector & desiredPos, const FVector & currentPos );
+        FVector ResolveCollision ( const FVector & desiredPos, const FVector & currentPos, const std::string & channelName );
         FVector m_LastPosition;
 
     };

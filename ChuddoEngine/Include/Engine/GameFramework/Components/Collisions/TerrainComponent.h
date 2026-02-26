@@ -145,6 +145,7 @@ class CTerrainComponent : public CBaseCollisionComponent
         float GetHeightAtWorld ( const FVector & worldPos ) const;
         float GetHeightAtLocal ( float localX, float localZ ) const;
         FVector GetWorldPositionAt ( int32 x, int32 z ) const;
+       
 
         // ========== ДАННЫЕ ТЕРРЕЙНА ==========
         const FTerrainData & GetTerrainData () const { return m_TerrainData; }

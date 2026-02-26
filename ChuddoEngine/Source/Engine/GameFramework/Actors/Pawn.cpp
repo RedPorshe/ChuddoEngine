@@ -36,7 +36,7 @@ void CPawn::AddMovementInput ( const FVector & WorldDirection, float ScaleValue 
 	if (!bInputEnabled) return;
 
 	float DeltaTime = GetWorld ()->GetDeltaSeconds ();
-	LOG_DEBUG ( "AddMovementInput DeltaTime: ", DeltaTime );
+	
 	FVector NormalizedDirection = WorldDirection;
 	if (!NormalizedDirection.IsZero ())
 		{
@@ -44,7 +44,7 @@ void CPawn::AddMovementInput ( const FVector & WorldDirection, float ScaleValue 
 		}
 
 	FVector Movement = NormalizedDirection * ScaleValue * DeltaTime;
-	LOG_DEBUG ( "Movement delta:", Movement );
+	
 	MoveActor ( Movement );
 	
 	}
