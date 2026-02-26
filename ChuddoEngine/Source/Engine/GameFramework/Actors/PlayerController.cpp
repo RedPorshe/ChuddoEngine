@@ -56,6 +56,7 @@ void CPlayerController::Possess ( CPawn * PawnToPossess )
     ControlledPawn = PawnToPossess;
     ControlledPawn->SetController ( this );
     ControlledPawn->OnPossessed ( this );
+    ControlledPawn->SetInputEnabled ( true );
     ViewTarget = ControlledPawn;
     ControlledPawn->OnPossess ();
     LOG_DEBUG ( "[PLAYERCONTROLLER] Possessed pawn: ", ControlledPawn->GetName (),
@@ -69,8 +70,9 @@ void CPlayerController::Unpossess ()
 
     LOG_DEBUG ( "[PLAYERCONTROLLER] Unpossessing pawn: ", ControlledPawn->GetName (),
                 " from controller: ", GetName () );
-
+    ControlledPawn->SetInputEnabled ( false );
     ControlledPawn->SetController ( nullptr );
+
     ControlledPawn = nullptr;
     ViewTarget = nullptr;
     }
@@ -156,7 +158,7 @@ FQuat CPlayerController::GetViewRotation () const
         return ControlledPawn->GetActorRotationQuat ();
         }
 
-        // ИСПРАВЛЕНО: const версия метода
+        
     return const_cast< CPlayerController * >( this )->GetActorRotationQuat ();
     }
 

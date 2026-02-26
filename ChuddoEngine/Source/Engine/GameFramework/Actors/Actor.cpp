@@ -16,6 +16,8 @@ CActor::CActor ( CObject * owner, const std::string & inName ) : CObject ( owner
 	RootComponent = AddDefaultSubObject<CTransformComponent> ( inName + "_Transform" );
 	m_Gravity = AddDefaultSubObject<CGravityComponent> ( GetName () + "_Gravity" );
 	if (RootComponent) RootComponent->SetCollisionEnabled ( bIsCollisionEnabled );
+	LerpSpeed = 10.f;
+	LOG_DEBUG ( "LerpSpeed set to: ", LerpSpeed, " for ", GetName());
 	}
 
 CActor::~CActor ()
@@ -27,7 +29,7 @@ void CActor::BeginPlay ()
 	{
 	LOG_DEBUG ( "[ACTOR] BeginPlay: ", GetName () );
 	for (auto comp : ActorComponents)
-		{		
+		{
 		comp->OnBeginPlay ();
 		}
 	if (RootComponent) RootComponent->SetCollisionEnabled ( bIsCollisionEnabled );
@@ -35,53 +37,63 @@ void CActor::BeginPlay ()
 
 void CActor::Tick ( float deltaTime )
 	{
-
-	if (this == nullptr) return;
 	if (IsPendingToDestroy ()) return;
-		// Обработка интерполяции позиции
+	
+	
+
+	// Сначала обновляем интерполяцию
 	if (bIsLerpingLocation && RootComponent)
 		{
+		
+
 		LocationLerpAlpha += deltaTime * LerpSpeed;
 
 		if (LocationLerpAlpha >= 1.0f)
 			{
-				// Интерполяция завершена
+				// Завершаем интерполяцию
 			LocationLerpAlpha = 1.0f;
 			bIsLerpingLocation = false;
 			bIsMovin = false;
 			RootComponent->SetLocation ( TargetLocation );
-
+			
 			}
 		else
 			{
-				// Линейная интерполяция
-			FVector currentLocation = LerpStartLocation + ( TargetLocation - LerpStartLocation ) * LocationLerpAlpha;
+				// Продолжаем интерполяцию
+			FVector currentLocation = FVector::Lerp (
+				LerpStartLocation,
+				TargetLocation,
+				LocationLerpAlpha
+			);
 			RootComponent->SetLocation ( currentLocation );
+			
 			}
 		}
 
-		// Обработка интерполяции вращения (Slerp - сферическая интерполяция)
+		// Затем обновляем вращение
 	if (bIsLerpingRotation && RootComponent)
 		{
 		RotationLerpAlpha += deltaTime * LerpSpeed;
 
 		if (RotationLerpAlpha >= 1.0f)
 			{
-				// Интерполяция завершена
 			RotationLerpAlpha = 1.0f;
 			bIsLerpingRotation = false;
 			RootComponent->SetRotation ( TargetRotation );
 			}
 		else
 			{
-				// Сферическая линейная интерполяция (Slerp)
-			FQuat currentRotation = FQuat::Slerp ( LerpStartRotation, TargetRotation, RotationLerpAlpha );
+			FQuat currentRotation = FQuat::Slerp (
+				LerpStartRotation,
+				TargetRotation,
+				RotationLerpAlpha
+			);
 			currentRotation.Normalize ();
 			RootComponent->SetRotation ( currentRotation );
 			}
 		}
 
-		// Вызов Tick для всех компонентов
+		// ПОТОМ обновляем компоненты
 	for (auto comp : ActorComponents)
 		{
 		if (comp && comp->GetOwner () == this)
@@ -89,8 +101,8 @@ void CActor::Tick ( float deltaTime )
 			comp->Tick ( deltaTime );
 			}
 		}
-
 	}
+
 
 void CActor::EndPlay ()
 	{
@@ -376,34 +388,43 @@ void CActor::DestroyGravity ()
 	}
 
 
-
 void CActor::MoveActor ( const FVector & Delta, bool Interpolate )
 	{
 	if (!RootComponent)
 		return;
 
+	FVector currentLocation = RootComponent->GetLocation ();
+	FVector newTarget = currentLocation + Delta;
+
 	if (!Interpolate)
 		{
-
-		FVector currentLocation = RootComponent->GetLocation ();
-
-		FVector NewLocation = currentLocation + Delta;
-
-		RootComponent->SetLocation ( NewLocation );
-
-		return;
+			// Мгновенное перемещение
+		RootComponent->SetLocation ( newTarget );
+		// Сбрасываем интерполяцию
+		bIsLerpingLocation = false;
+		bIsMovin = false;
 		}
-
-
-	FVector currentLocation = RootComponent->GetLocation ();
-	TargetLocation = currentLocation + Delta;
-	LerpStartLocation = currentLocation;
-	LocationLerpAlpha = 0.0f;
-	bIsLerpingLocation = true;
-	bIsMovin = true;
-
+	else
+		{
+			// Если уже интерполируемся, просто обновляем цель
+		if (bIsLerpingLocation)
+			{
+				// Плавно меняем цель, не сбрасывая альфу
+			TargetLocation = newTarget;
+			// Можно также скорректировать стартовую позицию для более плавного перехода
+			// LerpStartLocation = текущая позиция?
+			}
+		else
+			{
+				// Начинаем новую интерполяцию
+			TargetLocation = newTarget;
+			LerpStartLocation = currentLocation;
+			LocationLerpAlpha = 0.0f;
+			bIsLerpingLocation = true;
+			bIsMovin = true;
+			}
+		}
 	}
-
 void CActor::RotateActor ( const FVector & DeltaRotation, bool Interpolate )
 	{
 	if (!RootComponent)
@@ -485,7 +506,7 @@ void CActor::AddActorWorldRotation ( const FQuat & DeltaRotation, bool Interpola
 	if (!Interpolate)
 		{
 		RootComponent->SetRotation ( newRotation );
-		
+
 		return;
 		}
 
@@ -648,9 +669,27 @@ void CActor::OnComponentEndOverlap ( CBaseCollisionComponent * other )
 
 void CActor::OnComponentHit ( CBaseCollisionComponent * other )
 	{
-	if (other->GetShapeType () == ECollisionShape::TERRAIN)
+	if (!other || !m_Gravity || !RootComponent) return;
+	
+	if (CBaseCollisionComponent * Collision = dynamic_cast< CBaseCollisionComponent * >( RootComponent ))
+		{
+		if (Collision->ShouldBlockWith ( other ) ||
+			 other->ShouldBlockWith ( Collision ))
+			{
+			m_Gravity->SetVerticalVelocity ( 0.f );
+			LOG_DEBUG ( "[ACTOR] ", GetName (), " stopped falling due to collision with ",
+						other->GetOwnerActor () ? other->GetOwnerActor ()->GetName () : "unknown" );
+			}
+		}
+
+	if (!RootComponent->GetCollisionComponent ()) return;
+
+	if (RootComponent->GetCollisionComponent ()->ShouldBlockWith ( other ) ||
+		 other->ShouldBlockWith ( RootComponent->GetCollisionComponent () ))
 		{
 		m_Gravity->SetVerticalVelocity ( 0.f );
+		LOG_DEBUG ( "[ACTOR] ", GetName (), " stopped falling due to collision with ",
+					other->GetOwnerActor () ? other->GetOwnerActor ()->GetName () : "unknown" );
 		}
 	}
 

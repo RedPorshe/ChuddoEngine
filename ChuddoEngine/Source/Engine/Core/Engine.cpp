@@ -198,19 +198,21 @@ void CEngine::MainLoop ()
 	auto realStartTime = std::chrono::steady_clock::now ();
 	float gameTime = 0.0f;
 	static int frameCount = 0;
-	
+
 	while (bIsRunning && !glfwWindowShouldClose ( Info.WindowHandle ))
 		{
 		CalculateDeltaTime ();
 		Tick ( m_DeltaTime );
-		
-		
-	
 
-		InfoForRender = UpdateRenderInfo (); 		
+
+
+
+		InfoForRender = UpdateRenderInfo ();
 		Renderer.get ()->SetInfoForRender ( InfoForRender );
+
 		if (!Renderer.get ()->RenderScene ())
 			{
+			
 			static int errorcount = 0;
 			errorcount++;
 			LOG_ERROR ( "Failed to render scene" );
@@ -219,16 +221,13 @@ void CEngine::MainLoop ()
 				RequestExit ();
 				}
 			}
-		
+
 		frameCount++;
 		InfoForRender.Clear ();
 		}
 	auto EndTime = std::chrono::steady_clock::now ();
 	auto duration = std::chrono::duration_cast< std::chrono::milliseconds >( EndTime - realStartTime );
 
-	LOG_INFO ( "Main loop executed for: ", duration.count () / 1000.0, " seconds" );
-	// или в миллисекундах:
-	LOG_INFO ( "Main loop executed for: ", duration.count (), " ms" );
 	}
 
 void CEngine::Tick ( float deltaTime )
@@ -293,31 +292,34 @@ void CEngine::CreateTestWorld ()
 	auto world = CGameInstance::Get ().CreateWorld ( "Super" );
 	if (world)
 		{
+		auto level = world->CreateLevel<CLevel> ( "Level" );
+		auto start = level->SpawnActor<CPlayerStart> ( "playStart" );
+		start->SetActorLocation ( 1.f, 1.f, 3.f );
+
+		
+		auto Terrain = level->SpawnActor<CTerrainActor> ( "Terrain" );
+		Terrain->GenerateFlat ( 1000, 1000, 10.f, 2.f );
+		//Terrain->SetActorLocation ( 100.f, 0.f, 100.f );
+		// Спавним PlayerStart
+
+
+
+
+
+		LOG_DEBUG ( "Total actors after spawn: ", level->GetNumActors () );
+
+		// Тестовый куб
+		//auto cubeActor = level->SpawnActor<CActor> ( "TestCubeActor" );
+		//cubeActor->SetActorScale ( 25.f );
+		//auto cubemesh = cubeActor->AddDefaultSubObject<CStaticMeshComponent> ( "CubeMesh" );
+		//cubeActor->SetActorLocation ( 0.f, 1000.f, 0.f );
+
 		auto gameMode = world->CreateGameMode<CGameMode> ( "SuperGameMode" );
-		world->CreateLevel<CLevel> ( "Level" )->SpawnActor<CPlayerStart> ( "playStart" )->SetActorLocation( 0.f, 0.f, 20.f );
-		auto level = world->GetCurrentLevel ();
-
-		// Террейн
-		auto terra = level->SpawnActor<CTerrainActor> ( "Terrain" );
-		terra->GenerateHilly ( 100, 100, 15.f, 30.f, 0.03f );
-		terra->SetActorLocation ( 0.f, -5.f, 0.f );  // Центрируем террейн
-
-		// Куб для теста - ставим на террейн
-		auto cubeActor = level->SpawnActor<CActor> ( "TestCubeActor" );
-		cubeActor->SetActorScale ( 25.f );
-		auto cubemesh = cubeActor->AddDefaultSubObject<CStaticMeshComponent> ( "CubeMesh" );
-		cubeActor->SetActorLocation ( 0.f, 0.f, 10.f );  // На террейне
-
-		//auto CameraActor = level->SpawnActorByClass ( "CActor", "CameraActor" );
-		//auto Camera = CameraActor->AddDefaultSubObject ( "CCameraComponent", "Camera" );
-		//CameraActor->SetActorLocation ( 0.f, 0.f, 20.f );
-		gameMode->SetDefaultPawnClass ( "CPawn" );
-
-		LOG_DEBUG ( "[ENGINE] Test world created with camera" );
+		gameMode->SetDefaultPawnClass ( "CCharacter" );
 		}
 	}
 
 FRenderInfo CEngine::UpdateRenderInfo ()
-	{	
+	{
 	return CGameInstance::Get ().GetWorld ()->CollectRenderInfo ();
 	}

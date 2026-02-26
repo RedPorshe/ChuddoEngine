@@ -10,7 +10,10 @@
 CCapsuleComponent::CCapsuleComponent ( CObject * inOwner, const std::string & InName )
     : Super ( inOwner, InName )
     {
-    SetShapeType ( ECollisionShape::CAPSULE );
+    SetShapeType ( ECollisionShape::CAPSULE );   
+    SetChannelAsPawn ();
+    SetResponseToChannel ( ECollisionChannel::WorldDynamic, ECollisionResponse::BLOCK );
+    SetResponseToChannel ( ECollisionChannel::WorldStatic, ECollisionResponse::BLOCK );
     LOG_DEBUG ( "CapsuleComponent created: ", GetName (),
                 ", Radius: ", m_Radius,
                 ", HalfHeight: ", m_HalfHeight );

@@ -20,10 +20,8 @@ class CPawn : public CActor
 		bool IsPlayerControlled () const { return Controller != nullptr; }
 
 		// ========== INPUT ==========
-		virtual void SetupPlayerInputComponent (  CInputComponent * InputComponent );
-		virtual void ProcessPlayerInput ( float DeltaTime );
 
-		void Jump ();
+
 
 		void AddMovementInput ( const FVector & WorldDirection, float ScaleValue = 1.0f );
 		bool IsInputEnabled () const;
@@ -33,20 +31,20 @@ class CPawn : public CActor
 		virtual void BeginPlay () override;
 		virtual void EndPlay () override;
 
-		virtual void OnPossessed ( CPlayerController * NewController );
-		virtual void OnUnpossessed ( CPlayerController * OldController );
-		void OnPossess ();
-		CInputComponent* GetInputComponent () const { return m_InputComponent; }
-		
-		void MoveForward ( float Value );
-		void MoveRight ( float Value );
+		void OnPossessed ( CPlayerController * NewController );
+		void OnUnpossessed ( CPlayerController * OldController );
+		virtual void OnPossess ();
+		CInputComponent * GetInputComponent () const { return m_InputComponent; }
+		void SetInputEnabled ( bool value ) { bInputEnabled = value; }
 	protected:
+		virtual void SetupPlayerInputComponent ( CInputComponent * InputComponent );
+		void ProcessPlayerInput ( float DeltaTime );
 		CPlayerController * Controller = nullptr;
 		CInputComponent * m_InputComponent = nullptr;
 		// Input state
-		bool bInputEnabled = true;
-		CStaticMeshComponent * Mesh = nullptr;
-		
+		bool bInputEnabled = false;
+
+
 	};
 
 REGISTER_CLASS_FACTORY ( CPawn );

@@ -1,13 +1,13 @@
 #pragma once
 
-#include "Components/BaseComponent.h"
+#include "Components/TransformComponent.h"
 #include "Core/Collision.h"  
 
 struct FCollisionInfo;
 
-class CBaseCollisionComponent : public CBaseComponent
+class CBaseCollisionComponent : public CTransformComponent
     {
-    CHUDDO_DECLARE_CLASS ( CBaseCollisionComponent, CBaseComponent );
+    CHUDDO_DECLARE_CLASS ( CBaseCollisionComponent, CTransformComponent );
 
     public:
         CBaseCollisionComponent ( CObject * inOwner = nullptr,

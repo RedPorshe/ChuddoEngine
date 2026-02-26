@@ -203,10 +203,8 @@ bool CObject::TransferOwnership ( CObject * obj, CObject * newOwner )
 		LOG_DEBUG( "New Owner '" , newOwner->GetName () , "'");
 		newOwner->AddOwnedObject ( std::move ( temp ) );
 
-		std::cout << "Transferred '" << obj->GetName ()
-			<< "' [UUID: " << GetShortUUID ( obj->ObjectUUID )
-			<< "] from '" << GetName ()
-			<< "' to '" << newOwner->GetName () << "'\n";
+		LOG_DEBUG ( "Transferred '", obj->GetName (),"' [UUID: ", GetShortUUID ( obj->ObjectUUID ),"] from '", GetName (),"' to '" , newOwner->GetName (),"'" );
+		
 		return true;
 		}
 	return false;

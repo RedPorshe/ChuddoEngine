@@ -1352,7 +1352,7 @@ bool CCollisionSystem::CheckSphereTerrain ( CBaseCollisionComponent * sphere,
         outInfo.ComponentA = sphere;
         outInfo.ComponentB = terrain;
         outInfo.Depth = ( terrainHeight - ( spherePos.y - sphereRadius ) );
-        outInfo.Normal = FVector ( 0.0f, -1.0f, 0.0f ); // Нормаль вверх
+        outInfo.Normal = FVector ( 0.0f, 1.0f, 0.0f ); // Нормаль вверх
         outInfo.Location = FVector ( spherePos.x, terrainHeight, spherePos.z );
 
         return true;
@@ -1405,7 +1405,7 @@ bool CCollisionSystem::CheckBoxTerrain ( CBaseCollisionComponent * box,
         outInfo.ComponentA = box;
         outInfo.ComponentB = terrain;
         outInfo.Depth = terrainHeight - minY;
-        outInfo.Normal = FVector ( 0.0f, -1.0f, 0.0f ); // Та же нормаль, что и у сферы
+        outInfo.Normal = FVector ( 0.0f, 1.0f, 0.0f ); // Та же нормаль, что и у сферы
         outInfo.Location = FVector ( boxPos.x, terrainHeight, boxPos.z );
 
         return true;
@@ -1441,7 +1441,7 @@ bool CCollisionSystem::CheckCapsuleTerrain ( CBaseCollisionComponent * capsule,
         outInfo.ComponentA = capsule;
         outInfo.ComponentB = terrain;
         outInfo.Depth = terrainHeight - lowestPoint;
-        outInfo.Normal = FVector ( 0.0f, -1.0f, 0.0f ); // Та же нормаль, что и у сферы
+        outInfo.Normal = FVector ( 0.0f, 1.0f, 0.0f ); // Та же нормаль, что и у сферы
         outInfo.Location = FVector ( capsulePos.x, terrainHeight, capsulePos.z );
 
         return true;
@@ -1852,7 +1852,7 @@ bool CCollisionSystem::CheckCylinderTerrain ( CBaseCollisionComponent * cylinder
         outInfo.ComponentA = cylinder;
         outInfo.ComponentB = terrain;
         outInfo.Depth = terrainHeight - lowestPoint;
-        outInfo.Normal = FVector ( 0.0f, -1.0f, 0.0f );
+        outInfo.Normal = FVector ( 0.0f, 1.0f, 0.0f );
         outInfo.Location = FVector ( cylPos.x, terrainHeight, cylPos.z );
 
         return true;
@@ -2319,7 +2319,7 @@ bool CCollisionSystem::CheckConeTerrain ( CBaseCollisionComponent * cone,
         outInfo.ComponentA = cone;
         outInfo.ComponentB = terrain;
         outInfo.Depth = terrainHeight - lowestPoint;
-        outInfo.Normal = FVector ( 0.0f, -1.0f, 0.0f );
+        outInfo.Normal = FVector ( 0.0f, 1.0f, 0.0f );
         outInfo.Location = FVector ( conePos.x, terrainHeight, conePos.z );
 
         return true;

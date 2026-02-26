@@ -215,17 +215,11 @@ CPawn * CGameMode::SpawnDefaultPawnForController ( CPlayerController * Controlle
 	FTransform SpawnTransform = FTransform::Identity ();
 	CActor * PlayerStart = FindPlayerStart ( Controller );
 
-	if (PlayerStart)
+	if (CPlayerStart* Start = dynamic_cast< CPlayerStart * >( PlayerStart ))
 		{
-		CTransformComponent * Transform = PlayerStart->GetRootComponent ();
-		if (Transform)
-			{
-			SpawnTransform = Transform->GetTransform ();
-			LOG_DEBUG ( "[GAMEMODE] Found PlayerStart at: (",
-						SpawnTransform.Location.x, ", ",
-						SpawnTransform.Location.y, ", ",
-						SpawnTransform.Location.z, ")" );
-			}
+		SpawnTransform.Location = Start->GetRootComponent()->GetRelativeTransform().Location;
+		SpawnTransform.Rotation = Start->GetRootComponent ()->GetRelativeTransform ().Rotation;
+		SpawnTransform.Scale = Start->GetRootComponent ()->GetRelativeTransform ().Scale;
 		}
 	else
 		{
@@ -233,7 +227,7 @@ CPawn * CGameMode::SpawnDefaultPawnForController ( CPlayerController * Controlle
 		}
 
 		// Генерируем уникальное имя для pawn
-	std::string PawnName = Controller->GetName () + "_Pawn";
+	std::string PawnName = Controller->GetName () +"_"+ Settings->DefaultPawnClassName;
 
 	
 	auto NewPawnObj = CurrentLevel->SpawnActorByClass ( Settings->DefaultPawnClassName, PawnName );
@@ -242,12 +236,15 @@ CPawn * CGameMode::SpawnDefaultPawnForController ( CPlayerController * Controlle
 
 	if (NewPawn)
 		{
-		CTransformComponent * PawnTransform = NewPawn->GetRootComponent ();
+		NewPawn->SetActorLocation ( SpawnTransform .Location);
+		NewPawn->SetActorRotation ( SpawnTransform.Rotation );
+		NewPawn->SetActorScale ( SpawnTransform.Scale );
+		/*CTransformComponent * PawnTransform = NewPawn->GetRootComponent ();
 		
 		if (PawnTransform)
 			{
 			PawnTransform->SetTransform ( SpawnTransform );
-			}
+			}*/
 
 		LOG_DEBUG ( "[GAMEMODE] Spawned pawn: ", NewPawn->GetName (),
 					" for controller: ", Controller->GetName (),

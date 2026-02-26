@@ -167,6 +167,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Source\Engine\GameFramework\Actors\Character.cpp" />
     <ClCompile Include="Source\Engine\GameFramework\Components\Meshes\BaseMeshComponent.cpp" />
     <ClCompile Include="Source\Engine\GameFramework\Components\Meshes\StaticMeshComponent.cpp" />
     <ClCompile Include="Source\Engine\GameFramework\Components\Meshes\TerrainMeshComponent.cpp" />
@@ -232,6 +233,7 @@
     <ClInclude Include="Include\CoreMinimal.h" />
     <ClInclude Include="Include\Engine\Core\ObjectFactory.h" />
     <ClInclude Include="Include\Engine\GameFramework\Actors\Actor.h" />
+    <ClInclude Include="Include\Engine\GameFramework\Actors\Character.h" />
     <ClInclude Include="Include\Engine\GameFramework\Actors\HUD.h" />
     <ClInclude Include="Include\Engine\GameFramework\Actors\Pawn.h" />
     <ClInclude Include="Include\Engine\GameFramework\Actors\PlayerController.h" />

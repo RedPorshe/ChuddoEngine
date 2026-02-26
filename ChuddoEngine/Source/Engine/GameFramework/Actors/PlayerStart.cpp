@@ -4,6 +4,7 @@
 CPlayerStart::CPlayerStart ( CObject * inOwner, const std::string & inName )
 	: Super ( inOwner, inName )
 	{
+    if (!RootComponent) LOG_ERROR ("NO ROOT COMPONENT");
 	LOG_DEBUG ( "[PLAYERSTART] Created: ", GetName () );
     if (m_Gravity)
         {

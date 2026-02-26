@@ -751,8 +751,8 @@ namespace CEMath
         float range = zNear - zFar;
 
         return Matrix4x4(
-            1.0f / (aspect * tanHalfFov), 0.0f, 0.0f, 0.0f,
-            0.0f, 1.0f / tanHalfFov, 0.0f, 0.0f,
+            -1.0f / (aspect * tanHalfFov), 0.0f, 0.0f, 0.0f,
+            0.0f, -1.0f / tanHalfFov, 0.0f, 0.0f,
             0.0f, 0.0f, (zNear + zFar) / range, -1.0f,
             0.0f, 0.0f, (2.0f * zNear * zFar) / range, 0.0f
         );
@@ -766,8 +766,8 @@ namespace CEMath
         float depth = zFar - zNear;
 
         return Matrix4x4(
-            2.0f / width, 0.0f, 0.0f, 0.0f,
-            0.0f, 2.0f / height, 0.0f, 0.0f,
+            -2.0f / width, 0.0f, 0.0f, 0.0f,
+            0.0f, -2.0f / height, 0.0f, 0.0f,
             0.0f, 0.0f, -2.0f / depth, 0.0f,
             -(right + left) / width, -(top + bottom) / height, -(zFar + zNear) / depth, 1.0f
         );

@@ -537,7 +537,7 @@ void CRenderer::RenderWorld ( VkCommandBuffer CommandBuffer, uint32_t ImageIndex
 	renderPassInfo.renderArea.extent = extent;
 
 	VkClearValue clearValues[ 2 ];
-	clearValues[ 0 ].color = { {0.2f, 0.2f, 0.2f, 1.0f} };
+	clearValues[ 0 ].color = { {1.f, 1.f, 1.f, 1.0f} };
 	clearValues[ 1 ].depthStencil = { 1.0f, 0 };
 
 	renderPassInfo.clearValueCount = 2;
@@ -612,9 +612,9 @@ void CRenderer::RenderWorld ( VkCommandBuffer CommandBuffer, uint32_t ImageIndex
 
 	static int frameCount = 0;
 	frameCount++;
-	if (frameCount % 60 == 0)
+	if (frameCount % 120 == 0)
 		{
-		LOG_DEBUG ( "Rendered ", meshes.size (), " meshes" );
+		LOG_DEBUG ( "Rendered ", meshes.size (), " meshes" );		
 		}
 
 	vkCmdEndRenderPass ( CommandBuffer );

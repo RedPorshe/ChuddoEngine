@@ -177,6 +177,9 @@
     <ClCompile Include="Source\Engine\GameFramework\Components\Meshes\StaticMeshComponent.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Engine\GameFramework\Actors\Character.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\Utils\Math\CE_MathConstants.h">
@@ -354,6 +357,9 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="Include\Engine\GameFramework\Components\Meshes\StaticMeshComponent.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Engine\GameFramework\Actors\Character.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
