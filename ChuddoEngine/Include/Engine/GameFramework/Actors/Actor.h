@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Core/Object.h"
-
+#include "Render/RenderInfo.h"
 
 class CWorld;
 class CLevel;
@@ -9,13 +9,23 @@ class CBaseComponent;
 class CTransformComponent;
 class CBaseCollisionComponent;
 class CGravityComponent;
-struct FMeshInfo;
-struct FTerrainRenderInfo;
+
 
 struct FRenderCollection
 	{
 	std::vector<FMeshInfo> Meshes;
 	std::vector<FTerrainRenderInfo> Terrains;
+	std::vector<FCollisionDebugInfo> DebugCollisions;
+	std::vector<FTerrainDebugInfo> TerrainWireframes; 
+
+	// Очистка
+	void Clear ()
+		{
+		Meshes.clear ();
+		Terrains.clear ();
+		DebugCollisions.clear ();
+		TerrainWireframes.clear ();
+		}
 	};
 
 class CActor : public CObject
@@ -31,6 +41,9 @@ class CActor : public CObject
 		virtual void EndPlay ();
 
 		virtual FRenderCollection GetRenderInfo () const;
+
+		void SetDrawCollisions ( bool bDraw ) { m_bDrawCollisions = bDraw; }
+		bool IsDrawCollisionsEnabled () const { return m_bDrawCollisions; }
 
 		bool IsMIsMoving () const { return bIsMovin; }
 
@@ -143,7 +156,7 @@ class CActor : public CObject
 	protected:
 		std::vector<CBaseComponent *> ActorComponents;
 		CTransformComponent * RootComponent = nullptr;
-
+		bool m_bDrawCollisions = false;
 		// State flags
 		bool bIsCanTickAsAttached { false };
 		bool bIsAttached { false };

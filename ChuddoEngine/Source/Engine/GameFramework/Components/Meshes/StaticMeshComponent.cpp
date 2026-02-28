@@ -1,4 +1,5 @@
 #include "Components/Meshes/StaticMeshComponent.h"
+#include "Render/Vulkan/VertexStructs/AllVertices.h"
 #include "Render/Renderer.h"
 #include "Core/Engine.h"
 

@@ -18,16 +18,11 @@ class CTerrainActor : public CActor
         virtual void Tick ( float deltaTime ) override;
         virtual void EndPlay () override;
 
-        // Переопределяем метод сбора рендер-информации
-       // virtual FRenderCollection GetRenderInfo () const override;
-
         // Доступ к компонентам
         CTerrainComponent * GetTerrainComponent () const;
         CTerrainMeshComponent * GetTerrainMeshComponent () const;
 
         // ========== МЕТОДЫ ГЕНЕРАЦИИ ТЕРРЕЙНА ==========
-        // Эти методы создают компоненты при первом вызове
-
         // Плоский террейн
         void GenerateFlat ( int32 width, int32 height, float cellSize, float heightValue = 0.0f );
 

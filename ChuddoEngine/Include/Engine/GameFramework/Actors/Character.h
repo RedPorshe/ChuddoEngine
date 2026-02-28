@@ -3,7 +3,7 @@
 
 class CCapsuleComponent;
 class CCameraComponent;
-
+class CBoxComponent;
 
 class CCharacter : public CPawn
 	{

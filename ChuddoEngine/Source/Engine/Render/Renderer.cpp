@@ -7,6 +7,7 @@
 #include "Render/Vulkan/Managers/RenderPassManager.h"
 #include "Render/Vulkan/Managers/PipelineManager.h"
 #include "Render/Vulkan/Managers/BufferManager.h"
+#include "Render/Vulkan/Managers/WireframePipeline.h"
 #include "Render/RenderInfo.h"
 
 CRenderer::CRenderer ( FEngineInfo & inInfo )
@@ -687,6 +688,119 @@ void CRenderer::RenderWorld ( VkCommandBuffer CommandBuffer, uint32_t ImageIndex
 				}
 			}
 		}
+
+	 // ========== РЕНДЕР ОТЛАДКИ КОЛЛИЗИЙ ==========
+	if (m_RenderInfo.bDrawCollisions && !m_RenderInfo.DebugCollisions.empty ())
+		{
+		VkPipeline wireframePipeline = m_PipelineManager->GetPipeline ( "WireframePipeline" );
+		VkPipelineLayout wireframeLayout = m_PipelineManager->GetPipelineLayout ( "WireframePipelineLayout" );
+
+		if (wireframePipeline != VK_NULL_HANDLE && wireframeLayout != VK_NULL_HANDLE)
+			{
+			vkCmdBindPipeline ( CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, wireframePipeline );
+
+			// Push constants для wireframe
+			struct FWireframePushConstants
+				{
+				FMat4 view;
+				FMat4 projection;
+				FMat4 model;
+				} wireframePush;
+
+			wireframePush.view = m_RenderInfo.Camera.GetViewMatrix ();
+			wireframePush.projection = m_RenderInfo.Camera.GetProjectionMatrix ();
+			wireframePush.model = FMat4::IdentityMatrix (); // Используем identity, т.к. позиции уже в мировых координатах
+
+			vkCmdPushConstants (
+				CommandBuffer,
+				wireframeLayout,
+				VK_SHADER_STAGE_VERTEX_BIT,
+				0,
+				sizeof ( wireframePush ),
+				&wireframePush
+			);
+
+			// Генератор wireframe геометрии
+			CWireframeGenerator generator;
+
+			// Для каждой коллизионной формы генерируем временные буферы
+			for (const auto & collision : m_RenderInfo.DebugCollisions)
+				{
+				if (!collision.IsValid ()) continue;
+
+				std::vector<FWireframeVertex> vertices;
+
+				// Генерируем вершины в зависимости от типа
+				switch (collision.ShapeType)
+					{
+						case ECollisionShape::SPHERE:
+							generator.GenerateSphere ( vertices,
+													   collision.WorldLocation,
+													   collision.Params.Sphere.Radius,
+													   collision.DebugColor );
+							break;
+
+						case ECollisionShape::BOX:
+							generator.GenerateBox ( vertices,
+													collision.WorldLocation,
+													collision.WorldRotation,
+													collision.Params.Box.HalfExtents,
+													collision.DebugColor );
+							break;
+
+						case ECollisionShape::CAPSULE:
+							generator.GenerateCapsule ( vertices,
+														collision.WorldLocation,
+														collision.WorldRotation,
+														collision.Params.Capsule.Radius,
+														collision.Params.Capsule.HalfHeight,
+														collision.DebugColor );
+							break;
+
+						case ECollisionShape::CYLINDER:
+							generator.GenerateCylinder ( vertices,
+														 collision.WorldLocation,
+														 collision.WorldRotation,
+														 collision.Params.Cylinder.Radius,
+														 collision.Params.Cylinder.Height,
+														 collision.DebugColor );
+							break;
+
+						case ECollisionShape::CONE:
+							generator.GenerateCone ( vertices,
+													 collision.WorldLocation,
+													 collision.WorldRotation,
+													 collision.Params.Cone.Radius,
+													 collision.Params.Cone.Height,
+													 collision.DebugColor );
+							break;
+
+						default:
+							continue;
+					}
+
+				if (vertices.empty ()) continue;
+
+				// Создаём временный вершинный буфер
+				FBuffer tempBuffer = m_BufferManager->CreateVertexBuffer ( vertices );
+
+				if (tempBuffer.IsValid ())
+					{
+					VkBuffer vertexBuffers [] = { tempBuffer.Buffer };
+					VkDeviceSize offsets [] = { 0 };
+					vkCmdBindVertexBuffers ( CommandBuffer, 0, 1, vertexBuffers, offsets );
+
+					// Рисуем линии
+					vkCmdDraw ( CommandBuffer, static_cast< uint32_t >( vertices.size () ), 1, 0, 0 );
+
+					// Буфер будет уничтожен BufferManager'ом при следующем кадре
+					// или можно добавить временное хранилище
+					}
+				}
+			}
+		}
+
+
 	vkCmdEndRenderPass ( CommandBuffer );
 	m_CommandManager->EndCommandBuffer ( CommandBuffer );
 	}

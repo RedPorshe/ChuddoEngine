@@ -1,9 +1,11 @@
 #include "Render/Vulkan/Managers/PipelineManager.h"
+#include "Render/Vulkan/Managers/WireframePipeline.h"
 #include "Core/EngineInfo.h"
 #include "Render/Vulkan/Managers/DeviceManager.h"
 #include "Render/Vulkan/Managers/RenderPassManager.h"
 #include "Components/Collisions/TerrainComponent.h"
 #include "Components/Meshes/BaseMeshComponent.h"
+#include "Render/Vulkan/VertexStructs/AllVertices.h"
 #include <filesystem>
 #include <fstream>
 #include <vector>
@@ -132,10 +134,17 @@ bool CPipelineManager::RegisterDefaultPipelines ( VkRenderPass MainRenderPass )
         return false;
         }
 
-        // Create terrain pipeline - НОВЫЙ!
+        // Create terrain pipeline
     if (CreateTerrainPipeline ( MainRenderPass ) == VK_NULL_HANDLE)
         {
         LogError ( "Failed to create Terrain pipeline" );
+        return false;
+        }
+
+        // НОВОЕ: Create wireframe pipeline для отладки коллизий
+    if (CreateWireframePipeline ( MainRenderPass ) == VK_NULL_HANDLE)
+        {
+        LogError ( "Failed to create Wireframe pipeline" );
         return false;
         }
 
@@ -913,7 +922,7 @@ VkPipeline CPipelineManager::CreateTerrainPipeline ( VkRenderPass RenderPass )
     config.VertexInput = terrainVertexInput;
     config.Topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
     config.PolygonMode = VK_POLYGON_MODE_FILL;
-    config.CullMode = VK_CULL_MODE_FRONT_BIT  ;
+    config.CullMode = VK_CULL_MODE_BACK_BIT  ;
     config.FrontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE ;
     config.DepthTestEnable = VK_TRUE;
     config.DepthWriteEnable = VK_TRUE;
@@ -924,6 +933,69 @@ VkPipeline CPipelineManager::CreateTerrainPipeline ( VkRenderPass RenderPass )
     std::vector<FShaderModule> shaders = { vertShader, fragShader };
 
     return CreateGraphicsPipeline ( "TerrainPipeline", shaders, layout, RenderPass, config );
+    }
+
+VkPipeline CPipelineManager::CreateWireframePipeline ( VkRenderPass RenderPass )
+    {
+    std::string PipelineName = "WireframePipeline";
+    if (HasPipeline ( PipelineName ))
+        {
+        return GetPipeline ( PipelineName );
+        }
+
+        // Push constants для матриц (view, projection, model)
+    std::vector<VkPushConstantRange> pushConstants ( 1 );
+    pushConstants[ 0 ].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    pushConstants[ 0 ].offset = 0;
+    pushConstants[ 0 ].size = 3 * sizeof ( FMat4 ); // view, projection, model
+
+    VkPipelineLayout layout = CreatePipelineLayout ( PipelineName + "Layout", {}, pushConstants );
+    if (layout == VK_NULL_HANDLE)
+        {
+        LogError ( "Failed to create Wireframe pipeline layout" );
+        return VK_NULL_HANDLE;
+        }
+
+        // Загружаем шейдеры для wireframe
+    FShaderModule vertShader = LoadShaderModule ( "Assets/Shaders/Wireframe.vert", VK_SHADER_STAGE_VERTEX_BIT );
+    FShaderModule fragShader = LoadShaderModule ( "Assets/Shaders/Wireframe.frag", VK_SHADER_STAGE_FRAGMENT_BIT );
+
+    if (!vertShader.IsValid () || !fragShader.IsValid ())
+        {
+        LogError ( "Failed to load wireframe shaders" );
+        return VK_NULL_HANDLE;
+        }
+
+        // Создаём описание вершин для wireframe
+    FVertexInputDescription vertexInput;
+    VkVertexInputBindingDescription binding = FWireframeVertex::GetBindingDescription ();
+    vertexInput.Bindings.push_back ( binding );
+    vertexInput.Attributes = FWireframeVertex::GetAttributeDescriptions ();
+
+    // Конфигурация для wireframe (линии)
+    FGraphicsPipelineConfig config;
+    config.VertexInput = vertexInput;
+    config.Topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST; // Рисуем линии
+    config.PolygonMode = VK_POLYGON_MODE_FILL;
+    config.CullMode = VK_CULL_MODE_NONE; // Не отсекаем для отладки
+    config.FrontFace = VK_FRONT_FACE_CLOCKWISE;
+    config.DepthTestEnable = VK_TRUE;
+    config.DepthWriteEnable = VK_FALSE; // Не пишем в depth buffer для wireframe
+    config.DepthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL; // Разрешить рисовать поверх
+    config.BlendEnable = VK_FALSE;
+    config.LineWidth = 2.0f; // Толщина линий
+    config.DynamicStates = GetDefaultDynamicStates ();
+
+    std::vector<FShaderModule> shaders = { vertShader, fragShader };
+
+    VkPipeline pipeline = CreateGraphicsPipeline ( PipelineName, shaders, layout, RenderPass, config );
+
+    if (pipeline != VK_NULL_HANDLE)
+        {
+        LogDebug ( "Wireframe pipeline created successfully" );
+        }
+
+    return pipeline;
     }
 
 FVertexInputDescription CPipelineManager::GetTriangleVertexInput () const

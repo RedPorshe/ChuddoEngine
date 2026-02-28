@@ -4,9 +4,10 @@
 #include "Render/Renderer.h"
 #include "Core/CollisionSystem.h"
 #include "Core/Engine.h"
+#include "Render/Vulkan/VertexStructs/AllVertices.h"
 #include <cmath>
 #include <algorithm>
-
+#include <limits>
 
 // ============================================================================
 // FTerrainData Implementation
@@ -17,13 +18,13 @@ float FTerrainData::GetInterpolatedHeight ( float worldX, float worldZ ) const
     if (Width < 2 || Height < 2)
         return 0.0f;
 
-    // Преобразуем мировые координаты в локальные
+    // Преобразуем мировые координаты в локальные относительно центра
     float localX = worldX - Origin.x;
     float localZ = worldZ - Origin.z;
 
     // Находим ячейку
-    float cellX = localX / CellSize;
-    float cellZ = localZ / CellSize;
+    float cellX = ( localX / CellSize ) + ( Width - 1 ) * 0.5f;
+    float cellZ = ( localZ / CellSize ) + ( Height - 1 ) * 0.5f;
 
     int32 x1 = static_cast< int32 >( std::floor ( cellX ) );
     int32 z1 = static_cast< int32 >( std::floor ( cellZ ) );
@@ -51,9 +52,9 @@ float FTerrainData::GetInterpolatedHeight ( float worldX, float worldZ ) const
     return h1 * ( 1.0f - fz ) + h2 * fz;
     }
 
-// ============================================================================
-// CTerrainComponent Implementation
-// ============================================================================
+    // ============================================================================
+    // CTerrainComponent Implementation
+    // ============================================================================
 
 CTerrainComponent::CTerrainComponent ( CObject * inOwner, const std::string & InName )
     : Super ( inOwner, InName )
@@ -65,9 +66,7 @@ CTerrainComponent::CTerrainComponent ( CObject * inOwner, const std::string & In
 
 CTerrainComponent::~CTerrainComponent ()
     {
-    // Очищаем рендер ресурсы
     DestroyRenderResources ();
-
     m_TerrainData.Heights.clear ();
     }
 
@@ -86,10 +85,10 @@ void CTerrainComponent::OnBeginPlay ()
     Super::OnBeginPlay ();
 
     // Создаём рендер ресурсы после того, как террейн сгенерирован
-    auto&  engine = CEngine::Get ();
-    if ( engine.GetRenderer ())
+    auto & engine = CEngine::Get ();
+    if (engine.GetRenderer ())
         {
-        auto  bufferManager = engine.GetRenderer ()->GetBufferManager ();
+        auto bufferManager = engine.GetRenderer ()->GetBufferManager ();
         if (bufferManager)
             {
             CreateRenderResources ( bufferManager );
@@ -97,13 +96,12 @@ void CTerrainComponent::OnBeginPlay ()
         }
     }
 
-// ============================================================================
-// Terrain Generation
-// ============================================================================
+    // ============================================================================
+    // Terrain Generation
+    // ============================================================================
 
 void CTerrainComponent::GenerateFlat ( int32 width, int32 height, float cellSize, float heightValue )
     {
-    // Очищаем старые рендер ресурсы
     DestroyRenderResources ();
 
     m_TerrainData.Width = width;
@@ -117,17 +115,16 @@ void CTerrainComponent::GenerateFlat ( int32 width, int32 height, float cellSize
 
     // Вычисляем центр
     float totalWidth = ( width - 1 ) * cellSize;
-    float totalHeight = ( height - 1 ) * cellSize;
-    m_TerrainData.Origin = FVector ( totalWidth * 0.5f, 0.0f, totalHeight * 0.5f );
+    float totalDepth = ( height - 1 ) * cellSize;
+    m_TerrainData.Origin = FVector ( totalWidth * 0.5f, 0.0f, totalDepth * 0.5f );
 
     LOG_DEBUG ( "Terrain generated: ", width, "x", height, " cells, size: ",
-                totalWidth, " x ", totalHeight );
+                totalWidth, " x ", totalDepth );
     }
 
 void CTerrainComponent::GenerateFromHeightmap ( const std::vector<float> & heights,
                                                 int32 width, int32 height, float cellSize )
     {
-    // Очищаем старые рендер ресурсы
     DestroyRenderResources ();
 
     if (heights.size () != static_cast< size_t >( width * height ))
@@ -142,13 +139,14 @@ void CTerrainComponent::GenerateFromHeightmap ( const std::vector<float> & heigh
     m_TerrainData.CellSize = cellSize;
 
     // Находим мин/макс высоты
-    m_TerrainData.MinHeight = *std::min_element ( heights.begin (), heights.end () );
-    m_TerrainData.MaxHeight = *std::max_element ( heights.begin (), heights.end () );
+    auto [minIt, maxIt] = std::minmax_element ( heights.begin (), heights.end () );
+    m_TerrainData.MinHeight = *minIt;
+    m_TerrainData.MaxHeight = *maxIt;
 
     // Вычисляем центр
     float totalWidth = ( width - 1 ) * cellSize;
-    float totalHeight = ( height - 1 ) * cellSize;
-    m_TerrainData.Origin = FVector ( totalWidth * 0.5f, 0.0f, totalHeight * 0.5f );
+    float totalDepth = ( height - 1 ) * cellSize;
+    m_TerrainData.Origin = FVector ( totalWidth * 0.5f, 0.0f, totalDepth * 0.5f );
 
     LOG_DEBUG ( "Terrain generated from heightmap: ", width, "x", height,
                 ", height range: ", m_TerrainData.MinHeight, " - ", m_TerrainData.MaxHeight );
@@ -166,9 +164,164 @@ void CTerrainComponent::SetHeightAt ( int32 x, int32 z, float height )
         }
     }
 
-// ============================================================================
-// Height Queries
-// ============================================================================
+void CTerrainComponent::GenerateHilly ( int32 width, int32 height, float cellSize,
+                                        float amplitude, float frequency )
+    {
+    DestroyRenderResources ();
+
+    m_TerrainData.Width = width;
+    m_TerrainData.Height = height;
+    m_TerrainData.CellSize = cellSize;
+
+    size_t totalPoints = width * height;
+    m_TerrainData.Heights.resize ( totalPoints );
+
+    m_TerrainData.MinHeight = std::numeric_limits<float>::max ();
+    m_TerrainData.MaxHeight = -std::numeric_limits<float>::max ();
+
+    LOG_DEBUG ( "[TERRAIN] Generating hilly terrain: ", width, "x", height,
+                ", amp=", amplitude, ", freq=", frequency );
+
+      // Генерируем холмы с помощью синусоид
+    for (int32 z = 0; z < height; ++z)
+        {
+        for (int32 x = 0; x < width; ++x)
+            {
+                // Нормализуем координаты для более равномерных холмов
+            float nx = ( float ) x / ( width - 1 ) - 0.5f;
+            float nz = ( float ) z / ( height - 1 ) - 0.5f;
+
+            // Комбинация нескольких синусоид для более естественного вида
+            float h1 = sin ( nx * 10.0f * frequency ) * cos ( nz * 10.0f * frequency ) * amplitude;
+            float h2 = sin ( nx * 23.0f * frequency ) * cos ( nz * 23.0f * frequency ) * amplitude * 0.5f;
+            float h3 = sin ( nx * 7.0f * frequency ) * cos ( nz * 7.0f * frequency ) * amplitude * 0.8f;
+
+            // Добавляем шум для реалистичности
+            float noise = ( rand () % 1000 ) / 1000.0f * amplitude * 0.2f;
+
+            float heightValue = h1 + h2 + h3 + noise + amplitude * 0.5f;
+
+            m_TerrainData.Heights[ z * width + x ] = heightValue;
+
+            // Обновляем мин/макс
+            if (heightValue < m_TerrainData.MinHeight) m_TerrainData.MinHeight = heightValue;
+            if (heightValue > m_TerrainData.MaxHeight) m_TerrainData.MaxHeight = heightValue;
+            }
+        }
+
+        // Вычисляем центр
+    float totalWidth = ( width - 1 ) * cellSize;
+    float totalDepth = ( height - 1 ) * cellSize;
+    m_TerrainData.Origin = FVector ( totalWidth * 0.5f, 0.0f, totalDepth * 0.5f );
+
+    LOG_DEBUG ( "[TERRAIN] Generated height range: ",
+                m_TerrainData.MinHeight, " - ", m_TerrainData.MaxHeight );
+    }
+
+    // Простая реализация шума
+static float Noise ( int32 x, int32 y, int32 seed )
+    {
+    int32 n = x + y * 57 + seed * 131;
+    n = ( n << 13 ) ^ n;
+    return ( 1.0f - ( ( n * ( n * n * 60493 + 19990303 ) + 1376312589 ) & 0x7fffffff ) / 1073741824.0f );
+    }
+
+void CTerrainComponent::GenerateNoise ( int32 width, int32 height, float cellSize, int32 seed )
+    {
+    DestroyRenderResources ();
+
+    m_TerrainData.Width = width;
+    m_TerrainData.Height = height;
+    m_TerrainData.CellSize = cellSize;
+
+    size_t totalPoints = width * height;
+    m_TerrainData.Heights.resize ( totalPoints );
+
+    m_TerrainData.MinHeight = std::numeric_limits<float>::max ();
+    m_TerrainData.MaxHeight = -std::numeric_limits<float>::max ();
+
+    float frequency = 0.05f;
+    float amplitude = 50.0f;
+
+    for (int32 z = 0; z < height; ++z)
+        {
+        for (int32 x = 0; x < width; ++x)
+            {
+                // Простой шум с несколькими октавами
+            float heightValue = 0;
+            float amp = amplitude;
+            float freq = frequency;
+
+            for (int octave = 0; octave < 4; ++octave)
+                {
+                heightValue += Noise ( static_cast< int32 > ( x * freq ),
+                                       static_cast< int32 > ( z * freq ), seed ) * amp;
+                amp *= 0.5f;
+                freq *= 2.0f;
+                }
+
+            heightValue += amplitude * 0.5f; // Смещаем вверх
+
+            m_TerrainData.Heights[ z * width + x ] = heightValue;
+
+            if (heightValue < m_TerrainData.MinHeight) m_TerrainData.MinHeight = heightValue;
+            if (heightValue > m_TerrainData.MaxHeight) m_TerrainData.MaxHeight = heightValue;
+            }
+        }
+
+    float totalWidth = ( width - 1 ) * cellSize;
+    float totalDepth = ( height - 1 ) * cellSize;
+    m_TerrainData.Origin = FVector ( totalWidth * 0.5f, 0.0f, totalDepth * 0.5f );
+
+    LOG_DEBUG ( "Noise terrain generated: ", width, "x", height,
+                ", height range: ", m_TerrainData.MinHeight, " - ", m_TerrainData.MaxHeight );
+    }
+
+void CTerrainComponent::GenerateCustom ( int32 width, int32 height, float cellSize,
+                                         std::function<float ( int32 x, int32 z )> heightFunc )
+    {
+    DestroyRenderResources ();
+
+    m_TerrainData.Width = width;
+    m_TerrainData.Height = height;
+    m_TerrainData.CellSize = cellSize;
+
+    size_t totalPoints = width * height;
+    m_TerrainData.Heights.resize ( totalPoints );
+
+    m_TerrainData.MinHeight = std::numeric_limits<float>::max ();
+    m_TerrainData.MaxHeight = -std::numeric_limits<float>::max ();
+
+    for (int32 z = 0; z < height; ++z)
+        {
+        for (int32 x = 0; x < width; ++x)
+            {
+            float heightValue = heightFunc ( x, z );
+            m_TerrainData.Heights[ z * width + x ] = heightValue;
+
+            if (heightValue < m_TerrainData.MinHeight) m_TerrainData.MinHeight = heightValue;
+            if (heightValue > m_TerrainData.MaxHeight) m_TerrainData.MaxHeight = heightValue;
+            }
+        }
+
+    float totalWidth = ( width - 1 ) * cellSize;
+    float totalDepth = ( height - 1 ) * cellSize;
+    m_TerrainData.Origin = FVector ( totalWidth * 0.5f, 0.0f, totalDepth * 0.5f );
+
+    LOG_DEBUG ( "Custom terrain generated: ", width, "x", height,
+                ", height range: ", m_TerrainData.MinHeight, " - ", m_TerrainData.MaxHeight );
+    }
+
+bool CTerrainComponent::LoadFromHeightmap ( const std::string & filename, float cellSize )
+    {
+        // TODO: Реализовать загрузку изображения
+    LOG_ERROR ( "LoadFromHeightmap not implemented yet" );
+    return false;
+    }
+
+    // ============================================================================
+    // Height Queries
+    // ============================================================================
 
 float CTerrainComponent::GetHeightAtWorld ( const FVector & worldPos ) const
     {
@@ -189,27 +342,6 @@ FVector CTerrainComponent::GetWorldPositionAt ( int32 x, int32 z ) const
     float worldZ = m_TerrainData.Origin.z + ( z - ( m_TerrainData.Height - 1 ) * 0.5f ) * m_TerrainData.CellSize;
     float worldY = m_TerrainData.GetHeight ( x, z );
 
-    // Отладка для первого кадра (только несколько точек)
-    static bool firstTime = true;
-    if (firstTime)
-        {
-        if (x == 50 && z == 50)
-            {
-            LOG_DEBUG ( "[TERRAIN] Center point (50,50): world=(",
-                        worldX, ",", worldY, ",", worldZ,
-                        "), height=", worldY );
-            }
-        if (x == 0 && z == 0)
-            {
-            LOG_DEBUG ( "[TERRAIN] Corner (0,0): height=", worldY );
-            }
-        if (x == 99 && z == 99)
-            {
-            LOG_DEBUG ( "[TERRAIN] Corner (99,99): height=", worldY );
-            firstTime = false;
-            }
-        }
-
     return FVector ( worldX, worldY, worldZ );
     }
 
@@ -222,9 +354,9 @@ FVector CTerrainComponent::GetBoundingBox () const
     return FVector ( totalWidth, heightRange, totalDepth );
     }
 
-// ============================================================================
-// Collision Checks
-// ============================================================================
+    // ============================================================================
+    // Collision Checks
+    // ============================================================================
 
 bool CTerrainComponent::CheckCollision ( CBaseCollisionComponent * other, FCollisionInfo & outInfo ) const
     {
@@ -258,37 +390,14 @@ bool CTerrainComponent::CheckCollision ( CBaseCollisionComponent * other, FColli
                 return COLLISION_SYSTEM.CheckConeTerrain ( other, nonConstThis, outInfo );
 
             case ECollisionShape::COMPOUND:
-                LOG_DEBUG ( "stub for Terrain-Compound collision" );
-                return false;
-
             case ECollisionShape::MESH:
-                LOG_DEBUG ( "stub for Terrain-Mesh collision" );
-                return false;
-
             case ECollisionShape::TERRAIN:
-                {
-                static int warnCount = 0;
-                if (warnCount < 1)
-                    {
-                    LOG_DEBUG ( "Terrain-Terrain collision not implemented" );
-                    warnCount++;
-                    }
-                return false;
-                }
-
             case ECollisionShape::RAY:
-                LOG_DEBUG ( "stub for Terrain-Ray collision" );
-                return false;
-
             case ECollisionShape::PLANE:
-                LOG_DEBUG ( "stub for Terrain-Plane collision" );
-                return false;
-
             case ECollisionShape::MAX:
             default:
-                break;
+                return false;
         }
-    return false;
     }
 
 bool CTerrainComponent::RaycastTerrain ( const FVector & start, const FVector & dir, float maxDist,
@@ -305,7 +414,7 @@ bool CTerrainComponent::RaycastTerrain ( const FVector & start, const FVector & 
         if (current.y <= terrainY)
             {
             outHit = current;
-            outNormal = FVector ( 0.0f, 1.0f, 0.0f );
+            outNormal = FVector ( 0.0f, 1.0f, 0.0f ); // Упрощённая нормаль
             outDist = traveled;
             return true;
             }
@@ -317,9 +426,9 @@ bool CTerrainComponent::RaycastTerrain ( const FVector & start, const FVector & 
     return false;
     }
 
-// ============================================================================
-// Render Resources
-// ============================================================================
+    // ============================================================================
+    // Render Resources
+    // ============================================================================
 
 void CTerrainComponent::CreateRenderResources ( CBufferManager * BufferManager )
     {
@@ -328,31 +437,29 @@ void CTerrainComponent::CreateRenderResources ( CBufferManager * BufferManager )
         return;
         }
 
-    // Если уже есть ресурсы, не создаём заново
     if (HasRenderResources ())
         {
         return;
         }
 
-    // Генерируем вершины
+        // Генерируем вершины
     std::vector<FTerrainVertex> vertices;
     GenerateVertices ( vertices );
-    m_VertexCount = static_cast< uint32_t > ( vertices.size () );
+    m_VertexCount = static_cast< uint32_t >( vertices.size () );
 
     // Генерируем индексы
     std::vector<uint32_t> indices;
     GenerateIndices ( indices );
-    m_IndexCount = static_cast< uint32_t > ( indices.size () );
+    m_IndexCount = static_cast< uint32_t >( indices.size () );
 
     // Создаём вершинный буфер
     FBuffer vertexBuffer = BufferManager->CreateVertexBuffer ( vertices );
     if (vertexBuffer.IsValid ())
         {
         m_VertexBuffer = vertexBuffer.Buffer;
-        // BufferManager владеет памятью, мы только храним handle
         }
 
-    // Создаём индексный буфер (если есть индексы)
+        // Создаём индексный буфер
     if (!indices.empty ())
         {
         FBuffer indexBuffer = BufferManager->CreateIndexBuffer ( indices );
@@ -368,8 +475,6 @@ void CTerrainComponent::CreateRenderResources ( CBufferManager * BufferManager )
 
 void CTerrainComponent::DestroyRenderResources ()
     {
-    // BufferManager сам удалит буферы при Shutdown
-    // Мы только обнуляем указатели
     m_VertexBuffer = VK_NULL_HANDLE;
     m_IndexBuffer = VK_NULL_HANDLE;
     m_VertexCount = 0;
@@ -386,67 +491,35 @@ void CTerrainComponent::GenerateVertices ( std::vector<FTerrainVertex> & vertice
         for (int32 x = 0; x < m_TerrainData.Width; ++x)
             {
             FTerrainVertex vert;
-
-            // Позиция
             vert.Position = GetWorldPositionAt ( x, z );
 
-            // Нормаль (вычисляем через соседние точки)
-            float hL, hR, hD, hU;
-            float step = m_TerrainData.CellSize;
+            // Вычисляем нормаль через соседние точки
+            float hL = ( x > 0 ) ? GetHeightAtWorld ( FVector ( vert.Position.x - m_TerrainData.CellSize, 0, vert.Position.z ) ) : vert.Position.y;
+            float hR = ( x < m_TerrainData.Width - 1 ) ? GetHeightAtWorld ( FVector ( vert.Position.x + m_TerrainData.CellSize, 0, vert.Position.z ) ) : vert.Position.y;
+            float hD = ( z > 0 ) ? GetHeightAtWorld ( FVector ( vert.Position.x, 0, vert.Position.z - m_TerrainData.CellSize ) ) : vert.Position.y;
+            float hU = ( z < m_TerrainData.Height - 1 ) ? GetHeightAtWorld ( FVector ( vert.Position.x, 0, vert.Position.z + m_TerrainData.CellSize ) ) : vert.Position.y;
 
-            // Лево
-            if (x > 0)
-                hL = GetHeightAtWorld ( FVector ( vert.Position.x - step, 0, vert.Position.z ) );
-            else
-                hL = vert.Position.y;
-
-            // Право
-            if (x < m_TerrainData.Width - 1)
-                hR = GetHeightAtWorld ( FVector ( vert.Position.x + step, 0, vert.Position.z ) );
-            else
-                hR = vert.Position.y;
-
-            // Низ (по Z)
-            if (z > 0)
-                hD = GetHeightAtWorld ( FVector ( vert.Position.x, 0, vert.Position.z - step ) );
-            else
-                hD = vert.Position.y;
-
-            // Верх (по Z)
-            if (z < m_TerrainData.Height - 1)
-                hU = GetHeightAtWorld ( FVector ( vert.Position.x, 0, vert.Position.z + step ) );
-            else
-                hU = vert.Position.y;
-
-            FVector normal ( hL - hR, 2.0f * step, hD - hU );
+            FVector normal ( hL - hR, 2.0f * m_TerrainData.CellSize, hD - hU );
             float normalLength = normal.Length ();
-            if (normalLength > 0.0001f)
-                vert.Normal = normal / normalLength;
-            else
-                vert.Normal = FVector ( 0.0f, 1.0f, 0.0f );
+            vert.Normal = ( normalLength > 0.0001f ) ? normal / normalLength : FVector ( 0.0f, 1.0f, 0.0f );
 
-            // Цвет по высоте (для визуализации)
+            // Цвет по высоте
             float heightRange = m_TerrainData.MaxHeight - m_TerrainData.MinHeight;
-            float t = ( heightRange > 0.0001f ) ?
-                ( vert.Position.y - m_TerrainData.MinHeight ) / heightRange : 0.5f;
+            float t = ( heightRange > 0.0001f ) ? ( vert.Position.y - m_TerrainData.MinHeight ) / heightRange : 0.5f;
 
-      // Градиент от синего (низ) к зелёному (средний) к красному (высокий)
             if (t < 0.5f)
                 {
-                // От синего к зелёному
                 float t2 = t * 2.0f;
                 vert.Color = FVector ( 0.0f, t2, 1.0f - t2 );
                 }
             else
                 {
-                // От зелёного к красному
                 float t2 = ( t - 0.5f ) * 2.0f;
                 vert.Color = FVector ( t2, 1.0f - t2, 0.0f );
                 }
 
-            // UV координаты (для текстурирования)
-            vert.UV.x = static_cast< float > ( x ) / ( m_TerrainData.Width - 1 );
-            vert.UV.y = static_cast< float > ( z ) / ( m_TerrainData.Height - 1 );
+            vert.UV.x = static_cast< float >( x ) / ( m_TerrainData.Width - 1 );
+            vert.UV.y = static_cast< float >( z ) / ( m_TerrainData.Height - 1 );
 
             vertices.push_back ( vert );
             }
@@ -471,172 +544,15 @@ void CTerrainComponent::GenerateIndices ( std::vector<uint32_t> & indices ) cons
             uint32_t i2 = ( z + 1 ) * m_TerrainData.Width + x;
             uint32_t i3 = ( z + 1 ) * m_TerrainData.Width + x + 1;
 
-            // Первый треугольник (верхний левый)
+            // Первый треугольник
             indices.push_back ( i0 );
             indices.push_back ( i1 );
             indices.push_back ( i2 );
 
-            // Второй треугольник (нижний правый)
+            // Второй треугольник
             indices.push_back ( i1 );
             indices.push_back ( i3 );
             indices.push_back ( i2 );
             }
         }
-    }
-
-void CTerrainComponent::GenerateHilly ( int32 width, int32 height, float cellSize,
-                                        float amplitude, float frequency )
-    {
-        // Очищаем старые рендер ресурсы
-    DestroyRenderResources ();
-
-    m_TerrainData.Width = width;
-    m_TerrainData.Height = height;
-    m_TerrainData.CellSize = cellSize;
-
-    size_t totalPoints = width * height;
-    m_TerrainData.Heights.resize ( totalPoints );
-
-    m_TerrainData.MinHeight = FLT_MAX;
-    m_TerrainData.MaxHeight = -FLT_MAX;
-
-    LOG_DEBUG ( "[TERRAIN COMP] Generating hilly terrain: ", width, "x", height,
-                ", amp=", amplitude, ", freq=", frequency );
-
-      // Генерируем холмы с помощью синусоид
-    for (int32 z = 0; z < height; ++z)
-        {
-        for (int32 x = 0; x < width; ++x)
-            {
-                // Нормализуем координаты для более равномерных холмов
-            float nx = ( float ) x / ( width - 1 ) - 0.5f;
-            float nz = ( float ) z / ( height - 1 ) - 0.5f;
-
-            // Комбинация нескольких синусоид для более естественного вида
-            float h1 = sin ( nx * 10.0f * frequency ) * cos ( nz * 10.0f * frequency ) * amplitude;
-            float h2 = sin ( nx * 23.0f * frequency ) * cos ( nz * 23.0f * frequency ) * amplitude * 0.5f;
-            float h3 = sin ( nx * 7.0f * frequency ) * cos ( nz * 7.0f * frequency ) * amplitude * 0.8f;
-
-            // Добавляем шум для реалистичности
-            float noise = ( rand () % 1000 ) / 1000.0f * amplitude * 0.2f;
-
-            float heightValue = h1 + h2 + h3 + noise + amplitude * 0.5f;
-
-            m_TerrainData.Heights[ z * width + x ] = heightValue;
-
-            // Обновляем мин/макс
-            if (heightValue < m_TerrainData.MinHeight) m_TerrainData.MinHeight = heightValue;
-            if (heightValue > m_TerrainData.MaxHeight) m_TerrainData.MaxHeight = heightValue;
-            }
-        }
-
-        // Вычисляем центр
-    float totalWidth = ( width - 1 ) * cellSize;
-    float totalHeight = ( height - 1 ) * cellSize;
-    m_TerrainData.Origin = FVector ( totalWidth * 0.5f, 0.0f, totalHeight * 0.5f );
-
-    LOG_DEBUG ( "[TERRAIN COMP] Generated height range: ",
-                m_TerrainData.MinHeight, " - ", m_TerrainData.MaxHeight );
-    }
-
-// Простая реализация шума (можно заменить на настоящий Perlin noise)
-static float Noise ( int32 x, int32 y, int32 seed )
-    {
-    int32 n = x + y * 57 + seed * 131;
-    n = ( n << 13 ) ^ n;
-    return ( 1.0f - ( ( n * ( n * n * 60493 + 19990303 ) + 1376312589 ) & 0x7fffffff ) / 1073741824.0f );
-    }
-
-void CTerrainComponent::GenerateNoise ( int32 width, int32 height, float cellSize, int32 seed )
-    {
-    DestroyRenderResources ();
-
-    m_TerrainData.Width = width;
-    m_TerrainData.Height = height;
-    m_TerrainData.CellSize = cellSize;
-
-    size_t totalPoints = width * height;
-    m_TerrainData.Heights.resize ( totalPoints );
-
-    m_TerrainData.MinHeight = FLT_MAX;
-    m_TerrainData.MaxHeight = -FLT_MAX;
-
-    float frequency = 0.05f;
-    float amplitude = 50.0f;
-
-    for (int32 z = 0; z < height; ++z)
-        {
-        for (int32 x = 0; x < width; ++x)
-            {
-                // Простой шум с несколькими октавами
-            float heightValue = 0;
-            float amp = amplitude;
-            float freq = frequency;
-
-            for (int octave = 0; octave < 4; ++octave)
-                {
-                heightValue += Noise ( static_cast< int32 > ( x * freq ),
-                                       static_cast< int32 > ( z * freq ), seed ) * amp;
-                amp *= 0.5f;
-                freq *= 2.0f;
-                }
-
-            heightValue += amplitude * 0.5f; // Смещаем вверх
-
-            m_TerrainData.Heights[ z * width + x ] = heightValue;
-
-            if (heightValue < m_TerrainData.MinHeight) m_TerrainData.MinHeight = heightValue;
-            if (heightValue > m_TerrainData.MaxHeight) m_TerrainData.MaxHeight = heightValue;
-            }
-        }
-
-    float totalWidth = ( width - 1 ) * cellSize;
-    float totalHeight = ( height - 1 ) * cellSize;
-    m_TerrainData.Origin = FVector ( totalWidth * 0.5f, 0.0f, totalHeight * 0.5f );
-
-    LOG_DEBUG ( "Noise terrain generated: ", width, "x", height,
-                ", height range: ", m_TerrainData.MinHeight, " - ", m_TerrainData.MaxHeight );
-    }
-
-void CTerrainComponent::GenerateCustom ( int32 width, int32 height, float cellSize,
-                                         std::function<float ( int32 x, int32 z )> heightFunc )
-    {
-    DestroyRenderResources ();
-
-    m_TerrainData.Width = width;
-    m_TerrainData.Height = height;
-    m_TerrainData.CellSize = cellSize;
-
-    size_t totalPoints = width * height;
-    m_TerrainData.Heights.resize ( totalPoints );
-
-    m_TerrainData.MinHeight = FLT_MAX;
-    m_TerrainData.MaxHeight = -FLT_MAX;
-
-    for (int32 z = 0; z < height; ++z)
-        {
-        for (int32 x = 0; x < width; ++x)
-            {
-            float heightValue = heightFunc ( x, z );
-            m_TerrainData.Heights[ z * width + x ] = heightValue;
-
-            if (heightValue < m_TerrainData.MinHeight) m_TerrainData.MinHeight = heightValue;
-            if (heightValue > m_TerrainData.MaxHeight) m_TerrainData.MaxHeight = heightValue;
-            }
-        }
-
-    float totalWidth = ( width - 1 ) * cellSize;
-    float totalHeight = ( height - 1 ) * cellSize;
-    m_TerrainData.Origin = FVector ( totalWidth * 0.5f, 0.0f, totalHeight * 0.5f );
-
-    LOG_DEBUG ( "Custom terrain generated: ", width, "x", height,
-                ", height range: ", m_TerrainData.MinHeight, " - ", m_TerrainData.MaxHeight );
-    }
-
-bool CTerrainComponent::LoadFromHeightmap ( const std::string & filename, float cellSize )
-    {
-        // TODO: Реализовать загрузку изображения
-        // Пока заглушка
-    LOG_ERROR ( "LoadFromHeightmap not implemented yet" );
-    return false;
     }

@@ -1,6 +1,7 @@
 #include "Components/Meshes/BaseMeshComponent.h"
 #include "Actors/Actor.h"
 #include "Render/Vulkan/Managers/BufferManager.h"
+#include "Render/Vulkan/VertexStructs/AllVertices.h"
 #include "Render/Vulkan/Managers/PipelineManager.h"
 #include "Render/Renderer.h"
 #include "Core/Engine.h"

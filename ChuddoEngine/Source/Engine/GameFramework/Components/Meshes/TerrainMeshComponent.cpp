@@ -3,10 +3,13 @@
 #include "Render/Renderer.h"
 #include "Core/Engine.h"
 #include "Actors/Actor.h"
+#include "Utils/Math/CE_MathHelpers.h"
+#include "Render/Vulkan/VertexStructs/AllVertices.h"
 
 CTerrainMeshComponent::CTerrainMeshComponent ( CObject * inOwner, const std::string & inDisplayName )
     : Super ( inOwner, inDisplayName )
     {
+    m_PipelineName = "TerrainPipeline";
     LOG_DEBUG ( "TerrainMeshComponent created: ", GetName () );
     }
 
@@ -19,7 +22,8 @@ CTerrainMeshComponent::~CTerrainMeshComponent ()
 void CTerrainMeshComponent::InitComponent ()
     {
     Super::InitComponent ();
-    // Не создаём ресурсы здесь, ждём OnBeginPlay
+
+    // Пытаемся найти TerrainComponent у владельца, если ещё не установлен
     if (!m_TerrainComponent)
         {
         CActor * owner = GetOwnerActor ();
@@ -43,7 +47,7 @@ void CTerrainMeshComponent::OnBeginPlay ()
     {
     Super::OnBeginPlay ();
 
-    // ВАЖНО: Создаём ресурсы здесь, после того как террейн сгенерирован
+    // Создаём ресурсы после того, как террейн сгенерирован
     if (m_TerrainComponent && !m_bRenderResourcesCreated)
         {
         LOG_DEBUG ( "[", GetName (), "] Creating terrain resources in OnBeginPlay" );
@@ -61,13 +65,10 @@ FTerrainRenderInfo CTerrainMeshComponent::GetTerrainInfo () const
 
     if (!IsReadyForRender ())
         {
-        LOG_DEBUG ( "[", GetName (), "] Not ready for render" );
         return Info;
         }
 
-   
-
-      // Базовые Vulkan ресурсы
+        // Базовые Vulkan ресурсы
     Info.VertexBuffer = m_VertexBuffer;
     Info.VertexCount = m_VertexCount;
     Info.IndexBuffer = m_IndexBuffer;
@@ -99,8 +100,6 @@ FTerrainRenderInfo CTerrainMeshComponent::GetTerrainInfo () const
         Info.Params.GrassHeight = data.MinHeight + range * 0.3f;
         Info.Params.RockHeight = data.MinHeight + range * 0.6f;
         Info.Params.SnowHeight = data.MinHeight + range * 0.8f;
-
-      
         }
 
     Info.PipelineName = GetPipelineName ();
@@ -117,25 +116,19 @@ void CTerrainMeshComponent::UpdateFromTerrain ()
 
         // Проверяем, есть ли данные террейна
     const FTerrainData & data = m_TerrainComponent->GetTerrainData ();
-    if (data.Width == 0 || data.Height == 0)
+    if (data.Width == 0 || data.Height == 0 || data.Heights.empty ())
         {
         LOG_WARN ( "[", GetName (), "] Terrain data not generated yet!" );
         return;
         }
 
-        // Проверяем, не созданы ли уже ресурсы
-    if (m_bRenderResourcesCreated)
-        {
-        LOG_DEBUG ( "[", GetName (), "] Render resources already created, skipping..." );
-        return;
-        }
-
-        // Уничтожаем старые ресурсы (на всякий случай)
+        // Уничтожаем старые ресурсы
     DestroyRenderResources ();
 
     // Обновляем кэш данных
     m_CachedData = &data;
 
+    // Создаём новые ресурсы
     if (CEngine::Get ().GetRenderer ())
         {
         auto * bufferManager = CEngine::Get ().GetRenderer ()->GetBufferManager ();
@@ -146,7 +139,7 @@ void CTerrainMeshComponent::UpdateFromTerrain ()
         }
 
     LOG_DEBUG ( "[", GetName (), "] Updated from terrain: ",
-                data.Width, "x", data.Height );
+                data.Width, "x", data.Height, " with ", data.Heights.size (), " height points" );
     }
 
 void CTerrainMeshComponent::GenerateVertices ( std::vector<FMeshVertex> & OutVertices ) const
@@ -161,9 +154,9 @@ void CTerrainMeshComponent::GenerateVertices ( std::vector<FMeshVertex> & OutVer
 
     const FTerrainData & data = m_TerrainComponent->GetTerrainData ();
 
-    if (data.Width <= 0 || data.Height <= 0)
+    if (data.Width <= 0 || data.Height <= 0 || data.Heights.empty ())
         {
-        LOG_ERROR ( "[", GetName (), "] Invalid terrain dimensions!" );
+        LOG_ERROR ( "[", GetName (), "] Invalid terrain dimensions or no height data!" );
         return;
         }
 
@@ -175,7 +168,7 @@ void CTerrainMeshComponent::GenerateVertices ( std::vector<FMeshVertex> & OutVer
             {
             FMeshVertex vert;
 
-            // Позиция
+            // Позиция из компонента коллизии (чтобы гарантировать точное совпадение)
             vert.Position = m_TerrainComponent->GetWorldPositionAt ( x, z );
 
             // Нормаль
@@ -216,26 +209,15 @@ void CTerrainMeshComponent::GenerateIndices ( std::vector<uint32_t> & OutIndices
             uint32_t i2 = ( z + 1 ) * data.Width + x;
             uint32_t i3 = ( z + 1 ) * data.Width + x + 1;
 
-            // ДЛЯ CW (по часовой стрелке):
-            // Первый треугольник (i0 -> i1 -> i3 -> i2?)
-            // Давайте нарисуем:
-            // i0 (0,0) -> i1 (1,0) -> i3 (1,1) -> обратно к i0
+            // Первый треугольник
             OutIndices.push_back ( i0 );
-            OutIndices.push_back ( i2 );
             OutIndices.push_back ( i1 );
+            OutIndices.push_back ( i2 );
 
+            // Второй треугольник
             OutIndices.push_back ( i1 );
-            OutIndices.push_back ( i2 );
             OutIndices.push_back ( i3 );
-
-            // Для отладки - выведем первый треугольник
-            static bool firstTime = true;
-            if (firstTime && x == 0 && z == 0)
-                {
-                LOG_DEBUG ( "[TERRAIN] First triangle indices: ", i0, ", ", i1, ", ", i3 );
-                LOG_DEBUG ( "[TERRAIN] Second triangle indices: ", i0, ", ", i3, ", ", i2 );
-                firstTime = false;
-                }
+            OutIndices.push_back ( i2 );
             }
         }
     }
@@ -250,34 +232,16 @@ FVector CTerrainMeshComponent::CalculateNormal ( int32 x, int32 z ) const
     const FTerrainData & data = m_TerrainComponent->GetTerrainData ();
     float cellSize = data.CellSize;
 
-    float hL, hR, hD, hU;
+    // Получаем позицию текущей точки
     FVector pos = m_TerrainComponent->GetWorldPositionAt ( x, z );
 
-    // Лево
-    if (x > 0)
-        hL = m_TerrainComponent->GetHeightAtWorld ( FVector ( pos.x - cellSize, 0, pos.z ) );
-    else
-        hL = pos.y;
+    // Высоты соседних точек
+    float hL = ( x > 0 ) ? m_TerrainComponent->GetHeightAtWorld ( FVector ( pos.x - cellSize, 0, pos.z ) ) : pos.y;
+    float hR = ( x < data.Width - 1 ) ? m_TerrainComponent->GetHeightAtWorld ( FVector ( pos.x + cellSize, 0, pos.z ) ) : pos.y;
+    float hD = ( z > 0 ) ? m_TerrainComponent->GetHeightAtWorld ( FVector ( pos.x, 0, pos.z - cellSize ) ) : pos.y;
+    float hU = ( z < data.Height - 1 ) ? m_TerrainComponent->GetHeightAtWorld ( FVector ( pos.x, 0, pos.z + cellSize ) ) : pos.y;
 
-    // Право
-    if (x < data.Width - 1)
-        hR = m_TerrainComponent->GetHeightAtWorld ( FVector ( pos.x + cellSize, 0, pos.z ) );
-    else
-        hR = pos.y;
-
-    // Низ (по Z)
-    if (z > 0)
-        hD = m_TerrainComponent->GetHeightAtWorld ( FVector ( pos.x, 0, pos.z - cellSize ) );
-    else
-        hD = pos.y;
-
-    // Верх (по Z)
-    if (z < data.Height - 1)
-        hU = m_TerrainComponent->GetHeightAtWorld ( FVector ( pos.x, 0, pos.z + cellSize ) );
-    else
-        hU = pos.y;
-
-    // Вычисляем нормаль
+    // Вычисляем нормаль через разности высот
     FVector normal ( hL - hR, 2.0f * cellSize, hD - hU );
 
     float length = normal.Length ();

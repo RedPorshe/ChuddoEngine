@@ -1,4 +1,3 @@
-// GravityComponent.h
 #pragma once
 #include "Components/BaseComponent.h"
 
@@ -26,20 +25,20 @@ class CGravityComponent : public CBaseComponent
         float GetVerticalVelocity () const { return m_VerticalVelocity; }
         void SetVerticalVelocity ( float vel ) { m_VerticalVelocity = vel; }
 
-      
-
     protected:
-        float m_GravityScale = 1.1f;        
-        float m_GravityStrength = 9.8f;      
-        float m_VerticalVelocity = 0.0f;      
-        float m_KillZone = -10000.0f;      // Killzone
-        float m_GroundCheckDistance = .01f;    
-        bool bIsOnGround = false;           
-        bool m_bWasGrounded = false;           
-        void CheckGrounded ();
-        FVector ResolveCollision ( const FVector & desiredPos, const FVector & currentPos, const std::string & channelName );
-        FVector m_LastPosition;
+        // Параметры гравитации
+        float m_GravityScale = 1.1f;
+        float m_GravityStrength = 9.8f;
+        float m_VerticalVelocity = 0.0f;
+        float m_KillZone = -10000.0f;
+        float m_MaxFallSpeed = -100.0f;
 
+        // Состояние
+        bool bIsOnGround = false;
+        bool m_bWasGrounded = false;
+
+        // Для коллизий
+        FVector m_LastPosition = FVector::Zero ();
     };
 
 REGISTER_CLASS_FACTORY ( CGravityComponent );

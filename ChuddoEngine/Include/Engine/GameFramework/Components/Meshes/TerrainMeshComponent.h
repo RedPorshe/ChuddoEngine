@@ -3,7 +3,6 @@
 #include "Components/Meshes/BaseMeshComponent.h"
 #include "Components/Collisions/TerrainComponent.h"
 
-
 class CTerrainMeshComponent : public CBaseMeshComponent
     {
     CHUDDO_DECLARE_CLASS ( CTerrainMeshComponent, CBaseMeshComponent )
@@ -22,8 +21,12 @@ class CTerrainMeshComponent : public CBaseMeshComponent
          * Установить компонент террейна, из которого брать данные
          */
         void SetTerrainComponent ( CTerrainComponent * TerrainComp ) { m_TerrainComponent = TerrainComp; }
-        FMeshInfo GetMeshInfo () const { return FMeshInfo (); }
-        FTerrainRenderInfo GetTerrainInfo () const override;
+
+        /**
+         * Получить информацию о террейне для рендера
+         */
+        virtual FTerrainRenderInfo GetTerrainInfo () const override;
+
         /**
          * Получить привязанный компонент террейна
          */
@@ -39,7 +42,7 @@ class CTerrainMeshComponent : public CBaseMeshComponent
         // ========== Переопределённые методы из CBaseMeshComponent ==========
         virtual void GenerateVertices ( std::vector<FMeshVertex> & OutVertices ) const override;
         virtual void GenerateIndices ( std::vector<uint32_t> & OutIndices ) const override;
-        virtual const std::string & GetPipelineName () const override { return "TerrainPipeline"; }
+        virtual const std::string & GetPipelineName () const override { return m_PipelineName; }
 
     private:
         // ========== Вспомогательные методы ==========

@@ -8,171 +8,170 @@
 // ============================================================================
 
 CCapsuleComponent::CCapsuleComponent ( CObject * inOwner, const std::string & InName )
-    : Super ( inOwner, InName )
-    {
-    SetShapeType ( ECollisionShape::CAPSULE );   
-    SetChannelAsPawn ();
-    SetResponseToChannel ( ECollisionChannel::WorldDynamic, ECollisionResponse::BLOCK );
-    SetResponseToChannel ( ECollisionChannel::WorldStatic, ECollisionResponse::BLOCK );
-    LOG_DEBUG ( "CapsuleComponent created: ", GetName (),
-                ", Radius: ", m_Radius,
-                ", HalfHeight: ", m_HalfHeight );
-    }
+	: Super ( inOwner, InName )
+	{
+	SetShapeType ( ECollisionShape::CAPSULE );
+	SetChannelAsPawn ();
+	SetResponseToChannel ( ECollisionChannel::WorldDynamic, ECollisionResponse::BLOCK );
+	SetResponseToChannel ( ECollisionChannel::WorldStatic, ECollisionResponse::BLOCK );
+	LOG_DEBUG ( "CapsuleComponent created: ", GetName (),
+				", Radius: ", m_Radius,
+				", HalfHeight: ", m_HalfHeight );
+	}
 
 CCapsuleComponent::~CCapsuleComponent ()
-    {}
+	{}
 
-    // ============================================================================
-    // Component Lifecycle
-    // ============================================================================
+	// ============================================================================
+	// Component Lifecycle
+	// ============================================================================
 
 void CCapsuleComponent::InitComponent ()
-    {
-    Super::InitComponent ();
-    }
+	{
+	Super::InitComponent ();
+	}
 
 void CCapsuleComponent::Tick ( float DeltaTime )
-    {
-    Super::Tick ( DeltaTime );
-    }
+	{
+	Super::Tick ( DeltaTime );
+	}
 
 void CCapsuleComponent::OnBeginPlay ()
-    {
-    Super::OnBeginPlay ();
-    }
+	{
+	Super::OnBeginPlay ();
+	}
 
-    // ============================================================================
-    // Collision Interface
-    // ============================================================================
+	// ============================================================================
+	// Collision Interface
+	// ============================================================================
 
 bool CCapsuleComponent::CheckCollision ( CBaseCollisionComponent * other, FCollisionInfo & outInfo ) const
-    {
-    if (!other || !IsCollisionEnabled () || !other->IsCollisionEnabled ())
-        return false;
+	{
+	if (!other || !IsCollisionEnabled () || !other->IsCollisionEnabled ())
+		return false;
 
-    if (!CanCollideWith ( other ))
-        return false;
+	if (!CanCollideWith ( other ))
+		return false;
 
-    ECollisionShape otherShape = other->GetShapeType ();
-   
-    CCapsuleComponent * nonConstThis = const_cast< CCapsuleComponent * >( this );
-   
+	ECollisionShape otherShape = other->GetShapeType ();
 
-    switch (otherShape)
-        {
-            case ECollisionShape::NONE:
-                {
-                return false;
-                }
+	CCapsuleComponent * nonConstThis = const_cast< CCapsuleComponent * >( this );
 
-            case ECollisionShape::SPHERE:
-                {
-                return COLLISION_SYSTEM.CheckSphereCapsule ( other, nonConstThis, outInfo );
-                }
 
-            case ECollisionShape::BOX:
-                {
-                return COLLISION_SYSTEM.CheckBoxCapsule (  other, nonConstThis, outInfo );
-                }
+	switch (otherShape)
+		{
+			case ECollisionShape::NONE:
+				{
+				return false;
+				}
 
-            case ECollisionShape::CAPSULE:
-                {
-                return COLLISION_SYSTEM.CheckCapsuleCapsule ( nonConstThis, other, outInfo );
-                }
+			case ECollisionShape::SPHERE:
+				{
+				return COLLISION_SYSTEM.CheckSphereCapsule ( other, nonConstThis, outInfo );
+				}
 
-            case ECollisionShape::CYLINDER:
-                {
-                
-                return COLLISION_SYSTEM.CheckCapsuleCylinder(nonConstThis,other,outInfo);
-                }
+			case ECollisionShape::BOX:
+				{
+				return COLLISION_SYSTEM.CheckBoxCapsule ( other, nonConstThis, outInfo );
+				}
 
-            case ECollisionShape::CONE:
-                {
-                return COLLISION_SYSTEM.CheckCapsuleCone(nonConstThis,other,outInfo);
-                }
+			case ECollisionShape::CAPSULE:
+				{
+				return COLLISION_SYSTEM.CheckCapsuleCapsule ( nonConstThis, other, outInfo );
+				}
 
-            case ECollisionShape::COMPOUND:
-                {
-                    // TODO: Implement Sphere-Compound collision
-                LOG_DEBUG ( "stub for Sphere-Compound collision" );
-                return false;
-                }
+			case ECollisionShape::CYLINDER:
+				{
 
-            case ECollisionShape::MESH:
-                {
-                    // TODO: Implement Sphere-Mesh collision
-                LOG_DEBUG ( "stub for Sphere-Mesh collision" );
-                return false;
-                }
+				return COLLISION_SYSTEM.CheckCapsuleCylinder ( nonConstThis, other, outInfo );
+				}
 
-            case ECollisionShape::TERRAIN:
-                {
-                return COLLISION_SYSTEM.CheckCapsuleTerrain(nonConstThis,other,outInfo);
-                }
+			case ECollisionShape::CONE:
+				{
+				return COLLISION_SYSTEM.CheckCapsuleCone ( nonConstThis, other, outInfo );
+				}
 
-            case ECollisionShape::RAY:
-                {
-                    // TODO: Implement Sphere-Ray collision
-                LOG_DEBUG ( "stub for Sphere-Ray collision" );
-                return false;
-                }
+			case ECollisionShape::COMPOUND:
+				{
+					// TODO: Implement Sphere-Compound collision
+				LOG_DEBUG ( "stub for Sphere-Compound collision" );
+				return false;
+				}
 
-            case ECollisionShape::PLANE:
-                {
-                    // TODO: Implement Sphere-Plane collision
-                LOG_DEBUG ( "stub for Sphere-Plane collision" );
-                return false;
-                }
+			case ECollisionShape::MESH:
+				{
+					// TODO: Implement Sphere-Mesh collision
+				LOG_DEBUG ( "stub for Sphere-Mesh collision" );
+				return false;
+				}
 
-            case ECollisionShape::MAX:
-            default:
-                break;
-        }
+			case ECollisionShape::TERRAIN:
+				{
+				return COLLISION_SYSTEM.CheckCapsuleTerrain ( nonConstThis, other, outInfo );
+				}
 
-    return false;
-    }
+			case ECollisionShape::RAY:
+				{
+					// TODO: Implement Sphere-Ray collision
+				LOG_DEBUG ( "stub for Sphere-Ray collision" );
+				return false;
+				}
+
+			case ECollisionShape::PLANE:
+				{
+					// TODO: Implement Sphere-Plane collision
+				LOG_DEBUG ( "stub for Sphere-Plane collision" );
+				return false;
+				}
+
+			case ECollisionShape::MAX:
+			default:
+				break;
+		}
+
+	return false;
+	}
 
 float CCapsuleComponent::GetCollisionRadius () const
-    {
-        // Для капсулы возвращаем максимальный радиус (для грубых проверок)
-    return m_Radius + m_HalfHeight;
-    }
+	{
+	return    m_Radius + m_HalfHeight ;
+	}
 
 FVector CCapsuleComponent::GetBoundingBox () const
-    {
-        // Возвращаем размеры ограничивающего бокса
-    float totalHeight = GetTotalHeight ();
-    return FVector (
-        m_Radius * 2.0f,           // Ширина (X)
-        m_Radius * 2.0f,           // Глубина (Y)
-        totalHeight                 // Высота (Z)
-    );
-    }
+	{
+		// Возвращаем размеры ограничивающего бокса
+	float totalHeight = GetTotalHeight ();
+	return FVector (
+		m_Radius * 2.0f,           // Ширина (X)
+		m_Radius * 2.0f,           // Глубина (Y)
+		totalHeight                 // Высота (Z)
+	);
+	}
 
-    // ============================================================================
-    // Capsule Specific Methods
-    // ============================================================================
+	// ============================================================================
+	// Capsule Specific Methods
+	// ============================================================================
 
 FVector CCapsuleComponent::GetTopSphereCenter () const
-    {
-    FVector worldPos = GetWorldLocation ();
-    FQuat rotation = GetOwnerActor ()->GetActorRotationQuat ();
+	{
+	FVector worldPos = GetWorldLocation ();
+	FQuat rotation = GetOwnerActor ()->GetActorRotationQuat ();
 
-    // Смещение вверх по локальной оси Z
-    FVector localOffset ( 0, 0, m_HalfHeight );
-    FVector worldOffset = rotation * localOffset;
+	// Смещение вверх по локальной оси Z
+	FVector localOffset ( 0, 0, m_HalfHeight );
+	FVector worldOffset = rotation * localOffset;
 
-    return worldPos + worldOffset;
-    }
+	return worldPos + worldOffset;
+	}
 
 FVector CCapsuleComponent::GetBottomSphereCenter () const
-    {
-    FVector worldPos = GetWorldLocation ();
-    FQuat rotation = GetOwnerActor ()->GetActorRotationQuat ();
+	{
+	FVector worldPos = GetWorldLocation ();
+	FQuat rotation = GetOwnerActor ()->GetActorRotationQuat ();
 
-    // Смещение вниз по локальной оси Z
-    FVector localOffset ( 0, 0, -m_HalfHeight );
-    FVector worldOffset = rotation * localOffset;
+	// Смещение вниз по локальной оси Z
+	FVector localOffset ( 0, 0, -m_HalfHeight );
+	FVector worldOffset = rotation * localOffset;
 
-    return worldPos + worldOffset;
-    }
+	return worldPos + worldOffset;
+	}

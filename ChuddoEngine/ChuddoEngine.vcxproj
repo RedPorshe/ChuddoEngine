@@ -167,6 +167,9 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Include\Engine\Render\Vulkan\Managers\WireframePipeline.cpp" />
+    <ClCompile Include="Source\Engine\Render\Vulkan\VertexStructs\TerrainVertex.cpp" />
+    <ClCompile Include="Source\Engine\Render\Vulkan\VertexStructs\MeshVertex.cpp" />
     <ClCompile Include="Source\Engine\GameFramework\Actors\Character.cpp" />
     <ClCompile Include="Source\Engine\GameFramework\Components\Meshes\BaseMeshComponent.cpp" />
     <ClCompile Include="Source\Engine\GameFramework\Components\Meshes\StaticMeshComponent.cpp" />
@@ -181,6 +184,7 @@
     <ClCompile Include="Source\Engine\Render\Vulkan\Managers\RenderPassManager.cpp" />
     <ClCompile Include="Source\Engine\Render\Vulkan\Managers\SwapChainManager.cpp" />
     <ClCompile Include="Source\Engine\Render\Vulkan\Managers\SyncManager.cpp" />
+    <ClCompile Include="Source\Engine\Render\Vulkan\VertexStructs\WireframeVertex.cpp" />
     <ClCompile Include="Source\Engine\Render\Vulkan\VulkanContext.cpp" />
     <ClCompile Include="Source\Engine\Render\Window.cpp" />
     <ClCompile Include="Include\Test.cpp" />
@@ -269,6 +273,11 @@
     <ClInclude Include="Include\Engine\Render\Vulkan\Managers\RenderPassManager.h" />
     <ClInclude Include="Include\Engine\Render\Vulkan\Managers\SwapChainManager.h" />
     <ClInclude Include="Include\Engine\Render\Vulkan\Managers\SyncManager.h" />
+    <ClInclude Include="Include\Engine\Render\Vulkan\Managers\WireframePipeline.h" />
+    <ClInclude Include="Include\Engine\Render\Vulkan\VertexStructs\AllVertices.h" />
+    <ClInclude Include="Include\Engine\Render\Vulkan\VertexStructs\MeshVertex.h" />
+    <ClInclude Include="Include\Engine\Render\Vulkan\VertexStructs\TerrainVertex.h" />
+    <ClInclude Include="Include\Engine\Render\Vulkan\VertexStructs\WireframeVertex.h" />
     <ClInclude Include="Include\Engine\Render\Vulkan\VulkanContext.h" />
     <ClInclude Include="Include\Engine\Render\Vulkan\VulkanInterface.h" />
     <ClInclude Include="Include\Engine\Render\Window.h" />
@@ -292,6 +301,8 @@
     <None Include="Assets\Shaders\Terrain.vert" />
     <None Include="Assets\Shaders\Triangle.frag" />
     <None Include="Assets\Shaders\Triangle.vert" />
+    <None Include="Assets\Shaders\Wireframe.frag" />
+    <None Include="Assets\Shaders\Wireframe.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

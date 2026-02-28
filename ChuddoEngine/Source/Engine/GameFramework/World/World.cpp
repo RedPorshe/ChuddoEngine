@@ -180,7 +180,7 @@ FRenderInfo CWorld::CollectRenderInfo ()
 	// 1. Собираем камеру
 	Info.Camera = FindActiveCamera ();
 
-	// 2. Собираем меши и террейны для рендера
+	// 2. Собираем меши, террейны и коллизии для рендера
 	if (CurrentLevel)
 		{
 		const auto & actors = CurrentLevel->GetActors ();
@@ -189,9 +189,10 @@ FRenderInfo CWorld::CollectRenderInfo ()
 			{
 			if (!actor || actor->IsHiddenInGame ()) continue;
 
-			// Получаем все рендер-информацию от актора
-			auto [meshes, terrains] = actor->GetRenderInfo ();
+			// Получаем всю рендер-информацию от актора
+			auto [meshes, terrains, debugCollisions,Terrainwireframes] = actor->GetRenderInfo ();
 
+			
 			// Добавляем меши
 			for (const auto & mesh : meshes)
 				{
@@ -200,7 +201,8 @@ FRenderInfo CWorld::CollectRenderInfo ()
 					Info.AddMesh ( mesh );
 					}
 				}
-		
+
+				// Добавляем террейны
 			for (const auto & terrain : terrains)
 				{
 				if (terrain.IsValid ())
@@ -208,16 +210,41 @@ FRenderInfo CWorld::CollectRenderInfo ()
 					Info.AddTerrain ( terrain );
 					}
 				}
+
+				// Добавляем отладочные коллизии
+			for (const auto & collision : debugCollisions)
+				{
+				if (collision.IsValid ())
+					{
+					Info.AddDebugCollision ( collision );
+					}
+				}
+			for (const auto & TerWire : Terrainwireframes)
+				{
+				Info.AddTerrainWireframe ( TerWire );
+				}
 			}
 		}
 
-	// 3. Устанавливаем флаг наличия данных
+		// 3. Устанавливаем флаги
 	Info.HasInfo = !Info.RenderMeshes.empty () || !Info.Terrains.empty ();
-
-	
+	Info.bDrawCollisions = HasAnyActorWithDebugCollisions (); // Или установите глобально
 
 	return Info;
 	}
+
+bool CWorld::HasAnyActorWithDebugCollisions () const
+	{
+	if (!CurrentLevel) return false;
+
+	for (CActor * actor : CurrentLevel->GetActors ())
+		{
+		if (actor && actor->IsDrawCollisionsEnabled ())
+			return true;
+		}
+	return false;
+	}
+
 
 FCameraInfo CWorld::FindActiveCamera ()
 	{

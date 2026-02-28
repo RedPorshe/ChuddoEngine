@@ -7,13 +7,11 @@ CTerrainActor::CTerrainActor ( CObject * inOwner, const std::string & inDisplayN
     : Super ( inOwner, inDisplayName )
     {
     bIsTerrain = true;
-    // Не создаём компоненты в конструкторе
     LOG_DEBUG ( "[TERRAIN ACTOR] Created: ", GetName () );
     }
 
 CTerrainActor::~CTerrainActor ()
     {
-        // Компоненты удалятся автоматически через систему объектов
     m_TerrainComponent = nullptr;
     m_TerrainMeshComponent = nullptr;
     }
@@ -21,14 +19,13 @@ CTerrainActor::~CTerrainActor ()
 void CTerrainActor::BeginPlay ()
     {
     Super::BeginPlay ();
-    // НЕ создаём компоненты здесь - ждём вызова функций генерации
+    // Компоненты создаются при вызове методов генерации
     LOG_DEBUG ( "[TERRAIN ACTOR] BeginPlay - waiting for generation" );
     }
 
 void CTerrainActor::Tick ( float deltaTime )
     {
     Super::Tick ( deltaTime );
-  
     }
 
 void CTerrainActor::EndPlay ()
@@ -36,58 +33,6 @@ void CTerrainActor::EndPlay ()
     Super::EndPlay ();
     }
 
-
-//
-//FRenderCollection CTerrainActor::GetRenderInfo () const
-//    {
-//    FRenderCollection Collection;
-//
-//    // Если компоненты ещё не созданы, возвращаем пустую коллекцию
-//    if (!m_TerrainMeshComponent)
-//        {
-//        return Collection;
-//        }
-//
-//    for (auto * comp : ActorComponents)
-//        {
-//        if (CBaseMeshComponent * mesh = dynamic_cast< CBaseMeshComponent * >( comp ))
-//            {
-//            if (mesh->IsReadyForRender ())
-//                {
-//                if (CTerrainMeshComponent * terrain = dynamic_cast< CTerrainMeshComponent * >( mesh ))
-//                    {
-//                        // Это террейн
-//                    FTerrainRenderInfo terrainInfo = terrain->GetTerrainInfo ();
-//                    if (terrainInfo.IsValid ())
-//                        {
-//                        Collection.Terrains.push_back ( terrainInfo );
-//
-//                        // Отладка (редко)
-//                        static float debugtimer = 0.f;
-//                        debugtimer += 0.016f;
-//                        if (debugtimer >= 1.f)
-//                            {
-//                            LOG_DEBUG ( "[", GetName (), "] Added terrain to render list" );
-//                            debugtimer = 0.f;
-//                            }
-//                        }
-//                    }
-//                else
-//                    {
-//                        // Обычный меш (не должно быть у TerrainActor)
-//                    FMeshInfo meshInfo = mesh->GetMeshInfo ();
-//                    if (meshInfo.IsValid ())
-//                        {
-//                        LOG_DEBUG ( "[", GetName (), "] Added mesh to render list" );
-//                        Collection.Meshes.push_back ( meshInfo );
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//    return Collection;
-//    }
-//
 CTerrainMeshComponent * CTerrainActor::GetTerrainMeshComponent () const
     {
     return m_TerrainMeshComponent;
@@ -139,7 +84,6 @@ void CTerrainActor::CreateTerrainComponents ()
 
 void CTerrainActor::GenerateFlat ( int32 width, int32 height, float cellSize, float heightValue )
     {
-        // Создаём компоненты если их ещё нет
     CreateTerrainComponents ();
 
     if (m_TerrainComponent)
@@ -156,7 +100,6 @@ void CTerrainActor::GenerateFlat ( int32 width, int32 height, float cellSize, fl
 
 void CTerrainActor::GenerateFromHeightmap ( const std::vector<float> & heights, int32 width, int32 height, float cellSize )
     {
-        // Создаём компоненты если их ещё нет
     CreateTerrainComponents ();
 
     if (m_TerrainComponent)
@@ -174,7 +117,6 @@ void CTerrainActor::GenerateFromHeightmap ( const std::vector<float> & heights, 
 void CTerrainActor::GenerateHilly ( int32 width, int32 height, float cellSize,
                                     float amplitude, float frequency )
     {
-        // Создаём компоненты если их ещё нет
     CreateTerrainComponents ();
 
     if (m_TerrainComponent)
@@ -197,7 +139,6 @@ void CTerrainActor::GenerateHilly ( int32 width, int32 height, float cellSize,
 
 void CTerrainActor::GenerateNoise ( int32 width, int32 height, float cellSize, int32 seed )
     {
-        // Создаём компоненты если их ещё нет
     CreateTerrainComponents ();
 
     if (m_TerrainComponent)
@@ -215,7 +156,6 @@ void CTerrainActor::GenerateNoise ( int32 width, int32 height, float cellSize, i
 void CTerrainActor::GenerateCustom ( int32 width, int32 height, float cellSize,
                                      std::function<float ( int32 x, int32 z )> heightFunc )
     {
-        // Создаём компоненты если их ещё нет
     CreateTerrainComponents ();
 
     if (m_TerrainComponent)

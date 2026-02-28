@@ -138,6 +138,7 @@ class CPipelineManager final : public IVulkanManager
 
         VkPipeline CreateMeshPipeLine ( VkRenderPass RenderPass );
         VkPipeline CreateTerrainPipeline ( VkRenderPass RenderPass );
+        VkPipeline CreateWireframePipeline ( VkRenderPass RenderPass );
         // Vertex input helpers
         FVertexInputDescription GetTriangleVertexInput () const;
         FVertexInputDescription GetUIVertexInput () const;

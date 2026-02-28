@@ -68,6 +68,7 @@ class CWorld : public CObject
         LevelType * CreateLevel ( const std::string & name = "Level", Args&&... args );
 
     protected:
+        bool HasAnyActorWithDebugCollisions () const;
         bool bIsPlaying = false;
         float CurrentDeltaTime {};
     };

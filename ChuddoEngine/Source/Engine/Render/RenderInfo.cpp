@@ -6,12 +6,9 @@
 // FCameraInfo Implementation
 //=============================================================================
 
-FCameraInfo::FCameraInfo ( const FVector & inLocation,
-                           const FVector & inViewTarget,
-                           const FMat4 & inViewMatrix,
-                           const FMat4 & inProjectionMatrix,
-                           const float & inNearPlane,
-                           const float & inFarPlane,
+FCameraInfo::FCameraInfo ( const FVector & inLocation, const FVector & inViewTarget,
+                           const FMat4 & inViewMatrix, const FMat4 & inProjectionMatrix,
+                           const float & inNearPlane, const float & inFarPlane,
                            const float & inFOVAngles )
     : ViewMatrix ( inViewMatrix )
     , ProjectionMatrix ( inProjectionMatrix )
@@ -35,45 +32,35 @@ void FCameraInfo::Clear ()
 
 void FCameraInfo::UpdateViewMatrix ()
     {
-    // Вычисление LookAt матрицы с использованием вашей математики
     FVector Direction = ( ViewTarget - Location );
     if (!Direction.IsZero ())
         Direction.Normalize ();
 
-    // Вектор вверх по умолчанию (Y-up)
     FVector Up ( 0.0f, 1.0f, 0.0f );
-
-    // Вычисление правого вектора
     FVector Right = Up.Cross ( Direction );
     if (!Right.IsZero ())
         Right.Normalize ();
     else
-        Right = FVector ( 1.0f, 0.0f, 0.0f ); // Fallback если up и direction коллинеарны
+        Right = FVector ( 1.0f, 0.0f, 0.0f );
 
-    // Пересчет вектора вверх для ортогональности
     FVector AdjustedUp = Direction.Cross ( Right );
     AdjustedUp.Normalize ();
 
-    // Построение матрицы вида (column-major для Vulkan)
-    // Первая колонка - Right
     ViewMatrix ( 0, 0 ) = Right.x;
     ViewMatrix ( 1, 0 ) = Right.y;
     ViewMatrix ( 2, 0 ) = Right.z;
     ViewMatrix ( 3, 0 ) = -Right.Dot ( Location );
 
-    // Вторая колонка - AdjustedUp
     ViewMatrix ( 0, 1 ) = AdjustedUp.x;
     ViewMatrix ( 1, 1 ) = AdjustedUp.y;
     ViewMatrix ( 2, 1 ) = AdjustedUp.z;
     ViewMatrix ( 3, 1 ) = -AdjustedUp.Dot ( Location );
 
-    // Третья колонка - Direction
     ViewMatrix ( 0, 2 ) = Direction.x;
     ViewMatrix ( 1, 2 ) = Direction.y;
     ViewMatrix ( 2, 2 ) = Direction.z;
     ViewMatrix ( 3, 2 ) = -Direction.Dot ( Location );
 
-    // Четвертая колонка - translation
     ViewMatrix ( 0, 3 ) = 0.0f;
     ViewMatrix ( 1, 3 ) = 0.0f;
     ViewMatrix ( 2, 3 ) = 0.0f;
@@ -82,38 +69,259 @@ void FCameraInfo::UpdateViewMatrix ()
 
 void FCameraInfo::UpdateProjectionMatrix ( float AspectRatio )
     {
-    // Проверка на корректность AspectRatio
     if (AspectRatio <= 0.0f)
         AspectRatio = 16.0f / 9.0f;
 
-    // Конвертация FOV из градусов в радианы (используем ваши константы)
     float RadFOV = FOV * CEMath::DEG_TO_RAD;
-
-    // Вычисление параметров перспективной проекции
     float tanHalfFOV = CEMath::Tan ( RadFOV * 0.5f );
     float range = NearPlane - FarPlane;
 
-    // Построение перспективной матрицы проекции (column-major для Vulkan)
-    // Перспективная проекция с глубиной от 0 до 1 (для Vulkan)
     ProjectionMatrix = FMat4 (
         1.0f / ( AspectRatio * tanHalfFOV ), 0.0f, 0.0f, 0.0f,
         0.0f, 1.0f / tanHalfFOV, 0.0f, 0.0f,
         0.0f, 0.0f, ( FarPlane + NearPlane ) / range, -1.0f,
         0.0f, 0.0f, ( 2.0f * FarPlane * NearPlane ) / range, 0.0f
     );
-
-    // Альтернатива для OpenGL стиля (глубина от -1 до 1):
-    // ProjectionMatrix = FMat4(
-    //     1.0f / (AspectRatio * tanHalfFOV), 0.0f, 0.0f, 0.0f,
-    //     0.0f, 1.0f / tanHalfFOV, 0.0f, 0.0f,
-    //     0.0f, 0.0f, -(FarPlane + NearPlane) / (FarPlane - NearPlane), -1.0f,
-    //     0.0f, 0.0f, -(2.0f * FarPlane * NearPlane) / (FarPlane - NearPlane), 0.0f
-    // );
     }
 
-//=============================================================================
-// FRenderInfo Implementation
-//=============================================================================
+    //=============================================================================
+    // FMeshInfo Implementation
+    //=============================================================================
+
+FMeshInfo::FMeshInfo ( VkBuffer InVertexBuffer, uint32_t InVertexCount,
+                       VkBuffer InIndexBuffer, uint32_t InIndexCount,
+                       const FMat4 & InModel, const std::string & InPipelineName )
+    : Model ( InModel )
+    , VertexBuffer ( InVertexBuffer )
+    , IndexBuffer ( InIndexBuffer )
+    , VertexCount ( InVertexCount )
+    , IndexCount ( InIndexCount )
+    , MaterialId ( 0 )
+    , PipelineName ( InPipelineName )
+    {}
+
+void FMeshInfo::Clear ()
+    {
+    Model = FMat4 ( 1.f );
+    VertexBuffer = VK_NULL_HANDLE;
+    IndexBuffer = VK_NULL_HANDLE;
+    VertexCount = 0;
+    IndexCount = 0;
+    MaterialId = 0;
+    PipelineName.clear ();
+    }
+
+bool FMeshInfo::IsValid () const
+    {
+    return VertexBuffer != VK_NULL_HANDLE && VertexCount > 0;
+    }
+
+    //=============================================================================
+    // FTerrainRenderInfo Implementation
+    //=============================================================================
+
+bool FTerrainRenderInfo::IsValid () const
+    {
+    return VertexBuffer != VK_NULL_HANDLE && VertexCount > 0 && Width > 0 && Height > 0;
+    }
+
+void FTerrainRenderInfo::Clear ()
+    {
+    VertexBuffer = VK_NULL_HANDLE;
+    IndexBuffer = VK_NULL_HANDLE;
+    VertexCount = 0;
+    IndexCount = 0;
+    Model = FMat4 ( 1.f );
+    Width = 0;
+    Height = 0;
+    CellSize = 100.0f;
+    MinHeight = 0.0f;
+    MaxHeight = 0.0f;
+    Params = FTerrainParams ();
+    }
+
+    //=============================================================================
+    // FTerrainDebugInfo Implementation
+    //=============================================================================
+
+FTerrainDebugInfo::FTerrainDebugInfo ( const FTerrainDebugInfo & Other )
+    : WireframeVertices ( Other.WireframeVertices )
+    , DebugColor ( Other.DebugColor )
+    , Width ( Other.Width )
+    , Height ( Other.Height )
+    , CellSize ( Other.CellSize )
+    {}
+
+FTerrainDebugInfo & FTerrainDebugInfo::operator=( const FTerrainDebugInfo & Other )
+    {
+    if (this != &Other)
+        {
+        WireframeVertices = Other.WireframeVertices;
+        DebugColor = Other.DebugColor;
+        Width = Other.Width;
+        Height = Other.Height;
+        CellSize = Other.CellSize;
+        }
+    return *this;
+    }
+
+bool FTerrainDebugInfo::IsValid () const
+    {
+    return !WireframeVertices.empty ();
+    }
+
+void FTerrainDebugInfo::Clear ()
+    {
+    WireframeVertices.clear ();
+    Width = 0;
+    Height = 0;
+    CellSize = 0.0f;
+    }
+
+size_t FTerrainDebugInfo::GetLineCount () const
+    {
+    return WireframeVertices.size () / 2;
+    }
+
+    //=============================================================================
+    // FCollisionDebugInfo Implementation
+    //=============================================================================
+
+FCollisionDebugInfo::FCollisionDebugInfo ()
+    : ShapeType ( ECollisionShape::NONE )
+    {}
+
+FCollisionDebugInfo::FCollisionDebugInfo ( const FCollisionDebugInfo & Other )
+    : ShapeType ( Other.ShapeType )
+    , WorldLocation ( Other.WorldLocation )
+    , WorldRotation ( Other.WorldRotation )
+    , DebugColor ( Other.DebugColor )
+    {
+    switch (ShapeType)
+        {
+            case ECollisionShape::SPHERE:
+                Params.Sphere = Other.Params.Sphere;
+                break;
+            case ECollisionShape::BOX:
+                Params.Box = Other.Params.Box;
+                break;
+            case ECollisionShape::CAPSULE:
+                Params.Capsule = Other.Params.Capsule;
+                break;
+            case ECollisionShape::CYLINDER:
+                Params.Cylinder = Other.Params.Cylinder;
+                break;
+            case ECollisionShape::CONE:
+                Params.Cone = Other.Params.Cone;
+                break;
+            default:
+                break;
+        }
+    }
+
+FCollisionDebugInfo & FCollisionDebugInfo::operator=( const FCollisionDebugInfo & Other )
+    {
+    if (this != &Other)
+        {
+        ShapeType = Other.ShapeType;
+        WorldLocation = Other.WorldLocation;
+        WorldRotation = Other.WorldRotation;
+        DebugColor = Other.DebugColor;
+
+        switch (ShapeType)
+            {
+                case ECollisionShape::SPHERE:
+                    Params.Sphere = Other.Params.Sphere;
+                    break;
+                case ECollisionShape::BOX:
+                    Params.Box = Other.Params.Box;
+                    break;
+                case ECollisionShape::CAPSULE:
+                    Params.Capsule = Other.Params.Capsule;
+                    break;
+                case ECollisionShape::CYLINDER:
+                    Params.Cylinder = Other.Params.Cylinder;
+                    break;
+                case ECollisionShape::CONE:
+                    Params.Cone = Other.Params.Cone;
+                    break;
+                default:
+                    break;
+            }
+        }
+    return *this;
+    }
+
+bool FCollisionDebugInfo::IsValid () const
+    {
+    return ShapeType != ECollisionShape::NONE && ShapeType != ECollisionShape::MAX;
+    }
+
+FCollisionDebugInfo FCollisionDebugInfo::CreateSphere ( const FVector & Location, float Radius, const FVector & Color )
+    {
+    FCollisionDebugInfo Info;
+    Info.ShapeType = ECollisionShape::SPHERE;
+    Info.WorldLocation = Location;
+    Info.WorldRotation = FQuat::Identity ();
+    Info.Params.Sphere.Radius = Radius;
+    Info.DebugColor = Color;
+    return Info;
+    }
+
+FCollisionDebugInfo FCollisionDebugInfo::CreateBox ( const FVector & Location, const FQuat & Rotation,
+                                                     const FVector & HalfExtents, const FVector & Color )
+    {
+    FCollisionDebugInfo Info;
+    Info.ShapeType = ECollisionShape::BOX;
+    Info.WorldLocation = Location;
+    Info.WorldRotation = Rotation;
+    Info.Params.Box.HalfExtents = HalfExtents;
+    Info.DebugColor = Color;
+    return Info;
+    }
+
+FCollisionDebugInfo FCollisionDebugInfo::CreateCapsule ( const FVector & Location, const FQuat & Rotation,
+                                                         float Radius, float HalfHeight, const FVector & Color )
+    {
+    FCollisionDebugInfo Info;
+    Info.ShapeType = ECollisionShape::CAPSULE;
+    Info.WorldLocation = Location;
+    Info.WorldRotation = Rotation;
+    Info.Params.Capsule.Radius = Radius;
+    Info.Params.Capsule.HalfHeight = HalfHeight;
+    Info.DebugColor = Color;
+    return Info;
+    }
+
+FCollisionDebugInfo FCollisionDebugInfo::CreateCylinder ( const FVector & Location, const FQuat & Rotation,
+                                                          float Radius, float Height, const FVector & Color )
+    {
+    FCollisionDebugInfo Info;
+    Info.ShapeType = ECollisionShape::CYLINDER;
+    Info.WorldLocation = Location;
+    Info.WorldRotation = Rotation;
+    Info.Params.Cylinder.Radius = Radius;
+    Info.Params.Cylinder.Height = Height;
+    Info.DebugColor = Color;
+    return Info;
+    }
+
+FCollisionDebugInfo FCollisionDebugInfo::CreateCone ( const FVector & Location, const FQuat & Rotation,
+                                                      float Radius, float Height, const FVector & Color )
+    {
+    FCollisionDebugInfo Info;
+    Info.ShapeType = ECollisionShape::CONE;
+    Info.WorldLocation = Location;
+    Info.WorldRotation = Rotation;
+    Info.Params.Cone.Radius = Radius;
+    Info.Params.Cone.Height = Height;
+    Info.DebugColor = Color;
+    return Info;
+    }
+
+    //=============================================================================
+    // FRenderInfo Implementation
+    //=============================================================================
 
 void FRenderInfo::Clear ()
     {
@@ -121,18 +329,39 @@ void FRenderInfo::Clear ()
     Camera.Clear ();
     RenderMeshes.clear ();
     Terrains.clear ();
+    DebugCollisions.clear ();
+    TerrainWireframes.clear ();
+    bDrawCollisions = false;
     }
 
-//=============================================================================
-// Вспомогательные функции
-//=============================================================================
+bool FRenderInfo::IsEmpty () const
+    {
+    return RenderMeshes.empty () && Terrains.empty () &&
+        DebugCollisions.empty () && TerrainWireframes.empty ();
+    }
 
-FCameraInfo CreatePerspectiveCamera ( const FVector & Position,
-                                      const FVector & Target,
-                                      float FOVDegrees,
-                                      float AspectRatio,
-                                      float Near,
-                                      float Far )
+void FRenderInfo::Reserve ( size_t MeshCount, size_t TerrainCount,
+                            size_t DebugCount, size_t TerrainWireframeCount )
+    {
+    RenderMeshes.reserve ( MeshCount );
+    Terrains.reserve ( TerrainCount );
+    DebugCollisions.reserve ( DebugCount );
+    TerrainWireframes.reserve ( TerrainWireframeCount );
+    }
+
+bool FRenderInfo::IsValid () const
+    {
+    return HasInfo && ( !RenderMeshes.empty () || !Terrains.empty () ||
+                        ( bDrawCollisions && HasDebugCollisions () ) );
+    }
+
+    //=============================================================================
+    // Camera Creation Functions
+    //=============================================================================
+
+FCameraInfo CreatePerspectiveCamera ( const FVector & Position, const FVector & Target,
+                                      float FOVDegrees, float AspectRatio,
+                                      float Near, float Far )
     {
     FCameraInfo Camera;
     Camera.SetLocation ( Position );
@@ -147,12 +376,9 @@ FCameraInfo CreatePerspectiveCamera ( const FVector & Position,
     return Camera;
     }
 
-FCameraInfo CreateOrthographicCamera ( const FVector & Position,
-                                       const FVector & Target,
-                                       float Left, float Right,
-                                       float Bottom, float Top,
-                                       float Near,
-                                       float Far )
+FCameraInfo CreateOrthographicCamera ( const FVector & Position, const FVector & Target,
+                                       float Left, float Right, float Bottom, float Top,
+                                       float Near, float Far )
     {
     FCameraInfo Camera;
     Camera.SetLocation ( Position );
@@ -160,14 +386,12 @@ FCameraInfo CreateOrthographicCamera ( const FVector & Position,
     Camera.SetNearPlane ( Near );
     Camera.SetFarPlane ( Far );
 
-    // Обновляем матрицу вида
     Camera.UpdateViewMatrix ();
 
     float Width = Right - Left;
     float Height = Top - Bottom;
     float Depth = Far - Near;
 
-    // Ортографическая матрица проекции (column-major для Vulkan)
     Camera.ProjectionMatrix = FMat4 (
         2.0f / Width, 0.0f, 0.0f, 0.0f,
         0.0f, 2.0f / Height, 0.0f, 0.0f,

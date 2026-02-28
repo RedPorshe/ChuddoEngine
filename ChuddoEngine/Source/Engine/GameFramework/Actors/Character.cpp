@@ -1,6 +1,7 @@
 #include "Actors/Character.h"
 #include "Components/Meshes/StaticMeshComponent.h"
 #include "Components/Collisions/CapsuleComponent.h"
+#include "Components/Collisions/BoxComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/InputComponent.h"
 #include "Components/GravityComponent.h"
@@ -15,7 +16,8 @@ CCharacter::CCharacter ( CObject * inOwner, const std::string & DisplayName )
 	: Super ( inOwner, DisplayName )
 	{
 	Capsule = AddDefaultSubObject<CCapsuleComponent> ( "Capsule" );
-	Capsule->SetRadius ( 18.f );
+	
+	Capsule->SetRadius ( 1.8f );
 	Capsule->SetHalfHeight ( 9.f );
 	SetRootComponent ( Capsule );
 
@@ -159,27 +161,18 @@ void CCharacter::SpawnCube ()
 	auto level = GetWorld ()->GetCurrentLevel ();
 
 	// Вычисляем позицию для спавна (немного впереди и справа от персонажа)
-	FVector right = Camera->GetRotationQuat ()*FVector::Right();
-	FVector forward = Camera->GetRotationQuat () * FVector::Forward ();
-	FVector spawnDirection = ( right + forward ).Normalize ();
-	FVector spawnlocation = GetActorLocation () + spawnDirection * 5.0f; // 200 единиц от персонажа
+	
+	FVector spawnlocation = GetActorLocation ()+FVector(-2.f,0.f,-3.f); // 200 единиц от персонажа
 
 	// Поднимаем куб над землёй
-	spawnlocation.y += 50.0f;
-
-	LOG_DEBUG ( "[CHARACTER] Spawning test cube at: (",
-				spawnlocation.x, ", ", spawnlocation.y, ", ", spawnlocation.z, ")" );
-	LOG_DEBUG ( "[CHARACTER] Player position: (",
-				GetActorLocation ().x, ", ", GetActorLocation ().y, ", ", GetActorLocation ().z, ")" );
-
 	  // Спавним актор
-	auto cubeActor = level->SpawnActorAtLocation ( "CActor", "TestActor", spawnlocation );
+	auto cubeActor = level->SpawnActor <CActor> ( "TestActor" );
 	if (!cubeActor)
 		{
 		LOG_ERROR ( "[CHARACTER] Failed to spawn cube actor!" );
 		return;
 		}
-
+	cubeActor->SetActorLocation ( spawnlocation );
 		// Создаём меш
 	auto cubemesh = cubeActor->AddDefaultSubObject<CStaticMeshComponent> ( "Testmesh" );
 	if (!cubemesh)
@@ -192,14 +185,19 @@ void CCharacter::SpawnCube ()
 	cubeActor->SetRootComponent ( cubemesh );
 	cubemesh->CreateFallBackCube ();
 	cubemesh->SetPipelineName ( "StaticMesh" ); // Убеждаемся, что используем правильный пайплайн
-	
-	
+
+
 
 	// Важно: устанавливаем видимость
 	cubemesh->SetVisible ( true );
-
+	
 	// Запускаем актор
 	cubeActor->BeginPlay ();
+
+	LOG_DEBUG ( "[CHARACTER] Spawning test cube at: ", spawnlocation );
+	LOG_DEBUG ( "[CHARACTER] Player position: ", GetActorLocation () );
+
+	
 
 	LOG_DEBUG ( "[CHARACTER] Test cube spawned successfully!" );
 	}

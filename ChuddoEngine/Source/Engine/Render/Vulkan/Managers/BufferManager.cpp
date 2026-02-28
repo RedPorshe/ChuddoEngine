@@ -102,7 +102,7 @@ FBuffer CBufferManager::CreateBuffer ( VkDeviceSize Size,
 
 FBuffer CBufferManager::CreateVertexBuffer ( VkDeviceSize Size, const void * Data )
     {
-    LogDebug ( "Creating vertex buffer - Size: ", Size, ", Data: ", ( void * ) Data );
+   // LogDebug ( "Creating vertex buffer - Size: ", Size, ", Data: ", ( void * ) Data );
 
     FBuffer buffer;
 
@@ -114,7 +114,7 @@ FBuffer CBufferManager::CreateVertexBuffer ( VkDeviceSize Size, const void * Dat
 
     if (Data)
         {
-        LogDebug ( "Creating staging buffer for vertex data" );
+       // LogDebug ( "Creating staging buffer for vertex data" );
         FBuffer stagingBuffer = CreateStagingBuffer ( Size, Data );
         if (!stagingBuffer.IsValid ())
             {
@@ -122,14 +122,14 @@ FBuffer CBufferManager::CreateVertexBuffer ( VkDeviceSize Size, const void * Dat
             return buffer;
             }
 
-        LogDebug ( "Creating device local vertex buffer" );
+       // LogDebug ( "Creating device local vertex buffer" );
         buffer = CreateBuffer ( Size,
                                 VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
                                 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT );
 
         if (buffer.IsValid ())
             {
-            LogDebug ( "Copying data from staging to device buffer" );
+          //  LogDebug ( "Copying data from staging to device buffer" );
             CopyBufferToBuffer ( stagingBuffer, buffer, Size );
             }
 
@@ -137,7 +137,7 @@ FBuffer CBufferManager::CreateVertexBuffer ( VkDeviceSize Size, const void * Dat
         }
     else
         {
-        LogDebug ( "Creating host visible vertex buffer" );
+       // LogDebug ( "Creating host visible vertex buffer" );
         buffer = CreateBuffer ( Size,
                                 VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
                                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
@@ -145,7 +145,7 @@ FBuffer CBufferManager::CreateVertexBuffer ( VkDeviceSize Size, const void * Dat
 
     if (buffer.IsValid ())
         {
-        LogDebug ( "Vertex buffer created successfully" );
+       // LogDebug ( "Vertex buffer created successfully" );
         }
     else
         {

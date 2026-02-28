@@ -3,12 +3,18 @@
 #include "World/World.h"
 #include "GameInstance.h"
 #include "Render/RenderInfo.h"
+#include "Render/Vulkan/Managers/WireframePipeline.h"
 #include "Components/Collisions/TerrainComponent.h"
 #include "GameFramework/Components/BaseComponent.h"
 #include "Components/Meshes/BaseMeshComponent.h"
 #include "Components/Meshes/TerrainMeshComponent.h"
 #include "Components/SceneComponent.h"
 #include "Components/Collisions/BaseCollisionComponent.h"
+#include "Components/Collisions/BoxComponent.h"
+#include "Components/Collisions/CapsuleComponent.h"
+#include "Components/Collisions/ConeComponent.h"
+#include "Components/Collisions/CylinderComponent.h"
+#include "Components/Collisions/SphereComponent.h"
 #include "Components/GravityComponent.h"
 
 
@@ -17,7 +23,7 @@ CActor::CActor ( CObject * owner, const std::string & inName ) : CObject ( owner
 	RootComponent = AddDefaultSubObject<CTransformComponent> ( inName + "_Transform" );
 	m_Gravity = AddDefaultSubObject<CGravityComponent> ( GetName () + "_Gravity" );
 	if (RootComponent) RootComponent->SetCollisionEnabled ( bIsCollisionEnabled );
-	
+
 	}
 
 CActor::~CActor ()
@@ -32,7 +38,12 @@ void CActor::BeginPlay ()
 		{
 		comp->OnBeginPlay ();
 		}
-	if (RootComponent) RootComponent->SetCollisionEnabled ( bIsCollisionEnabled );
+	if (RootComponent) 
+		{
+		RootComponent->SetCollisionEnabled ( bIsCollisionEnabled );
+		RootComponent->UpdateTransform ();
+		}
+
 	}
 
 void CActor::Tick ( float deltaTime )
@@ -108,38 +119,201 @@ void CActor::EndPlay ()
 	{
 	LOG_DEBUG ( "[ACTOR] EndPlay: ", GetName () );
 	}
+
 FRenderCollection CActor::GetRenderInfo () const
 	{
 	FRenderCollection Collection;
 
-
-
+	// Сбор мешей и террейнов для рендера
 	for (auto * comp : ActorComponents)
 		{
 		if (CBaseMeshComponent * mesh = dynamic_cast< CBaseMeshComponent * >( comp ))
 			{
 			if (mesh->IsReadyForRender ())
 				{
-
 				if (CTerrainMeshComponent * terrain = dynamic_cast< CTerrainMeshComponent * >( mesh ))
 					{
 					FTerrainRenderInfo terrainInfo = terrain->GetTerrainInfo ();
 					if (terrainInfo.IsValid ())
 						{
-						Collection.Terrains.push_back ( terrainInfo );						
+						Collection.Terrains.push_back ( terrainInfo );
 						}
 					}
 				else
 					{
 					FMeshInfo meshInfo = mesh->GetMeshInfo ();
 					if (meshInfo.IsValid ())
-						{						
-						Collection.Meshes.push_back ( meshInfo );						
+						{
+						Collection.Meshes.push_back ( meshInfo );
 						}
 					}
 				}
 			}
-		}	
+		}
+
+		// Сбор отладочной информации о коллизиях
+	if (m_bDrawCollisions)
+		{
+			// Функция для обработки коллизионного компонента
+		auto ProcessCollisionComponent = [ & ] ( const CBaseCollisionComponent * collision )
+			{
+			if (!collision || !collision->IsCollisionEnabled ())
+				return;
+
+			FVector worldLoc = collision->GetWorldLocation ();
+			FQuat worldRot = GetActorRotationQuat ();
+
+			// Выбираем цвет в зависимости от типа взаимодействия
+			FVector debugColor = FVector ( 0.0f, 1.0f, 0.0f ); // Зеленый по умолчанию
+
+			if (collision->ShouldBlockWith ( collision ))
+				debugColor = FVector ( 1.0f, 0.0f, 0.0f ); // Красный для Block
+			else if (collision->ShouldOverlapWith ( collision ))
+				debugColor = FVector ( 0.0f, 0.0f, 1.0f ); // Синий для Overlap
+
+			switch (collision->GetShapeType ())
+				{
+					case ECollisionShape::SPHERE:
+						{
+						if (auto * sphere = dynamic_cast< const CSphereComponent * >( collision ))
+							{
+							Collection.DebugCollisions.push_back (
+								FCollisionDebugInfo::CreateSphere (
+									worldLoc,
+									sphere->GetRadius (),
+									debugColor
+								)
+							);
+							}
+						break;
+						}
+
+					case ECollisionShape::BOX:
+						{
+						if (auto * box = dynamic_cast< const CBoxComponent * >( collision ))
+							{
+							Collection.DebugCollisions.push_back (
+								FCollisionDebugInfo::CreateBox (
+									worldLoc,
+									worldRot,
+									box->GetHalfExtents (),
+									debugColor
+								)
+							);
+							}
+						break;
+						}
+
+					case ECollisionShape::CAPSULE:
+						{
+						if (auto * capsule = dynamic_cast< const CCapsuleComponent * >( collision ))
+							{
+							Collection.DebugCollisions.push_back (
+								FCollisionDebugInfo::CreateCapsule (
+									worldLoc,
+									worldRot,
+									capsule->GetRadius (),
+									capsule->GetHalfHeight (),
+									debugColor
+								)
+							);
+							}
+						break;
+						}
+
+					case ECollisionShape::CYLINDER:
+						{
+						if (auto * cylinder = dynamic_cast< const CCylinderComponent * >( collision ))
+							{
+							Collection.DebugCollisions.push_back (
+								FCollisionDebugInfo::CreateCylinder (
+									worldLoc,
+									worldRot,
+									cylinder->GetRadius (),
+									cylinder->GetHeight (),
+									debugColor
+								)
+							);
+							}
+						break;
+						}
+
+					case ECollisionShape::CONE:
+						{
+						if (auto * cone = dynamic_cast< const CConeComponent * >( collision ))
+							{
+							Collection.DebugCollisions.push_back (
+								FCollisionDebugInfo::CreateCone (
+									worldLoc,
+									worldRot,
+									cone->GetRadius (),
+									cone->GetHeight (),
+									debugColor
+								)
+							);
+							}
+						break;
+						}
+
+					case ECollisionShape::TERRAIN:
+						{
+						if (auto * terrain = dynamic_cast< const CTerrainComponent * >( collision ))
+							{
+								// Используем специальную структуру для террейна
+							FTerrainDebugInfo debugInfo;
+
+							// Генерируем wireframe для террейна
+							CWireframeGenerator::GenerateTerrainWireframe (
+								debugInfo.WireframeVertices,
+								terrain,
+								FVector ( 0.7f, 0.7f, 0.7f ),  // Серый цвет
+								false  // Не рисовать диагонали
+							);
+
+							// Заполняем дополнительную информацию
+							debugInfo.Width = terrain->GetTerrainData ().Width;
+							debugInfo.Height = terrain->GetTerrainData ().Height;
+							debugInfo.CellSize = terrain->GetTerrainData ().CellSize;
+
+							// ВАЖНО: Добавляем в коллекцию!
+							if (debugInfo.IsValid ())
+								{
+								Collection.TerrainWireframes.push_back ( debugInfo );
+								}
+							}
+						break;
+						}
+
+					default:
+						break;
+				}
+			};
+
+			// Обрабатываем прямые коллизионные компоненты
+		for (auto * comp : ActorComponents)
+			{
+			if (auto * collision = dynamic_cast< CBaseCollisionComponent * >( comp ))
+				{
+				ProcessCollisionComponent ( collision );
+				}
+			}
+
+			// Обрабатываем коллизионные компоненты в дочерних трансформ-компонентах
+		for (auto * comp : ActorComponents)
+			{
+			if (auto * transform = dynamic_cast< CTransformComponent * >( comp ))
+				{
+				for (auto * childComp : transform->GetChildTransformComponents ())
+					{
+					if (auto * collision = dynamic_cast< CBaseCollisionComponent * >( childComp ))
+						{
+						ProcessCollisionComponent ( collision );
+						}
+					}
+				}
+			}
+		}
+
 	return Collection;
 	}
 
@@ -169,7 +343,7 @@ std::vector<FMeshInfo> CActor::GetRenderMeshes () const
 				timer += 0.016f;
 				if (timer >= 1.f)
 					{
-					LOG_WARN ( "[", GetName(), "] Added mesh: ", mesh->GetName (), " to render list");
+					LOG_WARN ( "[", GetName (), "] Added mesh: ", mesh->GetName (), " to render list" );
 					timer = 0.f;
 					}
 				}
@@ -181,7 +355,7 @@ std::vector<FMeshInfo> CActor::GetRenderMeshes () const
 	tttt += 0.016f;
 	if (tttt >= 1.f)
 		{
-		LOG_WARN ( "[", GetName (), "] collected ",RenderMeshes.size(), " meshes");
+		LOG_WARN ( "[", GetName (), "] collected ", RenderMeshes.size (), " meshes" );
 		tttt = 0.f;
 		}
 	return RenderMeshes;
@@ -439,10 +613,10 @@ void CActor::MoveActor ( const FVector & Delta, bool Interpolate )
 	{
 	if (!RootComponent)
 		return;
-	
+
 	FVector currentLocation = RootComponent->GetLocation ();
 	FVector newTarget = currentLocation + Delta;
-	
+
 
 	if (!Interpolate)
 		{
@@ -715,33 +889,23 @@ void CActor::OnComponentEndOverlap ( CBaseCollisionComponent * other )
 
 	}
 
-void CActor::OnComponentHit ( CBaseCollisionComponent * other )
-	{
-	if (!other || !m_Gravity || !RootComponent) return;
-
-	if (CBaseCollisionComponent * Collision = dynamic_cast< CBaseCollisionComponent * >( RootComponent ))
-		{
-		if (Collision->ShouldBlockWith ( other ) ||
-			 other->ShouldBlockWith ( Collision ))
-			{
-			m_Gravity->SetVerticalVelocity ( 0.f );
-			LOG_DEBUG ( "[ACTOR] ", GetName (), " stopped falling due to collision with ",
-						other->GetOwnerActor () ? other->GetOwnerActor ()->GetName () : "unknown" );
-			}
-		}
-
-	if (!RootComponent->GetCollisionComponent ()) return;
-
-	if (RootComponent->GetCollisionComponent ()->ShouldBlockWith ( other ) ||
-		 other->ShouldBlockWith ( RootComponent->GetCollisionComponent () ))
-		{
-		m_Gravity->SetVerticalVelocity ( 0.f );
-		LOG_DEBUG ( "[ACTOR] ", GetName (), " stopped falling due to collision with ",
-					other->GetOwnerActor () ? other->GetOwnerActor ()->GetName () : "unknown" );
-		}
-	}
-
 void CActor::SetActorName ( const std::string & newName )
 	{
 	this->Rename ( newName );
+	}
+
+void CActor::OnComponentHit ( CBaseCollisionComponent * other )
+	{
+	if (!other || !m_Gravity) return;
+
+	// Проверяем, нужно ли блокировать движение
+	CBaseCollisionComponent * myCollision = FindComponent<CBaseCollisionComponent> ();
+	if (myCollision && ( myCollision->ShouldBlockWith ( other ) || other->ShouldBlockWith ( myCollision ) ))
+		{
+			// Останавливаем вертикальную скорость
+		m_Gravity->SetVerticalVelocity ( 0.0f );
+
+		LOG_DEBUG ( "[ACTOR] ", GetName (), " stopped by ",
+					other->GetOwnerActor () ? other->GetOwnerActor ()->GetName () : "unknown" );
+		}
 	}

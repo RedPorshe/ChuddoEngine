@@ -51,8 +51,8 @@ class CCapsuleComponent : public CBaseCollisionComponent
         FVector GetBottomSphereCenter () const;
 
     private:
-        float m_Radius = 50.0f;      // Радиус капсулы
-        float m_HalfHeight = 100.0f;  // Половина высоты цилиндрической части
+        float m_Radius = 18.0f;      // Радиус капсулы
+        float m_HalfHeight = 8.6f;  // Половина высоты цилиндрической части
     };
 
 REGISTER_CLASS_FACTORY ( CCapsuleComponent );

@@ -180,6 +180,18 @@
     <ClCompile Include="Source\Engine\GameFramework\Actors\Character.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="Include\Engine\Render\Vulkan\Managers\WireframePipeline.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\Render\Vulkan\VertexStructs\WireframeVertex.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\Render\Vulkan\VertexStructs\MeshVertex.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\Render\Vulkan\VertexStructs\TerrainVertex.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\Utils\Math\CE_MathConstants.h">
@@ -362,6 +374,21 @@
     <ClInclude Include="Include\Engine\GameFramework\Actors\Character.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
+    <ClInclude Include="Include\Engine\Render\Vulkan\Managers\WireframePipeline.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Engine\Render\Vulkan\VertexStructs\WireframeVertex.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Engine\Render\Vulkan\VertexStructs\AllVertices.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Engine\Render\Vulkan\VertexStructs\MeshVertex.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Engine\Render\Vulkan\VertexStructs\TerrainVertex.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Shaders\Mesh.vert" />
@@ -370,5 +397,7 @@
     <None Include="Assets\Shaders\Triangle.frag" />
     <None Include="Assets\Shaders\Terrain.vert" />
     <None Include="Assets\Shaders\Terrain.frag" />
+    <None Include="Assets\Shaders\Wireframe.vert" />
+    <None Include="Assets\Shaders\Wireframe.frag" />
   </ItemGroup>
 </Project>

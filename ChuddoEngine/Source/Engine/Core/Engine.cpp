@@ -201,6 +201,8 @@ void CEngine::MainLoop ()
 	float gameTime = 0.0f;
 	static int frameCount = 0;
 
+	
+
 	while (bIsRunning && !glfwWindowShouldClose ( Info.WindowHandle ))
 		{
 		CalculateDeltaTime ();
@@ -289,8 +291,17 @@ CEngine::CEngine ( FEngineInfo & EngineInfo ) :
 
 FRenderInfo CEngine::UpdateRenderInfo ()
 	{
-	return CGameInstance::Get ().GetWorld ()->CollectRenderInfo ();
+	auto RenderInfo = CGameInstance::Get ().GetWorld ()->CollectRenderInfo ();
+
+	  // Можно добавить глобальную отладку коллизий
+	static bool bGlobalDrawCollisions = true;
+	// Здесь можно проверить консольную переменную
+	RenderInfo.bDrawCollisions = bGlobalDrawCollisions || RenderInfo.HasDebugCollisions();
+
+	return RenderInfo;
 	}
+
+#include "Components/Meshes/TerrainMeshComponent.h"
 
 void CEngine::CreateTestWorld ()
 	{
@@ -301,24 +312,39 @@ void CEngine::CreateTestWorld ()
 		auto start = level->SpawnActor<CPlayerStart> ( "playStart" );
 		start->MoveActor ( { 500.f, 500.3322f, 500.f },false );
 		start->DestroyGravity ();
-
+		
 		// Создаём террейн - компоненты создадутся внутри GenerateHilly
 		auto Terrain = level->SpawnActor<CTerrainActor> ( "Terrain" );
 
-		// Генерируем холмистый террейн
-		Terrain->GenerateHilly ( 100, 100, 10.0f, 50.0f, 0.05f );
+		
+		Terrain->GenerateNoise ( 45, 45, 15.f,3 );
+		
 
 		Terrain->SetActorLocation ( 0.f, 0.f, 0.f );
+		Terrain->SetDrawCollisions ( true );
+		
 		
 		auto player = level->SpawnActor<CCharacter> ( "Player" );
 		auto PlayerController = level->SpawnActor<CPlayerController> ();
 		PlayerController->Possess(player);
-		player->SetActorLocation ( { 500.f,500.f,500.f } );
+		
+		player->SetActorLocation ( { 500.f,100.f,500.f } );
 		PlayerController->SetActorLocation ( { 500.f,500.f,500.f } );
 		
 		LOG_DEBUG ( "Total actors after spawn: ", level->GetNumActors () );
 
 		auto gameMode = world->CreateGameMode<CGameMode> ( "SuperGameMode" );
 		gameMode->SetDefaultPawnClass ( "" );
+		}
+	}
+
+void CEngine::EnableCollisionDebug ( bool bEnable )
+	{
+	CWorld * World = CGameInstance::Get ().GetWorld ();
+	if (!World) return;
+
+	for (CActor * actor : World->GetCurrentLevel ()->GetActors ())
+		{
+		actor->SetDrawCollisions ( bEnable );
 		}
 	}

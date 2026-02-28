@@ -39,7 +39,7 @@ class CEngine
         void Tick ( float deltaTime );
         void CalculateDeltaTime ();
         void CreateTestWorld ();
-
+        void EnableCollisionDebug ( bool bEnable );
         float m_DeltaTime = 0.f;
         std::chrono::steady_clock::time_point m_LastFrameTime;
         bool bIsInitialized = false;
