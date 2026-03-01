@@ -109,8 +109,8 @@ class CTransformComponent : public CBaseComponent
         bool IsChildOf ( CTransformComponent * PotentialParent ) const;
         CTransformComponent * GetRootTransformComponent () const;
 
-    protected:
         FTransform GetParentTransform ();
+    protected:
         FCollisionChannel CollisionChannel = FCollisionChannel::Static ();
         std::string m_collisionClass = "CBaseCollisionComponent";
         // Обновление матрицы трансформации для рендеринга

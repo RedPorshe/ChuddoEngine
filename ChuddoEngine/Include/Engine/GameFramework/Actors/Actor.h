@@ -112,8 +112,8 @@ class CActor : public CObject
 		FVector GetActorUpVector () const;
 
 		// Transform setters
-		void SetActorLocation ( const FVector & InLocation );
-		void SetActorLocation ( float inX, float inY, float inZ );
+		void SetActorLocation ( const FVector & InLocation, bool bTeleport = false );
+		void SetActorLocation ( float inX, float inY, float inZ, bool bTeleport = false );
 		void SetActorScale ( const FVector & InScale );
 		void SetActorScale ( float inX, float inY, float inZ );
 		void SetActorScale ( float InScale );

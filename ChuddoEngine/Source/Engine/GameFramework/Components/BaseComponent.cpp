@@ -23,8 +23,7 @@ CBaseComponent::~CBaseComponent ()
 void CBaseComponent::InitComponent ()
 	{
 	if (bIsInitialized)
-		{
-		LOG_WARN( "Component '" , GetName () , "' already initialized");
+		{		
 		return;
 		}
 	bIsInitialized = true;

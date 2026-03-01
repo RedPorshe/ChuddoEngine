@@ -10,6 +10,10 @@ class CPlayerStart : public CActor
         CPlayerStart ( CObject * inOwner = nullptr, const std::string & inName = "PlayerStart" );
         virtual ~CPlayerStart ();
 
+
+        void BeginPlay () override;
+        void Tick ( float DeltaTime ) override;
+        void EndPlay () override;
         // Индекс для мультиплеера
         void SetPlayerStartIndex ( int32 Index ) { PlayerStartIndex = Index; }
         int32 GetPlayerStartIndex () const { return PlayerStartIndex; }

@@ -47,7 +47,7 @@ class CLevel : public CObject
         CWorld * GetOwningWorld () const { return OwningWorld; }
 
         template<typename ActorType, typename... Args>
-        ActorType * SpawnActor ( const std::string & name = "Actor", Args&&... args )
+        ActorType * SpawnActor ( const std::string & name = "Actor",const FVector& SpawnLocation = FVector::Zero(), Args&&... args)
             {
             static_assert( std::is_base_of<CActor, ActorType>::value,
                            "ActorType must be derived from CActor" );
@@ -55,7 +55,9 @@ class CLevel : public CObject
              // Проверяем, можем ли спавнить сразу (лимит не превышен)
             if (CanSpawnImmediately ())
                 {
-                return SpawnActorImmediate<ActorType> ( name, std::forward<Args> ( args )... );
+                ActorType* ActorToReturn = SpawnActorImmediate<ActorType> ( name, std::forward<Args> ( args )... );
+                ActorToReturn->SetActorLocation ( SpawnLocation, true );
+                return ActorToReturn;
                 }
             else
                 {

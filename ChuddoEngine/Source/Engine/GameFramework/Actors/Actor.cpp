@@ -24,6 +24,7 @@ CActor::CActor ( CObject * owner, const std::string & inName ) : CObject ( owner
 	m_Gravity = AddDefaultSubObject<CGravityComponent> ( GetName () + "_Gravity" );
 	if (RootComponent) RootComponent->SetCollisionEnabled ( bIsCollisionEnabled );
 
+	
 	}
 
 CActor::~CActor ()
@@ -43,6 +44,27 @@ void CActor::BeginPlay ()
 		RootComponent->SetCollisionEnabled ( bIsCollisionEnabled );
 		RootComponent->UpdateTransform ();
 		}
+	if (!ActorComponents.empty ())
+		{
+		LOG_ERROR ( GetName (), " Begin play with ", ActorComponents.size () );
+		for (int i {}; i < ActorComponents.size (); i++)
+			{
+			LOG_ERROR ( i + 1, " Component: ", ActorComponents[ i ]->GetName ());
+			if (CTransformComponent * compTrans = dynamic_cast< CTransformComponent * > ( ActorComponents[ i ] ))
+				{
+				if(compTrans->GetParent() == nullptr)
+					{
+					LOG_ERROR ( "Component ", compTrans->GetName (), " world position : ", compTrans->GetLocation () );
+					LOG_ERROR ( "Component ", compTrans->GetName (), " relative position: ", compTrans->GetRelativeLocation () );
+					}
+				else
+					{
+					LOG_ERROR ( "Component ", compTrans->GetName (), " relative position: ", compTrans->GetRelativeLocation () );
+					}
+				}
+			}
+		}
+	LOG_ERROR ( GetName (), " Spawned in ", GetActorLocation (), " on called BeginPlay");
 
 	}
 
@@ -383,12 +405,19 @@ void CActor::SetRootComponent ( CTransformComponent * NewRoot )
 		}
 
 	CTransformComponent * OldRoot = RootComponent;
+	FTransform OldRootTransform = OldRoot->GetTransform ();
 	RootComponent = NewRoot;
-
+	RootComponent->SetTransform ( OldRootTransform );
 	if (OldRoot)
 		{
 			// Прикрепляем старый корень к новому
 		NewRoot->AttachComponentToComponent ( OldRoot );
+		NewRoot->SetLocation ( OldRoot->GetLocation () );
+		NewRoot->SetRotation ( OldRoot->GetRotation () );
+		NewRoot->SetScale ( OldRoot->GetScale () );
+		OldRoot->SetRelativeLocation ( FVector::Zero() );
+		OldRoot->SetRelativeRotation ( FQuat::Zero () );
+		OldRoot->SetRelativeScale ( FVector::Zero () );
 		LOG_DEBUG ( "Changed RootComponent from '", OldRoot->GetName ()
 					, "' to '", NewRoot->GetName (), "'" );
 		}
@@ -505,21 +534,28 @@ FVector CActor::GetActorUpVector ()
 	// Transform setters
 	// ============================================================================
 
-void CActor::SetActorLocation ( const FVector & InLocation )
+void CActor::SetActorLocation ( const FVector & InLocation, bool bTeleport )
 	{
-	if (RootComponent)
+	if(!bTeleport)
+			{
+			if (RootComponent)
+				{
+				RootComponent->SetLocation ( InLocation );
+				// Сбрасываем интерполяцию позиции
+				bIsLerpingLocation = false;
+				LocationLerpAlpha = 0.0f;
+				RootComponent->MarkTransformDirty ();
+				}
+			}
+	else
 		{
-		RootComponent->SetLocation ( InLocation );
-		// Сбрасываем интерполяцию позиции
-		bIsLerpingLocation = false;
-		LocationLerpAlpha = 0.0f;
-		RootComponent->MarkTransformDirty ();
+		this->TeleportTo ( InLocation );
 		}
 	}
 
-void CActor::SetActorLocation ( float inX, float inY, float inZ )
+void CActor::SetActorLocation ( float inX, float inY, float inZ, bool bTeleport )
 	{
-	SetActorLocation ( FVector ( inX, inY, inZ ) );
+	SetActorLocation ( FVector ( inX, inY, inZ ), bTeleport );
 	}
 
 void CActor::SetActorScale ( const FVector & InScale )

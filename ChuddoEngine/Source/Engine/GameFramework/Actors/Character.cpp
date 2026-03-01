@@ -54,6 +54,7 @@ CCharacter::CCharacter ( CObject * inOwner, const std::string & DisplayName )
 void CCharacter::BeginPlay ()
 	{
 	Super::BeginPlay ();	
+	GetActorLocation ();
 	}
 
 bool CCharacter::CheckTargetJump ()
@@ -67,12 +68,7 @@ bool CCharacter::CheckTargetJump ()
 void CCharacter::Tick ( float DeltaTime )
 	{
 	Super::Tick ( DeltaTime );
-	static int ttt = 0;
-	if (ttt < 1)
-		{
-		SpawnCube ();
-		++ ttt;
-		}
+
 	// Логика прыжка - только если мы в воздухе и прыжок активен
 	if (bIsJumping && m_Gravity && !m_Gravity->IsGrounded ())
 		{
@@ -96,9 +92,7 @@ void CCharacter::Tick ( float DeltaTime )
 		bIsJumping = false;
 		LOG_DEBUG ( " ON GROUND - ready to jump again" );
 		}
-	
 
-	
 	}
 
 
@@ -120,7 +114,8 @@ void CCharacter::SetupPlayerInputComponent ( CInputComponent * InputComponent )
 										 [ this ] ( float value ) { MoveUp ( value ); } );
 		GetInputComponent ()->BindAction ( "Jump", GLFW_KEY_SPACE, EInputEvent::IE_Pressed,
 										   [ this ] () { Jump (); } );
-	
+		GetInputComponent ()->BindAction ( "Spawn", GLFW_KEY_F,EInputEvent::IE_Pressed,
+										   [ this ] () { SpawnCube (); } );
 
 		}
 	}
@@ -206,10 +201,11 @@ void CCharacter::SpawnCube ()
 	auto level = GetWorld ()->GetCurrentLevel ();
 
 	// Вычисляем позицию для спавна
-	FVector spawnLocation = GetActorLocation () + FVector ( 0.f, 25.f, 25.f );
+	FVector SpawnOffset = GetActorForwardVector()*-200.f;
+	FVector spawnLocation = GetActorLocation () + SpawnOffset*2.f;
 
 	// Спавним актор
-	auto cubeActor = level->SpawnActor <CActor> ( "TestActor" );
+	auto cubeActor = level->SpawnActor <CActor> ( "TestActor", spawnLocation );
 	if (!cubeActor)
 		{
 		LOG_ERROR ( "[CHARACTER] Failed to spawn cube actor!" );
@@ -227,19 +223,19 @@ void CCharacter::SpawnCube ()
 	// ВАЖНО: Сначала устанавливаем RootComponent
 	cubeActor->SetRootComponent ( cubemesh );
 
-	// СОЗДАЕМ геометрию ДО установки позиции
-	cubemesh->CreateFallBackCube ();
-	cubemesh->SetVisible ( true );
-
+	
+	
+	
 	
 	
 
 	// ТЕПЕРЬ устанавливаем позицию, когда RootComponent уже есть
-	cubeActor->SetActorLocation ( spawnLocation );
+	cubeActor->SetActorLocation ( spawnLocation, true );
 
 	// Запускаем актор
+	if(GetWorld()->GetGameMode()->IsGameStarted())
 	cubeActor->BeginPlay ();
-	BeginPlay ();
+	
 	LOG_DEBUG ( "[CHARACTER] Player position: ", GetActorLocation () );
 	LOG_DEBUG ( "[CHARACTER] Test cube spawned at: ", cubeActor->GetActorLocation () );
 	LOG_DEBUG ( "[CHARACTER] Test cube spawned successfully!" );

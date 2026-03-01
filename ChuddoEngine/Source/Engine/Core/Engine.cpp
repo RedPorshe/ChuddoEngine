@@ -310,27 +310,18 @@ void CEngine::CreateTestWorld ()
 		{
 		auto level = world->CreateLevel<CLevel> ( "Level" );
 		auto start = level->SpawnActor<CPlayerStart> ( "playStart" );
-		start->MoveActor ( { 500.f, 500.3322f, 500.f },false );
-		//start->DestroyGravity ();
+		start->SetActorLocation ( FVector{ 500.f, 500.3322f, 500.f } , true); // true явно указываю что нужно телепортировать актора, потому что нету тиков
+	
 		
 		// Создаём террейн - компоненты создадутся внутри GenerateHilly
 		auto Terrain = level->SpawnActor<CTerrainActor> ( "Terrain" );
 
 		
-		//Terrain->GenerateHilly ( 45, 45, 15.f );
-		Terrain->GenerateFlat ( 45, 45, 15.f );
-		
+		Terrain->GenerateHilly ( 45, 45, 15.f );
+		Terrain->GenerateFlat ( 45, 45, 15.f );		
 
-		Terrain->SetActorLocation ( 0.f, 0.f, 0.f );
-		Terrain->SetDrawCollisions ( true );
-		
-		
-		/*auto player = level->SpawnActor<CCharacter> ( "Player" );
-		auto PlayerController = level->SpawnActor<CPlayerController> ();
-		PlayerController->Possess(player);*/
-		
-		
-		
+		Terrain->SetActorLocation ( 0.f, 0.f, 0.f, true ); // true явно указываю что нужно телепортировать актора, потому что нету тиков
+		Terrain->SetDrawCollisions ( true );	
 		
 		LOG_DEBUG ( "Total actors after spawn: ", level->GetNumActors () );
 

@@ -71,10 +71,13 @@ void CLevel::Tick ( float DeltaTime )
 
 	for (CActor * actor : Actors)
 		{
-		if (actor && !actor->IsAttached ())
-			{
-			actor->Tick ( DeltaTime );
-			}
+		if(actor )
+				{
+				if (!actor->IsAttached ())
+					{
+					actor->Tick ( DeltaTime );
+					}
+				}
 		}
 	CollectAllPendingActors ();
 	CollectAllPendingActors ();

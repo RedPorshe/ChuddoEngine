@@ -215,6 +215,14 @@ void CTransformComponent::AttachTo ( CTransformComponent * Parent )
 		}
 
 	Parent->AddChild ( this );
+	this->SetLocation ( Parent->GetLocation () );
+	this->SetRotation ( Parent->GetRotation () );
+	this->SetScale ( Parent->GetScale () );
+	this->SetRelativeLocation ( FVector::Zero () );
+	this->SetRelativeRotation ( FQuat::Zero () );
+	this->SetRelativeScale ( FVector::One () );
+	this->MarkTransformDirty ();
+	
 	}
 
 bool CTransformComponent::IsChildTransformComponent () const
@@ -444,6 +452,7 @@ void CTransformComponent::SetScale ( const FVector & inScale )
 	else
 		{
 		m_RelativeTransform.Scale = inScale;
+		//m_WorldTransform.Scale = inScale;
 		}
 
 	MarkTransformDirty ();
@@ -492,6 +501,7 @@ void CTransformComponent::SetRotation ( const FQuat & inRotation )
 	else
 		{
 		m_RelativeTransform.Rotation = normalizedRotation;
+		//m_WorldTransform.Rotation = normalizedRotation;
 		}
 
 	MarkTransformDirty ();
@@ -559,6 +569,7 @@ void CTransformComponent::SetLocation ( const FVector & inLocation )
 		{
 			// Нет родителя - относительная равна мировой
 		m_RelativeTransform.Location = inLocation;
+		//m_WorldTransform.Location = inLocation;
 		}
 
 	MarkTransformDirty ();
