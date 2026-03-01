@@ -25,6 +25,10 @@ CTransformComponent::~CTransformComponent ()
 void CTransformComponent::InitComponent ()
 	{
 	Super::InitComponent ();
+	if (bIsTransformDirty)
+		{
+		UpdateTransform ();
+		}
 	}
 
 void CTransformComponent::Tick ( float DeltaTime )
@@ -54,39 +58,36 @@ void CTransformComponent::UpdateTransform ()
 		{
 		FTransform parentTransform = ParentTransform->GetTransform ();
 
-		// ПРАВИЛЬНОЕ вычисление мировой трансформации:
-		// 1. Сначала вращение, потом позиция (стандартный порядок в игровых движках)
 		m_WorldTransform.Rotation = parentTransform.Rotation * m_RelativeTransform.Rotation;
-		m_WorldTransform.Rotation.Normalize (); // Важно нормализовать
+		m_WorldTransform.Rotation.Normalize ();
 
-		// 2. Позиция: сначала применяем вращение родителя к локальной позиции,
-		//    потом добавляем позицию родителя
 		FVector rotatedLocalPos = parentTransform.Rotation * m_RelativeTransform.Location;
 		m_WorldTransform.Location = parentTransform.Location + rotatedLocalPos;
 
-		// 3. Масштаб: перемножаем
 		m_WorldTransform.Scale = parentTransform.Scale * m_RelativeTransform.Scale;
 		}
-	else // Нет родителя
+	else
 		{
-			// Нет родителя - мировая трансформация равна относительной
-		m_WorldTransform = m_RelativeTransform;
-		m_WorldTransform.Rotation.Normalize (); // Всегда нормализуем
+		// Для корневого компонента:
+		// НЕ копируем relative в world, потому что world уже установлен через SetTransform()
+		// Просто нормализуем ротацию
+		m_WorldTransform.Rotation.Normalize ();
+
+		// Синхронизируем relative с world для консистентности
+		m_RelativeTransform = m_WorldTransform;
 		}
 
-		// Обновляем кэш
 	CachedWorldTransform = m_WorldTransform;
 	CachedRelativeTransform = m_RelativeTransform;
 
-	// Обновляем матрицу трансформации для рендеринга
 	UpdateTransformMatrix ();
 
-	// Обновляем детей
 	for (auto child : ChildTransformComponents)
 		{
 		if (child)
 			{
 			child->MarkTransformDirty ();
+			
 			}
 		}
 
@@ -95,33 +96,44 @@ void CTransformComponent::UpdateTransform ()
 
 void CTransformComponent::UpdateTransformMatrix ()
 	{
-		// Получаем компоненты трансформации
 	const FVector & location = m_WorldTransform.Location;
 	const FQuat & rotation = m_WorldTransform.Rotation;
 	const FVector & scale = m_WorldTransform.Scale;
 
-	// Создаем матрицы для каждой компоненты
 	FMat4 translationMatrix = FMat4::Translation ( location.x, location.y, location.z );
-
-	// Конвертируем кватернион в матрицу вращения
 	FMat4 rotationMatrix = rotation.ToMatrix ();
-
-	// Создаем матрицу масштабирования
 	FMat4 scaleMatrix = FMat4::Scaling ( scale.x, scale.y, scale.z );
 
-	// Комбинируем матрицы в правильном порядке: Scale * Rotation * Translation
-	// Для большинства графических API порядок: сначала масштаб, потом вращение, потом перемещение
-	// Вектор умножается на матрицу справа: v' = M * v
+	// Правильный порядок: сначала масштаб, потом вращение, потом перемещение
 	m_TransformMatrix = translationMatrix * rotationMatrix * scaleMatrix;
-
-	
 	}
 
 void CTransformComponent::SetTransform ( const FTransform & InTransform )
 	{
-	m_WorldTransform = InTransform;
-	m_WorldTransform.Rotation.Normalize ();
+	if (ParentTransform)
+		{
+		// Если есть родитель, нужно установить relative из world
+		FTransform parentTransform = ParentTransform->GetTransform ();
+		FQuat inverseParentRot = parentTransform.Rotation.Conjugated ();
+
+		m_RelativeTransform.Location = inverseParentRot * ( InTransform.Location - parentTransform.Location );
+		m_RelativeTransform.Rotation = inverseParentRot * InTransform.Rotation;
+		m_RelativeTransform.Scale = InTransform.Scale / parentTransform.Scale;
+		m_RelativeTransform.Rotation.Normalize ();
+
+		m_WorldTransform = InTransform;
+		m_WorldTransform.Rotation.Normalize ();
+		}
+	else
+		{
+		// Если нет родителя, устанавливаем ОБЕ трансформации
+		m_WorldTransform = InTransform;
+		m_WorldTransform.Rotation.Normalize ();
+		m_RelativeTransform = m_WorldTransform;
+		}
+
 	MarkTransformDirty ();
+	// Не вызываем UpdateTransform() здесь - он вызовется в Tick или при следующем запросе
 	}
 
 void CTransformComponent::SetRelativeTransform ( const FTransform & InTransform )
@@ -203,6 +215,7 @@ void CTransformComponent::RemoveChild ( CTransformComponent * Child )
 		}
 	}
 
+
 void CTransformComponent::AttachTo ( CTransformComponent * Parent )
 	{
 	if (GetParent () == Parent)
@@ -215,15 +228,11 @@ void CTransformComponent::AttachTo ( CTransformComponent * Parent )
 		}
 
 	Parent->AddChild ( this );
-	this->SetLocation ( Parent->GetLocation () );
-	this->SetRotation ( Parent->GetRotation () );
-	this->SetScale ( Parent->GetScale () );
-	this->SetRelativeLocation ( FVector::Zero () );
-	this->SetRelativeRotation ( FQuat::Zero () );
-	this->SetRelativeScale ( FVector::One () );
-	this->MarkTransformDirty ();
+	this->SetRelativeTransform ( FTransform::Identity () );
 	
+	MarkTransformDirty ();
 	}
+
 
 bool CTransformComponent::IsChildTransformComponent () const
 	{
@@ -240,41 +249,73 @@ void CTransformComponent::DetachFromParent ()
 
 FTransform CTransformComponent::GetTransform () const
 	{
+	if (bIsTransformDirty)
+		{
+		const_cast< CTransformComponent * >( this )->UpdateTransform ();
+		}
 	return m_WorldTransform;
 	}
 
 FTransform CTransformComponent::GetRelativeTransform () const
 	{
+	if (bIsTransformDirty)
+		{
+		const_cast< CTransformComponent * >( this )->UpdateTransform ();
+		}
 	return m_RelativeTransform;
 	}
 
 FVector CTransformComponent::GetLocation () const
 	{
+	if (bIsTransformDirty)
+		{
+		const_cast< CTransformComponent * >( this )->UpdateTransform ();
+		}
 	return m_WorldTransform.Location;
 	}
 
 FVector CTransformComponent::GetRelativeLocation () const
 	{
+	if (bIsTransformDirty)
+		{
+		const_cast< CTransformComponent * >( this )->UpdateTransform ();
+		}
 	return m_RelativeTransform.Location;
 	}
 
 FVector CTransformComponent::GetScale () const
 	{
+	if (bIsTransformDirty)
+		{
+		const_cast< CTransformComponent * >( this )->UpdateTransform ();
+		}
 	return m_WorldTransform.Scale;
 	}
 
 FVector CTransformComponent::GetRelativeScale () const
 	{
+	if (bIsTransformDirty)
+		{
+		const_cast< CTransformComponent * >( this )->UpdateTransform ();
+		}
 	return m_RelativeTransform.Scale;
 	}
 
 FQuat CTransformComponent::GetRotationQuat () const
 	{
+	if (bIsTransformDirty)
+		{
+		const_cast< CTransformComponent * >( this )->UpdateTransform ();
+		}
 	return m_WorldTransform.Rotation;
 	}
 
 FQuat CTransformComponent::GetRelativeRotationQuat () const
 	{
+	if (bIsTransformDirty)
+		{
+		const_cast< CTransformComponent * >( this )->UpdateTransform ();
+		}
 	return m_RelativeTransform.Rotation;
 	}
 
@@ -452,7 +493,6 @@ void CTransformComponent::SetScale ( const FVector & inScale )
 	else
 		{
 		m_RelativeTransform.Scale = inScale;
-		//m_WorldTransform.Scale = inScale;
 		}
 
 	MarkTransformDirty ();
@@ -501,7 +541,6 @@ void CTransformComponent::SetRotation ( const FQuat & inRotation )
 	else
 		{
 		m_RelativeTransform.Rotation = normalizedRotation;
-		//m_WorldTransform.Rotation = normalizedRotation;
 		}
 
 	MarkTransformDirty ();
@@ -567,9 +606,9 @@ void CTransformComponent::SetLocation ( const FVector & inLocation )
 		}
 	else
 		{
-			// Нет родителя - относительная равна мировой
+			// Нет родителя - устанавливаем ОБЕ трансформации
 		m_RelativeTransform.Location = inLocation;
-		//m_WorldTransform.Location = inLocation;
+		m_WorldTransform.Location = inLocation;  // ВАЖНО: синхронизируем!
 		}
 
 	MarkTransformDirty ();
@@ -603,7 +642,6 @@ void CTransformComponent::AddLocalRotation ( const FQuat & DeltaRotation )
 	delta.Normalize ();
 
 	// ПРАВИЛЬНЫЙ ПОРЯДОК: новое = дельта * текущее (локальное вращение)
-	// Это добавляет вращение в локальном пространстве компонента
 	FQuat newRotation = delta * currentRotation;
 	newRotation.Normalize ();
 
@@ -615,7 +653,6 @@ void CTransformComponent::AddLocalRotation ( const FQuat & DeltaRotation )
 
 void CTransformComponent::AddLocalRotation ( const FVector & DeltaRotationDegrees )
 	{
-		// Конвертируем градусы в радианы и создаем кватернион
 	FQuat deltaQuat = FQuat::FromEulerAngles (
 		CEMath::DegreesToRadians ( DeltaRotationDegrees.x ),
 		CEMath::DegreesToRadians ( DeltaRotationDegrees.y ),
@@ -642,23 +679,17 @@ void CTransformComponent::AddWorldRotation ( const FQuat & DeltaRotation )
 	{
 	if (ParentTransform)
 		{
-			// Если есть родитель, нужно преобразовать мировое вращение в локальное
-
-			// Получаем вращение родителя
 		FQuat parentRotation = ParentTransform->GetRotationQuat ();
 		parentRotation.Normalize ();
 
-		// Конвертируем мировую дельту в локальное пространство родителя
 		FQuat parentInverse = parentRotation.Conjugated ();
 		FQuat localDelta = parentInverse * DeltaRotation * parentRotation;
 		localDelta.Normalize ();
 
-		// Добавляем локальное вращение
 		AddLocalRotation ( localDelta );
 		}
 	else
 		{
-			// Нет родителя - мировое = локальное
 		AddLocalRotation ( DeltaRotation );
 		}
 

@@ -407,7 +407,7 @@ void CGravityComponent::Tick ( float DeltaTime )
             {
             float targetY = terrainHeight + ( currentPos.y - bottomPoint.y ) + 0.5f;
             owner->SetActorLocation ( FVector ( currentPos.x, targetY, currentPos.z ) );
-            LOG_DEBUG ( "[TERRAIN LANDING] Bottom at Y=", bottomPoint.y,
+            LOG_DEBUG ( "[TERRAIN LANDING] for",owner->GetName(), " Bottom at Y=", bottomPoint.y,
                         " terrain at Y=", terrainHeight,
                         " new position Y=", targetY );
             }

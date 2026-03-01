@@ -47,13 +47,13 @@ class CGravityComponent : public CBaseComponent
         void UpdateLastPosition ( const FVector & pos ) { m_LastPosition = pos; }
     protected:
         // Параметры гравитации
-        float m_GravityScale = 1.0f;
+        float m_GravityScale = 10.0f;
         float m_GravityStrength = 9.8f;
         float m_VerticalVelocity = 0.0f;
         float m_KillZone = -1000.0f;
-        float m_MaxFallSpeed = -100.0f;
+        float m_MaxFallSpeed = -1000.0f;
         float m_GroundCheckDistance = 5.0f;
-        float m_MaxWalkableSlope = 45.0f;
+        float m_MaxWalkableSlope = 35.0f;
         float m_LastCorrectionTime = 0.0f;
         float m_CorrectionCooldown = 0.02f;
         // Состояние

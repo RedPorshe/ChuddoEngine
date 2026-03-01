@@ -21,7 +21,7 @@ class CTransformComponent : public CBaseComponent
         void UpdateTransform ();
         void MarkTransformDirty ();
 
-        void SetAutoGenerateCollisionComponent ( bool value = true, const FCollisionChannel& inChannel = FCollisionChannel::Static() );
+        void SetAutoGenerateCollisionComponent ( bool value = true, const FCollisionChannel & inChannel = FCollisionChannel::Static () );
 
         // Локальное вращение (относительно собственных осей)
         void AddLocalRotation ( const FQuat & DeltaRotation );
@@ -134,7 +134,7 @@ class CTransformComponent : public CBaseComponent
         bool bIsTransformDirty = false;
         bool bIsCollisionEnabled = false;
         bool bIsAutoGenerateCollision = false;
-      
+
     };
 
 REGISTER_CLASS_FACTORY ( CTransformComponent );

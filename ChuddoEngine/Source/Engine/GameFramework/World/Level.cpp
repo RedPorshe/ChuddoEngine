@@ -71,13 +71,13 @@ void CLevel::Tick ( float DeltaTime )
 
 	for (CActor * actor : Actors)
 		{
-		if(actor )
+		if (actor)
+			{
+			if (!actor->IsAttached ())
 				{
-				if (!actor->IsAttached ())
-					{
-					actor->Tick ( DeltaTime );
-					}
+				actor->Tick ( DeltaTime );
 				}
+			}
 		}
 	CollectAllPendingActors ();
 	CollectAllPendingActors ();
@@ -220,23 +220,30 @@ bool CLevel::DestroyActor ( const std::string & actorName )
 
 CActor * CLevel::SpawnActorAtLocation ( const std::string & ClassName, const std::string & ActorName, const FVector & loc )
 	{
-	auto newActor = SpawnActorByClass ( ClassName, ActorName );
-	if (newActor)
-		{
-		newActor->SetActorLocation ( loc );
-		LOG_DEBUG ( newActor->GetName (), " spawned at location :", newActor->GetActorLocation () );
-		return newActor;
-		}
-	return nullptr;
+	return SpawnActorByClass ( ClassName, ActorName, loc );
 	}
 
-CActor * CLevel::SpawnActorByClass ( const std::string & ClassName, const std::string & ActorName )
+CActor * CLevel::SpawnActorByClass ( const std::string & ClassName, const std::string & ActorName,
+									 const FVector & SpawnLocation )
 	{
-	auto newActor = AddSubObjectByClass ( ClassName, ActorName );
-	if (CActor * actToSpawn = dynamic_cast< CActor * >( newActor ))
+	CActor * NewActor = dynamic_cast< CActor * >( OBJECT_FACTORY.Create ( ClassName, this, ActorName ) );
+	if (NewActor)
 		{
-		Actors.push_back ( actToSpawn );
-		return actToSpawn;
+		Actors.push_back ( NewActor );
+		ActorsSpawnedThisTick++;
+
+		// Устанавливаем позицию СРАЗУ после создания
+		NewActor->SetActorLocation ( SpawnLocation, true );  // true = телепорт (мгновенно)
+		if (NewActor->GetRootComponent ())
+			{
+			NewActor->GetRootComponent ()->UpdateTransform ();
+			}
+
+		if (bIsPlaying)
+			{
+			NewActor->BeginPlay ();
+			}
+		return NewActor;
 		}
 	return nullptr;
 	}
@@ -320,7 +327,7 @@ CObject * CLevel::FindObjectByUUID ( const std::string & uuid )
 	return nullptr;
 	}
 
- 
+
 void CLevel::ProcessSpawnQueue ()
 	{
 	if (SpawnQueue.empty ())

@@ -31,13 +31,27 @@ CCharacter::CCharacter ( CObject * inOwner, const std::string & DisplayName )
 	Mesh->AttachTo ( Capsule );
 	Mesh->SetRelativeLocation ( 0.f,0.f,0.f );
 	// ВАЖНО: Генерируем геометрию для меша
-	Mesh->CreateFallBackCube ();	
+	Mesh->CreateFallBackCube ();
+	
+	
 	Mesh->SetScale ( 0.5f );
 	Camera = AddDefaultSubObject<CCameraComponent> ( "Camera" );
 	Camera->AttachTo ( Capsule );
-	Camera->SetRelativeLocation ( 0.f, 18.f, -20.f ); // Поднимаем камеру на уровень глаз
-	Camera->SetRelativeRotation ( 45.f, 0.f, 0.f );
+	// Сначала смотрим вперед (как персонаж)
+	FQuat ForwardRotation = GetActorRotationQuat ();
 
+	// Добавляем наклон вниз на 10 градусов вокруг локальной оси X
+	float PitchDownRadians = CEMath::DegreesToRadians ( -10.0f );
+	FQuat DownRotation ( FVector::Right (), PitchDownRadians );
+
+	// Комбинируем: сначала поворот персонажа, потом наклон камеры
+	// Внимание: порядок умножения важен!
+	FQuat FinalRotation = DownRotation * ForwardRotation;
+	FinalRotation.Normalize ();
+
+	Camera->SetRelativeRotation ( FinalRotation );
+	Camera->SetRelativeLocation ( 0.f, 18.f, -20.f );
+	Camera->UpdateTransform ();
 	// Настройки движения
 	m_GroundSpeed = 600.0f;
 	m_MaxAirSpeed = 400.0f;
@@ -48,7 +62,7 @@ CCharacter::CCharacter ( CObject * inOwner, const std::string & DisplayName )
 	TargetJumpHeight = 0.f;
 	
 	JumpHeight = 10.0f;  
-	SetActorLocation ( { 500.f, 500.3322f, 500.f } );
+	
 	}
 
 void CCharacter::BeginPlay ()
@@ -93,6 +107,7 @@ void CCharacter::Tick ( float DeltaTime )
 		LOG_DEBUG ( " ON GROUND - ready to jump again" );
 		}
 
+	
 	}
 
 
@@ -192,51 +207,38 @@ void CCharacter::Jump ()
 
 void CCharacter::SpawnCube ()
 	{
-	if (!GetWorld () || !GetWorld ()->GetCurrentLevel ())
-		{
-		LOG_ERROR ( "[CHARACTER] Cannot spawn cube - no world or level!" );
-		return;
-		}
+	if (!GetWorld () || !GetWorld ()->GetCurrentLevel ()) return;
 
 	auto level = GetWorld ()->GetCurrentLevel ();
 
-	// Вычисляем позицию для спавна
-	FVector SpawnOffset = GetActorForwardVector()*-200.f;
-	FVector spawnLocation = GetActorLocation () + SpawnOffset*2.f;
+	FVector SpawnOffset = GetActorForwardVector () * 200.f;
+	FVector spawnLocation = GetActorLocation () + SpawnOffset * 2.f;
 
-	// Спавним актор
-	auto cubeActor = level->SpawnActor <CActor> ( "TestActor", spawnLocation );
-	if (!cubeActor)
-		{
-		LOG_ERROR ( "[CHARACTER] Failed to spawn cube actor!" );
-		return;
-		}
+	auto cubeActor = level->SpawnActor<CActor> ( "TestCube", spawnLocation );
+	if (!cubeActor) return;
 
-	// Создаём меш и устанавливаем как RootComponent
 	auto cubemesh = cubeActor->AddDefaultSubObject<CStaticMeshComponent> ( "Testmesh" );
-	if (!cubemesh)
-		{
-		LOG_ERROR ( "[CHARACTER] Failed to create mesh for cube!" );
-		return;
-		}
+	auto box = cubeActor->AddDefaultSubObject<CBoxComponent> ( "CubeBox" );
 
-	// ВАЖНО: Сначала устанавливаем RootComponent
+	// Настраиваем бокс
+	box->SetHalfExtents ( FVector ( 5.f, 5.f, 5.f ) );
+
+	
+
 	cubeActor->SetRootComponent ( cubemesh );
+	cubemesh->SetCollisionComponent ( box );
+	box->AttachTo ( cubemesh );  // box становится дочерним компонентом меша
+	// ВАЖНО: Устанавливаем относительную позицию бокса в (0,0,0)
+	//box->SetRelativeLocation ( FVector::Zero () );  // ЭТОГО НЕ ХВАТАЕТ!
+	// Включаем коллизию
+	cubeActor->SetCollisionEnabled ();
 
-	
-	
-	
-	
-	
-
-	// ТЕПЕРЬ устанавливаем позицию, когда RootComponent уже есть
+	// Устанавливаем позицию актора
 	cubeActor->SetActorLocation ( spawnLocation, true );
 
-	// Запускаем актор
-	if(GetWorld()->GetGameMode()->IsGameStarted())
+
+
 	cubeActor->BeginPlay ();
-	
-	LOG_DEBUG ( "[CHARACTER] Player position: ", GetActorLocation () );
+
 	LOG_DEBUG ( "[CHARACTER] Test cube spawned at: ", cubeActor->GetActorLocation () );
-	LOG_DEBUG ( "[CHARACTER] Test cube spawned successfully!" );
 	}

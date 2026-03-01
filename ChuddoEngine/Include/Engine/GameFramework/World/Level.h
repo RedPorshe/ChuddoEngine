@@ -57,6 +57,7 @@ class CLevel : public CObject
                 {
                 ActorType* ActorToReturn = SpawnActorImmediate<ActorType> ( name, std::forward<Args> ( args )... );
                 ActorToReturn->SetActorLocation ( SpawnLocation, true );
+                ActorToReturn->GetRootComponent ()->UpdateTransform ();
                 return ActorToReturn;
                 }
             else
@@ -102,7 +103,8 @@ class CLevel : public CObject
         bool DestroyActor ( const std::string & actorName );
         bool SpawnTerrain ();
         CActor * SpawnActorAtLocation ( const std::string & ClassName, const std::string & ActorName, const FVector & loc );
-        CActor* SpawnActorByClass ( const std::string & ClassName, const std::string & ActorName );
+        CActor* SpawnActorByClass ( const std::string & ClassName, const std::string & ActorName,
+                                    const FVector & SpawnLocation = FVector::Zero () );
 
         const std::vector<CActor *> & GetActors () const { return Actors; }
         size_t GetNumActors () const { return Actors.size (); }
@@ -173,6 +175,11 @@ class CLevel : public CObject
 
             Actors.push_back ( newActor );
             ActorsSpawnedThisTick++; // Увеличиваем счетчик
+            
+            if (auto * transform = newActor->GetRootComponent ())
+                {
+                transform->UpdateTransform ();  // Вызываем немедленно
+                }
 
             if (bIsPlaying)
                 {

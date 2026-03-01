@@ -1,5 +1,6 @@
 #include "Components/Meshes/StaticMeshComponent.h"
 #include "Render/Vulkan/VertexStructs/AllVertices.h"
+#include "Components/Collisions/BoxComponent.h"
 #include "Render/Renderer.h"
 #include "Core/Engine.h"
 
@@ -161,6 +162,7 @@ void CStaticMeshComponent::CreateFallBackCube ()
     // Верхняя грань (Y+)
     StaticMesh_indices.push_back ( 20 ); StaticMesh_indices.push_back ( 21 ); StaticMesh_indices.push_back ( 22 );
     StaticMesh_indices.push_back ( 20 ); StaticMesh_indices.push_back ( 22 ); StaticMesh_indices.push_back ( 23 );
+    SetCollisionEnabled ();
 
     LOG_DEBUG ( "[", GetName (), "] Created fallback cube with ",
                 StaticMesh_vertices.size (), " vertices and ",

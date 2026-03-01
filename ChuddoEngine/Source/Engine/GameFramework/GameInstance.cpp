@@ -124,7 +124,7 @@ void CGameInstance::Init ()
 		// World сам создаст GameMode в BeginPlay!
 	if (CurrentWorld)
 		{
-		CurrentWorld->BeginPlay ();
+		//CurrentWorld->BeginPlay ();
 		}
 	}
 
@@ -137,6 +137,15 @@ void CGameInstance::Tick ( float deltaTime )
 	if (CurrentWorld)
 		{
 		CurrentWorld->Tick ( deltaTime );
+		static int SafeBeginPlay = 0;
+		if (SafeBeginPlay <= 3)
+			SafeBeginPlay++;
+		if (SafeBeginPlay == 4)
+			{
+			LOG_DEBUG ( "Safe begin play after 3 ticks" );
+			CurrentWorld->BeginPlay ();
+			SafeBeginPlay++;
+			}
 		}
 	}
 

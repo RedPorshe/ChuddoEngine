@@ -22,7 +22,10 @@ CActor::CActor ( CObject * owner, const std::string & inName ) : CObject ( owner
 	{
 	RootComponent = AddDefaultSubObject<CTransformComponent> ( inName + "_Transform" );
 	m_Gravity = AddDefaultSubObject<CGravityComponent> ( GetName () + "_Gravity" );
-	if (RootComponent) RootComponent->SetCollisionEnabled ( bIsCollisionEnabled );
+	if (RootComponent) 
+		{		
+		RootComponent->SetCollisionEnabled ( bIsCollisionEnabled );
+		}
 
 	
 	}
@@ -37,7 +40,12 @@ void CActor::BeginPlay ()
 	LOG_DEBUG ( "[ACTOR] BeginPlay: ", GetName () );
 	for (auto comp : ActorComponents)
 		{
+		if (CTransformComponent * transform = dynamic_cast< CTransformComponent * >( comp ))
+			{
+			transform->UpdateTransform ();
+			}
 		comp->OnBeginPlay ();
+
 		}
 	if (RootComponent) 
 		{
@@ -53,12 +61,20 @@ void CActor::BeginPlay ()
 			if (CTransformComponent * compTrans = dynamic_cast< CTransformComponent * > ( ActorComponents[ i ] ))
 				{
 				if(compTrans->GetParent() == nullptr)
-					{
+					{					
 					LOG_ERROR ( "Component ", compTrans->GetName (), " world position : ", compTrans->GetLocation () );
 					LOG_ERROR ( "Component ", compTrans->GetName (), " relative position: ", compTrans->GetRelativeLocation () );
+					LOG_ERROR ( "Component ", compTrans->GetName (), " is Root and have ", compTrans->GetChildTransformComponents ().size(), " childs: ");
+					int childcount {};
+					for (auto& child : compTrans->GetChildTransformComponents ())
+						{
+						childcount++;
+						LOG_ERROR ( childcount, ". ",child->GetName() );
+						}
 					}
 				else
 					{
+					LOG_ERROR ( "Component ", compTrans->GetName (), " world position : ", compTrans->GetLocation () );
 					LOG_ERROR ( "Component ", compTrans->GetName (), " relative position: ", compTrans->GetRelativeLocation () );
 					}
 				}
@@ -134,12 +150,18 @@ void CActor::Tick ( float deltaTime )
 			comp->Tick ( deltaTime );
 			}
 		}
+	this->DebugInfo ( deltaTime );
 	}
 
 
 void CActor::EndPlay ()
 	{
 	LOG_DEBUG ( "[ACTOR] EndPlay: ", GetName () );
+	}
+
+void CActor::DebugInfo ( float deltaTime )
+	{
+	
 	}
 
 FRenderCollection CActor::GetRenderInfo () const
@@ -405,26 +427,26 @@ void CActor::SetRootComponent ( CTransformComponent * NewRoot )
 		}
 
 	CTransformComponent * OldRoot = RootComponent;
-	FTransform OldRootTransform = OldRoot->GetTransform ();
-	RootComponent = NewRoot;
-	RootComponent->SetTransform ( OldRootTransform );
+
 	if (OldRoot)
 		{
-			// Прикрепляем старый корень к новому
-		NewRoot->AttachComponentToComponent ( OldRoot );
-		NewRoot->SetLocation ( OldRoot->GetLocation () );
-		NewRoot->SetRotation ( OldRoot->GetRotation () );
-		NewRoot->SetScale ( OldRoot->GetScale () );
-		OldRoot->SetRelativeLocation ( FVector::Zero() );
-		OldRoot->SetRelativeRotation ( FQuat::Zero () );
-		OldRoot->SetRelativeScale ( FVector::Zero () );
-		LOG_DEBUG ( "Changed RootComponent from '", OldRoot->GetName ()
-					, "' to '", NewRoot->GetName (), "'" );
-		}
-	else
-		{
-		LOG_DEBUG ( "Set '", NewRoot->GetName ()
-					, "' as RootComponent for actor '", GetName (), "'" );
+			// Сохраняем мировую позицию СТАРОГО корня
+		FVector WorldLocation = OldRoot->GetLocation ();  // (500, 500.332, 500)
+		FQuat WorldRotation = OldRoot->GetRotationQuat ();
+		FVector WorldScale = OldRoot->GetScale ();
+
+		// Прикрепляем старый корень к новому
+		OldRoot->AttachTo ( NewRoot );  // Теперь Transform приаттачен к Capsule
+
+		// НОВЫЙ корень получает мировую позицию СТАРОГО корня
+		NewRoot->SetTransform ( FTransform ( WorldLocation, WorldRotation, WorldScale ) );
+
+		// Старый корень теперь в относительных координатах
+		OldRoot->SetRelativeLocation ( FVector::Zero () );
+		OldRoot->SetRelativeRotation ( FQuat::Identity () );
+		OldRoot->SetRelativeScale ( FVector::One () );
+
+		RootComponent = NewRoot;
 		}
 	}
 
@@ -610,7 +632,11 @@ void CActor::TeleportTo ( const FVector & NewLocation )
 	{
 	LOG_DEBUG ( "[ACTOR] TeleportTo: ", GetName (), " to (",
 				NewLocation.x, ", ", NewLocation.y, ", ", NewLocation.z, ")" );
-	SetActorLocation ( NewLocation );
+	if(RootComponent)
+		{
+		RootComponent->SetLocation ( NewLocation );
+		RootComponent->UpdateTransform ();
+		}
 	}
 
 void CActor::TeleportTo ( float NewX, float NewY, float NewZ )

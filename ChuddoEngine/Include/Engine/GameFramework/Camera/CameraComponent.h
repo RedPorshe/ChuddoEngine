@@ -36,7 +36,7 @@ class CCameraComponent : public CTransformComponent
         // Camera-specific properties
         float FieldOfView = 90.0f;
         float NearClipPlane = 0.1f;
-        float FarClipPlane = 1000.0f;
+        float FarClipPlane = 5000.0f;
 
     };
 

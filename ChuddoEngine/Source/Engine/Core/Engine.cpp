@@ -176,8 +176,7 @@ void CEngine::Start ()
 	{
 	CreateTestWorld ();
 
-	auto & GameInstance = CGameInstance::Get ();
-	GameInstance.Init ();
+	
 
 	MainLoop ();
 	}
@@ -201,7 +200,8 @@ void CEngine::MainLoop ()
 	float gameTime = 0.0f;
 	static int frameCount = 0;
 
-	
+	auto & GameInstance = CGameInstance::Get ();
+	GameInstance.Init ();
 
 	while (bIsRunning && !glfwWindowShouldClose ( Info.WindowHandle ))
 		{
@@ -293,7 +293,7 @@ FRenderInfo CEngine::UpdateRenderInfo ()
 	{
 	auto RenderInfo = CGameInstance::Get ().GetWorld ()->CollectRenderInfo ();
 
-	  // Можно добавить глобальную отладку коллизий
+	  
 	static bool bGlobalDrawCollisions = true;
 	// Здесь можно проверить консольную переменную
 	RenderInfo.bDrawCollisions = bGlobalDrawCollisions || RenderInfo.HasDebugCollisions();
@@ -310,18 +310,18 @@ void CEngine::CreateTestWorld ()
 		{
 		auto level = world->CreateLevel<CLevel> ( "Level" );
 		auto start = level->SpawnActor<CPlayerStart> ( "playStart" );
-		start->SetActorLocation ( FVector{ 500.f, 500.3322f, 500.f } , true); // true явно указываю что нужно телепортировать актора, потому что нету тиков
 	
 		
 		// Создаём террейн - компоненты создадутся внутри GenerateHilly
 		auto Terrain = level->SpawnActor<CTerrainActor> ( "Terrain" );
 
 		
-		Terrain->GenerateHilly ( 45, 45, 15.f );
-		Terrain->GenerateFlat ( 45, 45, 15.f );		
-
+		//Terrain->GenerateHilly ( 45, 45, 15.f );
+		Terrain->GenerateNoise ( 100, 300, 25.f );
 		Terrain->SetActorLocation ( 0.f, 0.f, 0.f, true ); // true явно указываю что нужно телепортировать актора, потому что нету тиков
 		Terrain->SetDrawCollisions ( true );	
+		float startHeight = Terrain->GetTerrainMeshComponent ()->GetTerrainComponent ()->GetHeightAtWorld ( FVector { 500.f, 150.3322f, 500.f } );
+		start->SetActorLocation ( FVector{ 500.f, startHeight+500.f, 500.f } , true); // true явно указываю что нужно телепортировать актора, потому что нету тиков
 		
 		LOG_DEBUG ( "Total actors after spawn: ", level->GetNumActors () );
 

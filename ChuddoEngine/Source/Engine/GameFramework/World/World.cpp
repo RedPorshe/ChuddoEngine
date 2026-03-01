@@ -177,6 +177,7 @@ FRenderInfo CWorld::CollectRenderInfo ()
 	{
 	FRenderInfo Info {};
 
+
 	// 1. Собираем камеру
 	Info.Camera = FindActiveCamera ();
 

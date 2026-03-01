@@ -39,14 +39,14 @@ class CActor : public CObject
 		virtual void BeginPlay ();
 		virtual void Tick ( float deltaTime );
 		virtual void EndPlay ();
-
+		void DebugInfo ( float deltaTime );
 		virtual FRenderCollection GetRenderInfo () const;
 
 		void SetDrawCollisions ( bool bDraw ) { m_bDrawCollisions = bDraw; }
 		bool IsDrawCollisionsEnabled () const { return m_bDrawCollisions; }
 
 		bool IsMIsMoving () const { return bIsMovin; }
-
+		CGravityComponent* GetGravityComponent () { return m_Gravity; }
 		// Getters
 		CTransformComponent * GetRootComponent () const { return RootComponent; }
 		CLevel * GetLevel () const;
@@ -184,7 +184,7 @@ class CActor : public CObject
 		bool bIsTerrain = false;
 
 		bool bIsHiddenInGame = false;
-		
+		float DebugTimer = 0.f;
 	};
 
 	// Inline template implementation
