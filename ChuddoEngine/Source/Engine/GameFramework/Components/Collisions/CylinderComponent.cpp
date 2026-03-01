@@ -126,3 +126,26 @@ FVector CCylinderComponent::GetBottomCenter () const
 
 	return worldPos + worldOffset;
 	}
+
+FVector CCylinderComponent::GetExtremePoint ( const FVector & Direction ) const
+	{
+	FVector center = GetWorldLocation ();
+	FQuat rotation = GetOwnerActor ()->GetActorRotationQuat ();
+
+	// Направление в локальном пространстве
+	FVector localDir = rotation.Inverse () * Direction;
+	float len = localDir.Length ();
+	if (len < 0.001f)
+		return center;
+
+	localDir /= len;
+
+	// Для цилиндра: ограничиваем по радиусу в плоскости XZ и по высоте по Y
+	FVector localPoint (
+		localDir.x * m_Radius,
+		( localDir.y > 0 ) ? GetHalfHeight () : -GetHalfHeight (),
+		localDir.z * m_Radius
+	);
+
+	return center + rotation * localPoint;
+	}

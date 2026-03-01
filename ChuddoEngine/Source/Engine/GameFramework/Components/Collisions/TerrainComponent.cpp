@@ -325,6 +325,22 @@ bool CTerrainComponent::LoadFromHeightmap ( const std::string & filename, float 
 
 float CTerrainComponent::GetHeightAtWorld ( const FVector & worldPos ) const
     {
+    // Сначала проверяем, находится ли точка в пределах террейна
+    float halfWidth = ( m_TerrainData.Width - 1 ) * m_TerrainData.CellSize * 0.5f;
+    float halfDepth = ( m_TerrainData.Height - 1 ) * m_TerrainData.CellSize * 0.5f;
+
+    float minX = m_TerrainData.Origin.x - halfWidth;
+    float maxX = m_TerrainData.Origin.x + halfWidth;
+    float minZ = m_TerrainData.Origin.z - halfDepth;
+    float maxZ = m_TerrainData.Origin.z + halfDepth;
+
+    // Если точка за границами террейна, возвращаем специальное значение
+    if (worldPos.x < minX || worldPos.x > maxX || worldPos.z < minZ || worldPos.z > maxZ)
+        {
+        // Возвращаем -INF или очень большое отрицательное число, чтобы объект падал
+        return -std::numeric_limits<float>::max ();
+        }
+
     return m_TerrainData.GetInterpolatedHeight ( worldPos.x, worldPos.z );
     }
 

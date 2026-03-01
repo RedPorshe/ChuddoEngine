@@ -311,30 +311,31 @@ void CEngine::CreateTestWorld ()
 		auto level = world->CreateLevel<CLevel> ( "Level" );
 		auto start = level->SpawnActor<CPlayerStart> ( "playStart" );
 		start->MoveActor ( { 500.f, 500.3322f, 500.f },false );
-		start->DestroyGravity ();
+		//start->DestroyGravity ();
 		
 		// Создаём террейн - компоненты создадутся внутри GenerateHilly
 		auto Terrain = level->SpawnActor<CTerrainActor> ( "Terrain" );
 
 		
-		Terrain->GenerateNoise ( 45, 45, 15.f,3 );
+		//Terrain->GenerateHilly ( 45, 45, 15.f );
+		Terrain->GenerateFlat ( 45, 45, 15.f );
 		
 
 		Terrain->SetActorLocation ( 0.f, 0.f, 0.f );
 		Terrain->SetDrawCollisions ( true );
 		
 		
-		auto player = level->SpawnActor<CCharacter> ( "Player" );
+		/*auto player = level->SpawnActor<CCharacter> ( "Player" );
 		auto PlayerController = level->SpawnActor<CPlayerController> ();
-		PlayerController->Possess(player);
+		PlayerController->Possess(player);*/
 		
-		player->SetActorLocation ( { 500.f,100.f,500.f } );
-		PlayerController->SetActorLocation ( { 500.f,500.f,500.f } );
+		
+		
 		
 		LOG_DEBUG ( "Total actors after spawn: ", level->GetNumActors () );
 
 		auto gameMode = world->CreateGameMode<CGameMode> ( "SuperGameMode" );
-		gameMode->SetDefaultPawnClass ( "" );
+		gameMode->SetDefaultPawnClass ( "CCharacter" );
 		}
 	}
 

@@ -60,6 +60,14 @@ class CBaseCollisionComponent : public CTransformComponent
         bool ShouldOverlapWith ( const CBaseCollisionComponent * other ) const;
         virtual float GetCollisionRadius () const { return 0.0f; }
         virtual FVector GetBoundingBox () const { return FVector::Zero (); };
+        virtual FVector GetExtremePoint ( const FVector & Direction ) const;
+        virtual FVector GetTopPoint () const;
+        virtual FVector GetBottomPoint () const;
+        virtual FVector GetFrontPoint () const;
+        virtual FVector GetBackPoint () const;
+        virtual FVector GetLeftPoint () const;
+        virtual FVector GetRightPoint () const;
+        FVector GetLocalExtremePoint ( const FVector & LocalDirection ) const;
 
         // Форма коллизии
         ECollisionShape GetShapeType () const { return m_CollisionShape; }

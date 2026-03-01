@@ -12,6 +12,7 @@ class CStaticMeshComponent : public CBaseMeshComponent
 		virtual void Tick ( float DeltaTime ) override;
 		virtual void OnBeginPlay () override;
 		void CreateFallBackCube ();
+		void CreateBolt ();
 	protected:
 	// ========== Переопределённые методы из CBaseMeshComponent ==========
 		virtual void GenerateVertices ( std::vector<FMeshVertex> & OutVertices ) const override;

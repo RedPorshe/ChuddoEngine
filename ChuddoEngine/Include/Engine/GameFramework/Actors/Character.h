@@ -2,8 +2,8 @@
 #include "Actors/Pawn.h"
 
 class CCapsuleComponent;
+class CStaticMeshComponent;
 class CCameraComponent;
-class CBoxComponent;
 
 class CCharacter : public CPawn
 	{
@@ -11,21 +11,30 @@ class CCharacter : public CPawn
 	public:
 		CCharacter ( CObject * inOwner, const std::string & DisplayName );
 		virtual ~CCharacter () = default;
-		void BeginPlay () override ;
-		void Tick ( float DeltaTime ) override ;
-		void EndPlay () override ;
-	protected:
-		void SetupPlayerInputComponent ( CInputComponent * InputComponent ) override ;
-		CStaticMeshComponent * Mesh = nullptr; // TODO: change to SkeletalMesh
-		CCapsuleComponent * Capsule = nullptr;
-		CCameraComponent * Camera = nullptr;
+		void BeginPlay () override;
+		void Tick ( float DeltaTime ) override;
+		void EndPlay () override;
 
-		float MoveSpeed = 600.f;
-		float JumpForce = 500.0f;
+		void StartJump ();
+		void EndJump ();
+		void SpawnCube ();
+	protected:
+		void SetupPlayerInputComponent ( CInputComponent * InputComponent ) override;
 		void MoveRight ( float value );
 		void MoveForward ( float Value );
 		void MoveUp ( float Value );
 		void Jump ();
-		void SpawnCube ();
+		
+		bool CheckTargetJump ();
+		CStaticMeshComponent * Mesh = nullptr; // TODO: change to SkeletalMesh
+		CCapsuleComponent * Capsule = nullptr;
+		CCameraComponent * Camera = nullptr;
+
+		float MoveSpeed = 600.f;		
+		float TargetJumpHeight = 0.f;
+		float InitialJumpHeight = 0.f;
+		float JumpHeight = 40.f;
+		bool bIsJumping = false;
 	};
+
 REGISTER_CLASS_FACTORY ( CCharacter );

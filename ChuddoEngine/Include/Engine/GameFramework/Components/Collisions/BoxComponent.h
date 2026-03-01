@@ -29,7 +29,7 @@ class CBoxComponent : public CBaseCollisionComponent
 
         // Получение ограничивающего объема (для системы коллизий)
         virtual FVector GetBoundingBox () const override { return m_HalfExtents * 2.0f; }
-
+        virtual FVector GetExtremePoint ( const FVector & Direction ) const override;
         FVector GetWorldLocation () const;
         FVector GetWorldRotation () const;
     private:

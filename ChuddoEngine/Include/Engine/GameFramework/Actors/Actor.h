@@ -148,6 +148,10 @@ class CActor : public CObject
 		void DestroyGravity ();
 		void SetCollisionEnabled ( bool value = true );
 
+		template<typename ClassName, typename... Args>
+		ClassName * SpawnActor ( const std::string & name = "ActorFromActor", Args&&... args );
+
+
 		virtual void OnComponentBeginOverlap ( CBaseCollisionComponent * other );
 		virtual void OnComponentEndOverlap ( CBaseCollisionComponent * other );
 		virtual void OnComponentHit ( CBaseCollisionComponent * other );
@@ -206,5 +210,17 @@ inline Comp * CActor::AddDefaultSubObject ( const std::string & desiredDisplayNa
 	ActorComponents.push_back ( newComp );
 	return newComp;
 	}
+
+template<typename ClassName, typename ...Args>
+inline ClassName * CActor::SpawnActor ( const std::string & name, Args && ...args )
+	{
+	ClassName * ToReturn = nullptr;
+	ToReturn = this->GetWorld ()->GetCurrentLevel ()->SpawnActor<ClassName> ( name, std::forward<Args> ( args )... );
+	return ToReturn;
+	}
+
+
+
+
 
 REGISTER_CLASS_FACTORY ( CActor );

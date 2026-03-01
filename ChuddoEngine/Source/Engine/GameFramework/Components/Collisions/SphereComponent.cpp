@@ -110,3 +110,17 @@ bool CSphereComponent::CheckCollision ( CBaseCollisionComponent * other, FCollis
 
     return false;
     }
+
+FVector CSphereComponent::GetExtremePoint ( const FVector & Direction ) const
+    {
+    FVector center = GetWorldLocation ();
+    float radius = GetRadius ();
+
+    FVector normalizedDir = Direction;
+    float len = normalizedDir.Length ();
+    if (len < 0.001f)
+        return center;
+
+    normalizedDir /= len;
+    return center + normalizedDir * radius;
+    }

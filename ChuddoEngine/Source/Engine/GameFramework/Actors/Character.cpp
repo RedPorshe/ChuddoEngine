@@ -2,6 +2,9 @@
 #include "Components/Meshes/StaticMeshComponent.h"
 #include "Components/Collisions/CapsuleComponent.h"
 #include "Components/Collisions/BoxComponent.h"
+#include "Components/Collisions/ConeComponent.h"
+#include "Components/Collisions/CylinderComponent.h"
+#include "Components/Collisions/SphereComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/InputComponent.h"
 #include "Components/GravityComponent.h"
@@ -11,73 +14,93 @@
 
 #include "Core/Engine.h"
 #include "Render/Renderer.h"
+#include "Utils/Math/CE_MathHelpers.h"
+#include <cmath>
 
 CCharacter::CCharacter ( CObject * inOwner, const std::string & DisplayName )
 	: Super ( inOwner, DisplayName )
 	{
 	Capsule = AddDefaultSubObject<CCapsuleComponent> ( "Capsule" );
-	
-	Capsule->SetRadius ( 1.8f );
-	Capsule->SetHalfHeight ( 9.f );
-	SetRootComponent ( Capsule );
 
+	
+	Capsule->SetHalfHeight ( 9.f );
+	Capsule->SetRadius ( 1.8f );
+	SetRootComponent ( Capsule );
+	SetDrawCollisions ( true ); 
 	Mesh = AddDefaultSubObject<CStaticMeshComponent> ( "Mesh" );
 	Mesh->AttachTo ( Capsule );
-	
+	Mesh->SetRelativeLocation ( 0.f,0.f,0.f );
 	// ВАЖНО: Генерируем геометрию для меша
-	Mesh->CreateFallBackCube (); // Вызываем метод создания куба
-
+	Mesh->CreateFallBackCube ();	
+	Mesh->SetScale ( 0.5f );
 	Camera = AddDefaultSubObject<CCameraComponent> ( "Camera" );
 	Camera->AttachTo ( Capsule );
-	Camera->SetRelativeLocation ( 0.f, 0.f, -10.f ); // Поднимаем камеру на уровень глаз
-	Camera->SetRelativeRotation ( 0.f, 0.f, 0.f );
-	
-	
+	Camera->SetRelativeLocation ( 0.f, 18.f, -20.f ); // Поднимаем камеру на уровень глаз
+	Camera->SetRelativeRotation ( 45.f, 0.f, 0.f );
 
+	// Настройки движения
+	m_GroundSpeed = 600.0f;
+	m_MaxAirSpeed = 400.0f;
+	m_AirControl = 0.8f; // 80% контроля в воздухе
 
+	// Настройки прыжка
+	bIsJumping = false;
+	TargetJumpHeight = 0.f;
+	
+	JumpHeight = 10.0f;  
+	SetActorLocation ( { 500.f, 500.3322f, 500.f } );
 	}
 
 void CCharacter::BeginPlay ()
 	{
-	Super::BeginPlay ();
-	
-	 // Убеждаемся, что меш создан
-	if (Mesh && !Mesh->HasRenderResources ())
-		{
-		if (CEngine::Get ().GetRenderer ())
-			{
-			auto  bufferManager = CEngine::Get ().GetRenderer ()->GetBufferManager ();
-			if (bufferManager)
-				{
-				LOG_DEBUG ( "[CHARACTER] Creating mesh resources..." );
-				Mesh->CreateRenderResources ( bufferManager );
-				if (!Mesh->IsReadyForRender ())
-					{
-					Mesh->SetVisible ( true );
-					Mesh->SetPipelineName ( "StaticMesh" );
-					}
-				}
-			}
-		}	
-	
+	Super::BeginPlay ();	
 	}
+
+bool CCharacter::CheckTargetJump ()
+	{
+	float CurrentHeight = GetActorLocation ().y;
+	// Добавляем небольшую погрешность
+	return CurrentHeight >= TargetJumpHeight - 1.2f;
+	}
+
 
 void CCharacter::Tick ( float DeltaTime )
 	{
 	Super::Tick ( DeltaTime );
-	static float timer = 0.f;
-	timer += DeltaTime;
-	if (timer >= 1.f )
+	static int ttt = 0;
+	if (ttt < 1)
 		{
-		/*auto rot = RootComponent->GetRotation ();
-		rot.z += 5.f;
-		RootComponent->SetRotation ( rot );*/
-		
-		 
-
-
+		SpawnCube ();
+		++ ttt;
 		}
+	// Логика прыжка - только если мы в воздухе и прыжок активен
+	if (bIsJumping && m_Gravity && !m_Gravity->IsGrounded ())
+		{
+		float CurrentHeight = GetActorLocation ().y;
+		float CurrentVel = m_Gravity->GetVerticalVelocity ();
+
+		// Проверяем, достигли ли пика (скорость стала <= 0)
+		if (CurrentVel <= 0)
+			{
+			if (CheckTargetJump ())
+				{
+				bIsJumping = false;
+				LOG_DEBUG ( "[JUMP PEAK] Достигнута высота: ", CurrentHeight,
+							" Цель: ", TargetJumpHeight );
+				}
+			}
+		}
+ 
+	if (m_Gravity && m_Gravity->IsGrounded () && bIsJumping&& CheckTargetJump ())
+		{
+		bIsJumping = false;
+		LOG_DEBUG ( " ON GROUND - ready to jump again" );
+		}
+	
+
+	
 	}
+
 
 void CCharacter::EndPlay ()
 	{
@@ -97,19 +120,17 @@ void CCharacter::SetupPlayerInputComponent ( CInputComponent * InputComponent )
 										 [ this ] ( float value ) { MoveUp ( value ); } );
 		GetInputComponent ()->BindAction ( "Jump", GLFW_KEY_SPACE, EInputEvent::IE_Pressed,
 										   [ this ] () { Jump (); } );
-		GetInputComponent ()->BindAction ( "SpawnCube", GLFW_KEY_TAB, EInputEvent::IE_Pressed,
-										   [ this ] () { SpawnCube (); } );
+	
 
 		}
 	}
 
 void CCharacter::MoveRight ( float value )
 	{
-	if ( value != 0.f)
+	if (value != 0.f)
 		{
-		FVector Direction = GetActorRotationQuat ()*FVector::Right();
-		float scale = MoveSpeed * value;
-		AddMovementInput ( Direction, scale );
+		FVector Direction = GetActorRotationQuat () * FVector::Right ();
+		AddMovementInput ( Direction, value );
 		}
 	}
 
@@ -117,12 +138,8 @@ void CCharacter::MoveForward ( float Value )
 	{
 	if (Value != 0.f)
 		{
-		
 		FVector Direction = GetActorRotationQuat () * FVector::Forward ();
-		
-		float scale = MoveSpeed * Value;
-		
-		AddMovementInput ( Direction, scale );
+		AddMovementInput ( Direction, Value );
 		}
 	}
 
@@ -130,25 +147,53 @@ void CCharacter::MoveUp ( float Value )
 	{
 	if (Value != 0.f)
 		{
-
 		FVector Direction = GetActorRotationQuat () * FVector::Up ();
-
-		float scale = MoveSpeed * Value;
-
-		AddMovementInput ( Direction, scale );
+		AddMovementInput ( Direction, Value );
 		}
+	}
+
+void CCharacter::StartJump ()
+	{
+	if (m_Gravity && m_Gravity->IsGrounded ())
+		{
+		// Получаем силу гравитации
+		float gravity = m_Gravity->GetGravityStrength () * m_Gravity->GetGravityScale ();
+
+		// Вычисляем нужную скорость для достижения JumpHeight
+		// v = sqrt(2 * g * h)
+		float neededVelocity = std::sqrt ( 2.0f * gravity * JumpHeight );
+
+		// Устанавливаем целевую высоту
+		TargetJumpHeight = GetActorLocation ().y + JumpHeight;
+
+		// Даем вычисленную силу
+		m_Gravity->SetVerticalVelocity ( neededVelocity );
+
+		bIsJumping = true;
+
+		LOG_DEBUG ( "[JUMP START] Цель: ", TargetJumpHeight,
+					" Текущая: ", GetActorLocation ().y,
+					" Сила: ", neededVelocity,
+					" Гравитация: ", gravity,
+					" Высота: ", JumpHeight );
+		}
+	}
+
+void CCharacter::EndJump ()
+	{
+	// При отпускании клавиши ничего не делаем
+	// Прыжок уже в процессе
+	LOG_DEBUG ( "[JUMP END]" );
 	}
 
 void CCharacter::Jump ()
 	{
-	if (m_Gravity && m_Gravity->IsGrounded ())
+	if (!bIsJumping && m_Gravity && m_Gravity->IsGrounded ())
 		{
-		LOG_DEBUG ( "JUMP!" );
-		// Даем импульс вверх
-		AddMovementInput ( FVector::Up(), JumpForce);
-		m_Gravity->IsGrounded ();
+		StartJump ();
 		}
 	}
+
 
 void CCharacter::SpawnCube ()
 	{
@@ -160,20 +205,18 @@ void CCharacter::SpawnCube ()
 
 	auto level = GetWorld ()->GetCurrentLevel ();
 
-	// Вычисляем позицию для спавна (немного впереди и справа от персонажа)
-	
-	FVector spawnlocation = GetActorLocation ()+FVector(-2.f,0.f,-3.f); // 200 единиц от персонажа
+	// Вычисляем позицию для спавна
+	FVector spawnLocation = GetActorLocation () + FVector ( 0.f, 25.f, 25.f );
 
-	// Поднимаем куб над землёй
-	  // Спавним актор
+	// Спавним актор
 	auto cubeActor = level->SpawnActor <CActor> ( "TestActor" );
 	if (!cubeActor)
 		{
 		LOG_ERROR ( "[CHARACTER] Failed to spawn cube actor!" );
 		return;
 		}
-	cubeActor->SetActorLocation ( spawnlocation );
-		// Создаём меш
+
+	// Создаём меш и устанавливаем как RootComponent
 	auto cubemesh = cubeActor->AddDefaultSubObject<CStaticMeshComponent> ( "Testmesh" );
 	if (!cubemesh)
 		{
@@ -181,23 +224,23 @@ void CCharacter::SpawnCube ()
 		return;
 		}
 
-		// Настраиваем меш
+	// ВАЖНО: Сначала устанавливаем RootComponent
 	cubeActor->SetRootComponent ( cubemesh );
+
+	// СОЗДАЕМ геометрию ДО установки позиции
 	cubemesh->CreateFallBackCube ();
-	cubemesh->SetPipelineName ( "StaticMesh" ); // Убеждаемся, что используем правильный пайплайн
-
-
-
-	// Важно: устанавливаем видимость
 	cubemesh->SetVisible ( true );
+
 	
+	
+
+	// ТЕПЕРЬ устанавливаем позицию, когда RootComponent уже есть
+	cubeActor->SetActorLocation ( spawnLocation );
+
 	// Запускаем актор
 	cubeActor->BeginPlay ();
-
-	LOG_DEBUG ( "[CHARACTER] Spawning test cube at: ", spawnlocation );
+	BeginPlay ();
 	LOG_DEBUG ( "[CHARACTER] Player position: ", GetActorLocation () );
-
-	
-
+	LOG_DEBUG ( "[CHARACTER] Test cube spawned at: ", cubeActor->GetActorLocation () );
 	LOG_DEBUG ( "[CHARACTER] Test cube spawned successfully!" );
 	}

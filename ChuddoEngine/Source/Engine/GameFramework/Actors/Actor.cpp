@@ -319,7 +319,8 @@ FRenderCollection CActor::GetRenderInfo () const
 
 CLevel * CActor::GetLevel () const
 	{
-	return dynamic_cast< CLevel * >( GetOwner () );
+	if (GetWorld () == nullptr) return nullptr;
+	return GetWorld()->GetCurrentLevel();
 	}
 
 CWorld * CActor::GetWorld () const
@@ -617,28 +618,21 @@ void CActor::MoveActor ( const FVector & Delta, bool Interpolate )
 	FVector currentLocation = RootComponent->GetLocation ();
 	FVector newTarget = currentLocation + Delta;
 
-
 	if (!Interpolate)
 		{
-			// Мгновенное перемещение
+		// Мгновенное перемещение
 		RootComponent->SetLocation ( newTarget );
-		// Сбрасываем интерполяцию
 		bIsLerpingLocation = false;
 		bIsMovin = false;
 		}
 	else
 		{
-			// Если уже интерполируемся, просто обновляем цель
 		if (bIsLerpingLocation)
 			{
-				// Плавно меняем цель, не сбрасывая альфу
 			TargetLocation = newTarget;
-			// Можно также скорректировать стартовую позицию для более плавного перехода
-			// LerpStartLocation = текущая позиция?
 			}
 		else
 			{
-				// Начинаем новую интерполяцию
 			TargetLocation = newTarget;
 			LerpStartLocation = currentLocation;
 			LocationLerpAlpha = 0.0f;
@@ -646,7 +640,14 @@ void CActor::MoveActor ( const FVector & Delta, bool Interpolate )
 			bIsMovin = true;
 			}
 		}
+
+	// Важно: обновляем последнюю позицию для гравитации
+	if (m_Gravity)
+		{
+		m_Gravity->UpdateLastPosition ( currentLocation );
+		}
 	}
+
 void CActor::RotateActor ( const FVector & DeltaRotation, bool Interpolate )
 	{
 	if (!RootComponent)

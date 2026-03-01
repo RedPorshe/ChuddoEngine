@@ -182,4 +182,22 @@ bool CBoxComponent::CheckCollision ( CBaseCollisionComponent * other, FCollision
 
 	return false;
 	}
- 
+
+FVector CBoxComponent::GetExtremePoint ( const FVector & Direction ) const
+	{
+	FVector center = GetWorldLocation ();
+	FQuat rotation = GetOwnerActor ()->GetActorRotationQuat ();
+
+	// Переводим направление в локальное пространство
+	FVector localDir = rotation.Inverse () * Direction;
+
+	// Находим локальную точку с максимальной проекцией на направление
+	FVector localExtreme (
+		( localDir.x > 0 ) ? m_HalfExtents.x : -m_HalfExtents.x,
+		( localDir.y > 0 ) ? m_HalfExtents.y : -m_HalfExtents.y,
+		( localDir.z > 0 ) ? m_HalfExtents.z : -m_HalfExtents.z
+	);
+
+	// Возвращаем в мировые координаты
+	return center + rotation * localExtreme;
+	}

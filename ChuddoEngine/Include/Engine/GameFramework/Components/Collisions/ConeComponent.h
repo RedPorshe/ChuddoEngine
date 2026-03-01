@@ -25,7 +25,7 @@ class CConeComponent : public CBaseCollisionComponent
         float GetHeight () const { return m_Height; }
         void SetRadius ( float radius ) { m_Radius = radius; }
         void SetHeight ( float height ) { m_Height = height; }
-
+        virtual FVector GetExtremePoint ( const FVector & Direction ) const override;
         // Специфические методы для конуса
         FVector GetTip () const;           // Острие конуса (вверху)
         FVector GetBaseCenter () const;     // Центр основания (внизу)

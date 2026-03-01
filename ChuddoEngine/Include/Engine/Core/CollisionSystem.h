@@ -95,7 +95,7 @@ class CCollisionSystem : public CObject
         // ------------------------------------------------------------------------
         // Collision Queries
         // ------------------------------------------------------------------------
-
+        std::vector<CBaseCollisionComponent *> GetAllCollisionComponents () const { return m_CollisionComponents; }
         // Manual collision checks
         std::vector<FCollisionInfo> CheckCollisions ( CBaseCollisionComponent * component ) const;
         std::vector<FCollisionInfo> CheckCollisionsAtLocation ( const FVector & location, float radius ) const;

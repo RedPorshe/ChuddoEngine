@@ -122,3 +122,54 @@ float CConeComponent::GetSlope () const
         // Наклон стенки = радиус / высота
     return m_Radius / m_Height;
     }
+
+FVector CConeComponent::GetExtremePoint ( const FVector & Direction ) const
+    {
+    FVector center = GetWorldLocation ();
+    FQuat rotation = GetOwnerActor ()->GetActorRotationQuat ();
+
+    // Направление в локальном пространстве
+    FVector localDir = rotation.Inverse () * Direction;
+    float len = localDir.Length ();
+    if (len < 0.001f)
+        return center;
+
+    localDir /= len;
+
+    // Для конуса: основание внизу (y = -halfHeight), острие вверху (y = +halfHeight)
+    float halfHeight = m_Height * 0.5f;
+
+    // Проверяем разные части конуса
+    FVector bestPoint;
+    float bestProjection = -std::numeric_limits<float>::max ();
+
+    // Проверяем острие
+    FVector tip ( 0.0f, halfHeight, 0.0f );
+    float tipProj = tip.Dot ( localDir );
+    if (tipProj > bestProjection)
+        {
+        bestProjection = tipProj;
+        bestPoint = tip;
+        }
+
+        // Проверяем окружность основания
+    const int numSamples = 16;
+    for (int i = 0; i < numSamples; i++)
+        {
+        float angle = ( 2.0f * 3.14159f * i ) / numSamples;
+        FVector basePoint (
+            m_Radius * cos ( angle ),
+            -halfHeight,
+            m_Radius * sin ( angle )
+        );
+
+        float proj = basePoint.Dot ( localDir );
+        if (proj > bestProjection)
+            {
+            bestProjection = proj;
+            bestPoint = basePoint;
+            }
+        }
+
+    return center + rotation * bestPoint;
+    }

@@ -20,13 +20,20 @@ class CPawn : public CActor
 		bool IsPlayerControlled () const { return Controller != nullptr; }
 
 		// ========== INPUT ==========
-
-
-
 		void AddMovementInput ( const FVector & WorldDirection, float ScaleValue = 1.0f );
 		bool IsInputEnabled () const;
 
-		  // ========== ACTOR OVERRIDES ==========
+		// ========== MOVEMENT SETTINGS ==========
+		void SetAirControl ( float value ) { m_AirControl = value; }
+		float GetAirControl () const { return m_AirControl; }
+
+		void SetMaxAirSpeed ( float value ) { m_MaxAirSpeed = value; }
+		float GetMaxAirSpeed () const { return m_MaxAirSpeed; }
+
+		void SetGroundSpeed ( float value ) { m_GroundSpeed = value; }
+		float GetGroundSpeed () const { return m_GroundSpeed; }
+
+		// ========== ACTOR OVERRIDES ==========
 		virtual void Tick ( float DeltaTime ) override;
 		virtual void BeginPlay () override;
 		virtual void EndPlay () override;
@@ -36,15 +43,22 @@ class CPawn : public CActor
 		virtual void OnPossess ();
 		CInputComponent * GetInputComponent () const { return m_InputComponent; }
 		void SetInputEnabled ( bool value ) { bInputEnabled = value; }
+
 	protected:
 		virtual void SetupPlayerInputComponent ( CInputComponent * InputComponent );
 		void ProcessPlayerInput ( float DeltaTime );
+
 		CPlayerController * Controller = nullptr;
 		CInputComponent * m_InputComponent = nullptr;
+
 		// Input state
 		bool bInputEnabled = false;
 
-
+		// Movement settings
+		float m_AirControl = 0.3f;      // Коэффициент управления в воздухе (30% от наземного)
+		float m_MaxAirSpeed = 300.0f;    // Максимальная скорость в воздухе
+		float m_GroundSpeed = 600.0f;     // Скорость на земле
+		FVector m_Velocity = FVector::Zero (); // Текущая скорость персонажа
 	};
 
 REGISTER_CLASS_FACTORY ( CPawn );

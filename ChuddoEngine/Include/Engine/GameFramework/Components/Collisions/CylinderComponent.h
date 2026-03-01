@@ -30,7 +30,7 @@ class CCylinderComponent : public CBaseCollisionComponent
         FVector GetTopCenter () const;
         FVector GetBottomCenter () const;
         float GetHalfHeight () const { return m_Height * 0.5f; }
-
+        virtual FVector GetExtremePoint ( const FVector & Direction ) const override;
     private:
         float m_Radius = 25.0f;   // Радиус цилиндра
         float m_Height = 50.0f;    // Полная высота цилиндра

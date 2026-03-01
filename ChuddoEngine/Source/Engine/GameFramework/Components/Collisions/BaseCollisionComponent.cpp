@@ -272,3 +272,56 @@ void CBaseCollisionComponent::OnHit ( CBaseCollisionComponent * other )
         GetOwnerActor ()->OnComponentHit ( other );
         }
     }
+
+FVector CBaseCollisionComponent::GetExtremePoint ( const FVector & Direction ) const
+    {
+        // Базовая реализация - возвращает центр (должна быть переопределена в наследниках)
+    return GetWorldLocation ();
+    }
+
+FVector CBaseCollisionComponent::GetTopPoint () const
+    {
+        // По умолчанию используем направление вверх (0,1,0) или (0,0,1) в зависимости от вашей системы координат
+        // Предположим, что Y - вверх
+    return GetExtremePoint ( FVector ( 0.0f, 1.0f, 0.0f ) );
+    }
+
+FVector CBaseCollisionComponent::GetBottomPoint () const
+    {
+    return GetExtremePoint ( FVector ( 0.0f, -1.0f, 0.0f ) );
+    }
+
+FVector CBaseCollisionComponent::GetFrontPoint () const
+    {
+        // Предположим, что Z - вперед
+    return GetExtremePoint ( FVector ( 0.0f, 0.0f, 1.0f ) );
+    }
+
+FVector CBaseCollisionComponent::GetBackPoint () const
+    {
+    return GetExtremePoint ( FVector ( 0.0f, 0.0f, -1.0f ) );
+    }
+
+FVector CBaseCollisionComponent::GetLeftPoint () const
+    {
+        // Предположим, что X - вправо, значит Left = -X
+    return GetExtremePoint ( FVector ( -1.0f, 0.0f, 0.0f ) );
+    }
+
+FVector CBaseCollisionComponent::GetRightPoint () const
+    {
+    return GetExtremePoint ( FVector ( 1.0f, 0.0f, 0.0f ) );
+    }
+
+FVector CBaseCollisionComponent::GetLocalExtremePoint ( const FVector & LocalDirection ) const
+    {
+        // Преобразуем локальное направление в мировое с учетом поворота
+    CActor * owner = GetOwnerActor ();
+    if (owner)
+        {
+        FQuat rotation = owner->GetActorRotationQuat ();
+        FVector worldDirection = rotation * LocalDirection;
+        return GetExtremePoint ( worldDirection );
+        }
+    return GetExtremePoint ( LocalDirection );
+    }

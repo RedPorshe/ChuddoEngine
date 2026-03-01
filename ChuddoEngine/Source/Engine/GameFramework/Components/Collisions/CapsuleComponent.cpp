@@ -175,3 +175,31 @@ FVector CCapsuleComponent::GetBottomSphereCenter () const
 
 	return worldPos + worldOffset;
 	}
+
+FVector CCapsuleComponent::GetExtremePoint ( const FVector & Direction ) const
+	{
+	FVector center = GetWorldLocation ();
+	FQuat rotation = GetOwnerActor ()->GetActorRotationQuat ();
+
+	// Направление в локальном пространстве
+	FVector localDir = rotation.Inverse () * Direction;
+	float len = localDir.Length ();
+	if (len < 0.001f)
+		return center;
+
+	localDir /= len;
+
+	// Для капсулы: комбинация сферы на концах и цилиндра посередине
+	// Проецируем направление на ось капсулы (локальная Z)
+	float axisProjection = localDir.z;
+	float radialScale = std::sqrt ( 1.0f - axisProjection * axisProjection );
+
+	// Точка на капсуле
+	FVector localPoint (
+		localDir.x * m_Radius,
+		localDir.y * m_Radius,
+		axisProjection * ( m_HalfHeight + m_Radius * ( 1.0f - std::abs ( axisProjection ) ) )
+	);
+
+	return center + rotation * localPoint;
+	}

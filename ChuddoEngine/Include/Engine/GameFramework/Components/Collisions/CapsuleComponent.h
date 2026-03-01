@@ -29,7 +29,7 @@ class CCapsuleComponent : public CBaseCollisionComponent
         virtual bool CheckCollision ( CBaseCollisionComponent * other, FCollisionInfo & outInfo ) const override;
         virtual float GetCollisionRadius () const override;
         virtual FVector GetBoundingBox () const override;
-
+        virtual FVector GetExtremePoint ( const FVector & Direction ) const override;
         // ------------------------------------------------------------------------
         // Capsule Specific Methods
         // ------------------------------------------------------------------------

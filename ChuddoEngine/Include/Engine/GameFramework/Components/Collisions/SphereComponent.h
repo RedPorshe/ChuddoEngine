@@ -16,7 +16,7 @@ class CSphereComponent : public CBaseCollisionComponent
 		virtual float GetCollisionRadius () const override { return GetRadius (); }
 		float GetRadius () const { return m_Radius; }
 		void SetRadius ( float value ) { m_Radius = value; }
-
+		virtual FVector GetExtremePoint ( const FVector & Direction ) const override;
 	private:
 		float m_Radius = 10.f;
 	};
