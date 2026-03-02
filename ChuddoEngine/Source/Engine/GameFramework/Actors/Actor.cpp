@@ -22,12 +22,12 @@ CActor::CActor ( CObject * owner, const std::string & inName ) : CObject ( owner
 	{
 	RootComponent = AddDefaultSubObject<CTransformComponent> ( inName + "_Transform" );
 	m_Gravity = AddDefaultSubObject<CGravityComponent> ( GetName () + "_Gravity" );
-	if (RootComponent) 
-		{		
+	if (RootComponent)
+		{
 		RootComponent->SetCollisionEnabled ( bIsCollisionEnabled );
 		}
 
-	
+
 	}
 
 CActor::~CActor ()
@@ -47,7 +47,7 @@ void CActor::BeginPlay ()
 		comp->OnBeginPlay ();
 
 		}
-	if (RootComponent) 
+	if (RootComponent)
 		{
 		RootComponent->SetCollisionEnabled ( bIsCollisionEnabled );
 		RootComponent->UpdateTransform ();
@@ -58,7 +58,7 @@ void CActor::Tick ( float deltaTime )
 	{
 	if (IsPendingToDestroy ()) return;
 
-
+	UpdatePhysics ( deltaTime );
 
 	// Сначала обновляем интерполяцию
 	if (bIsLerpingLocation && RootComponent)
@@ -72,7 +72,7 @@ void CActor::Tick ( float deltaTime )
 				// Завершаем интерполяцию
 			LocationLerpAlpha = 1.0f;
 			bIsLerpingLocation = false;
-			bIsMovin = false;
+			bIsMoving = false;
 			RootComponent->SetLocation ( TargetLocation );
 
 			}
@@ -131,7 +131,7 @@ void CActor::EndPlay ()
 
 void CActor::DebugInfo ( float deltaTime )
 	{
-	
+
 	}
 
 FRenderCollection CActor::GetRenderInfo () const
@@ -334,7 +334,7 @@ FRenderCollection CActor::GetRenderInfo () const
 CLevel * CActor::GetLevel () const
 	{
 	if (GetWorld () == nullptr) return nullptr;
-	return GetWorld()->GetCurrentLevel();
+	return GetWorld ()->GetCurrentLevel ();
 	}
 
 CWorld * CActor::GetWorld () const
@@ -528,17 +528,17 @@ FVector CActor::GetActorUpVector ()
 
 void CActor::SetActorLocation ( const FVector & InLocation, bool bTeleport )
 	{
-	if(!bTeleport)
+	if (!bTeleport)
+		{
+		if (RootComponent)
 			{
-			if (RootComponent)
-				{
-				RootComponent->SetLocation ( InLocation );
-				// Сбрасываем интерполяцию позиции
-				bIsLerpingLocation = false;
-				LocationLerpAlpha = 0.0f;
-				RootComponent->MarkTransformDirty ();
-				}
+			RootComponent->SetLocation ( InLocation );
+			// Сбрасываем интерполяцию позиции
+			bIsLerpingLocation = false;
+			LocationLerpAlpha = 0.0f;
+			RootComponent->MarkTransformDirty ();
 			}
+		}
 	else
 		{
 		this->TeleportTo ( InLocation );
@@ -602,7 +602,7 @@ void CActor::TeleportTo ( const FVector & NewLocation )
 	{
 	LOG_DEBUG ( "[ACTOR] TeleportTo: ", GetName (), " to (",
 				NewLocation.x, ", ", NewLocation.y, ", ", NewLocation.z, ")" );
-	if(RootComponent)
+	if (RootComponent)
 		{
 		RootComponent->SetLocation ( NewLocation );
 		RootComponent->UpdateTransform ();
@@ -655,7 +655,7 @@ void CActor::MoveActor ( const FVector & Delta, bool Interpolate )
 		// Мгновенное перемещение
 		RootComponent->SetLocation ( newTarget );
 		bIsLerpingLocation = false;
-		bIsMovin = false;
+		bIsMoving = false;
 		}
 	else
 		{
@@ -669,7 +669,7 @@ void CActor::MoveActor ( const FVector & Delta, bool Interpolate )
 			LerpStartLocation = currentLocation;
 			LocationLerpAlpha = 0.0f;
 			bIsLerpingLocation = true;
-			bIsMovin = true;
+			bIsMoving = true;
 			}
 		}
 
@@ -948,7 +948,49 @@ void CActor::SetMovableState ( const EMovableState & state )
 	MovableState = state;
 	switch (MovableState)
 		{
+			case EMovableState::STATIC:
+				{
+				m_Gravity->SetEnableGravity(false); 
+				Velocity = FVector::Zero ();
+				SetCollisionEnabled ( true );
+				break;
+				}
+			case EMovableState::MOVABLE:
+				{
+				m_Gravity->SetEnableGravity(true);
+				SetCollisionEnabled ( true );
+				break;
+				}
+			case EMovableState::DYNAMIC:
+				{				
+				m_Gravity->SetEnableGravity(true);
+				SetCollisionEnabled ( true );
+				break;
+				}
 			default:
 				break;
 		}
+	}
+
+void CActor::AddImpulse ( const FVector & Impulse )
+	{}
+
+void CActor::SetVelocity ( const FVector & NewVelocity )
+	{
+	Velocity = NewVelocity;
+	}
+
+void CActor::UpdatePhysics ( float DeltaTime )
+	{
+	if (MovableState == EMovableState::STATIC) return;
+	if (m_Gravity && m_Gravity->IsGravityEnabled ())
+		{
+		m_Gravity->ApplyGravity ( DeltaTime );
+		Velocity.y += m_Gravity->GetVerticalVelocity () * DeltaTime;
+		}
+	if (!Velocity.IsZero ())
+		{
+		MoveActor ( Velocity * DeltaTime );
+		}
+	Velocity.y *= 0.98f;
 	}

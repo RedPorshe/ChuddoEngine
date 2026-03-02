@@ -235,7 +235,7 @@ void CCharacter::SpawnCube ()
 
 	// Устанавливаем позицию актора
 	cubeActor->SetActorLocation ( spawnLocation, true );
-
+	cubeActor->SetMovableState ( EMovableState::DYNAMIC );
 
 
 	cubeActor->BeginPlay ();

@@ -3,6 +3,7 @@
 #include "Core/Object.h"
 #include "Render/RenderInfo.h"
 
+// Forward declarations
 class CWorld;
 class CLevel;
 class CBaseComponent;
@@ -10,230 +11,304 @@ class CTransformComponent;
 class CBaseCollisionComponent;
 class CGravityComponent;
 
+// ============================================================================
+// Enums
+// ============================================================================
 enum class EMovableState : uint8_t
-	{
-	STATIC,
-	MOVABLE,
-	DYNAMIC
-	};
+    {
+    STATIC,     // Объект не двигается (гравитация выключена)
+    MOVABLE,    // Объект можно толкать (гравитация включена)
+    DYNAMIC     // Объект управляется (полная физика)
+    };
 
+    // ============================================================================
+    // Render Collection
+    // ============================================================================
 struct FRenderCollection
-	{
-	std::vector<FMeshInfo> Meshes;
-	std::vector<FTerrainRenderInfo> Terrains;
-	std::vector<FCollisionDebugInfo> DebugCollisions;
-	std::vector<FTerrainDebugInfo> TerrainWireframes; 
+    {
+    std::vector<FMeshInfo> Meshes;
+    std::vector<FTerrainRenderInfo> Terrains;
+    std::vector<FCollisionDebugInfo> DebugCollisions;
+    std::vector<FTerrainDebugInfo> TerrainWireframes;
 
-	// Очистка
-	void Clear ()
-		{
-		Meshes.clear ();
-		Terrains.clear ();
-		DebugCollisions.clear ();
-		TerrainWireframes.clear ();
-		}
-	};
+    void Clear ()
+        {
+        Meshes.clear ();
+        Terrains.clear ();
+        DebugCollisions.clear ();
+        TerrainWireframes.clear ();
+        }
+    };
 
+    // ============================================================================
+    // Actor Class
+    // ============================================================================
 class CActor : public CObject
-	{
-	CHUDDO_DECLARE_CLASS ( CActor, CObject )
+    {
+    CHUDDO_DECLARE_CLASS ( CActor, CObject )
 
-	public:
-		CActor ( CObject * owner = nullptr, const std::string & inName = "Actor" );
-		virtual ~CActor ();
+    public:
+        // ------------------------------------------------------------------------
+        // Constructor & Destructor
+        // ------------------------------------------------------------------------
+        CActor ( CObject * owner = nullptr, const std::string & inName = "Actor" );
+        virtual ~CActor ();
 
-		virtual void BeginPlay ();
-		virtual void Tick ( float deltaTime );
-		virtual void EndPlay ();
-		void DebugInfo ( float deltaTime );
-		virtual FRenderCollection GetRenderInfo () const;
+        // ------------------------------------------------------------------------
+        // Lifecycle
+        // ------------------------------------------------------------------------
+        virtual void BeginPlay () ;
+        virtual void Tick ( float deltaTime ) ;
+        virtual void EndPlay () ;
+        void DebugInfo ( float deltaTime );
 
-		void SetDrawCollisions ( bool bDraw ) { m_bDrawCollisions = bDraw; }
-		bool IsDrawCollisionsEnabled () const { return m_bDrawCollisions; }
+        void Destroy ();
+        void SetPendingToDestroy ();
+        bool IsPendingToDestroy () const { return bIsPendingToDestroy; }
 
-		bool IsMIsMoving () const { return bIsMovin; }
-		CGravityComponent* GetGravityComponent () { return m_Gravity; }
-		// Getters
-		CTransformComponent * GetRootComponent () const { return RootComponent; }
-		CLevel * GetLevel () const;
-		CWorld * GetWorld () const;
+        // ------------------------------------------------------------------------
+        // World & Level Access
+        // ------------------------------------------------------------------------
+        CLevel * GetLevel () const;
+        CWorld * GetWorld () const;
 
-		virtual std::vector<FMeshInfo> GetRenderMeshes () const;
-		
+        // ------------------------------------------------------------------------
+        // Component Management
+        // ------------------------------------------------------------------------
+        template<typename T>
+        T * FindComponent () const
+            {
+            for (CBaseComponent * comp : ActorComponents)
+                {
+                if (T * typedComp = dynamic_cast< T * >( comp ))
+                    return typedComp;
+                }
+            return nullptr;
+            }
 
-		template<typename T>
-		T * FindComponent () const
-			{
-			for (CBaseComponent * comp : ActorComponents)
-				{
-				if (T * typedComp = dynamic_cast< T * >( comp ))
-					return typedComp;
-				}
-			return nullptr;
-			}
+        template<typename Comp, typename... Args>
+        Comp * AddDefaultSubObject ( const std::string & desiredDisplayName = "SubObject" );
 
-		bool IsCanTickOnAttached () const { return bIsCanTickAsAttached; }
-		bool IsAttached () const { return bIsAttached; }
-		bool IsPendingToDestroy () const { return bIsPendingToDestroy; }
-		bool IsLerpingLocation () const { return bIsLerpingLocation; }
-		bool IsLerpingRotation () const { return bIsLerpingRotation; }
+        CBaseComponent * AddDefaultSubObject ( const std::string & className,
+                                               const std::string & desiredDisplayName );
 
-		// Setters
-		void SetRootComponent ( CTransformComponent * NewRoot );
-		void SetCanTickOnAttached ( bool value ) { bIsCanTickAsAttached = value; }
-		void SetIsAttached ( bool value ) { bIsAttached = value; }
-		void SetActorName ( const std::string & newName );
+        std::vector<CBaseComponent *> GetActorComponents () const { return ActorComponents; }
 
-		// Actor lifecycle
-		void Destroy ();
-		void SetPendingToDestroy ();
+        // ------------------------------------------------------------------------
+        // Root Component
+        // ------------------------------------------------------------------------
+        CTransformComponent * GetRootComponent () const { return RootComponent; }
+        void SetRootComponent ( CTransformComponent * NewRoot );
 
-		// Component management
-		template<typename Comp, typename... Args>
-		Comp * AddDefaultSubObject ( const std::string & desiredDisplayName = "SubObject" );
+        // ------------------------------------------------------------------------
+        // Transform Getters (const & non-const)
+        // ------------------------------------------------------------------------
+        FVector GetActorLocation ();
+        FVector GetActorRotation ();
+        FVector GetActorScale ();
+        FQuat GetActorRotationQuat ();
 
-		CBaseComponent * AddDefaultSubObject ( const std::string & className,
-											   const std::string & desiredDisplayName );
+        FVector GetActorLocation () const;
+        FVector GetActorRotation () const;
+        FVector GetActorScale () const;
+        FQuat GetActorRotationQuat () const;
 
-		   // Transform getters - NON-const версии (существующие)
-		FVector GetActorLocation ();
-		FVector GetActorRotation ();
-		FVector GetActorScale ();
-		FQuat GetActorRotationQuat ();
+        // ------------------------------------------------------------------------
+        // Direction Vectors
+        // ------------------------------------------------------------------------
+        FVector GetActorForwardVector ();
+        FVector GetActorRightVector ();
+        FVector GetActorUpVector ();
 
-		// ДОБАВЛЯЕМ const версии
-		FVector GetActorLocation () const;
-		FVector GetActorRotation () const;
-		FVector GetActorScale () const;
-		FQuat GetActorRotationQuat () const;
+        FVector GetActorForwardVector () const;
+        FVector GetActorRightVector () const;
+        FVector GetActorUpVector () const;
 
-		// Direction vectors getters - NON-const версии
-		FVector GetActorForwardVector ();
-		FVector GetActorRightVector ();
-		FVector GetActorUpVector ();
+        // ------------------------------------------------------------------------
+        // Transform Setters
+        // ------------------------------------------------------------------------
+        void SetActorLocation ( const FVector & InLocation, bool bTeleport = false );
+        void SetActorLocation ( float inX, float inY, float inZ, bool bTeleport = false );
 
-		// ДОБАВЛЯЕМ const версии для direction vectors
-		FVector GetActorForwardVector () const;
-		FVector GetActorRightVector () const;
-		FVector GetActorUpVector () const;
+        void SetActorScale ( const FVector & InScale );
+        void SetActorScale ( float inX, float inY, float inZ );
+        void SetActorScale ( float InScale );
 
-		// Transform setters
-		void SetActorLocation ( const FVector & InLocation, bool bTeleport = false );
-		void SetActorLocation ( float inX, float inY, float inZ, bool bTeleport = false );
-		void SetActorScale ( const FVector & InScale );
-		void SetActorScale ( float inX, float inY, float inZ );
-		void SetActorScale ( float InScale );
-		void SetActorRotation ( const FVector & inRotation );
-		void SetActorRotation ( const FQuat & inRotation );
-		void SetActorRotation ( float inX, float inY, float inZ );
+        void SetActorRotation ( const FVector & inRotation );
+        void SetActorRotation ( const FQuat & inRotation );
+        void SetActorRotation ( float inX, float inY, float inZ );
 
-		// Movement methods
-		void MoveActor ( const FVector & Delta, bool Interpolate = true );
-		void RotateActor ( const FVector & DeltaRotation, bool Interpolate = true );
-		void RotateActor ( const FQuat & DeltaRotation, bool Interpolate = true );
+        // ------------------------------------------------------------------------
+        // Movement (Immediate)
+        // ------------------------------------------------------------------------
+        void MoveActor ( const FVector & Delta, bool Interpolate = true );
+        void MoveActorInDirection ( const FVector & Direction, float Distance, bool Interpolate = true );
 
-		// Offset methods (world and local space)
-		void AddActorWorldOffset ( const FVector & DeltaLocation, bool Interpolate = false );
-		void AddActorLocalOffset ( const FVector & DeltaLocation, bool Interpolate = false );
-		void AddActorWorldRotation ( const FQuat & DeltaRotation, bool Interpolate = false );
-		void AddActorLocalRotation ( const FQuat & DeltaRotation, bool Interpolate = false );
+        void RotateActor ( const FVector & DeltaRotation, bool Interpolate = true );
+        void RotateActor ( const FQuat & DeltaRotation, bool Interpolate = true );
+        void RotateAroundAxis ( const FVector & Axis, float AngleDegrees, bool Interpolate = true );
 
-		// Helper movement methods
-		void MoveActorInDirection ( const FVector & Direction, float Distance, bool Interpolate = true );
-		void RotateAroundAxis ( const FVector & Axis, float AngleDegrees, bool Interpolate = true );
-		void SetInterpolationSpeed ( const float inSpeed ) { LerpSpeed = inSpeed; }
+        // ------------------------------------------------------------------------
+        // Movement (Offset-based)
+        // ------------------------------------------------------------------------
+        void AddActorWorldOffset ( const FVector & DeltaLocation, bool Interpolate = false );
+        void AddActorLocalOffset ( const FVector & DeltaLocation, bool Interpolate = false );
 
-		std::vector<CBaseComponent *> GetActorComponents () const { return ActorComponents; }
+        void AddActorWorldRotation ( const FQuat & DeltaRotation, bool Interpolate = false );
+        void AddActorLocalRotation ( const FQuat & DeltaRotation, bool Interpolate = false );
 
-		// Teleport functions (immediate movement)
-		void TeleportTo ( const FVector & NewLocation );
-		void TeleportTo ( float NewX, float NewY, float NewZ );
-		void SetActorRotationImmediately ( const FQuat & NewRotation );
-		void SetActorRotationImmediately ( const FVector & NewRotation );
-		void SetActorRotationImmediately ( float inX, float inY, float inZ );
-		void DestroyGravity ();
-		void SetCollisionEnabled ( bool value = true );
+        // ------------------------------------------------------------------------
+        // Teleportation (Immediate)
+        // ------------------------------------------------------------------------
+        void TeleportTo ( const FVector & NewLocation );
+        void TeleportTo ( float NewX, float NewY, float NewZ );
 
-		template<typename ClassName, typename... Args>
-		ClassName * SpawnActor ( const std::string & name = "ActorFromActor", Args&&... args );
-		
-		bool IsStatic () const { return MovableState == EMovableState::STATIC; }
-		bool IsMovable () const { return MovableState == EMovableState::MOVABLE; }
-		bool IsDynamic () const { return MovableState == EMovableState::DYNAMIC; }
+        void SetActorRotationImmediately ( const FQuat & NewRotation );
+        void SetActorRotationImmediately ( const FVector & NewRotation );
+        void SetActorRotationImmediately ( float inX, float inY, float inZ );
 
-		virtual void OnComponentBeginOverlap ( CBaseCollisionComponent * other );
-		virtual void OnComponentEndOverlap ( CBaseCollisionComponent * other );
-		virtual void OnComponentHit ( CBaseCollisionComponent * other );
-		void SetHiddenInGame ( bool value ) { bIsHiddenInGame = value; }
-		bool IsHiddenInGame () const { return bIsHiddenInGame; }
-		EMovableState GetMovableState () const { return MovableState; }
-		void SetMovableState ( const EMovableState & state );
-	protected:
-		std::vector<CBaseComponent *> ActorComponents;
-		CTransformComponent * RootComponent = nullptr;
-		bool m_bDrawCollisions = false;
-		// State flags
-		bool bIsCanTickAsAttached { false };
-		bool bIsAttached { false };
-		bool bIsPendingToDestroy { false };
-		bool bIsCollisionEnabled { true };
-		bool bIsMovin { false };
+        // ------------------------------------------------------------------------
+        // Interpolation
+        // ------------------------------------------------------------------------
+        void SetInterpolationSpeed ( float inSpeed ) { LerpSpeed = inSpeed; }
+        bool IsLerpingLocation () const { return bIsLerpingLocation; }
+        bool IsLerpingRotation () const { return bIsLerpingRotation; }
+        bool IsMoving () const { return bIsMoving; }
 
-		EMovableState MovableState = EMovableState::STATIC;
+        // ------------------------------------------------------------------------
+        // Physics & Movement State
+        // ------------------------------------------------------------------------
+        EMovableState GetMovableState () const { return MovableState; }
+        void SetMovableState ( const EMovableState & state );
 
-		// Interpolation data
-		FVector TargetLocation;
-		FQuat TargetRotation;
-		FVector LerpStartLocation;
-		FQuat LerpStartRotation;
+        bool IsStatic () const { return MovableState == EMovableState::STATIC; }
+        bool IsMovable () const { return MovableState == EMovableState::MOVABLE || MovableState == EMovableState::DYNAMIC; }
+        bool IsDynamic () const { return MovableState == EMovableState::DYNAMIC; }
 
-		float LocationLerpAlpha = 0.0f;
-		float RotationLerpAlpha = 0.0f;
+        void AddImpulse ( const FVector & Impulse );
+        void SetVelocity ( const FVector & NewVelocity );
+        FVector GetVelocity () const { return Velocity; }
 
-		bool bIsLerpingLocation = false;
-		bool bIsLerpingRotation = false;
-		float LerpSpeed = 10.0f;
-		CGravityComponent * m_Gravity = nullptr;
-		bool bIsTerrain = false;
+        // ------------------------------------------------------------------------
+        // Gravity
+        // ------------------------------------------------------------------------
+        CGravityComponent * GetGravityComponent () { return m_Gravity; }
+        void DestroyGravity ();
 
-		bool bIsHiddenInGame = false;
-		float DebugTimer = 0.f;
-	};
+        // ------------------------------------------------------------------------
+        // Collision
+        // ------------------------------------------------------------------------
+        void SetCollisionEnabled ( bool value = true );
+        bool IsCollisionEnabled () const { return bIsCollisionEnabled; }
 
-	// Inline template implementation
+        virtual void OnComponentBeginOverlap ( CBaseCollisionComponent * other );
+        virtual void OnComponentEndOverlap ( CBaseCollisionComponent * other );
+        virtual void OnComponentHit ( CBaseCollisionComponent * other );
+
+        // ------------------------------------------------------------------------
+        // Rendering & Visibility
+        // ------------------------------------------------------------------------
+        virtual FRenderCollection GetRenderInfo () const;
+        virtual std::vector<FMeshInfo> GetRenderMeshes () const;
+
+        void SetDrawCollisions ( bool bDraw ) { m_bDrawCollisions = bDraw; }
+        bool IsDrawCollisionsEnabled () const { return m_bDrawCollisions; }
+
+        void SetHiddenInGame ( bool value ) { bIsHiddenInGame = value; }
+        bool IsHiddenInGame () const { return bIsHiddenInGame; }
+
+        // ------------------------------------------------------------------------
+        // Spawning
+        // ------------------------------------------------------------------------
+        template<typename ClassName, typename... Args>
+        ClassName * SpawnActor ( const std::string & name = "ActorFromActor", Args&&... args );
+
+        // ------------------------------------------------------------------------
+        // Misc
+        // ------------------------------------------------------------------------
+        void SetActorName ( const std::string & newName );
+        void SetCanTickOnAttached ( bool value ) { bIsCanTickAsAttached = value; }
+        bool IsCanTickOnAttached () const { return bIsCanTickAsAttached; }
+
+        void SetIsAttached ( bool value ) { bIsAttached = value; }
+        bool IsAttached () const { return bIsAttached; }
+
+    protected:
+        // ------------------------------------------------------------------------
+        // Physics
+        // ------------------------------------------------------------------------
+        virtual void UpdatePhysics ( float DeltaTime );
+
+        // ------------------------------------------------------------------------
+        // Member Variables - Grouped by functionality
+        // ------------------------------------------------------------------------
+
+        // Components
+        std::vector<CBaseComponent *> ActorComponents;
+        CTransformComponent * RootComponent = nullptr;
+        CGravityComponent * m_Gravity = nullptr;
+
+        // Movement State
+        EMovableState MovableState = EMovableState::STATIC;
+        FVector Velocity = FVector::Zero ();
+        bool bIsMoving = false;
+        bool bIsTerrain = false;
+
+        // Interpolation
+        FVector TargetLocation;
+        FQuat TargetRotation;
+        FVector LerpStartLocation;
+        FQuat LerpStartRotation;
+        float LocationLerpAlpha = 0.0f;
+        float RotationLerpAlpha = 0.0f;
+        bool bIsLerpingLocation = false;
+        bool bIsLerpingRotation = false;
+        float LerpSpeed = 10.0f;
+
+        // Collision
+        bool bIsCollisionEnabled = true;
+
+        // Flags
+        bool bIsCanTickAsAttached = false;
+        bool bIsAttached = false;
+        bool bIsPendingToDestroy = false;
+        bool bIsHiddenInGame = false;
+
+        // Debug
+        bool m_bDrawCollisions = false;
+        float DebugTimer = 0.f;
+    };
+
+    // ============================================================================
+    // Template Implementations
+    // ============================================================================
 #include "Components/SceneComponent.h"
 
 template<typename Comp, typename... Args>
 inline Comp * CActor::AddDefaultSubObject ( const std::string & desiredDisplayName )
-	{
-	static_assert( std::is_base_of<CBaseComponent, Comp>::value,
-				   "Class must be derived from CBaseComponent" );
+    {
+    static_assert( std::is_base_of<CBaseComponent, Comp>::value,
+                   "Class must be derived from CBaseComponent" );
 
-	auto newComp = this->AddSubObject<Comp> ( desiredDisplayName );
+    auto newComp = this->AddSubObject<Comp> ( desiredDisplayName );
 
-	// If no root component exists and this is a scene component, set it as root
-	if (RootComponent == nullptr)
-		{
-		if (CTransformComponent * sceneComp = dynamic_cast< CTransformComponent * >( newComp ))
-			{
-			RootComponent = sceneComp;
-			}
-		}
+    if (RootComponent == nullptr)
+        {
+        if (CTransformComponent * sceneComp = dynamic_cast< CTransformComponent * >( newComp ))
+            {
+            RootComponent = sceneComp;
+            }
+        }
 
-	ActorComponents.push_back ( newComp );
-	return newComp;
-	}
+    ActorComponents.push_back ( newComp );
+    return newComp;
+    }
 
-template<typename ClassName, typename ...Args>
-inline ClassName * CActor::SpawnActor ( const std::string & name, Args && ...args )
-	{
-	ClassName * ToReturn = nullptr;
-	ToReturn = this->GetWorld ()->GetCurrentLevel ()->SpawnActor<ClassName> ( name, std::forward<Args> ( args )... );
-	return ToReturn;
-	}
-
-
-
-
+template<typename ClassName, typename... Args>
+inline ClassName * CActor::SpawnActor ( const std::string & name, Args&&... args )
+    {
+    return this->GetWorld ()->GetCurrentLevel ()->SpawnActor<ClassName> (
+        name, std::forward<Args> ( args )... );
+    }
 
 REGISTER_CLASS_FACTORY ( CActor );

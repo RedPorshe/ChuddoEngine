@@ -5,6 +5,7 @@
 class CPlayerController;
 class CInputComponent;
 class CStaticMeshComponent;
+class CMovementComponent;
 
 class CPawn : public CActor
 	{
@@ -20,7 +21,14 @@ class CPawn : public CActor
 		bool IsPlayerControlled () const { return Controller != nullptr; }
 
 		// ========== INPUT ==========
-		void AddMovementInput ( const FVector & WorldDirection, float ScaleValue = 1.0f );
+		CMovementComponent * GetMovementComponent () const { return MovementComponent; }
+		void SetMovementComponent ( CMovementComponent * NewMovementComponent ) { MovementComponent = NewMovementComponent; }
+// Input API (как в UE)
+		void AddMovementInput ( const FVector & WorldDirection, float ScaleValue );
+		void AddMovementInput ( const FVector & WorldDirection, float ScaleValue, bool bForce = false );
+		void AddControllerYawInput ( float Val );
+		void AddControllerPitchInput ( float Val );
+		void AddControllerRollInput ( float Val );
 		bool IsInputEnabled () const;
 
 		// ========== MOVEMENT SETTINGS ==========
@@ -47,7 +55,7 @@ class CPawn : public CActor
 	protected:
 		virtual void SetupPlayerInputComponent ( CInputComponent * InputComponent );
 		void ProcessPlayerInput ( float DeltaTime );
-
+		CMovementComponent * MovementComponent = nullptr;
 		CPlayerController * Controller = nullptr;
 		CInputComponent * m_InputComponent = nullptr;
 

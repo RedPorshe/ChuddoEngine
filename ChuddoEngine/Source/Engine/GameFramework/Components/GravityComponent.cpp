@@ -32,6 +32,194 @@ void CGravityComponent::OnBeginPlay ()
     Super::OnBeginPlay ();
     }
 
+void CGravityComponent::ApplyGravity ( float DeltaTime )
+    {
+    CActor * owner = GetOwnerActor ();
+    if (!owner) return;
+
+    CBaseCollisionComponent * myCollision = owner->FindComponent<CBaseCollisionComponent> ();
+    if (!myCollision) return;
+
+    static float s_CorrectionTimer = 0.0f;
+    s_CorrectionTimer += DeltaTime;
+
+    FVector currentPos = owner->GetActorLocation ();
+    FVector bottomPoint = myCollision->GetBottomPoint ();
+
+    // Получаем все коллизионные компоненты
+    std::vector<CBaseCollisionComponent *> allCollisions = COLLISION_SYSTEM.GetAllCollisionComponents ();
+
+    // Находим террейн
+    CTerrainComponent * terrain = nullptr;
+    for (auto * comp : allCollisions)
+        {
+        if (comp && comp->GetOwnerActor () != owner &&
+             comp->GetShapeType () == ECollisionShape::TERRAIN)
+            {
+            terrain = dynamic_cast< CTerrainComponent * >( comp );
+            if (terrain) break;
+            }
+        }
+
+    // Запоминаем предыдущее состояние
+    m_bWasGrounded = bIsOnGround;
+
+    // ПРОВЕРКА ЗЕМЛИ
+    float checkDistance = m_GroundCheckDistance + myCollision->GetCollisionRadius () * 0.5f;
+    FVector rayStart = bottomPoint;
+    FVector rayEnd = bottomPoint + FVector ( 0.0f, -checkDistance, 0.0f );
+
+    bool bRayHit = CheckGroundWithRay ( rayStart, rayEnd, myCollision );
+    bool bSphereHit = CheckGroundWithSphere ( currentPos, myCollision );
+
+    // Проверка через террейн
+    bool bTerrainHit = false;
+    float terrainHeight = 0.0f;
+    if (terrain)
+        {
+        terrainHeight = terrain->GetHeightAtWorld ( currentPos );
+        float bottomY = bottomPoint.y;
+
+        if (bottomY <= terrainHeight + 5.0f)
+            {
+            bTerrainHit = true;
+            m_GroundPoint = FVector ( currentPos.x, terrainHeight, currentPos.z );
+            m_GroundNormal = FVector ( 0.0f, 1.0f, 0.0f );
+            m_CurrentSlopeAngle = 0.0f;
+            }
+        }
+
+    // Проверка нижних точек
+    bool bExtremePointsHit = false;
+    if (owner)
+        {
+        std::vector<FVector> directions = {
+            FVector ( 0.0f, -1.0f, 1.0f ),
+            FVector ( 0.0f, -1.0f, -1.0f ),
+            FVector ( -1.0f, -1.0f, 0.0f ),
+            FVector ( 1.0f, -1.0f, 0.0f ),
+            FVector ( -0.7f, -1.0f, 0.7f ),
+            FVector ( 0.7f, -1.0f, 0.7f ),
+            FVector ( -0.7f, -1.0f, -0.7f ),
+            FVector ( 0.7f, -1.0f, -0.7f )
+            };
+
+        for (const auto & dir : directions)
+            {
+            FVector point = myCollision->GetLocalExtremePoint ( dir );
+            FRaycastResult pointResult = COLLISION_SYSTEM.Raycast (
+                point,
+                point + FVector ( 0.0f, -checkDistance, 0.0f ),
+                myCollision->GetCollisionChannel ().GetName ()
+            );
+
+            if (pointResult.bHit && pointResult.HitComponent &&
+                 pointResult.HitComponent->GetOwnerActor () != owner)
+                {
+                bExtremePointsHit = true;
+                if (!bRayHit || pointResult.Location.y > m_GroundPoint.y)
+                    {
+                    m_GroundPoint = pointResult.Location;
+                    m_GroundNormal = pointResult.Normal;
+
+                    float dot = m_GroundNormal.Dot ( FVector ( 0.0f, 1.0f, 0.0f ) );
+                    dot = CEMath::Clamp ( dot, -1.0f, 1.0f );
+                    m_CurrentSlopeAngle = std::acos ( dot ) * ( 180.0f / 3.14159f );
+                    }
+                break;
+                }
+            }
+        }
+
+    // Объединяем результаты
+    bIsOnGround = bRayHit || bSphereHit || bExtremePointsHit || bTerrainHit;
+
+    // Проверка угла наклона
+    if (bIsOnGround && m_CurrentSlopeAngle > m_MaxWalkableSlope)
+        {
+        bIsOnGround = false;
+        }
+
+    // Приземление
+    if (bIsOnGround && !m_bWasGrounded)
+        {
+        m_VerticalVelocity = 0.0f;
+
+        if (bTerrainHit && terrain)
+            {
+            float targetY = terrainHeight + ( currentPos.y - bottomPoint.y ) + 0.5f;
+            owner->SetActorLocation ( FVector ( currentPos.x, targetY, currentPos.z ) );
+            LOG_DEBUG ( "[TERRAIN LANDING] for ", owner->GetName (), " Bottom at Y=", bottomPoint.y,
+                        " terrain at Y=", terrainHeight,
+                        " new position Y=", targetY );
+            }
+        else if (bRayHit)
+            {
+            FRaycastResult rayResult = COLLISION_SYSTEM.Raycast (
+                rayStart,
+                rayEnd,
+                myCollision->GetCollisionChannel ().GetName ()
+            );
+            SnapToGround ( myCollision, rayResult );
+            }
+
+        s_CorrectionTimer = 0.0f;
+        return;
+        }
+
+    // Коррекция проваливания
+    if (bIsOnGround && terrain && s_CorrectionTimer > m_CorrectionCooldown)
+        {
+        float currentTerrainHeight = terrain->GetHeightAtWorld ( currentPos );
+        float bottomY = bottomPoint.y;
+        bool bValidTerrainHeight = ( currentTerrainHeight > -std::numeric_limits<float>::max () * 0.5f );
+
+        if (bValidTerrainHeight)
+            {
+            float penetrationDepth = bottomY - currentTerrainHeight;
+            if (penetrationDepth < -0.4f)
+                {
+                float targetY = currentPos.y - penetrationDepth;
+                owner->SetActorLocation ( FVector ( currentPos.x, targetY, currentPos.z ) );
+                LOG_DEBUG ( "[TERRAIN CORRECTION] ",owner->GetName(), " Bottom was at Y=", bottomY,
+                            " terrain at Y=", currentTerrainHeight,
+                            " new position Y=", targetY );
+                s_CorrectionTimer = 0.0f;
+                return;
+                }
+            }
+        else
+            {
+            bIsOnGround = false;
+            LOG_DEBUG ( "[TERRAIN] ", owner->GetName (), " вышел за границы террейна" );
+            s_CorrectionTimer = 0.0f;
+            }
+        }
+
+    // ОСНОВНАЯ ЛОГИКА ДВИЖЕНИЯ
+    if (bIsOnGround && m_VerticalVelocity > 0.1f)
+        {
+        // На земле, но есть положительная скорость (прыжок только начался)
+        FlyUp ( DeltaTime );
+        }
+    else if (!bIsOnGround)
+        {
+        // В воздухе - падаем или летим
+        Fall ( DeltaTime );
+        }
+
+    // Проверка kill zone
+    if (bottomPoint.y <= m_KillZone)
+        {
+        LOG_DEBUG ( "Объект ", owner->GetName (), " достиг kill zone на Y=", bottomPoint.y );
+        owner->SetPendingToDestroy ();
+        }
+
+    // Обновляем последнюю позицию
+    m_LastPosition = owner->GetActorLocation ();
+
+    }
+
 bool CGravityComponent::CheckGroundWithSphere ( const FVector & position, CBaseCollisionComponent * collision )
     {
     if (!collision) return false;
@@ -292,187 +480,5 @@ void CGravityComponent::Tick ( float DeltaTime )
     {
     Super::Tick ( DeltaTime );
 
-    CActor * owner = GetOwnerActor ();
-    if (!owner) return;
-
-    CBaseCollisionComponent * myCollision = owner->FindComponent<CBaseCollisionComponent> ();
-    if (!myCollision) return;
-
-    static float s_CorrectionTimer = 0.0f;
-    s_CorrectionTimer += DeltaTime;
-
-    FVector currentPos = owner->GetActorLocation ();
-    FVector bottomPoint = myCollision->GetBottomPoint ();
-
-    // Получаем все коллизионные компоненты
-    std::vector<CBaseCollisionComponent *> allCollisions = COLLISION_SYSTEM.GetAllCollisionComponents ();
-
-    // Находим террейн
-    CTerrainComponent * terrain = nullptr;
-    for (auto * comp : allCollisions)
-        {
-        if (comp && comp->GetOwnerActor () != owner &&
-             comp->GetShapeType () == ECollisionShape::TERRAIN)
-            {
-            terrain = dynamic_cast< CTerrainComponent * >( comp );
-            if (terrain) break;
-            }
-        }
-
-    // Запоминаем предыдущее состояние
-    m_bWasGrounded = bIsOnGround;
-
-    // ПРОВЕРКА ЗЕМЛИ
-    float checkDistance = m_GroundCheckDistance + myCollision->GetCollisionRadius () * 0.5f;
-    FVector rayStart = bottomPoint;
-    FVector rayEnd = bottomPoint + FVector ( 0.0f, -checkDistance, 0.0f );
-
-    bool bRayHit = CheckGroundWithRay ( rayStart, rayEnd, myCollision );
-    bool bSphereHit = CheckGroundWithSphere ( currentPos, myCollision );
-
-    // Проверка через террейн
-    bool bTerrainHit = false;
-    float terrainHeight = 0.0f;
-    if (terrain)
-        {
-        terrainHeight = terrain->GetHeightAtWorld ( currentPos );
-        float bottomY = bottomPoint.y;
-
-        if (bottomY <= terrainHeight + 5.0f)
-            {
-            bTerrainHit = true;
-            m_GroundPoint = FVector ( currentPos.x, terrainHeight, currentPos.z );
-            m_GroundNormal = FVector ( 0.0f, 1.0f, 0.0f );
-            m_CurrentSlopeAngle = 0.0f;
-            }
-        }
-
-    // Проверка нижних точек
-    bool bExtremePointsHit = false;
-    if (owner)
-        {
-        std::vector<FVector> directions = {
-            FVector ( 0.0f, -1.0f, 1.0f ),
-            FVector ( 0.0f, -1.0f, -1.0f ),
-            FVector ( -1.0f, -1.0f, 0.0f ),
-            FVector ( 1.0f, -1.0f, 0.0f ),
-            FVector ( -0.7f, -1.0f, 0.7f ),
-            FVector ( 0.7f, -1.0f, 0.7f ),
-            FVector ( -0.7f, -1.0f, -0.7f ),
-            FVector ( 0.7f, -1.0f, -0.7f )
-            };
-
-        for (const auto & dir : directions)
-            {
-            FVector point = myCollision->GetLocalExtremePoint ( dir );
-            FRaycastResult pointResult = COLLISION_SYSTEM.Raycast (
-                point,
-                point + FVector ( 0.0f, -checkDistance, 0.0f ),
-                myCollision->GetCollisionChannel ().GetName ()
-            );
-
-            if (pointResult.bHit && pointResult.HitComponent &&
-                 pointResult.HitComponent->GetOwnerActor () != owner)
-                {
-                bExtremePointsHit = true;
-                if (!bRayHit || pointResult.Location.y > m_GroundPoint.y)
-                    {
-                    m_GroundPoint = pointResult.Location;
-                    m_GroundNormal = pointResult.Normal;
-
-                    float dot = m_GroundNormal.Dot ( FVector ( 0.0f, 1.0f, 0.0f ) );
-                    dot = CEMath::Clamp ( dot, -1.0f, 1.0f );
-                    m_CurrentSlopeAngle = std::acos ( dot ) * ( 180.0f / 3.14159f );
-                    }
-                break;
-                }
-            }
-        }
-
-    // Объединяем результаты
-    bIsOnGround = bRayHit || bSphereHit || bExtremePointsHit || bTerrainHit;
-
-    // Проверка угла наклона
-    if (bIsOnGround && m_CurrentSlopeAngle > m_MaxWalkableSlope)
-        {
-        bIsOnGround = false;
-        }
-
-    // Приземление
-    if (bIsOnGround && !m_bWasGrounded)
-        {
-        m_VerticalVelocity = 0.0f;
-
-        if (bTerrainHit && terrain)
-            {
-            float targetY = terrainHeight + ( currentPos.y - bottomPoint.y ) + 0.5f;
-            owner->SetActorLocation ( FVector ( currentPos.x, targetY, currentPos.z ) );
-            LOG_DEBUG ( "[TERRAIN LANDING] for",owner->GetName(), " Bottom at Y=", bottomPoint.y,
-                        " terrain at Y=", terrainHeight,
-                        " new position Y=", targetY );
-            }
-        else if (bRayHit)
-            {
-            FRaycastResult rayResult = COLLISION_SYSTEM.Raycast (
-                rayStart,
-                rayEnd,
-                myCollision->GetCollisionChannel ().GetName ()
-            );
-            SnapToGround ( myCollision, rayResult );
-            }
-
-        s_CorrectionTimer = 0.0f;
-        return;
-        }
-
-    // Коррекция проваливания
-    if (bIsOnGround && terrain && s_CorrectionTimer > m_CorrectionCooldown)
-        {
-        float currentTerrainHeight = terrain->GetHeightAtWorld ( currentPos );
-        float bottomY = bottomPoint.y;
-        bool bValidTerrainHeight = ( currentTerrainHeight > -std::numeric_limits<float>::max () * 0.5f );
-
-        if (bValidTerrainHeight)
-            {
-            float penetrationDepth = bottomY - currentTerrainHeight;
-            if (penetrationDepth < -0.4f)
-                {
-                float targetY = currentPos.y - penetrationDepth ;
-                owner->SetActorLocation ( FVector ( currentPos.x, targetY, currentPos.z ) );
-                LOG_DEBUG ( "[TERRAIN CORRECTION] Bottom was at Y=", bottomY,
-                            " terrain at Y=", currentTerrainHeight,
-                            " new position Y=", targetY );
-                s_CorrectionTimer = 0.0f;
-                return;
-                }
-            }
-        else
-            {
-            bIsOnGround = false;
-            LOG_DEBUG ( "[TERRAIN] ", owner->GetName (), " вышел за границы террейна" );
-            s_CorrectionTimer = 0.0f;
-            }
-        }
-
-    // ОСНОВНАЯ ЛОГИКА ДВИЖЕНИЯ
-    if (bIsOnGround && m_VerticalVelocity > 0.1f)
-        {
-        // На земле, но есть положительная скорость (прыжок только начался)
-        FlyUp ( DeltaTime );
-        }
-    else if (!bIsOnGround)
-        {
-        // В воздухе - падаем или летим
-        Fall ( DeltaTime );
-        }
-
-    // Проверка kill zone
-    if (bottomPoint.y <= m_KillZone)
-        {
-        LOG_DEBUG ( "Объект ", owner->GetName (), " достиг kill zone на Y=", bottomPoint.y );
-        owner->SetPendingToDestroy ();
-        }
-
-    // Обновляем последнюю позицию
-    m_LastPosition = owner->GetActorLocation ();
+   
     }

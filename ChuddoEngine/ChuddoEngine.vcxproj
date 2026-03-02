@@ -168,6 +168,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Include\Engine\GameFramework\Actors\MyChar.cpp" />
+    <ClCompile Include="Source\Engine\GameFramework\Components\MovementComponent.cpp" />
     <ClCompile Include="Include\Engine\Render\Vulkan\Managers\WireframePipeline.cpp" />
     <ClCompile Include="Source\Engine\Render\Vulkan\VertexStructs\TerrainVertex.cpp" />
     <ClCompile Include="Source\Engine\Render\Vulkan\VertexStructs\MeshVertex.cpp" />
@@ -258,6 +259,7 @@
     <ClInclude Include="Include\Engine\GameFramework\Components\Meshes\BaseMeshComponent.h" />
     <ClInclude Include="Include\Engine\GameFramework\Components\Meshes\StaticMeshComponent.h" />
     <ClInclude Include="Include\Engine\GameFramework\Components\Meshes\TerrainMeshComponent.h" />
+    <ClInclude Include="Include\Engine\GameFramework\Components\MovementComponent.h" />
     <ClInclude Include="Include\Engine\GameFramework\Components\SceneComponent.h" />
     <ClInclude Include="Include\Engine\GameFramework\Components\Collisions\SphereComponent.h" />
     <ClInclude Include="Include\Engine\GameFramework\Components\TransformComponent.h" />

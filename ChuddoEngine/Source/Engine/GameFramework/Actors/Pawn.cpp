@@ -2,6 +2,7 @@
 #include "Actors/PlayerController.h"
 #include "Components/TransformComponent.h"
 #include "Components/GravityComponent.h"
+#include "Components/MovementComponent.h"
 #include "Components/InputComponent.h"
 #include "Components/Meshes/StaticMeshComponent.h"
 #include "Utils/Math/Quaternion.h"
@@ -13,6 +14,7 @@ CPawn::CPawn ( CObject * inOwner, const std::string & inDisplayName )
 	{
 	m_InputComponent = AddDefaultSubObject<CInputComponent> ( "InputComponent_" + GetName () );
 	m_InputComponent->AttachComponentToComponent ( RootComponent );
+	SetMovableState ( EMovableState::DYNAMIC );
 	}
 
 CPawn::~CPawn ()
@@ -69,6 +71,33 @@ void CPawn::AddMovementInput ( const FVector & WorldDirection, float ScaleValue 
 
 	// Применяем движение
 	MoveActor ( m_Velocity * DeltaTime );
+	}
+
+void CPawn::AddMovementInput ( const FVector & WorldDirection, float ScaleValue, bool bForce )
+	{}
+
+void CPawn::AddControllerYawInput ( float Val )
+	{
+	if (MovementComponent && IsInputEnabled ())
+		{
+		MovementComponent->AddYawInput ( Val );
+		}
+	}
+
+void CPawn::AddControllerPitchInput ( float Val )
+	{
+	if (MovementComponent && IsInputEnabled ())
+		{
+		MovementComponent->AddPitchInput ( Val );
+		}
+	}
+
+void CPawn::AddControllerRollInput ( float Val )
+	{
+	if (MovementComponent && IsInputEnabled ())
+		{
+		MovementComponent->AddRollInput ( Val );
+		}
 	}
 
 bool CPawn::IsInputEnabled () const

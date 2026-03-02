@@ -29,11 +29,13 @@ class CGravityComponent : public CBaseComponent
 
         void SetGroundCheckDistance ( float distance ) { m_GroundCheckDistance = distance; }
         float GetGroundCheckDistance () const { return m_GroundCheckDistance; }
-
+        void ApplyGravity ( float DeltaTime );
         // Состояние
         bool IsGrounded () const { return bIsOnGround; }
         float GetVerticalVelocity () const { return m_VerticalVelocity; }
         void SetVerticalVelocity ( float vel ) { m_VerticalVelocity = vel; }
+        bool IsGravityEnabled () const { return bIsGravityEnabled; }
+        void SetEnableGravity (bool bEnable)  {  bIsGravityEnabled = bEnable; }
 
         // Дополнительные методы для проверки поверхности
         bool IsOnSlope () const { return m_CurrentSlopeAngle > m_MaxWalkableSlope; }
@@ -60,6 +62,7 @@ class CGravityComponent : public CBaseComponent
         bool bIsOnGround = false;
         bool m_bWasGrounded = false;
         float m_CurrentSlopeAngle = 0.0f;
+        bool bIsGravityEnabled = false;
         FVector m_GroundNormal = FVector ( 0.0f, 1.0f, 0.0f );
         FVector m_GroundPoint = FVector::Zero ();
 
