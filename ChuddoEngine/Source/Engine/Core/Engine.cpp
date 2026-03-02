@@ -196,10 +196,8 @@ void CEngine::MainLoop ()
 	{
 	bIsRunning = true;
 	FRenderInfo InfoForRender {};
-	auto realStartTime = std::chrono::steady_clock::now ();
-	float gameTime = 0.0f;
 	static int frameCount = 0;
-
+	static float time = 0.0000f;
 	auto & GameInstance = CGameInstance::Get ();
 	GameInstance.Init ();
 
@@ -207,16 +205,11 @@ void CEngine::MainLoop ()
 		{
 		CalculateDeltaTime ();
 		Tick ( m_DeltaTime );
-
-
-
-
+		time += m_DeltaTime;
 		InfoForRender = UpdateRenderInfo ();
 		Renderer.get ()->SetInfoForRender ( InfoForRender );
-
 		if (!Renderer.get ()->RenderScene ())
-			{
-			
+			{			
 			static int errorcount = 0;
 			errorcount++;
 			LOG_ERROR ( "Failed to render scene" );
@@ -225,34 +218,29 @@ void CEngine::MainLoop ()
 				RequestExit ();
 				}
 			}
-
 		frameCount++;
+		if (time >= 1.f)
+			{
+			LOG_INFO ( "FPS: ", frameCount );
+			frameCount = 0;
+			time = 0.0000f;
+			}
 		InfoForRender.Clear ();
-		}
-	auto EndTime = std::chrono::steady_clock::now ();
-	auto duration = std::chrono::duration_cast< std::chrono::milliseconds >( EndTime - realStartTime );
-
+		}	
 	}
 
 void CEngine::Tick ( float deltaTime )
 	{
 	glfwPollEvents ();
 
-	// Проверка нажатия ESC (дублируется с InputSystem, но оставим для надежности)
 	if (glfwGetKey ( Info.WindowHandle, GLFW_KEY_ESCAPE ) == GLFW_PRESS)
 		{
 		LOG_DEBUG ( "[ENGINE] ESC pressed, exiting..." );
 		RequestExit ();
 		return;
 		}
-
-		// Обновляем InputSystem
 	INPUT_SYSTEM->Update ( deltaTime );
-
-	// Обновляем GameInstance
 	CGameInstance::Get ().Tick ( deltaTime );
-
-	// Обновляем CollisionSystem
 	CollisionSystem.Update ( deltaTime );
 	}
 
@@ -326,7 +314,7 @@ void CEngine::CreateTestWorld ()
 		LOG_DEBUG ( "Total actors after spawn: ", level->GetNumActors () );
 
 		auto gameMode = world->CreateGameMode<CGameMode> ( "SuperGameMode" );
-		gameMode->SetDefaultPawnClass ( "CCharacter" );
+		gameMode->SetDefaultPawnClass ( "MyCharact" );
 		}
 	}
 

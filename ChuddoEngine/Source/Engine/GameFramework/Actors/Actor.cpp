@@ -52,36 +52,6 @@ void CActor::BeginPlay ()
 		RootComponent->SetCollisionEnabled ( bIsCollisionEnabled );
 		RootComponent->UpdateTransform ();
 		}
-	if (!ActorComponents.empty ())
-		{
-		LOG_ERROR ( GetName (), " Begin play with ", ActorComponents.size () );
-		for (int i {}; i < ActorComponents.size (); i++)
-			{
-			LOG_ERROR ( i + 1, " Component: ", ActorComponents[ i ]->GetName ());
-			if (CTransformComponent * compTrans = dynamic_cast< CTransformComponent * > ( ActorComponents[ i ] ))
-				{
-				if(compTrans->GetParent() == nullptr)
-					{					
-					LOG_ERROR ( "Component ", compTrans->GetName (), " world position : ", compTrans->GetLocation () );
-					LOG_ERROR ( "Component ", compTrans->GetName (), " relative position: ", compTrans->GetRelativeLocation () );
-					LOG_ERROR ( "Component ", compTrans->GetName (), " is Root and have ", compTrans->GetChildTransformComponents ().size(), " childs: ");
-					int childcount {};
-					for (auto& child : compTrans->GetChildTransformComponents ())
-						{
-						childcount++;
-						LOG_ERROR ( childcount, ". ",child->GetName() );
-						}
-					}
-				else
-					{
-					LOG_ERROR ( "Component ", compTrans->GetName (), " world position : ", compTrans->GetLocation () );
-					LOG_ERROR ( "Component ", compTrans->GetName (), " relative position: ", compTrans->GetRelativeLocation () );
-					}
-				}
-			}
-		}
-	LOG_ERROR ( GetName (), " Spawned in ", GetActorLocation (), " on called BeginPlay");
-
 	}
 
 void CActor::Tick ( float deltaTime )
@@ -970,5 +940,15 @@ void CActor::OnComponentHit ( CBaseCollisionComponent * other )
 
 		LOG_DEBUG ( "[ACTOR] ", GetName (), " stopped by ",
 					other->GetOwnerActor () ? other->GetOwnerActor ()->GetName () : "unknown" );
+		}
+	}
+
+void CActor::SetMovableState ( const EMovableState & state )
+	{
+	MovableState = state;
+	switch (MovableState)
+		{
+			default:
+				break;
 		}
 	}

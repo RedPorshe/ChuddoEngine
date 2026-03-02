@@ -167,6 +167,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Include\Engine\GameFramework\Actors\MyChar.cpp" />
     <ClCompile Include="Include\Engine\Render\Vulkan\Managers\WireframePipeline.cpp" />
     <ClCompile Include="Source\Engine\Render\Vulkan\VertexStructs\TerrainVertex.cpp" />
     <ClCompile Include="Source\Engine\Render\Vulkan\VertexStructs\MeshVertex.cpp" />
@@ -239,6 +240,7 @@
     <ClInclude Include="Include\Engine\GameFramework\Actors\Actor.h" />
     <ClInclude Include="Include\Engine\GameFramework\Actors\Character.h" />
     <ClInclude Include="Include\Engine\GameFramework\Actors\HUD.h" />
+    <ClInclude Include="Include\Engine\GameFramework\Actors\MyChar.h" />
     <ClInclude Include="Include\Engine\GameFramework\Actors\Pawn.h" />
     <ClInclude Include="Include\Engine\GameFramework\Actors\PlayerController.h" />
     <ClInclude Include="Include\Engine\GameFramework\Actors\PlayerStart.h" />

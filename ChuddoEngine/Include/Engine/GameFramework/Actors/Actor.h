@@ -10,6 +10,12 @@ class CTransformComponent;
 class CBaseCollisionComponent;
 class CGravityComponent;
 
+enum class EMovableState : uint8_t
+	{
+	STATIC,
+	MOVABLE,
+	DYNAMIC
+	};
 
 struct FRenderCollection
 	{
@@ -150,13 +156,18 @@ class CActor : public CObject
 
 		template<typename ClassName, typename... Args>
 		ClassName * SpawnActor ( const std::string & name = "ActorFromActor", Args&&... args );
-
+		
+		bool IsStatic () const { return MovableState == EMovableState::STATIC; }
+		bool IsMovable () const { return MovableState == EMovableState::MOVABLE; }
+		bool IsDynamic () const { return MovableState == EMovableState::DYNAMIC; }
 
 		virtual void OnComponentBeginOverlap ( CBaseCollisionComponent * other );
 		virtual void OnComponentEndOverlap ( CBaseCollisionComponent * other );
 		virtual void OnComponentHit ( CBaseCollisionComponent * other );
 		void SetHiddenInGame ( bool value ) { bIsHiddenInGame = value; }
 		bool IsHiddenInGame () const { return bIsHiddenInGame; }
+		EMovableState GetMovableState () const { return MovableState; }
+		void SetMovableState ( const EMovableState & state );
 	protected:
 		std::vector<CBaseComponent *> ActorComponents;
 		CTransformComponent * RootComponent = nullptr;
@@ -167,6 +178,8 @@ class CActor : public CObject
 		bool bIsPendingToDestroy { false };
 		bool bIsCollisionEnabled { true };
 		bool bIsMovin { false };
+
+		EMovableState MovableState = EMovableState::STATIC;
 
 		// Interpolation data
 		FVector TargetLocation;

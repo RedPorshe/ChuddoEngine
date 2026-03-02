@@ -43,7 +43,7 @@ void CGameMode::StartPlay ()
 				OBJECT_FACTORY.Create (
 					Settings->DefaultHUDClassName,
 					Controller,
-					Controller->GetName () + "_HUD"
+					Settings->DefaultHUDClassName
 				)
 				);
 			if (NewHUD)
@@ -139,8 +139,7 @@ CPlayerController * CGameMode::SpawnPlayerController ()
 		CObject * NewControllerObj = OBJECT_FACTORY.Create (
 			Settings->DefaultPlayerControllerClassName,
 			CurrentLevel,
-			"PlayerController_" + std::to_string ( PlayerControllers.size () + 1 )
-		);
+			Settings->DefaultPlayerControllerClassName 	);
 
 		CPlayerController * NewController = dynamic_cast< CPlayerController * >( NewControllerObj );
 
@@ -221,12 +220,12 @@ CPawn * CGameMode::SpawnDefaultPawnForController ( CPlayerController * Controlle
 		SpawnTransform.Scale = Start->GetActorScale ();
 		}
 
-	std::string PawnName = Controller->GetName () + "_" + Settings->DefaultPawnClassName;
+	
 
 	// Передаем позицию при спавне!
 	auto NewPawnObj = CurrentLevel->SpawnActorByClass (
 		Settings->DefaultPawnClassName,
-		PawnName,
+		Settings->DefaultPawnClassName,
 		SpawnTransform.Location  // <-- Позиция передается сразу
 	);
 
