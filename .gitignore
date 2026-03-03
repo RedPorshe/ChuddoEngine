@@ -1,3 +1,6 @@
 \build
 \bin
 \.vs
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
