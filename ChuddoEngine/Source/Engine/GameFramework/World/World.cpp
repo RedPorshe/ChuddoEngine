@@ -207,7 +207,7 @@ void CWorld::SetGameMode ( CGameMode * NewGameMode )
         }
     }
 
-    // ========== WORLD LIFECYCLE ==========
+
 
 void CWorld::BeginPlay ()
     {
