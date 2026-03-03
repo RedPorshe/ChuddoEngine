@@ -10,7 +10,6 @@ class CGameMode;
 struct FRenderInfo;
 struct FCameraInfo;
 
-
 class CWorld : public CObject
     {
     CHUDDO_DECLARE_CLASS ( CWorld, CObject )
@@ -23,17 +22,20 @@ class CWorld : public CObject
         // GAME MODE - принадлежит World!
         CGameMode * CurrentGameMode = nullptr;
 
+        // Состояние
+        bool bIsPlaying = false;
+        float CurrentDeltaTime = 0.0f;
+
     public:
         CWorld ( CObject * inOwner = nullptr, const std::string & displayName = "World" );
         virtual ~CWorld ();
 
         // ========== GAME INSTANCE ACCESS ==========
         CGameInstance * GetGameInstance () const { return OwningGameInstance; }
-        CWorld * GetWorld ()  { return this; }
-        float GetDeltaSeconds () { return CurrentDeltaTime; }
+        CWorld * GetWorld () { return this; }
+        float GetDeltaSeconds () const { return CurrentDeltaTime; }
 
         // ========== LEVEL MANAGEMENT ==========
-      
         void AddLevel ( CLevel * level );
         bool RemoveLevel ( const std::string & levelName );
         bool RemoveLevel ( CLevel * level );
@@ -41,11 +43,12 @@ class CWorld : public CObject
         CLevel * GetCurrentLevel () const { return CurrentLevel; }
         size_t GetNumLevels () const { return Levels.size (); }
         bool HasLevels () const { return !Levels.empty (); }
-        //Render info collecting
+
+        // ========== RENDER INFO ==========
         FRenderInfo CollectRenderInfo ();
         FCameraInfo FindActiveCamera ();
+
         // ========== GAME MODE MANAGEMENT ==========
-        // World СОЗДАЕТ GameMode!
         template<typename GameModeType, typename... Args>
         GameModeType * CreateGameMode ( const std::string & name = "GameMode", Args&&... args );
 
@@ -53,26 +56,25 @@ class CWorld : public CObject
         CGameMode * GetGameMode () const { return CurrentGameMode; }
 
         // ========== WORLD LIFECYCLE ==========
-        virtual void BeginPlay () ;
-        virtual void Tick ( float deltaTime ) ;
-        virtual void EndPlay () ;
+        virtual void BeginPlay ();
+        virtual void Tick ( float deltaTime );
+        virtual void EndPlay ();
 
         // ========== SEARCH/QUERY ==========
-        CObject * FindObjectByName ( const std::string & name ) const ;
-        CObject * FindObjectByUUID ( const std::string & uuid ) const ;
+        CObject * FindObjectByName ( const std::string & name ) const;
+        CObject * FindObjectByUUID ( const std::string & uuid ) const;
 
         // ========== DEBUG/UTILS ==========
-         void DumpState () const ;
+        void DumpState () const;
 
         template<typename LevelType, typename... Args>
         LevelType * CreateLevel ( const std::string & name = "Level", Args&&... args );
 
     protected:
         bool HasAnyActorWithDebugCollisions () const;
-        bool bIsPlaying = false;
-        float CurrentDeltaTime {};
+        FRenderInfo * m_RenderInfo = nullptr;
+        FCameraInfo * m_CameraInfo = nullptr;
     };
-
 
 #include "GameMode.h"
 
@@ -86,6 +88,10 @@ GameModeType * CWorld::CreateGameMode ( const std::string & name, Args&&... args
     if (CurrentGameMode)
         {
         LOG_DEBUG ( "[WORLD] Replacing existing GameMode: ", CurrentGameMode->GetName () );
+        if (bIsPlaying)
+            {
+            CurrentGameMode->EndGame ();
+            }
         RemoveOwnedObject ( CurrentGameMode->GetName () );
         CurrentGameMode = nullptr;
         }
@@ -97,6 +103,8 @@ GameModeType * CWorld::CreateGameMode ( const std::string & name, Args&&... args
         {
         SetGameMode ( NewGameMode );
         NewGameMode->SetWorld ( this );
+        NewGameMode->InitGame ();
+
         LOG_DEBUG ( "[WORLD] GameMode created: ", NewGameMode->GetName (),
                     " (Class: ", NewGameMode->GetObjectClassName (), ")" );
         }

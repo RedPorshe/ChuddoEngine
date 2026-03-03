@@ -57,9 +57,9 @@ class CActor : public CObject
         // ------------------------------------------------------------------------
         // Lifecycle
         // ------------------------------------------------------------------------
-        virtual void BeginPlay () ;
-        virtual void Tick ( float deltaTime ) ;
-        virtual void EndPlay () ;
+        virtual void BeginPlay ();
+        virtual void Tick ( float deltaTime );
+        virtual void EndPlay ();
         void DebugInfo ( float deltaTime );
 
         void Destroy ();

@@ -125,7 +125,7 @@ void CInputSystem::SetWindow ( GLFWwindow * window )
     Info.WindowHandle = window;
     }
 
-void CInputSystem::ProcessControllerInput ( CPlayerController * Controller, float DeltaTime )
+void CInputSystem::ProcessControllerInput ( CController * Controller, float DeltaTime )
     {
     if (!Controller || !Controller->IsInputEnabled ()) return;
 

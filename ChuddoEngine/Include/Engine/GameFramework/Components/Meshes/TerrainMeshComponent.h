@@ -25,7 +25,7 @@ class CTerrainMeshComponent : public CBaseMeshComponent
         /**
          * Получить информацию о террейне для рендера
          */
-        virtual FTerrainRenderInfo GetTerrainInfo () const override;
+        virtual FTerrainRenderInfo GetTerrainInfo ()  override;
 
         /**
          * Получить привязанный компонент террейна

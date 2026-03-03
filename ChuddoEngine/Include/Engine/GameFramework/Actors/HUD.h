@@ -3,7 +3,7 @@
 #include "Actors/Actor.h"
 
 // Forward declarations
-class CPlayerController;
+class CController;
 class CFont;
 class CTexture;
 class CMaterial;
@@ -17,8 +17,8 @@ class CHUD : public CActor
         virtual ~CHUD ();
 
         // ========== CONTROLLER ==========
-        void SetOwnerController ( CPlayerController * InController );
-        CPlayerController * GetOwnerController () const { return OwnerController; }
+        void SetOwnerController ( CController * InController );
+        CController * GetOwnerController () const { return OwnerController; }
 
         // ========== HUD LIFECYCLE ==========
         virtual void InitializeHUD ();
@@ -56,7 +56,7 @@ class CHUD : public CActor
 
     protected:
         // Owner
-        CPlayerController * OwnerController = nullptr;
+        CController * OwnerController = nullptr;
 
         // HUD State
         bool bVisible = true;

@@ -7,13 +7,10 @@
 class CWorld;
 class CLevel;
 class CPawn;
-class CPlayerController;
+class CController;
 class CHUD;
 class CActor;
 class CPlayerStart;
-
-
-
 
 class CGameMode : public CObject
     {
@@ -42,16 +39,19 @@ class CGameMode : public CObject
         FGameModeSettings * GetGameModeSettings () const { return Settings; }
 
         // ========== PLAYER SPAWNING ==========
-        virtual CPlayerController * SpawnPlayerController ();
-        virtual CPawn * SpawnDefaultPawnForController ( CPlayerController * Controller );
-        virtual void RestartPlayer ( CPlayerController * Controller );
-        virtual void RestartPlayerAtTransform ( CPlayerController * Controller, const FTransform & SpawnTransform );
+        virtual CController * SpawnPlayerController ();
+        virtual CPawn * SpawnDefaultPawnForController ( CController * Controller );
+        virtual void RestartPlayer ( CController * Controller );
+        virtual void RestartPlayerAtTransform ( CController * Controller, const FTransform & SpawnTransform );
         virtual bool ShouldSpawnPlayerAutomatically () const { return true; }
 
+        // ========== HUD MANAGEMENT ==========
+        virtual void SpawnHUDForController ( CController * Controller );
+
         // ========== PLAYER MANAGEMENT ==========
-        const std::vector<CPlayerController *> & GetPlayerControllers () const { return PlayerControllers; }
+        const std::vector<CController *> & GetPlayerControllers () const { return PlayerControllers; }
         int32 GetNumPlayers () const { return static_cast< int32 >( PlayerControllers.size () ); }
-        void RemovePlayerController ( CPlayerController * Controller );
+        void RemovePlayerController ( CController * Controller );
 
         // ========== GAME STATE ==========
         bool IsGameStarted () const { return bGameStarted; }
@@ -63,24 +63,25 @@ class CGameMode : public CObject
         CWorld * GetWorld () const { return OwningWorld; }
         void SetWorld ( CWorld * World ) { OwningWorld = World; }
 
-
     protected:
-        FGameModeSettings * Settings {};
+        FGameModeSettings * Settings = nullptr;
 
         // Состояние игры
         bool bGameStarted = false;
         bool bGameOver = false;
         float GameTime = 0.0f;
+
         bool IsValidPawnClass ( const std::string & ClassName ) const;
         void SpawnPlayerForNewGame ();
+
         // Список игроков
-        std::vector<CPlayerController *> PlayerControllers;
+        std::vector<CController *> PlayerControllers;
 
         // Владелец
         CWorld * OwningWorld = nullptr;
 
         // Вспомогательные методы
-        virtual CActor * FindPlayerStart ( CPlayerController * Player = nullptr );
+        virtual CActor * FindPlayerStart ( CController * Player = nullptr );
         virtual bool IsValidPlayerStart ( CActor * PlayerStart );
     };
 

@@ -30,7 +30,7 @@ class CBaseComponent : public CObject
 		bool bIsInitialized { false };
 		bool bIsAutoInit { true };
 		CActor * ActorOwner = nullptr;
-
+		float DebugTimer = 0.f;
 	};
 
 REGISTER_CLASS_FACTORY ( CBaseComponent );

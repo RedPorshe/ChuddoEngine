@@ -1,244 +1,192 @@
 #include "Actors/Character.h"
 #include "Components/Meshes/StaticMeshComponent.h"
+#include "Components/Meshes/TerrainMeshComponent.h"
 #include "Components/Collisions/CapsuleComponent.h"
 #include "Components/Collisions/BoxComponent.h"
-#include "Components/Collisions/ConeComponent.h"
-#include "Components/Collisions/CylinderComponent.h"
-#include "Components/Collisions/SphereComponent.h"
+#include "Components/CharacterMovementComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/InputComponent.h"
 #include "Components/GravityComponent.h"
-#include "Actors/TerrainActor.h"
 #include "World/World.h"
 #include "World/Level.h"
 
-#include "Core/Engine.h"
-#include "Render/Renderer.h"
-#include "Utils/Math/CE_MathHelpers.h"
-#include <cmath>
-
 CCharacter::CCharacter ( CObject * inOwner, const std::string & DisplayName )
-	: Super ( inOwner, DisplayName )
-	{
-	Capsule = AddDefaultSubObject<CCapsuleComponent> ( "Capsule" );
+    : Super ( inOwner, DisplayName )
+    {
+    CreateCharacterMovementComponent ();
 
-	
-	Capsule->SetHalfHeight ( 9.f );
-	Capsule->SetRadius ( 1.8f );
-	SetRootComponent ( Capsule );
-	SetDrawCollisions ( true ); 
-	Mesh = AddDefaultSubObject<CStaticMeshComponent> ( "Mesh" );
-	Mesh->AttachTo ( Capsule );
-	Mesh->SetRelativeLocation ( 0.f,0.f,0.f );
-	// ВАЖНО: Генерируем геометрию для меша
-	Mesh->CreateFallBackCube ();
-	
-	
-	Mesh->SetScale ( 0.5f );
-	Camera = AddDefaultSubObject<CCameraComponent> ( "Camera" );
-	Camera->AttachTo ( Capsule );
-	// Сначала смотрим вперед (как персонаж)
-	FQuat ForwardRotation = GetActorRotationQuat ();
+    Capsule = AddDefaultSubObject<CCapsuleComponent> ( "Capsule" );
+    Capsule->SetHalfHeight ( 9.f );
+    Capsule->SetRadius ( 1.8f );
+    SetRootComponent ( Capsule );
 
-	// Добавляем наклон вниз на 10 градусов вокруг локальной оси X
-	float PitchDownRadians = CEMath::DegreesToRadians ( -10.0f );
-	FQuat DownRotation ( FVector::Right (), PitchDownRadians );
+    SetDrawCollisions ( true );
 
-	// Комбинируем: сначала поворот персонажа, потом наклон камеры
-	// Внимание: порядок умножения важен!
-	FQuat FinalRotation = DownRotation * ForwardRotation;
-	FinalRotation.Normalize ();
+    Mesh = AddDefaultSubObject<CStaticMeshComponent> ( "Mesh" );
+    Mesh->AttachTo ( Capsule );
+    Mesh->SetRelativeLocation ( 0.f, 0.f, 0.f );
+    Mesh->CreateFallBackCube ();
+    Mesh->SetScale ( 0.5f );
 
-	Camera->SetRelativeRotation ( FinalRotation );
-	Camera->SetRelativeLocation ( 0.f, 18.f, -20.f );
-	Camera->UpdateTransform ();
-	// Настройки движения
-	m_GroundSpeed = 600.0f;
-	m_MaxAirSpeed = 400.0f;
-	m_AirControl = 0.8f; // 80% контроля в воздухе
+    Camera = AddDefaultSubObject<CCameraComponent> ( "Camera" );
+    Camera->AttachTo ( Capsule );
 
-	// Настройки прыжка
-	bIsJumping = false;
-	TargetJumpHeight = 0.f;
-	
-	JumpHeight = 10.0f;  
-	
-	}
+    float PitchDownRadians = CEMath::DegreesToRadians ( -10.0f );
+    FQuat DownRotation ( FVector::Right (), PitchDownRadians );
+    FQuat FinalRotation = DownRotation * GetActorRotationQuat ();
+    FinalRotation.Normalize ();
+
+    Camera->SetRelativeRotation ( FinalRotation );
+    Camera->SetRelativeLocation ( 0.f, 18.f, -20.f );
+    
+    }
+
+void CCharacter::CreateCharacterMovementComponent ()
+    {
+    if (MovementComponent)
+        {
+        RemoveOwnedObject ( MovementComponent->GetName () );
+        MovementComponent = nullptr;
+        }
+
+    MovementComponent = AddDefaultSubObject<CCharacterMovementComponent> ( "CharMov" );
+
+    if (MovementComponent)
+        {
+        MovementComponent->SetOwnerPawn ( this );
+        LOG_DEBUG ( "[CHARACTER] Movement component created: ", MovementComponent->GetName () );
+        }
+    else
+        {
+        LOG_ERROR ( "[CHARACTER] Failed to create movement component" );
+        }
+    }
 
 void CCharacter::BeginPlay ()
-	{
-	Super::BeginPlay ();	
-	GetActorLocation ();
-	}
+    {
+    Super::BeginPlay ();
+    for (auto& actor : GetWorld ()->GetCurrentLevel ()->GetActors ())
+        {
+        for (auto & comp : actor->GetActorComponents ())
+            {
+            if (CTerrainMeshComponent * terMesh = dynamic_cast< CTerrainMeshComponent * >( comp ))
+                {
+                terrainMesh = terMesh;
+                break;
+                }
+            }
+        }
+    }
 
-bool CCharacter::CheckTargetJump ()
-	{
-	float CurrentHeight = GetActorLocation ().y;
-	// Добавляем небольшую погрешность
-	return CurrentHeight >= TargetJumpHeight - 1.2f;
-	}
 
 
 void CCharacter::Tick ( float DeltaTime )
-	{
-	Super::Tick ( DeltaTime );
+    {
+    Super::Tick ( DeltaTime );
+    float dist = ( terrainMesh->GetLocation () - Camera->GetLocation () ).Length ();
+    static float speedTimer = 0.f;
+    speedTimer += DeltaTime;
+    if (speedTimer >= 1.f)
+        {
+        LOG_INFO (  );
+        LOG_INFO ( "Distance ",dist);
+        LOG_INFO (  );
+        speedTimer = 0.f;
+        }
 
-	// Логика прыжка - только если мы в воздухе и прыжок активен
-	if (bIsJumping && m_Gravity && !m_Gravity->IsGrounded ())
-		{
-		float CurrentHeight = GetActorLocation ().y;
-		float CurrentVel = m_Gravity->GetVerticalVelocity ();
-
-		// Проверяем, достигли ли пика (скорость стала <= 0)
-		if (CurrentVel <= 0)
-			{
-			if (CheckTargetJump ())
-				{
-				bIsJumping = false;
-				LOG_DEBUG ( "[JUMP PEAK] Достигнута высота: ", CurrentHeight,
-							" Цель: ", TargetJumpHeight );
-				}
-			}
-		}
- 
-	if (m_Gravity && m_Gravity->IsGrounded () && bIsJumping&& CheckTargetJump ())
-		{
-		bIsJumping = false;
-		LOG_DEBUG ( " ON GROUND - ready to jump again" );
-		}
-
-	
-	}
-
+    }
 
 void CCharacter::EndPlay ()
-	{
-	Super::EndPlay ();
-	}
+    {
+    Super::EndPlay ();
+    }
 
 void CCharacter::SetupPlayerInputComponent ( CInputComponent * InputComponent )
-	{
-	Super::SetupPlayerInputComponent ( InputComponent );
-	if (GetInputComponent ())
-		{
-		GetInputComponent ()->BindAxis ( "MoveForward", GLFW_KEY_W, GLFW_KEY_S,
-										 [ this ] ( float value ) { MoveForward ( value ); } );
-		GetInputComponent ()->BindAxis ( "MoveRight", GLFW_KEY_D, GLFW_KEY_A,
-										 [ this ] ( float value ) { MoveRight ( value ); } );
-		GetInputComponent ()->BindAxis ( "MoveUp", GLFW_KEY_E, GLFW_KEY_Q,
-										 [ this ] ( float value ) { MoveUp ( value ); } );
-		GetInputComponent ()->BindAction ( "Jump", GLFW_KEY_SPACE, EInputEvent::IE_Pressed,
-										   [ this ] () { Jump (); } );
-		GetInputComponent ()->BindAction ( "Spawn", GLFW_KEY_F,EInputEvent::IE_Pressed,
-										   [ this ] () { SpawnCube (); } );
+    {
+    Super::SetupPlayerInputComponent ( InputComponent );
 
-		}
-	}
+    if (auto * Input = GetInputComponent ())
+        {
+        Input->BindAxis ( "MoveForward", GLFW_KEY_W, GLFW_KEY_S,
+                          [ this ] ( float value ) { MoveForward ( value ); } );
+        Input->BindAxis ( "MoveRight", GLFW_KEY_D, GLFW_KEY_A,
+                          [ this ] ( float value ) { MoveRight ( value ); } );
+        Input->BindAxis ( "MoveUp", GLFW_KEY_E, GLFW_KEY_Q,
+                          [ this ] ( float value ) { MoveUp ( value ); } );
+        Input->BindAction ( "Jump", GLFW_KEY_SPACE, EInputEvent::IE_Pressed,
+                            [ this ] () { Jump (); } );
+        Input->BindAction ( "Spawn", GLFW_KEY_F, EInputEvent::IE_Pressed,
+                            [ this ] () { SpawnCube (); } );
+        }
+    }
 
 void CCharacter::MoveRight ( float value )
-	{
-	if (value != 0.f)
-		{
-		FVector Direction = GetActorRotationQuat () * FVector::Right ();
-		AddMovementInput ( Direction, value );
-		}
-	}
+    {
+    if (value != 0.f && MovementComponent)
+        {
+        FVector Direction = GetActorRotationQuat () * FVector::Right ();
+        AddMovementInput ( Direction, value );
+        }
+    }
 
 void CCharacter::MoveForward ( float Value )
-	{
-	if (Value != 0.f)
-		{
-		FVector Direction = GetActorRotationQuat () * FVector::Forward ();
-		AddMovementInput ( Direction, Value );
-		}
-	}
+    {
+    if (Value != 0.f && MovementComponent)
+        {
+        FVector Direction = GetActorRotationQuat () * FVector::Forward ();
+        AddMovementInput ( Direction, Value );
+        }
+    }
 
 void CCharacter::MoveUp ( float Value )
-	{
-	if (Value != 0.f)
-		{
-		FVector Direction = GetActorRotationQuat () * FVector::Up ();
-		AddMovementInput ( Direction, Value );
-		}
-	}
-
-void CCharacter::StartJump ()
-	{
-	if (m_Gravity && m_Gravity->IsGrounded ())
-		{
-		// Получаем силу гравитации
-		float gravity = m_Gravity->GetGravityStrength () * m_Gravity->GetGravityScale ();
-
-		// Вычисляем нужную скорость для достижения JumpHeight
-		// v = sqrt(2 * g * h)
-		float neededVelocity = std::sqrt ( 2.0f * gravity * JumpHeight );
-
-		// Устанавливаем целевую высоту
-		TargetJumpHeight = GetActorLocation ().y + JumpHeight;
-
-		// Даем вычисленную силу
-		m_Gravity->SetVerticalVelocity ( neededVelocity );
-
-		bIsJumping = true;
-
-		LOG_DEBUG ( "[JUMP START] Цель: ", TargetJumpHeight,
-					" Текущая: ", GetActorLocation ().y,
-					" Сила: ", neededVelocity,
-					" Гравитация: ", gravity,
-					" Высота: ", JumpHeight );
-		}
-	}
-
-void CCharacter::EndJump ()
-	{
-	// При отпускании клавиши ничего не делаем
-	// Прыжок уже в процессе
-	LOG_DEBUG ( "[JUMP END]" );
-	}
+    {
+    if (Value != 0.f && MovementComponent)
+        {
+        AddMovementInput ( FVector::Up (), Value );
+        }
+    }
 
 void CCharacter::Jump ()
-	{
-	if (!bIsJumping && m_Gravity && m_Gravity->IsGrounded ())
-		{
-		StartJump ();
-		}
-	}
+    {
+    if (auto * CharMov = dynamic_cast< CCharacterMovementComponent * >( MovementComponent ))
+        {
+        CharMov->Jump ();
+        }
+    }
 
+bool CCharacter::IsJumping () const
+    {
+    if (auto * CharMov = dynamic_cast< CCharacterMovementComponent * >( MovementComponent ))
+        {
+        return CharMov->IsJumping ();
+        }
+    return false;
+    }
 
 void CCharacter::SpawnCube ()
-	{
-	if (!GetWorld () || !GetWorld ()->GetCurrentLevel ()) return;
+    {
+    if (!GetWorld () || !GetWorld ()->GetCurrentLevel ()) return;
 
-	auto level = GetWorld ()->GetCurrentLevel ();
+    auto level = GetWorld ()->GetCurrentLevel ();
+    FVector SpawnOffset = GetActorForwardVector () * 600.f;
+    FVector spawnLocation = GetActorLocation () + SpawnOffset ;
 
-	FVector SpawnOffset = GetActorForwardVector () * 200.f;
-	FVector spawnLocation = GetActorLocation () + SpawnOffset * 2.f;
+    auto cubeActor = SpawnActor<CActor> ( "TestCube", spawnLocation );
+    if (!cubeActor) return;
 
-	auto cubeActor = level->SpawnActor<CActor> ( "TestCube", spawnLocation );
-	if (!cubeActor) return;
+    auto cubemesh = cubeActor->AddDefaultSubObject<CStaticMeshComponent> ( "Testmesh" );
+    cubeActor->BeginPlay ();
+    auto box = cubeActor->AddDefaultSubObject<CBoxComponent> ( "CubeBox" );
 
-	auto cubemesh = cubeActor->AddDefaultSubObject<CStaticMeshComponent> ( "Testmesh" );
-	auto box = cubeActor->AddDefaultSubObject<CBoxComponent> ( "CubeBox" );
+    box->SetHalfExtents ( FVector ( 5.f, 5.f, 5.f ) );
+    cubeActor->SetRootComponent ( cubemesh );
+    cubemesh->SetCollisionComponent ( box );
+    box->AttachTo ( cubemesh );
+    box->SetChannelAsInteractable ();
+    cubeActor->SetCollisionEnabled (true); // по умолчанию true
+    cubeActor->SetActorLocation ( spawnLocation, true );
+    cubeActor->SetMovableState ( EMovableState::DYNAMIC );
+    cubemesh->UpdateTransform ();
 
-	// Настраиваем бокс
-	box->SetHalfExtents ( FVector ( 5.f, 5.f, 5.f ) );
-
-	
-
-	cubeActor->SetRootComponent ( cubemesh );
-	cubemesh->SetCollisionComponent ( box );
-	box->AttachTo ( cubemesh );  // box становится дочерним компонентом меша
-	// ВАЖНО: Устанавливаем относительную позицию бокса в (0,0,0)
-	//box->SetRelativeLocation ( FVector::Zero () );  // ЭТОГО НЕ ХВАТАЕТ!
-	// Включаем коллизию
-	cubeActor->SetCollisionEnabled ();
-
-	// Устанавливаем позицию актора
-	cubeActor->SetActorLocation ( spawnLocation, true );
-	cubeActor->SetMovableState ( EMovableState::DYNAMIC );
-
-
-	cubeActor->BeginPlay ();
-
-	LOG_DEBUG ( "[CHARACTER] Test cube spawned at: ", cubeActor->GetActorLocation () );
-	}
+    LOG_DEBUG ( "[CHARACTER] Test cube spawned at: ", cubeActor->GetActorLocation () );
+    }

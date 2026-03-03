@@ -59,7 +59,7 @@ void CTerrainMeshComponent::OnBeginPlay ()
         }
     }
 
-FTerrainRenderInfo CTerrainMeshComponent::GetTerrainInfo () const
+FTerrainRenderInfo CTerrainMeshComponent::GetTerrainInfo () 
     {
     FTerrainRenderInfo Info;
 
@@ -67,6 +67,7 @@ FTerrainRenderInfo CTerrainMeshComponent::GetTerrainInfo () const
         {
         return Info;
         }
+    if (bIsTransformDirty) UpdateTransform ();
 
         // Базовые Vulkan ресурсы
     Info.VertexBuffer = m_VertexBuffer;

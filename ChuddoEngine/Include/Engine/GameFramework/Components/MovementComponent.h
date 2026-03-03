@@ -1,10 +1,6 @@
 #pragma once
 
 #include "Components/BaseComponent.h"
-/*
- * @Brief: Base Movement component
- * Handles movement input and velocity for pawns
- */
 
 class CPawn;
 
@@ -20,20 +16,16 @@ class CMovementComponent : public CBaseComponent
         void Tick ( float DeltaTime ) override;
         void OnBeginPlay () override;
 
-        // Input accumulation (как в UE)
+        // Input accumulation
         void AddInputVector ( const FVector & WorldDirection, float ScaleValue, bool bForce = false );
-        void AddPitchInput ( float Value );     // В радианах
-        void AddYawInput ( float Value );       // В радианах
-        void AddRollInput ( float Value );      // В радианах
+        void AddPitchInput ( float Value );
+        void AddYawInput ( float Value );
+        void AddRollInput ( float Value );
 
-        // Вспомогательные методы для градусов (для удобства)
+        // Градусы для удобства
         void AddPitchInputDegrees ( float Degrees ) { AddPitchInput ( CEMath::DegreesToRadians ( Degrees ) ); }
         void AddYawInputDegrees ( float Degrees ) { AddYawInput ( CEMath::DegreesToRadians ( Degrees ) ); }
         void AddRollInputDegrees ( float Degrees ) { AddRollInput ( CEMath::DegreesToRadians ( Degrees ) ); }
-
-        // Velocity management
-        FVector GetVelocity () const { return m_Velocity; }
-        void SetVelocity ( const FVector & NewVelocity ) { m_Velocity = NewVelocity; }
 
         // Owner access
         CPawn * GetOwnerPawn () const { return OwnerPawn; }
@@ -49,14 +41,17 @@ class CMovementComponent : public CBaseComponent
         void SetAirControl ( float Control ) { AirControl = Control; }
         float GetAirControl () const { return AirControl; }
 
-        void SetBrakingDeceleration ( float Decel ) { BrakingDeceleration = Decel; }
-        float GetBrakingDeceleration () const { return BrakingDeceleration; }
+        float GetAccelerationRate () const { return AccelerationRate; }
+        void SetAccelerationRate (const float & value)  {  AccelerationRate = value; }
+        float GetDecelerationRate () const { return DecelerationRate; }
+        void SetDecelerationRate (const float & value)  { DecelerationRate = value; }
+       // void SetBrakingDeceleration ( float Decel ) { BrakingDeceleration = Decel; }
+       // float GetBrakingDeceleration () const { return BrakingDeceleration; }
 
     protected:
-        // Internal methods
         virtual void ProcessMovementInput ( float DeltaTime );
         virtual void ProcessRotationInput ( float DeltaTime );
-        virtual void ApplyVelocity ( float DeltaTime );
+        virtual bool IsJumping () const { return false; }
 
         // Input accumulators
         FVector MovementInputAccumulator;
@@ -71,11 +66,11 @@ class CMovementComponent : public CBaseComponent
         float MaxWalkSpeed = 600.0f;
         float MaxAirSpeed = 400.0f;
         float AirControl = 0.3f;
-        float BrakingDeceleration = 8.0f;
+        float AccelerationRate = 100.0f;   
+        float DecelerationRate = 10.f;
 
-        // Current state
-        FVector m_Velocity = FVector::Zero ();
-        bool bIsGrounded = true;  // Будет обновляться из GravityComponent
+        // State
+        bool bIsGrounded = true;
 
         // Owner
         CPawn * OwnerPawn = nullptr;

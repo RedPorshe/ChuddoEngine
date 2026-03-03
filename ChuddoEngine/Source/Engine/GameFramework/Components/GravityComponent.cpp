@@ -149,9 +149,7 @@ void CGravityComponent::ApplyGravity ( float DeltaTime )
             {
             float targetY = terrainHeight + ( currentPos.y - bottomPoint.y ) + 0.5f;
             owner->SetActorLocation ( FVector ( currentPos.x, targetY, currentPos.z ) );
-            LOG_DEBUG ( "[TERRAIN LANDING] for ", owner->GetName (), " Bottom at Y=", bottomPoint.y,
-                        " terrain at Y=", terrainHeight,
-                        " new position Y=", targetY );
+            
             }
         else if (bRayHit)
             {
@@ -181,17 +179,14 @@ void CGravityComponent::ApplyGravity ( float DeltaTime )
                 {
                 float targetY = currentPos.y - penetrationDepth;
                 owner->SetActorLocation ( FVector ( currentPos.x, targetY, currentPos.z ) );
-                LOG_DEBUG ( "[TERRAIN CORRECTION] ",owner->GetName(), " Bottom was at Y=", bottomY,
-                            " terrain at Y=", currentTerrainHeight,
-                            " new position Y=", targetY );
+                
                 s_CorrectionTimer = 0.0f;
                 return;
                 }
             }
         else
             {
-            bIsOnGround = false;
-            LOG_DEBUG ( "[TERRAIN] ", owner->GetName (), " вышел за границы террейна" );
+            bIsOnGround = false;           
             s_CorrectionTimer = 0.0f;
             }
         }
@@ -481,4 +476,10 @@ void CGravityComponent::Tick ( float DeltaTime )
     Super::Tick ( DeltaTime );
 
    
+    }
+
+float CGravityComponent::GetJumpVelocity ( float JumpHeight ) const
+    {
+    float gravity = m_GravityStrength * m_GravityScale;
+    return std::sqrt ( 2.0f * gravity * JumpHeight );
     }

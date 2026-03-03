@@ -29,7 +29,7 @@ CHUD::~CHUD ()
     CrosshairTexture = nullptr;
     }
 
-void CHUD::SetOwnerController ( CPlayerController * InController )
+void CHUD::SetOwnerController ( CController * InController )
     {
     OwnerController = InController;
     LOG_DEBUG ( "[HUD] Owner controller set: ",

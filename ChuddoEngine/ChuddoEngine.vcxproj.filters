@@ -96,7 +96,7 @@
     <ClCompile Include="Source\Engine\GameFramework\GameMode.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Engine\GameFramework\Actors\PlayerController.cpp">
+    <ClCompile Include="Source\Engine\GameFramework\Actors\Controller.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\GameFramework\Actors\PlayerStart.cpp">
@@ -192,10 +192,16 @@
     <ClCompile Include="Source\Engine\Render\Vulkan\VertexStructs\TerrainVertex.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Include\Engine\GameFramework\Actors\MyChar.cpp">
+    <ClCompile Include="Source\Engine\GameFramework\Components\MovementComponent.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Engine\GameFramework\Components\MovementComponent.cpp">
+    <ClCompile Include="Source\Engine\GameFramework\Components\CharacterMovementComponent.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\GameFramework\Actors\PlayerController.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Engine\GameFramework\Actors\AIController.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>
@@ -284,7 +290,7 @@
     <ClInclude Include="Include\Engine\GameFramework\GameMode.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="Include\Engine\GameFramework\Actors\PlayerController.h">
+    <ClInclude Include="Include\Engine\GameFramework\Actors\Controller.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="Include\Engine\GameFramework\Actors\HUD.h">
@@ -395,10 +401,16 @@
     <ClInclude Include="Include\Engine\Render\Vulkan\VertexStructs\TerrainVertex.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="Include\Engine\GameFramework\Actors\MyChar.h">
+    <ClInclude Include="Include\Engine\GameFramework\Components\MovementComponent.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="Include\Engine\GameFramework\Components\MovementComponent.h">
+    <ClInclude Include="Include\Engine\GameFramework\Components\CharacterMovementComponent.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Engine\GameFramework\Actors\PlayerController.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Engine\GameFramework\Actors\AIController.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>

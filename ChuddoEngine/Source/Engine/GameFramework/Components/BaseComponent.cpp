@@ -60,6 +60,13 @@ void CBaseComponent::Tick ( float DeltaTime )
 			actor->Tick ( DeltaTime );
 			}
 		}	
+
+	DebugTimer += DeltaTime;
+	if (DebugTimer >= 1.f)
+		{
+		LOG_WARN ( "TICK FOR :", GetName () );
+		DebugTimer = 0.f;
+		}
 	}
 
 bool CBaseComponent::CanTick () const

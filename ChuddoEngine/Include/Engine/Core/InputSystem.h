@@ -7,7 +7,7 @@
 #include <glm/glm.hpp>
 
 // Forward declarations
-class CPlayerController;
+class CController;
 class CInputComponent;
 struct FEngineInfo;
 
@@ -74,7 +74,7 @@ class CInputSystem
         float GetMouseSensitivity () const { return m_MouseSensitivity; }
 
         // Controller input processing
-        void ProcessControllerInput ( CPlayerController * Controller, float DeltaTime );
+        void ProcessControllerInput ( CController * Controller, float DeltaTime );
 
         // ЕДИНЫЙ BindAction для всего!
         void BindAction ( const std::string & actionName, int button, EInputEvent eventType,

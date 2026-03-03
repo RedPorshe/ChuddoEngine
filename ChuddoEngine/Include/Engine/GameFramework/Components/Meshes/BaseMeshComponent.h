@@ -30,8 +30,8 @@ class CBaseMeshComponent : public CSceneComponent
          * Использует мировую матрицу трансформации из CTransformComponent
          * @return структура с информацией о меше
          */
-        virtual FMeshInfo GetMeshInfo () const;
-        virtual FTerrainRenderInfo GetTerrainInfo () const
+        virtual FMeshInfo GetMeshInfo () ;
+        virtual FTerrainRenderInfo GetTerrainInfo () 
             {
             return FTerrainRenderInfo ();
             }

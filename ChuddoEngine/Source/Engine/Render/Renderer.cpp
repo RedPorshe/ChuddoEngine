@@ -519,6 +519,9 @@ void CRenderer::RenderWorld ( VkCommandBuffer CommandBuffer, uint32_t ImageIndex
 		return;
 		}
 
+	
+	
+
 	m_CommandManager->BeginCommandBuffer ( CommandBuffer );
 
 	// Begin render pass
@@ -632,10 +635,14 @@ void CRenderer::RenderWorld ( VkCommandBuffer CommandBuffer, uint32_t ImageIndex
 			}
 		}
 
+
+
 	// ========== РЕНДЕР ТЕРРЕЙНОВ ==========
 	// Используем отдельные переменные для террейна
 	VkPipeline terrainPipeline = m_PipelineManager->GetPipeline ( "TerrainPipeline" );
 	VkPipelineLayout terrainLayout = m_PipelineManager->GetPipelineLayout ( "TerrainLayout" );
+
+
 
 	if (terrainPipeline != VK_NULL_HANDLE && terrainLayout != VK_NULL_HANDLE)
 		{

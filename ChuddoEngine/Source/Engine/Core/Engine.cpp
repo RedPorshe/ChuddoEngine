@@ -207,6 +207,7 @@ void CEngine::MainLoop ()
 		Tick ( m_DeltaTime );
 		time += m_DeltaTime;
 		InfoForRender = UpdateRenderInfo ();
+
 		Renderer.get ()->SetInfoForRender ( InfoForRender );
 		if (!Renderer.get ()->RenderScene ())
 			{			
@@ -309,12 +310,13 @@ void CEngine::CreateTestWorld ()
 		Terrain->SetActorLocation ( 0.f, 0.f, 0.f, true ); // true явно указываю что нужно телепортировать актора, потому что нету тиков
 		Terrain->SetDrawCollisions ( true );	
 		float startHeight = Terrain->GetTerrainMeshComponent ()->GetTerrainComponent ()->GetHeightAtWorld ( FVector { 500.f, 150.3322f, 500.f } );
-		start->SetActorLocation ( FVector{ 500.f, startHeight+500.f, 500.f } , true); // true явно указываю что нужно телепортировать актора, потому что нету тиков
+		start->SetActorLocation ( FVector{ 500.f, startHeight+50.f, 500.f } , true); // true явно указываю что нужно телепортировать актора, потому что нету тиков
 		
 		LOG_DEBUG ( "Total actors after spawn: ", level->GetNumActors () );
 
 		auto gameMode = world->CreateGameMode<CGameMode> ( "SuperGameMode" );
-		gameMode->SetDefaultPawnClass ( "MyCharact" );
+		gameMode->SetDefaultPawnClass ( "CCharacter" );
+		world->BeginPlay ();
 		}
 	}
 

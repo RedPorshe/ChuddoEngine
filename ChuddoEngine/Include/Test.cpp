@@ -26,7 +26,7 @@ void CTestLevel::BeginPlay ()
         {
         TestCharacter->SetActorLocation ( FVector ( 0.0f, 0.0f, 100.0f ) );
 
-        CPlayerController * PlayerController = SpawnActor<CPlayerController> ( "TestPlayerController" );
+        CController * PlayerController = SpawnActor<CController> ( "TestPlayerController" );
         if (PlayerController)
             {
             PlayerController->Possess ( TestCharacter );

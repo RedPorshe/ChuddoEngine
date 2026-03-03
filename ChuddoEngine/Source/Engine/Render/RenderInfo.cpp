@@ -32,7 +32,8 @@ void FCameraInfo::Clear ()
 
 void FCameraInfo::UpdateViewMatrix ()
     {
-    FVector Direction = ( ViewTarget - Location );
+    ViewMatrix = FMat4::LookAtMatrix ( Location, ViewTarget, FVector::Up () );
+    /*FVector Direction = ( ViewTarget - Location );
     if (!Direction.IsZero ())
         Direction.Normalize ();
 
@@ -64,7 +65,7 @@ void FCameraInfo::UpdateViewMatrix ()
     ViewMatrix ( 0, 3 ) = 0.0f;
     ViewMatrix ( 1, 3 ) = 0.0f;
     ViewMatrix ( 2, 3 ) = 0.0f;
-    ViewMatrix ( 3, 3 ) = 1.0f;
+    ViewMatrix ( 3, 3 ) = 1.0f;*/
     }
 
 void FCameraInfo::UpdateProjectionMatrix ( float AspectRatio )

@@ -183,7 +183,7 @@ class CLevel : public CObject
 
             if (bIsPlaying)
                 {
-                newActor->BeginPlay ();
+                newActor->BeginPlay ();               
                 }
 
             return newActor;

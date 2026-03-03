@@ -17,11 +17,11 @@ class CCameraComponent : public CTransformComponent
         virtual void OnBeginPlay () override;
         FMat4 GetViewMatrix () const;
         FMat4 GetProjectionMatrix ( float AspectRatio ) const;
-        FMat4 GetProjectionMatrix () const;
+        
 
         // Для удобства - получить всю информацию о камере одним вызовом
         FCameraInfo GetCameraInfo ( float AspectRatio ) const;
-        FCameraInfo GetCameraInfo () const;
+        
         bool IsVisible () const { return bIsVisible; }
         void SetCameraVisible ( bool value ) { bIsVisible = value; }
 

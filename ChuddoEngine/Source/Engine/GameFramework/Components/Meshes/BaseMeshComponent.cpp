@@ -57,7 +57,7 @@ void CBaseMeshComponent::OnBeginPlay ()
         }
     }
 
-FMeshInfo CBaseMeshComponent::GetMeshInfo () const
+FMeshInfo CBaseMeshComponent::GetMeshInfo () 
     {
     FMeshInfo meshInfo;
 
@@ -65,6 +65,7 @@ FMeshInfo CBaseMeshComponent::GetMeshInfo () const
         {
         return meshInfo;
         }
+    if (bIsTransformDirty) this->UpdateTransform ();
 
     meshInfo.VertexBuffer = m_VertexBuffer;
     meshInfo.VertexCount = m_VertexCount;
