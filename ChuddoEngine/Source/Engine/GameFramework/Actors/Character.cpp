@@ -14,7 +14,7 @@ CCharacter::CCharacter ( CObject * inOwner, const std::string & DisplayName )
     : Super ( inOwner, DisplayName )
     {
     CreateCharacterMovementComponent ();
-
+    SetMovableState ( EMovableState::DYNAMIC );
     Capsule = AddDefaultSubObject<CCapsuleComponent> ( "Capsule" );
     Capsule->SetHalfHeight ( 9.f );
     Capsule->SetRadius ( 1.8f );
@@ -82,18 +82,7 @@ void CCharacter::BeginPlay ()
 
 void CCharacter::Tick ( float DeltaTime )
     {
-    Super::Tick ( DeltaTime );
-    float dist = ( terrainMesh->GetLocation () - Camera->GetLocation () ).Length ();
-    static float speedTimer = 0.f;
-    speedTimer += DeltaTime;
-    if (speedTimer >= 1.f)
-        {
-        LOG_INFO (  );
-        LOG_INFO ( "Distance ",dist);
-        LOG_INFO (  );
-        speedTimer = 0.f;
-        }
-
+    Super::Tick ( DeltaTime );   
     }
 
 void CCharacter::EndPlay ()
@@ -165,6 +154,7 @@ bool CCharacter::IsJumping () const
 
 void CCharacter::SpawnCube ()
     {
+    BeginPlay ();
     if (!GetWorld () || !GetWorld ()->GetCurrentLevel ()) return;
 
     auto level = GetWorld ()->GetCurrentLevel ();
@@ -175,18 +165,18 @@ void CCharacter::SpawnCube ()
     if (!cubeActor) return;
 
     auto cubemesh = cubeActor->AddDefaultSubObject<CStaticMeshComponent> ( "Testmesh" );
-    cubeActor->BeginPlay ();
     auto box = cubeActor->AddDefaultSubObject<CBoxComponent> ( "CubeBox" );
 
     box->SetHalfExtents ( FVector ( 5.f, 5.f, 5.f ) );
     cubeActor->SetRootComponent ( cubemesh );
     cubemesh->SetCollisionComponent ( box );
     box->AttachTo ( cubemesh );
-    box->SetChannelAsInteractable ();
+    box->SetChannelAsDynamic ();
     cubeActor->SetCollisionEnabled (true); // по умолчанию true
     cubeActor->SetActorLocation ( spawnLocation, true );
     cubeActor->SetMovableState ( EMovableState::DYNAMIC );
-    cubemesh->UpdateTransform ();
+   
+    cubeActor->BeginPlay ();
 
     LOG_DEBUG ( "[CHARACTER] Test cube spawned at: ", cubeActor->GetActorLocation () );
     }

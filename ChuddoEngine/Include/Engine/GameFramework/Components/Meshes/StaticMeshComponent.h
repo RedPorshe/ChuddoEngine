@@ -1,6 +1,8 @@
 #pragma once
 #include "BaseMeshComponent.h"
 
+struct FMeshVertex;
+
 class CStaticMeshComponent : public CBaseMeshComponent
 	{
 	CHUDDO_DECLARE_CLASS ( CStaticMeshComponent, CBaseMeshComponent );

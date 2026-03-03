@@ -273,6 +273,7 @@ class CActor : public CObject
         bool bIsAttached = false;
         bool bIsPendingToDestroy = false;
         bool bIsHiddenInGame = false;
+       
 
         // Debug
         bool m_bDrawCollisions = false;

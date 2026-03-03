@@ -26,7 +26,7 @@ class CBaseComponent : public CObject
 	protected:
 		std::vector<CBaseComponent *> OwnedComponents;
 		std::vector<CActor *> AttachedActors;
-		bool bIsComponentTick { false };
+		bool bIsComponentTick { true };
 		bool bIsInitialized { false };
 		bool bIsAutoInit { true };
 		CActor * ActorOwner = nullptr;

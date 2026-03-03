@@ -248,7 +248,7 @@ bool CVulkanContext::CreateInstance ()
     AppInfo.engineVersion = VK_MAKE_VERSION ( 1, 0, 0 );
     AppInfo.pApplicationName = m_Info.WindowInfo.Title.c_str ();
     AppInfo.applicationVersion = VK_MAKE_VERSION ( 1, 0, 0 );
-    AppInfo.apiVersion = VK_API_VERSION_1_4;
+    AppInfo.apiVersion = VK_API_VERSION_1_3;
 
     VkInstanceCreateInfo InstanceInfo {};
     InstanceInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;

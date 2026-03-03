@@ -37,7 +37,15 @@ CActor::~CActor ()
 void CActor::BeginPlay ()
     {
     LOG_DEBUG ( "[ACTOR] BeginPlay: ", GetName () );
-
+    if (GetActorLocation ().IsZero ())
+        {
+        if (GetRootComponent () && GetRootComponent ()->IdDyrty())
+            {
+            LOG_WARN ( "[",GetName(), "] Transform on begin play Dirty updating transform");
+            GetRootComponent ()->UpdateTransform ();
+            LOG_DEBUG ( "[", GetName (), "] Transform updated" );
+            }
+        }
     for (auto comp : ActorComponents)
         {
         comp->OnBeginPlay ();
@@ -47,10 +55,10 @@ void CActor::BeginPlay ()
             }
         }
 
-    if (RootComponent)
+    if (GetRootComponent())
         {
-       this-> RootComponent->SetCollisionEnabled ( bIsCollisionEnabled );
-       this->RootComponent->UpdateTransform ();
+       this->GetRootComponent ()->SetCollisionEnabled ( bIsCollisionEnabled );
+       this->GetRootComponent ()->UpdateTransform ();
         }
     }
 

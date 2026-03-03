@@ -2,13 +2,13 @@
 #include "Core/Object.h"
 #include <vector>
 #include <memory>
-
+#include "Render/RenderInfo.h"
 // Forward declarations
 class CGameInstance;
 class CLevel;
 class CGameMode;
-struct FRenderInfo;
-struct FCameraInfo;
+//struct FRenderInfo;
+//struct FCameraInfo;
 
 class CWorld : public CObject
     {
@@ -72,8 +72,8 @@ class CWorld : public CObject
 
     protected:
         bool HasAnyActorWithDebugCollisions () const;
-        FRenderInfo * m_RenderInfo = nullptr;
-        FCameraInfo * m_CameraInfo = nullptr;
+        FRenderInfo  m_RenderInfo ;
+        FCameraInfo  m_CameraInfo ;
     };
 
 #include "GameMode.h"
