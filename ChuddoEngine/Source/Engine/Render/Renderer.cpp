@@ -559,24 +559,24 @@ void CRenderer::RenderWorld ( VkCommandBuffer CommandBuffer, uint32_t ImageIndex
 	// Структуры для push constants
 	struct FCommonPushConstants
 		{
-		FMat4 view;
-		FMat4 projection;
-		FMat4 model;
+		glm::mat4x4 view;
+		glm::mat4x4 projection;
+		glm::mat4x4 model;
 		// Дополнительные параметры в зависимости от типа
 		float params[ 8 ];
 		} pushConstants;
 
 	struct FMeshPushConstants
 		{
-		FMat4 view;
-		FMat4 projection;
-		FMat4 model;
+		glm::mat4x4 view;
+		glm::mat4x4 projection;
+		glm::mat4x4 model;
 		} meshPushConstants;
 
-	pushConstants.view = m_RenderInfo.Camera.GetViewMatrix ();
-	pushConstants.projection = m_RenderInfo.Camera.GetProjectionMatrix ();
-	meshPushConstants.view = m_RenderInfo.Camera.GetViewMatrix ();
-	meshPushConstants.projection = m_RenderInfo.Camera.GetProjectionMatrix ();
+	pushConstants.view = CEMath::ToGLM( m_RenderInfo.Camera.GetViewMatrix ());
+	pushConstants.projection = CEMath::ToGLM (m_RenderInfo.Camera.GetProjectionMatrix ());
+	meshPushConstants.view = CEMath::ToGLM(m_RenderInfo.Camera.GetViewMatrix ());
+	meshPushConstants.projection = CEMath::ToGLM( m_RenderInfo.Camera.GetProjectionMatrix ());
 
 	// ========== РЕНДЕР СТАТИЧЕСКИХ МЕШЕЙ ==========
 	VkPipeline currentMeshPipeline = VK_NULL_HANDLE;
@@ -608,7 +608,7 @@ void CRenderer::RenderWorld ( VkCommandBuffer CommandBuffer, uint32_t ImageIndex
 
 		vkCmdBindPipeline ( CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, currentMeshPipeline );
 
-		meshPushConstants.model = mesh.Model;
+		meshPushConstants.model = CEMath::ToGLM( mesh.Model);
 		
 
 		vkCmdPushConstants (
@@ -659,7 +659,7 @@ void CRenderer::RenderWorld ( VkCommandBuffer CommandBuffer, uint32_t ImageIndex
 				continue;
 				}
 
-			pushConstants.model = terrain.Model;
+			pushConstants.model = CEMath::ToGLM(terrain.Model);
 
 			// Заполняем параметры террейна
 			pushConstants.params[ 0 ] = terrain.Params.TilingFactor;

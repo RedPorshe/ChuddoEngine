@@ -72,8 +72,7 @@ class CWorld : public CObject
 
     protected:
         bool HasAnyActorWithDebugCollisions () const;
-        FRenderInfo  m_RenderInfo ;
-        FCameraInfo  m_CameraInfo ;
+        FCameraInfo CachedCamera {};
     };
 
 #include "GameMode.h"

@@ -13,8 +13,7 @@ CWorld::CWorld ( CObject * inOwner, const std::string & displayName )
     : Super ( inOwner, displayName )
     {
     OwningGameInstance = dynamic_cast< CGameInstance * >( inOwner );
-    m_RenderInfo =  FRenderInfo ();
-    m_CameraInfo =  FCameraInfo ();
+  
        // 1. Создаем GameMode если его нет
     if (!CurrentGameMode)
         {
@@ -219,7 +218,7 @@ void CWorld::BeginPlay ()
 
     bIsPlaying = true;
     LOG_DEBUG ( "[WORLD] BeginPlay: ", GetName () );
-    m_RenderInfo = CollectRenderInfo ();
+  
  
 
     if (CurrentGameMode)
@@ -236,7 +235,7 @@ void CWorld::BeginPlay ()
 void CWorld::Tick ( float deltaTime )
     {
     CurrentDeltaTime = deltaTime;
-    m_RenderInfo = CollectRenderInfo ();
+   
     if (!bIsPlaying) return;
 
     // Tick GameMode
@@ -276,13 +275,18 @@ void CWorld::EndPlay ()
 
 FRenderInfo CWorld::CollectRenderInfo ()
     {
-    m_RenderInfo.Clear ();
-    m_CameraInfo.Clear ();
-    // 1. Собираем камеру
-    m_CameraInfo = FindActiveCamera ();
-   
-    m_RenderInfo.Camera = m_CameraInfo;
-    // 2. Собираем меши, террейны и коллизии для рендера
+    FRenderInfo Info {};   
+     auto NewCamera = FindActiveCamera ();
+    
+     if (NewCamera.Location !=  CachedCamera.Location
+          && NewCamera.ViewMatrix != CachedCamera.ViewMatrix)
+         {
+         CachedCamera = NewCamera;
+         }
+     Info.Camera = CachedCamera;
+
+    
+  
     if (CurrentLevel)
         {
         const auto & actors = CurrentLevel->GetActors ();
@@ -293,45 +297,43 @@ FRenderInfo CWorld::CollectRenderInfo ()
 
             FRenderCollection renderCollection = actor->GetRenderInfo ();
 
-            // Добавляем меши
+           
             for (const auto & mesh : renderCollection.Meshes)
                 {
                 if (mesh.IsValid ())
                     {
-                    m_RenderInfo.AddMesh ( mesh );
+                    Info.AddMesh ( mesh );
                     }
                 }
 
-                // Добавляем террейны
             for (const auto & terrain : renderCollection.Terrains)
                 {
                 if (terrain.IsValid ())
                     {
-                    m_RenderInfo.AddTerrain ( terrain );
+                    Info.AddTerrain ( terrain );
                     }
                 }
 
-                // Добавляем отладочные коллизии
+        
             for (const auto & collision : renderCollection.DebugCollisions)
                 {
                 if (collision.IsValid ())
                     {
-                    m_RenderInfo.AddDebugCollision ( collision );
+                    Info.AddDebugCollision ( collision );
                     }
                 }
 
             for (const auto & TerWire : renderCollection.TerrainWireframes)
                 {
-                m_RenderInfo.AddTerrainWireframe ( TerWire );
+                Info.AddTerrainWireframe ( TerWire );
                 }
             }
         }
 
-        // 3. Устанавливаем флаги
-    m_RenderInfo.HasInfo = !m_RenderInfo.RenderMeshes.empty () || !m_RenderInfo.Terrains.empty ();
-    m_RenderInfo.bDrawCollisions = HasAnyActorWithDebugCollisions ();
+    Info.HasInfo = !Info.RenderMeshes.empty () || !Info.Terrains.empty ();
+    Info.bDrawCollisions = HasAnyActorWithDebugCollisions ();
 
-    return m_RenderInfo;
+    return Info;
     }
 
 bool CWorld::HasAnyActorWithDebugCollisions () const
@@ -348,8 +350,8 @@ bool CWorld::HasAnyActorWithDebugCollisions () const
 
 FCameraInfo CWorld::FindActiveCamera ()
     {
-    m_CameraInfo.Clear ();
-
+    FCameraInfo Info {};
+    
     if (CurrentLevel)
         {
         const auto & actors = CurrentLevel->GetActors ();
@@ -360,8 +362,9 @@ FCameraInfo CWorld::FindActiveCamera ()
                 {
                 float aspectRatio = CEngine::Get ().GetWindow ()->GetAspectRatio ();
                 if (aspectRatio <= 0.0f) aspectRatio = 16.0f / 9.0f;
-                m_CameraInfo = camera->GetCameraInfo ( aspectRatio );
-                return m_CameraInfo;
+                
+                Info = camera->GetCameraInfo ( aspectRatio );               
+                return Info;
                 }
             }
         }
@@ -370,20 +373,20 @@ FCameraInfo CWorld::FindActiveCamera ()
     float aspectRatio = CEngine::Get ().GetWindow ()->GetAspectRatio ();
     if (aspectRatio <= 0.0001f) aspectRatio = 16.0f / 9.0f;
 
-    m_CameraInfo.Location = { 10.f, 5.f, 10.f };
-    m_CameraInfo.ViewTarget = { 0.f, 0.f, 0.f };
-    m_CameraInfo.NearPlane = 0.1f;
-    m_CameraInfo.FarPlane = 1000.f;
-    m_CameraInfo.FOV = 90.f;
-    m_CameraInfo.ViewMatrix = FMat4::LookAtMatrix ( m_CameraInfo.Location, m_CameraInfo.ViewTarget, -FVector::Up () );
-    m_CameraInfo.ProjectionMatrix = FMat4::PerspectiveMatrix (
-        m_CameraInfo.FOV * CEMath::DEG_TO_RAD,
+    Info.Location = { 10.f, 5.f, 10.f };
+    Info.ViewTarget = { 0.f, 0.f, 0.f };
+    Info.NearPlane = 0.1f;
+    Info.FarPlane = 1000.f;
+    Info.FOV = 90.f;
+    Info.ViewMatrix = FMat4::LookAtMatrix ( Info.Location, Info.ViewTarget, -FVector::Up () );
+    Info.ProjectionMatrix = FMat4::PerspectiveMatrix (
+        Info.FOV * CEMath::DEG_TO_RAD,
         aspectRatio,
-        m_CameraInfo.NearPlane,
-        m_CameraInfo.FarPlane
+        Info.NearPlane,
+        Info.FarPlane
     );
 
-    return  m_CameraInfo;
+    return  Info;
     }
 
     // ========== SEARCH/QUERY ==========

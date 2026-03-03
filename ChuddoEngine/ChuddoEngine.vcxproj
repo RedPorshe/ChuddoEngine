@@ -94,7 +94,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>E:\Libs\glfw-3.4.bin.WIN64\include;C:\VulkanSDK\Include;E:\Projects\ChuddoEngine\ChuddoEngine\Include\Engine\GameFramework;E:\Projects\ChuddoEngine\ChuddoEngine\Include\Engine;E:\Projects\ChuddoEngine\ChuddoEngine\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>E:\Libs\glfw-3.4.bin.WIN64\include;$(VULKAN_SDK)Include;$(SolutionDir)ChuddoEngine\Include\Engine\GameFramework;$(SolutionDir)ChuddoEngine\Include\Engine;$(SolutionDir)ChuddoEngine\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -115,7 +115,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>E:\Libs\glfw-3.4.bin.WIN64\include;C:\VulkanSDK\Include;E:\Projects\ChuddoEngine\ChuddoEngine\Include\Engine\GameFramework;E:\Projects\ChuddoEngine\ChuddoEngine\Include\Engine;E:\Projects\ChuddoEngine\ChuddoEngine\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>E:\Libs\glfw-3.4.bin.WIN64\include;$(VULKAN_SDK)Include;$(SolutionDir)ChuddoEngine\Include\Engine\GameFramework;$(SolutionDir)ChuddoEngine\Include\Engine;$(SolutionDir)ChuddoEngine\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -134,7 +134,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>E:\Libs\glfw-3.4.bin.WIN64\include;C:\VulkanSDK\Include;E:\Projects\ChuddoEngine\ChuddoEngine\Include\Engine\GameFramework;E:\Projects\ChuddoEngine\ChuddoEngine\Include\Engine;E:\Projects\ChuddoEngine\ChuddoEngine\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>E:\Libs\glfw-3.4.bin.WIN64\include;$(VULKAN_SDK)Include;$(SolutionDir)ChuddoEngine\Include\Engine\GameFramework;$(SolutionDir)ChuddoEngine\Include\Engine;$(SolutionDir)ChuddoEngine\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -155,7 +155,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>E:\Libs\glfw-3.4.bin.WIN64\include;C:\VulkanSDK\Include;E:\Projects\ChuddoEngine\ChuddoEngine\Include\Engine\GameFramework;E:\Projects\ChuddoEngine\ChuddoEngine\Include\Engine;E:\Projects\ChuddoEngine\ChuddoEngine\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>E:\Libs\glfw-3.4.bin.WIN64\include;$(VULKAN_SDK)Include;$(SolutionDir)ChuddoEngine\Include\Engine\GameFramework;$(SolutionDir)ChuddoEngine\Include\Engine;$(SolutionDir)ChuddoEngine\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
