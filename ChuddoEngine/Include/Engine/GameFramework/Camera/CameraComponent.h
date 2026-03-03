@@ -1,7 +1,8 @@
 #pragma once
 
 #include "Components/TransformComponent.h"
-struct FCameraInfo;
+#include "Render/RenderInfo.h"
+
 
 
 class CCameraComponent : public CTransformComponent
@@ -20,7 +21,7 @@ class CCameraComponent : public CTransformComponent
         
 
         // Для удобства - получить всю информацию о камере одним вызовом
-        FCameraInfo GetCameraInfo ( float AspectRatio ) const;
+        FCameraInfo GetCameraInfo ( float AspectRatio ) ;
         
         bool IsVisible () const { return bIsVisible; }
         void SetCameraVisible ( bool value ) { bIsVisible = value; }
@@ -31,13 +32,14 @@ class CCameraComponent : public CTransformComponent
         float GetFOV () const { return FieldOfView; }
         float GetNearClipPlane () const { return NearClipPlane; }
         float GetFarClipPlane () const { return FarClipPlane; }
+        void UpdateInfo ();
     protected:
         bool bIsVisible = true;
         // Camera-specific properties
         float FieldOfView = 90.0f;
         float NearClipPlane = 0.1f;
         float FarClipPlane = 5000.0f;
-
+        FCameraInfo m_CameraInfo;
     };
 
 REGISTER_CLASS_FACTORY ( CCameraComponent );

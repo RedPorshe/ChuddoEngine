@@ -1,5 +1,6 @@
 #include "Render/Vulkan/Managers/PipelineManager.h"
 #include "Render/Vulkan/Managers/WireframePipeline.h"
+#include "Render/Vulkan/Managers/DescriptorManager.h"
 #include "Core/EngineInfo.h"
 #include "Render/Vulkan/Managers/DeviceManager.h"
 #include "Render/Vulkan/Managers/RenderPassManager.h"
@@ -819,6 +820,7 @@ VkPipeline CPipelineManager::CreateTrianglePipeline ( VkRenderPass RenderPass )
 // Vertex Input Helpers
 //=============================================================================
 
+
 VkPipeline CPipelineManager::CreateMeshPipeLine ( VkRenderPass RenderPass )
     {
     std::string PipelineName = "StaticMesh";
@@ -827,14 +829,30 @@ VkPipeline CPipelineManager::CreateMeshPipeLine ( VkRenderPass RenderPass )
         return GetPipeline ( PipelineName );
         }
 
-        // Создаём push constants для матриц
-    std::vector<VkPushConstantRange> pushConstants ( 1 );
-    pushConstants[ 0 ].stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-    pushConstants[ 0 ].offset = 0;
-    pushConstants[ 0 ].size = 3 * sizeof ( FMat4 ); // view, projection, model
+        // Получаем дескрипторные layout'ы от DescriptorManager
+    VkDescriptorSetLayout globalLayout = m_DescMgr->GetGlobalLayout ();
+    VkDescriptorSetLayout perObjectLayout = m_DescMgr->GetPerObjectLayout ();
 
-    // Create pipeline layout with push constants
-    VkPipelineLayout layout = CreatePipelineLayout ( PipelineName+"Layout", {}, pushConstants );
+    if (globalLayout == VK_NULL_HANDLE || perObjectLayout == VK_NULL_HANDLE)
+        {
+        LogError ( "Failed to get descriptor set layouts" );
+        return VK_NULL_HANDLE;
+        }
+
+    std::vector<VkDescriptorSetLayout> descriptorLayouts = { globalLayout, perObjectLayout };
+
+    // Push constants только для model matrix (так как view/projection в дескрипторах)
+    std::vector<VkPushConstantRange> pushConstants ( 1 );
+    pushConstants[ 0 ].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    pushConstants[ 0 ].offset = 0;
+    pushConstants[ 0 ].size = sizeof ( glm::mat4x4 ); // Только model matrix
+
+    // Create pipeline layout with descriptor sets AND push constants
+    VkPipelineLayout layout = CreatePipelineLayout (
+        PipelineName + "Layout",
+        descriptorLayouts,  // Теперь передаём дескрипторные layout'ы
+        pushConstants );     // И push constants
+
     if (layout == VK_NULL_HANDLE)
         {
         LogError ( "Failed to create StaticMesh pipeline layout" );
@@ -850,19 +868,16 @@ VkPipeline CPipelineManager::CreateMeshPipeLine ( VkRenderPass RenderPass )
         LogError ( "Shader modules are invalid!" );
         return VK_NULL_HANDLE;
         }
-       
+
     FVertexInputDescription vertexInput;
-
-    vertexInput.Bindings.push_back( FMeshVertex::GetBindingDescription ());
+    vertexInput.Bindings.push_back ( FMeshVertex::GetBindingDescription () );
     vertexInput.Attributes = FMeshVertex::GetAttributeDescriptions ();
-
-
 
     FGraphicsPipelineConfig config;
     config.VertexInput = vertexInput;
     config.Topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
     config.PolygonMode = VK_POLYGON_MODE_FILL;
-    config.CullMode = VK_CULL_MODE_NONE ;
+    config.CullMode = VK_CULL_MODE_NONE;
     config.FrontFace = VK_FRONT_FACE_CLOCKWISE;
     config.DepthTestEnable = VK_TRUE;
     config.DepthWriteEnable = VK_TRUE;
@@ -875,6 +890,8 @@ VkPipeline CPipelineManager::CreateMeshPipeLine ( VkRenderPass RenderPass )
     return CreateGraphicsPipeline ( PipelineName, shaders, layout, RenderPass, config );
     }
 
+
+
 VkPipeline CPipelineManager::CreateTerrainPipeline ( VkRenderPass RenderPass )
     {
     if (HasPipeline ( "TerrainPipeline" ))
@@ -882,33 +899,34 @@ VkPipeline CPipelineManager::CreateTerrainPipeline ( VkRenderPass RenderPass )
         return GetPipeline ( "TerrainPipeline" );
         }
 
-        // Специальный vertex input для террейна (может быть оптимизирован)
-    FVertexInputDescription terrainVertexInput;
+        // Получаем глобальный layout дескрипторов
+    VkDescriptorSetLayout globalLayout = m_DescMgr->GetGlobalLayout ();
+    if (globalLayout == VK_NULL_HANDLE)
+        {
+        LogError ( "Failed to get global descriptor set layout" );
+        return VK_NULL_HANDLE;
+        }
 
-    VkVertexInputBindingDescription binding {};
-    binding.binding = 0;
-    binding.stride = sizeof ( FTerrainVertex ); // или специальная структура FTerrainVertex
-    binding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-    terrainVertexInput.Bindings.push_back ( binding );
-     
+    std::vector<VkDescriptorSetLayout> descriptorLayouts = { globalLayout };
 
-    // Push constants для террейна (может быть больше параметров)
+    // Push constants только для model matrix и параметров террейна
     std::vector<VkPushConstantRange> pushConstants ( 1 );
     pushConstants[ 0 ].stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
     pushConstants[ 0 ].offset = 0;
-    pushConstants[ 0 ].size = sizeof ( FMat4 ) * 3 + sizeof ( float ) * 4; // view + proj + model + terrain params
+    pushConstants[ 0 ].size = sizeof ( glm::mat4x4 ) + sizeof ( glm::vec4 ); // model + terrainParams
 
-
-
-    VkPipelineLayout layout = CreatePipelineLayout ( "TerrainLayout", {}, pushConstants );
+    VkPipelineLayout layout = CreatePipelineLayout ( "TerrainLayout", descriptorLayouts, pushConstants );
     if (layout == VK_NULL_HANDLE)
         {
         LogError ( "Failed to create Terrain pipeline layout" );
         return VK_NULL_HANDLE;
         }
 
-    terrainVertexInput.Attributes = FTerrainVertex::GetAttributeDescriptions ();;
-        // Специальные шейдеры для террейна
+    FVertexInputDescription terrainVertexInput;
+    VkVertexInputBindingDescription binding = FTerrainVertex::GetBindingDescription ();
+    terrainVertexInput.Bindings.push_back ( binding );
+    terrainVertexInput.Attributes = FTerrainVertex::GetAttributeDescriptions ();
+
     FShaderModule vertShader = LoadShaderModule ( "Assets/Shaders/Terrain.vert", VK_SHADER_STAGE_VERTEX_BIT );
     FShaderModule fragShader = LoadShaderModule ( "Assets/Shaders/Terrain.frag", VK_SHADER_STAGE_FRAGMENT_BIT );
 
@@ -922,8 +940,8 @@ VkPipeline CPipelineManager::CreateTerrainPipeline ( VkRenderPass RenderPass )
     config.VertexInput = terrainVertexInput;
     config.Topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
     config.PolygonMode = VK_POLYGON_MODE_FILL;
-    config.CullMode = VK_CULL_MODE_BACK_BIT  ;
-    config.FrontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE ;
+    config.CullMode = VK_CULL_MODE_BACK_BIT;
+    config.FrontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
     config.DepthTestEnable = VK_TRUE;
     config.DepthWriteEnable = VK_TRUE;
     config.DepthCompareOp = VK_COMPARE_OP_LESS;
@@ -935,6 +953,8 @@ VkPipeline CPipelineManager::CreateTerrainPipeline ( VkRenderPass RenderPass )
     return CreateGraphicsPipeline ( "TerrainPipeline", shaders, layout, RenderPass, config );
     }
 
+
+
 VkPipeline CPipelineManager::CreateWireframePipeline ( VkRenderPass RenderPass )
     {
     std::string PipelineName = "WireframePipeline";
@@ -943,20 +963,29 @@ VkPipeline CPipelineManager::CreateWireframePipeline ( VkRenderPass RenderPass )
         return GetPipeline ( PipelineName );
         }
 
-        // Push constants для матриц (view, projection, model)
+        // Получаем глобальный layout дескрипторов
+    VkDescriptorSetLayout globalLayout = m_DescMgr->GetGlobalLayout ();
+    if (globalLayout == VK_NULL_HANDLE)
+        {
+        LogError ( "Failed to get global descriptor set layout" );
+        return VK_NULL_HANDLE;
+        }
+
+    std::vector<VkDescriptorSetLayout> descriptorLayouts = { globalLayout };
+
+    // Push constants только для model matrix
     std::vector<VkPushConstantRange> pushConstants ( 1 );
     pushConstants[ 0 ].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
     pushConstants[ 0 ].offset = 0;
-    pushConstants[ 0 ].size = 3 * sizeof ( FMat4 ); // view, projection, model
+    pushConstants[ 0 ].size = sizeof ( glm::mat4x4 ); // Только model
 
-    VkPipelineLayout layout = CreatePipelineLayout ( PipelineName + "Layout", {}, pushConstants );
+    VkPipelineLayout layout = CreatePipelineLayout ( PipelineName + "Layout", descriptorLayouts, pushConstants );
     if (layout == VK_NULL_HANDLE)
         {
         LogError ( "Failed to create Wireframe pipeline layout" );
         return VK_NULL_HANDLE;
         }
 
-        // Загружаем шейдеры для wireframe
     FShaderModule vertShader = LoadShaderModule ( "Assets/Shaders/Wireframe.vert", VK_SHADER_STAGE_VERTEX_BIT );
     FShaderModule fragShader = LoadShaderModule ( "Assets/Shaders/Wireframe.frag", VK_SHADER_STAGE_FRAGMENT_BIT );
 
@@ -966,36 +995,26 @@ VkPipeline CPipelineManager::CreateWireframePipeline ( VkRenderPass RenderPass )
         return VK_NULL_HANDLE;
         }
 
-        // Создаём описание вершин для wireframe
     FVertexInputDescription vertexInput;
-    VkVertexInputBindingDescription binding = FWireframeVertex::GetBindingDescription ();
-    vertexInput.Bindings.push_back ( binding );
+    vertexInput.Bindings.push_back ( FWireframeVertex::GetBindingDescription () );
     vertexInput.Attributes = FWireframeVertex::GetAttributeDescriptions ();
 
-    // Конфигурация для wireframe (линии)
     FGraphicsPipelineConfig config;
     config.VertexInput = vertexInput;
-    config.Topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST; // Рисуем линии
+    config.Topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
     config.PolygonMode = VK_POLYGON_MODE_FILL;
-    config.CullMode = VK_CULL_MODE_NONE; // Не отсекаем для отладки
+    config.CullMode = VK_CULL_MODE_NONE;
     config.FrontFace = VK_FRONT_FACE_CLOCKWISE;
     config.DepthTestEnable = VK_TRUE;
-    config.DepthWriteEnable = VK_FALSE; // Не пишем в depth buffer для wireframe
-    config.DepthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL; // Разрешить рисовать поверх
+    config.DepthWriteEnable = VK_FALSE;
+    config.DepthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
     config.BlendEnable = VK_FALSE;
-    config.LineWidth = 2.0f; // Толщина линий
+    config.LineWidth = 2.0f;
     config.DynamicStates = GetDefaultDynamicStates ();
 
     std::vector<FShaderModule> shaders = { vertShader, fragShader };
 
-    VkPipeline pipeline = CreateGraphicsPipeline ( PipelineName, shaders, layout, RenderPass, config );
-
-    if (pipeline != VK_NULL_HANDLE)
-        {
-        LogDebug ( "Wireframe pipeline created successfully" );
-        }
-
-    return pipeline;
+    return CreateGraphicsPipeline ( PipelineName, shaders, layout, RenderPass, config );
     }
 
 FVertexInputDescription CPipelineManager::GetTriangleVertexInput () const

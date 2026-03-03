@@ -11,6 +11,7 @@ CTerrainMeshComponent::CTerrainMeshComponent ( CObject * inOwner, const std::str
     {
     m_PipelineName = "TerrainPipeline";
     LOG_DEBUG ( "TerrainMeshComponent created: ", GetName () );
+    
     }
 
 CTerrainMeshComponent::~CTerrainMeshComponent ()
@@ -32,6 +33,7 @@ void CTerrainMeshComponent::InitComponent ()
             m_TerrainComponent = owner->FindComponent<CTerrainComponent> ();
             if (m_TerrainComponent)
                 {
+                SetCollisionComponent ( m_TerrainComponent );
                 LOG_DEBUG ( "[", GetName (), "] Found TerrainComponent: ", m_TerrainComponent->GetName () );
                 }
             }
@@ -76,7 +78,9 @@ FTerrainRenderInfo CTerrainMeshComponent::GetTerrainInfo ()
     Info.IndexCount = m_IndexCount;
 
     // Матрица трансформации
-    Info.Model = GetTransformMatrix ();
+   // Info.Model = GetTransformMatrix ();
+    Info.Model = FMat4 (m_WorldTransform.Location,m_WorldTransform.Rotation,m_WorldTransform.Scale);
+
 
     // Данные о размерах террейна
     if (m_TerrainComponent)

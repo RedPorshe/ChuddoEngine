@@ -128,6 +128,7 @@ struct FCollisionDebugInfo
     ECollisionShape ShapeType = ECollisionShape::NONE;
     FVector WorldLocation = FVector::Zero ();
     FQuat WorldRotation = FQuat::Identity ();
+    FVector WorldScale = FVector::One ();
 
     union ParamsUnion
         {

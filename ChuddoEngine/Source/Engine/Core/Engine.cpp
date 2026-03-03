@@ -176,7 +176,7 @@ void CEngine::Start ()
 	{
 	CreateTestWorld ();
 
-	
+
 
 	MainLoop ();
 	}
@@ -194,23 +194,21 @@ CGameInstance & CEngine::GetGameInstance ()
 
 void CEngine::MainLoop ()
 	{
-	bIsRunning = true;
-	FRenderInfo InfoForRender {};
-	static int frameCount = 0;
-	static float time = 0.0000f;
+	bIsRunning = true;	
+
 	auto & GameInstance = CGameInstance::Get ();
 	GameInstance.Init ();
 
 	while (bIsRunning && !glfwWindowShouldClose ( Info.WindowHandle ))
 		{
+		m_RenderInfo->Clear ();
 		CalculateDeltaTime ();
 		Tick ( m_DeltaTime );
-		time += m_DeltaTime;
-		InfoForRender = UpdateRenderInfo ();
 
-		Renderer.get ()->SetInfoForRender ( InfoForRender );
+		UpdateRenderInfo ();
+
 		if (!Renderer.get ()->RenderScene ())
-			{			
+			{
 			static int errorcount = 0;
 			errorcount++;
 			LOG_ERROR ( "Failed to render scene" );
@@ -218,16 +216,9 @@ void CEngine::MainLoop ()
 				{
 				RequestExit ();
 				}
-			}
-		frameCount++;
-		if (time >= 1.f)
-			{
-			LOG_INFO ( "FPS: ", frameCount );
-			frameCount = 0;
-			time = 0.0000f;
-			}
-		InfoForRender.Clear ();
-		}	
+			}		
+		}
+	m_RenderInfo->Clear ();
 	}
 
 void CEngine::Tick ( float deltaTime )
@@ -242,7 +233,7 @@ void CEngine::Tick ( float deltaTime )
 		}
 	INPUT_SYSTEM->Update ( deltaTime );
 	CGameInstance::Get ().Tick ( deltaTime );
-	CollisionSystem.Update ( deltaTime );
+	CollisionSystem.Update ( deltaTime ); 
 	}
 
 void CEngine::CalculateDeltaTime ()
@@ -276,18 +267,16 @@ CEngine::CEngine ( FEngineInfo & EngineInfo ) :
 	Info ( EngineInfo )
 	{
 	m_LastFrameTime = std::chrono::steady_clock::now ();
+	m_RenderInfo = new FRenderInfo ();
+	m_RenderInfo->Clear ();
 	}
 
-FRenderInfo CEngine::UpdateRenderInfo ()
+void CEngine::UpdateRenderInfo ()
 	{
-	auto RenderInfo = CGameInstance::Get ().GetWorld ()->CollectRenderInfo ();
-
-	  
+	m_RenderInfo->Clear ();
+	CGameInstance::Get ().GetWorld ()->CollectRenderInfo ( m_RenderInfo );
 	static bool bGlobalDrawCollisions = true;
-	// Здесь можно проверить консольную переменную
-	RenderInfo.bDrawCollisions = bGlobalDrawCollisions || RenderInfo.HasDebugCollisions();
-
-	return RenderInfo;
+	m_RenderInfo->bDrawCollisions = bGlobalDrawCollisions || m_RenderInfo->HasDebugCollisions ();
 	}
 
 #include "Components/Meshes/TerrainMeshComponent.h"
@@ -299,19 +288,19 @@ void CEngine::CreateTestWorld ()
 		{
 		auto level = world->CreateLevel<CLevel> ( "Level" );
 		auto start = level->SpawnActor<CPlayerStart> ( "playStart" );
-	
-		
+
+
 		// Создаём террейн - компоненты создадутся внутри GenerateHilly
 		auto Terrain = level->SpawnActor<CTerrainActor> ( "Terrain" );
 
-		
+
 		//Terrain->GenerateHilly ( 45, 45, 15.f );
 		Terrain->GenerateNoise ( 100, 300, 25.f );
 		Terrain->SetActorLocation ( 0.f, 0.f, 0.f, true ); // true явно указываю что нужно телепортировать актора, потому что нету тиков
-		Terrain->SetDrawCollisions ( true );	
+		Terrain->SetDrawCollisions ( true );
 		float startHeight = Terrain->GetTerrainMeshComponent ()->GetTerrainComponent ()->GetHeightAtWorld ( FVector { 500.f, 150.3322f, 500.f } );
-		start->SetActorLocation ( FVector{ 500.f, startHeight+50.f, 500.f } , true); // true явно указываю что нужно телепортировать актора, потому что нету тиков
-		
+		start->SetActorLocation ( FVector { 500.f, startHeight + 50.f, 500.f }, true ); // true явно указываю что нужно телепортировать актора, потому что нету тиков
+
 		LOG_DEBUG ( "Total actors after spawn: ", level->GetNumActors () );
 
 		auto gameMode = world->CreateGameMode<CGameMode> ( "SuperGameMode" );

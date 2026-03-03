@@ -30,6 +30,8 @@ class CEngine
         void Start ();
         void RequestExit ();
         bool IsRunning () const { return bIsRunning; }
+
+        FRenderInfo * GetRenderInfo () const { return m_RenderInfo; }
         // GameInstance access
         CRenderer* GetRenderer () { return Renderer.get (); }
         CGameInstance & GetGameInstance (); 
@@ -44,12 +46,14 @@ class CEngine
         std::chrono::steady_clock::time_point m_LastFrameTime;
         bool bIsInitialized = false;
         bool bIsRunning = false;
-        FRenderInfo UpdateRenderInfo ();
+        void UpdateRenderInfo ();
         
         std::unique_ptr<CWindow>  Window = nullptr;
         std::unique_ptr<CRenderer>  Renderer = nullptr;
         CCollisionSystem & CollisionSystem;
         CInputSystem & InputSystem;
         FEngineInfo & Info;
+        FRenderInfo * m_RenderInfo = nullptr;
         CEngine (FEngineInfo& EngineInfo);
+        friend class CActor;
     };

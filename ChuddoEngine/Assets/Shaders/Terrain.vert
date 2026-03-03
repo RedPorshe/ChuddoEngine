@@ -6,13 +6,16 @@ layout(location = 1) in vec3 inNormal;
 layout(location = 2) in vec3 inColor;
 layout(location = 3) in vec2 inUV;
 
-// Push constants для матриц и параметров террейна
-layout(push_constant) uniform PushConstants {
+// Дескрипторный набор 0 для глобальных uniform-ов
+layout(set = 0, binding = 0) uniform GlobalUniform {
     mat4 view;
     mat4 projection;
+} global;
+
+// Push constants только для model matrix и параметров террейна
+layout(push_constant) uniform PushConstants {
     mat4 model;
-    // Дополнительные параметры террейна
-    vec4 terrainParams; // x = tiling factor, y = height scale, z = fog density, w = unused
+    vec4 terrainParams; // x = tiling factor, y = height scale, z = fog density, w = use texture flag
 } push;
 
 // Выходные данные для фрагментного шейдера
@@ -30,15 +33,16 @@ void main() {
     // Высота для цветовых градиентов
     fragHeight = inPosition.y;
     
-      mat3 normalMatrix = transpose(inverse(mat3(push.model)));
+    // Правильное преобразование нормали
+    mat3 normalMatrix = transpose(inverse(mat3(push.model)));
     fragNormal = normalize(normalMatrix * inNormal);
     
     // UV координаты с tiling
     fragUV = inUV * push.terrainParams.x;
     
-    // Цвет (можно использовать inColor или вычислять на основе высоты)
+    // Цвет
     fragColor = inColor;
     
-    // Финальная позиция
-    gl_Position = push.projection * push.view * worldPos;
+    // Финальная позиция с использованием глобальных матриц из дескрипторов
+    gl_Position = global.projection * global.view * worldPos;
 }

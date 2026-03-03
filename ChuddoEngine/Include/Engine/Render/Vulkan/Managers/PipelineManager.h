@@ -6,6 +6,8 @@
 #include <memory>
 
 struct FEngineInfo;
+class CDescriptorManager;
+
 
 struct FShaderModule
     {
@@ -97,11 +99,11 @@ class CPipelineManager final : public IVulkanManager
         VkShaderModule CreateShaderModule ( const std::vector<char> & Code );
         VkShaderModule LoadShader ( const std::string & Filename );
         FShaderModule LoadShaderModule ( const std::string & Filename, VkShaderStageFlagBits Stage );
-
+        void SetDescriptorManager ( CDescriptorManager * DescMgr ) { m_DescMgr = DescMgr; }
         // Pipeline layout creation with caching
         VkPipelineLayout CreatePipelineLayout (
             const std::string & LayoutName,
-            const std::vector<VkDescriptorSetLayout> & DescSetLayouts = {},
+            const std::vector<VkDescriptorSetLayout> & DescSetLayouts = {},  
             const std::vector<VkPushConstantRange> & PushConstants = {} );
 
         // Graphics pipeline creation with caching
@@ -135,7 +137,7 @@ class CPipelineManager final : public IVulkanManager
         VkPipeline CreateTrianglePipeline ( VkRenderPass RenderPass );
 
     private:
-
+        CDescriptorManager * m_DescMgr = nullptr;
         VkPipeline CreateMeshPipeLine ( VkRenderPass RenderPass );
         VkPipeline CreateTerrainPipeline ( VkRenderPass RenderPass );
         VkPipeline CreateWireframePipeline ( VkRenderPass RenderPass );

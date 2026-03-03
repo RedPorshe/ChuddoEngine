@@ -204,6 +204,9 @@
     <ClCompile Include="Source\Engine\GameFramework\Actors\AIController.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Engine\Render\Vulkan\Managers\DescriptorManager.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\Utils\Math\CE_MathConstants.h">
@@ -411,6 +414,9 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="Include\Engine\GameFramework\Actors\AIController.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Engine\Render\Vulkan\Managers\DescriptorManager.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>

@@ -4,6 +4,7 @@
 #include "Render/Vulkan/Managers/CommandManager.h"
 #include "Render/Vulkan/Managers/SyncManager.h"
 #include "Render/Vulkan/Managers/PipelineManager.h"
+#include "Render/Vulkan/Managers/DescriptorManager.h"
 #include "Render/Vulkan/Managers/BufferManager.h"
 #include "Render/Vulkan/Managers/RenderPassManager.h"
 #include "Render/Window.h"
@@ -66,6 +67,7 @@ bool CVulkanContext::Initialize ()
     m_Info.Vulkan.RenderPassManager = std::make_unique<CRenderPassManager> ( m_Info );
     m_Info.Vulkan.PipelineManager = std::make_unique<CPipelineManager> ( m_Info );
     m_Info.Vulkan.BufferManager = std::make_unique<CBufferManager> ( m_Info );
+    m_Info.Vulkan.DescriptorManager = std::make_unique<CDescriptorManager> ( m_Info );
 
     // Инициализируем в правильном порядке
     if (!m_Info.Vulkan.DeviceManager->Initialize ())
@@ -109,6 +111,15 @@ bool CVulkanContext::Initialize ()
         LogError ( "Failed to initialize BufferManager" );
         return false;
         }
+    if (!m_Info.Vulkan.DescriptorManager->Initialize ())
+        {
+        LogError ( "Failed to initialize DescriptorManager" );
+        return false;
+        }
+
+    auto * pipelineMgr = static_cast< CPipelineManager * >( m_Info.Vulkan.PipelineManager.get () );
+    auto * descMgr = static_cast< CDescriptorManager * >( m_Info.Vulkan.DescriptorManager.get () );
+    pipelineMgr->SetDescriptorManager ( descMgr );
 
     LogDebug ( "VulkanContext initialized successfully" );
     m_bInitialized = true;

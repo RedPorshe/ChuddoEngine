@@ -278,6 +278,9 @@ class CActor : public CObject
         // Debug
         bool m_bDrawCollisions = false;
         float DebugTimer = 0.f;
+        bool bIsStarted = false;
+        public:
+            bool ActorStartedBeginPlay () const { return bIsStarted; }
     };
 
     // ============================================================================

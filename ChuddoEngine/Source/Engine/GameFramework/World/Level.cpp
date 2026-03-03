@@ -77,6 +77,10 @@ void CLevel::Tick ( float DeltaTime )
 				{
 				actor->Tick ( DeltaTime );
 				}
+			if (!actor->ActorStartedBeginPlay ())
+				{
+				actor->BeginPlay ();
+				}
 			}
 		}
 	CollectAllPendingActors ();

@@ -1,10 +1,14 @@
 #include "Camera/CameraComponent.h"
 #include "Actors/Actor.h"
 #include "Render/RenderInfo.h"
+#include "Core/Engine.h"
+#include "Render/Window.h"
 
 CCameraComponent::CCameraComponent ( CObject * inOwner, const std::string & inDisplayName )
 	: Super ( inOwner, inDisplayName )
-	{}
+	{
+	m_CameraInfo.Clear ();
+	}
 
 CCameraComponent::~CCameraComponent ()
 	{}
@@ -17,6 +21,7 @@ void CCameraComponent::InitComponent ()
 void CCameraComponent::Tick ( float DeltaTime )
 	{
 	Super::Tick ( DeltaTime );
+	UpdateInfo ();
 	}
 
 void CCameraComponent::OnBeginPlay ()
@@ -26,22 +31,19 @@ void CCameraComponent::OnBeginPlay ()
 
 FMat4 CCameraComponent::GetViewMatrix () const
 	{
-		// Получаем мировую позицию и вращение из TransformComponent
 	FVector location = GetLocation ();
 	FQuat rotation = GetRotationQuat ();
-
-	// Стандартный up вектор в мировых координатах
 	FVector up = FVector::Up ();
 
-	// Направление взгляда (вперёд) в локальных координатах камеры - обычно по Z
-	FVector forward = rotation * FVector::Forward ();
+	
+	FVector forward = rotation * FVector::Forward (); 
 	forward.Normalize ();
 
-	// Цель = позиция + направление
-	FVector target = location + forward * NearClipPlane;
-	FMat4 result = FMat4::LookAtMatrix ( location, target, up );
+	float viewDistance = 1000.0f;
+	FVector target = location + forward * viewDistance;
 
-	return result;
+
+	return FMat4::LookAtMatrix ( location, target, up );
 	}
 
 FMat4 CCameraComponent::GetProjectionMatrix ( float AspectRatio ) const
@@ -55,24 +57,27 @@ FMat4 CCameraComponent::GetProjectionMatrix ( float AspectRatio ) const
 	}
 
 
-FCameraInfo CCameraComponent::GetCameraInfo ( float AspectRatio ) const
+FCameraInfo CCameraComponent::GetCameraInfo ( float AspectRatio ) 
 	{
-	FCameraInfo Info;
+	UpdateInfo ();	
+	return m_CameraInfo;
+	}
 
-	Info.Location = GetLocation ();
-
+void CCameraComponent::UpdateInfo ()
+	{ 
+	m_CameraInfo.Clear ();
+	m_CameraInfo.Location = GetLocation ();
 	// Направление взгляда
 	FQuat rotation = GetRotationQuat ();
 	FVector forward = rotation * FVector::Forward ();
 	forward.Normalize ();
-
-	Info.NearPlane = NearClipPlane;
-	Info.FarPlane = FarClipPlane;
-	Info.ViewTarget = Info.Location + forward * NearClipPlane;
-	Info.FOV = FieldOfView;
-	Info.ViewMatrix = GetViewMatrix ();
-	Info.ProjectionMatrix = GetProjectionMatrix ( AspectRatio );
-	
-	return Info;
+	float aspectRatio = CEngine::Get ().GetWindow ()->GetAspectRatio ();
+	if (aspectRatio <= 0.0f) aspectRatio = 16.0f / 9.0f;
+	m_CameraInfo.NearPlane = NearClipPlane;
+	m_CameraInfo.FarPlane = FarClipPlane;
+	m_CameraInfo.ViewTarget = m_CameraInfo.Location + forward * NearClipPlane;
+	m_CameraInfo.FOV = FieldOfView;
+	m_CameraInfo.ViewMatrix = GetViewMatrix ();
+	m_CameraInfo.ProjectionMatrix = GetProjectionMatrix ( aspectRatio );
 	}
 

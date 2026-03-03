@@ -172,6 +172,7 @@
     <ClCompile Include="Source\Engine\GameFramework\Components\CharacterMovementComponent.cpp" />
     <ClCompile Include="Source\Engine\GameFramework\Components\MovementComponent.cpp" />
     <ClCompile Include="Include\Engine\Render\Vulkan\Managers\WireframePipeline.cpp" />
+    <ClCompile Include="Source\Engine\Render\Vulkan\Managers\DescriptorManager.cpp" />
     <ClCompile Include="Source\Engine\Render\Vulkan\VertexStructs\TerrainVertex.cpp" />
     <ClCompile Include="Source\Engine\Render\Vulkan\VertexStructs\MeshVertex.cpp" />
     <ClCompile Include="Source\Engine\GameFramework\Actors\Character.cpp" />
@@ -276,6 +277,7 @@
     <ClInclude Include="Include\Engine\Render\RenderInfo.h" />
     <ClInclude Include="Include\Engine\Render\Vulkan\Managers\BufferManager.h" />
     <ClInclude Include="Include\Engine\Render\Vulkan\Managers\CommandManager.h" />
+    <ClInclude Include="Include\Engine\Render\Vulkan\Managers\DescriptorManager.h" />
     <ClInclude Include="Include\Engine\Render\Vulkan\Managers\DeviceManager.h" />
     <ClInclude Include="Include\Engine\Render\Vulkan\Managers\PipelineManager.h" />
     <ClInclude Include="Include\Engine\Render\Vulkan\Managers\RenderPassManager.h" />

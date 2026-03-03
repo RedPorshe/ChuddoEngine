@@ -10,436 +10,441 @@
 #include <algorithm>
 
 CWorld::CWorld ( CObject * inOwner, const std::string & displayName )
-    : Super ( inOwner, displayName )
-    {
-    OwningGameInstance = dynamic_cast< CGameInstance * >( inOwner );
-  
-       // 1. Создаем GameMode если его нет
-    if (!CurrentGameMode)
-        {
-        LOG_WARN ( "[WORLD] No GameMode found, creating default GameMode" );
-        CreateGameMode<CGameMode> ( "GameModeBase" );
-        }
-    }
+	: Super ( inOwner, displayName )
+	{
+	OwningGameInstance = dynamic_cast< CGameInstance * >( inOwner );
+
+	   // 1. Создаем GameMode если его нет
+	if (!CurrentGameMode)
+		{
+		LOG_WARN ( "[WORLD] No GameMode found, creating default GameMode" );
+		CreateGameMode<CGameMode> ( "GameModeBase" );
+		}
+	}
 
 CWorld::~CWorld ()
-    {
-    DumpState ();
+	{
+	DumpState ();
 
-    if (bIsPlaying)
-        {
-        EndPlay ();
-        }
+	if (bIsPlaying)
+		{
+		EndPlay ();
+		}
 
-    CurrentGameMode = nullptr;
-    Levels.clear ();
-    CurrentLevel = nullptr;
-    OwningGameInstance = nullptr;
-  
-    }
+	CurrentGameMode = nullptr;
+	Levels.clear ();
+	CurrentLevel = nullptr;
+	OwningGameInstance = nullptr;
 
-    // ========== LEVEL MANAGEMENT ==========
+	}
+
+	// ========== LEVEL MANAGEMENT ==========
 
 void CWorld::AddLevel ( CLevel * level )
-    {
-    if (!level) return;
+	{
+	if (!level) return;
 
-    level->OwningWorld = this;
-    Levels.push_back ( level );
+	level->OwningWorld = this;
+	Levels.push_back ( level );
 
-    LOG_DEBUG ( "[WORLD] Level added: ", level->GetName (),
-                " (Total levels: ", Levels.size (), ")" );
-    }
+	LOG_DEBUG ( "[WORLD] Level added: ", level->GetName (),
+				" (Total levels: ", Levels.size (), ")" );
+	}
 
 bool CWorld::RemoveLevel ( const std::string & levelName )
-    {
-    auto level = FindObjectByName ( levelName );
-    if (!level)
-        {
-        LOG_WARN ( "[WORLD] Level not found: ", levelName );
-        return false;
-        }
+	{
+	auto level = FindObjectByName ( levelName );
+	if (!level)
+		{
+		LOG_WARN ( "[WORLD] Level not found: ", levelName );
+		return false;
+		}
 
-    CLevel * levelPtr = dynamic_cast< CLevel * >( level );
-    if (!levelPtr)
-        {
-        LOG_ERROR ( "[WORLD] ERROR: Object '", levelName, "' is not a CLevel!" );
-        return false;
-        }
+	CLevel * levelPtr = dynamic_cast< CLevel * >( level );
+	if (!levelPtr)
+		{
+		LOG_ERROR ( "[WORLD] ERROR: Object '", levelName, "' is not a CLevel!" );
+		return false;
+		}
 
-    auto it = std::find ( Levels.begin (), Levels.end (), levelPtr );
-    if (it == Levels.end ())
-        {
-        LOG_ERROR ( "[WORLD] ERROR: Level '", levelName, "' not found in Levels vector!" );
-        return false;
-        }
+	auto it = std::find ( Levels.begin (), Levels.end (), levelPtr );
+	if (it == Levels.end ())
+		{
+		LOG_ERROR ( "[WORLD] ERROR: Level '", levelName, "' not found in Levels vector!" );
+		return false;
+		}
 
-    if (CurrentLevel == levelPtr)
-        {
-        LOG_DEBUG ( "[WORLD] Removing current level: ", levelName );
+	if (CurrentLevel == levelPtr)
+		{
+		LOG_DEBUG ( "[WORLD] Removing current level: ", levelName );
 
-        if (Levels.size () > 1)
-            {
-            auto levelIndex = std::distance ( Levels.begin (), it );
-            if (levelIndex < static_cast< int > ( Levels.size () ) - 1)
-                {
-                SetCurrentLevel ( Levels[ levelIndex + 1 ] );
-                }
-            else
-                {
-                SetCurrentLevel ( Levels[ levelIndex - 1 ] );
-                }
-            }
-        else
-            {
-            SetCurrentLevel ( nullptr );
-            }
-        }
+		if (Levels.size () > 1)
+			{
+			auto levelIndex = std::distance ( Levels.begin (), it );
+			if (levelIndex < static_cast< int > ( Levels.size () ) - 1)
+				{
+				SetCurrentLevel ( Levels[ levelIndex + 1 ] );
+				}
+			else
+				{
+				SetCurrentLevel ( Levels[ levelIndex - 1 ] );
+				}
+			}
+		else
+			{
+			SetCurrentLevel ( nullptr );
+			}
+		}
 
-    if (bIsPlaying)
-        {
-        levelPtr->EndPlay ();
-        }
+	if (bIsPlaying)
+		{
+		levelPtr->EndPlay ();
+		}
 
-    Levels.erase ( it );
-    levelPtr->OwningWorld = nullptr;
+	Levels.erase ( it );
+	levelPtr->OwningWorld = nullptr;
 
-    bool removed = RemoveOwnedObject ( levelName );
-    if (removed)
-        {
-        LOG_DEBUG ( "[WORLD] Level removed: ", levelName,
-                    " (Remaining levels: ", Levels.size (), ")" );
-        }
+	bool removed = RemoveOwnedObject ( levelName );
+	if (removed)
+		{
+		LOG_DEBUG ( "[WORLD] Level removed: ", levelName,
+					" (Remaining levels: ", Levels.size (), ")" );
+		}
 
-    return removed;
-    }
+	return removed;
+	}
 
 bool CWorld::RemoveLevel ( CLevel * level )
-    {
-    if (!level) return false;
+	{
+	if (!level) return false;
 
-    if (level->OwningWorld != this)
-        {
-        LOG_ERROR ( "[WORLD] ERROR: Level '", level->GetName (),
-                    "' does not belong to this world!" );
-        return false;
-        }
+	if (level->OwningWorld != this)
+		{
+		LOG_ERROR ( "[WORLD] ERROR: Level '", level->GetName (),
+					"' does not belong to this world!" );
+		return false;
+		}
 
-    return RemoveLevel ( level->GetName () );
-    }
+	return RemoveLevel ( level->GetName () );
+	}
 
 void CWorld::SetCurrentLevel ( CLevel * level )
-    {
-    if (!level)
-        {
-        if (CurrentLevel)
-            {
-            LOG_DEBUG ( "[WORLD] Current level cleared. Was: ", CurrentLevel->GetName () );
-            }
-        CurrentLevel = nullptr;
-        return;
-        }
+	{
+	if (!level)
+		{
+		if (CurrentLevel)
+			{
+			LOG_DEBUG ( "[WORLD] Current level cleared. Was: ", CurrentLevel->GetName () );
+			}
+		CurrentLevel = nullptr;
+		return;
+		}
 
-    bool belongsToWorld = false;
-    for (auto lvl : Levels)
-        {
-        if (lvl == level)
-            {
-            belongsToWorld = true;
-            break;
-            }
-        }
+	bool belongsToWorld = false;
+	for (auto lvl : Levels)
+		{
+		if (lvl == level)
+			{
+			belongsToWorld = true;
+			break;
+			}
+		}
 
-    if (!belongsToWorld)
-        {
-        LOG_ERROR ( "[WORLD] ERROR: Level '", level->GetName (),
-                    "' does not belong to this world!" );
-        return;
-        }
+	if (!belongsToWorld)
+		{
+		LOG_ERROR ( "[WORLD] ERROR: Level '", level->GetName (),
+					"' does not belong to this world!" );
+		return;
+		}
 
-    if (CurrentLevel == level)
-        {
-        LOG_WARN ( "[WORLD] Level '", level->GetName (), "' is already current" );
-        return;
-        }
+	if (CurrentLevel == level)
+		{
+		LOG_WARN ( "[WORLD] Level '", level->GetName (), "' is already current" );
+		return;
+		}
 
-    if (bIsPlaying && CurrentLevel)
-        {
-        CurrentLevel->EndPlay ();
-        }
+	if (bIsPlaying && CurrentLevel)
+		{
+		CurrentLevel->EndPlay ();
+		}
 
-    CurrentLevel = level;
+	CurrentLevel = level;
 
-    if (bIsPlaying)
-        {
-        level->BeginPlay ();
-        }
+	if (bIsPlaying)
+		{
+		level->BeginPlay ();
+		}
 
-    LOG_DEBUG ( "[WORLD] Current level set to: ", level->GetName () );
-    }
+	LOG_DEBUG ( "[WORLD] Current level set to: ", level->GetName () );
+	}
 
-    // ========== GAME MODE MANAGEMENT ==========
+	// ========== GAME MODE MANAGEMENT ==========
 
 void CWorld::SetGameMode ( CGameMode * NewGameMode )
-    {
-    if (CurrentGameMode == NewGameMode) return;
+	{
+	if (CurrentGameMode == NewGameMode) return;
 
-    if (CurrentGameMode)
-        {
-        if (bIsPlaying)
-            {
-            CurrentGameMode->EndGame ();
-            }
-        RemoveOwnedObject ( CurrentGameMode->GetName () );
-        }
+	if (CurrentGameMode)
+		{
+		if (bIsPlaying)
+			{
+			CurrentGameMode->EndGame ();
+			}
+		RemoveOwnedObject ( CurrentGameMode->GetName () );
+		}
 
-    CurrentGameMode = NewGameMode;
+	CurrentGameMode = NewGameMode;
 
-    if (CurrentGameMode)
-        {
-        CurrentGameMode->SetWorld ( this );
-        if (bIsPlaying)
-            {
-            CurrentGameMode->StartPlay ();
-            }
-        LOG_DEBUG ( "[WORLD] GameMode set to: ", CurrentGameMode->GetName () );
-        }
-    }
+	if (CurrentGameMode)
+		{
+		CurrentGameMode->SetWorld ( this );
+		if (bIsPlaying)
+			{
+			CurrentGameMode->StartPlay ();
+			}
+		LOG_DEBUG ( "[WORLD] GameMode set to: ", CurrentGameMode->GetName () );
+		}
+	}
 
 
 
 void CWorld::BeginPlay ()
-    {
-    if (bIsPlaying)
-        {
-        LOG_WARN ( "[WORLD] World is already playing!" );
-        return;
-        }
+	{
+	if (bIsPlaying)
+		{
+		LOG_WARN ( "[WORLD] World is already playing!" );
+		return;
+		}
 
-    bIsPlaying = true;
-    LOG_DEBUG ( "[WORLD] BeginPlay: ", GetName () );
-  
- 
+	bIsPlaying = true;
+	LOG_DEBUG ( "[WORLD] BeginPlay: ", GetName () );
 
-    if (CurrentGameMode)
-        {
-        CurrentGameMode->StartPlay ();
-        }
 
-    for (auto & level : Levels)
-        {
-        level->BeginPlay ();
-        }
-    }
+
+	if (CurrentGameMode)
+		{
+		CurrentGameMode->StartPlay ();
+		}
+
+	for (auto & level : Levels)
+		{
+		level->BeginPlay ();
+		}
+	}
 
 void CWorld::Tick ( float deltaTime )
-    {
-    CurrentDeltaTime = deltaTime;
-   
-    if (!bIsPlaying) return;
+	{
+	CurrentDeltaTime = deltaTime;
 
-    // Tick GameMode
-    if (CurrentGameMode)
-        {
-        CurrentGameMode->Tick ( deltaTime );
-        }
+	if (!bIsPlaying) return;
 
-        // Tick текущий уровень
-    if (CurrentLevel)
-        {
-        CurrentLevel->Tick ( deltaTime );
-        }
-    }
+	// Tick GameMode
+	if (CurrentGameMode)
+		{
+		CurrentGameMode->Tick ( deltaTime );
+		}
+
+		// Tick текущий уровень
+	if (CurrentLevel)
+		{
+		CurrentLevel->Tick ( deltaTime );
+		}
+	}
 
 void CWorld::EndPlay ()
-    {
-    if (!bIsPlaying) return;
+	{
+	if (!bIsPlaying) return;
 
-    bIsPlaying = false;
-    LOG_DEBUG ( "[WORLD] EndPlay: ", GetName () );
+	bIsPlaying = false;
+	LOG_DEBUG ( "[WORLD] EndPlay: ", GetName () );
 
-    // Завершаем GameMode
-    if (CurrentGameMode)
-        {
-        CurrentGameMode->EndGame ();
-        }
+	// Завершаем GameMode
+	if (CurrentGameMode)
+		{
+		CurrentGameMode->EndGame ();
+		}
 
-        // Завершаем уровни
-    for (auto & level : Levels)
-        {
-        level->EndPlay ();
-        }
-    }
+		// Завершаем уровни
+	for (auto & level : Levels)
+		{
+		level->EndPlay ();
+		}
+	}
 
-    // ========== RENDER INFO ==========
+	// ========== RENDER INFO ==========
 
-FRenderInfo CWorld::CollectRenderInfo ()
-    {
-    FRenderInfo Info {};   
-     auto NewCamera = FindActiveCamera ();
-    
-     if (NewCamera.Location !=  CachedCamera.Location
-          && NewCamera.ViewMatrix != CachedCamera.ViewMatrix)
-         {
-         CachedCamera = NewCamera;
-         }
-     Info.Camera = CachedCamera;
+void CWorld::CollectRenderInfo ( FRenderInfo * Info )
+	{
+   // FRenderInfo Info {};   
+	Info->Camera = FindActiveCamera ();
 
-    
-  
-    if (CurrentLevel)
-        {
-        const auto & actors = CurrentLevel->GetActors ();
 
-        for (CActor * actor : actors)
-            {
-            if (!actor || actor->IsHiddenInGame ()) continue;
+	if (CurrentLevel)
+		{
+		const auto & actors = CurrentLevel->GetActors ();
 
-            FRenderCollection renderCollection = actor->GetRenderInfo ();
+		for (CActor * actor : actors)
+			{
+			if (!actor || actor->IsHiddenInGame ()) continue;
 
-           
-            for (const auto & mesh : renderCollection.Meshes)
-                {
-                if (mesh.IsValid ())
-                    {
-                    Info.AddMesh ( mesh );
-                    }
-                }
+			FRenderCollection renderCollection = actor->GetRenderInfo ();
 
-            for (const auto & terrain : renderCollection.Terrains)
-                {
-                if (terrain.IsValid ())
-                    {
-                    Info.AddTerrain ( terrain );
-                    }
-                }
 
-        
-            for (const auto & collision : renderCollection.DebugCollisions)
-                {
-                if (collision.IsValid ())
-                    {
-                    Info.AddDebugCollision ( collision );
-                    }
-                }
+			for (const auto & mesh : renderCollection.Meshes)
+				{
+				if (mesh.IsValid ())
+					{
+					Info->AddMesh ( mesh );
+					}
+				}
 
-            for (const auto & TerWire : renderCollection.TerrainWireframes)
-                {
-                Info.AddTerrainWireframe ( TerWire );
-                }
-            }
-        }
+			for (const auto & terrain : renderCollection.Terrains)
+				{
+				if (terrain.IsValid ())
+					{
+					Info->AddTerrain ( terrain );
+					}
+				}
 
-    Info.HasInfo = !Info.RenderMeshes.empty () || !Info.Terrains.empty ();
-    Info.bDrawCollisions = HasAnyActorWithDebugCollisions ();
 
-    return Info;
-    }
+			for (const auto & collision : renderCollection.DebugCollisions)
+				{
+				if (collision.IsValid ())
+					{
+					Info->AddDebugCollision ( collision );
+					}
+				}
+
+			for (const auto & TerWire : renderCollection.TerrainWireframes)
+				{
+				Info->AddTerrainWireframe ( TerWire );
+				}
+			}
+		}
+
+	Info->HasInfo = !Info->RenderMeshes.empty () || !Info->Terrains.empty ();
+	Info->bDrawCollisions = HasAnyActorWithDebugCollisions ();
+
+	if (!Info->HasInfo)
+		{
+		LOG_ERROR ( "World not set Info for render" );
+		}
+	}
 
 bool CWorld::HasAnyActorWithDebugCollisions () const
-    {
-    if (!CurrentLevel) return false;
+	{
+	if (!CurrentLevel) return false;
 
-    for (CActor * actor : CurrentLevel->GetActors ())
-        {
-        if (actor && actor->IsDrawCollisionsEnabled ())
-            return true;
-        }
-    return false;
-    }
+	for (CActor * actor : CurrentLevel->GetActors ())
+		{
+		if (actor && actor->IsDrawCollisionsEnabled ())
+			return true;
+		}
+	return false;
+	}
 
 FCameraInfo CWorld::FindActiveCamera ()
-    {
-    FCameraInfo Info {};
-    
-    if (CurrentLevel)
-        {
-        const auto & actors = CurrentLevel->GetActors ();
-        for (CActor * actor : actors)
-            {
-            CCameraComponent * camera = actor->FindComponent<CCameraComponent> ();
-            if (camera && camera->IsVisible ())
-                {
-                float aspectRatio = CEngine::Get ().GetWindow ()->GetAspectRatio ();
-                if (aspectRatio <= 0.0f) aspectRatio = 16.0f / 9.0f;
-                
-                Info = camera->GetCameraInfo ( aspectRatio );               
-                return Info;
-                }
-            }
-        }
+	{
+	FCameraInfo Info {};
 
-        // Тестовая камера
-    float aspectRatio = CEngine::Get ().GetWindow ()->GetAspectRatio ();
-    if (aspectRatio <= 0.0001f) aspectRatio = 16.0f / 9.0f;
+	// Сначала ищем активную камеру в уровне
+	if (CurrentLevel)
+		{
+		const auto & actors = CurrentLevel->GetActors ();
+		for (CActor * actor : actors)
+			{
+			CCameraComponent * camera = actor->FindComponent<CCameraComponent> ();
+			if (camera && camera->IsVisible ())
+				{
+				float aspectRatio = CEngine::Get ().GetWindow ()->GetAspectRatio ();
+				if (aspectRatio <= 0.0f) aspectRatio = 16.0f / 9.0f;
 
-    Info.Location = { 10.f, 5.f, 10.f };
-    Info.ViewTarget = { 0.f, 0.f, 0.f };
-    Info.NearPlane = 0.1f;
-    Info.FarPlane = 1000.f;
-    Info.FOV = 90.f;
-    Info.ViewMatrix = FMat4::LookAtMatrix ( Info.Location, Info.ViewTarget, -FVector::Up () );
-    Info.ProjectionMatrix = FMat4::PerspectiveMatrix (
-        Info.FOV * CEMath::DEG_TO_RAD,
-        aspectRatio,
-        Info.NearPlane,
-        Info.FarPlane
-    );
+				Info = camera->GetCameraInfo ( aspectRatio );
+				
+				return Info;
+				}
+			}
+		}
 
-    return  Info;
-    }
+	
+	float aspectRatio = CEngine::Get ().GetWindow ()->GetAspectRatio ();
+	if (aspectRatio <= 0.0001f) aspectRatio = 16.0f / 9.0f;
 
-    // ========== SEARCH/QUERY ==========
+	
+	Info.Location = { 500.f, 200.f, 300.f };  
+	Info.ViewTarget = { 500.f, 43.f, 500.f }; 
+	Info.NearPlane = 0.1f;
+	Info.FarPlane = 2000.f;  
+	Info.FOV = 90.f;
+
+	
+	Info.ViewMatrix = FMat4::LookAtMatrix (
+		Info.Location,
+		Info.ViewTarget,
+		FVector::Up ()  
+	);
+
+	Info.ProjectionMatrix = FMat4::PerspectiveMatrix (
+		Info.FOV * CEMath::DEG_TO_RAD,
+		aspectRatio,
+		Info.NearPlane,
+		Info.FarPlane
+	);
+	
+	return Info;
+	}
+
+	// ========== SEARCH/QUERY ==========
 
 CObject * CWorld::FindObjectByName ( const std::string & name ) const
-    {
-    for (const auto & level : Levels)
-        {
-        CObject * found = level->FindObjectByName ( name );
-        if (found)
-            return found;
-        }
+	{
+	for (const auto & level : Levels)
+		{
+		CObject * found = level->FindObjectByName ( name );
+		if (found)
+			return found;
+		}
 
-    return nullptr;
-    }
+	return nullptr;
+	}
 
 CObject * CWorld::FindObjectByUUID ( const std::string & uuid ) const
-    {
-    for (const auto & level : Levels)
-        {
-        CObject * found = level->FindObjectByUUID ( uuid );
-        if (found)
-            return found;
-        }
+	{
+	for (const auto & level : Levels)
+		{
+		CObject * found = level->FindObjectByUUID ( uuid );
+		if (found)
+			return found;
+		}
 
-    return nullptr;
-    }
+	return nullptr;
+	}
 
-    // ========== DEBUG/UTILS ==========
+	// ========== DEBUG/UTILS ==========
 
 void CWorld::DumpState () const
-    {
-    LOG_DEBUG ( "=== WORLD STATE ===" );
-    LOG_DEBUG ( "Name: ", GetName () );
-    LOG_DEBUG ( "UUID: ", GetShortUUID () );
-    LOG_DEBUG ( "GameInstance: ", ( OwningGameInstance ? OwningGameInstance->GetName () : "None" ) );
-    LOG_DEBUG ( "Is Playing: ", ( bIsPlaying ? "Yes" : "No" ) );
-    LOG_DEBUG ( "Current Level: ", ( CurrentLevel ? CurrentLevel->GetName () : "None" ) );
-    LOG_DEBUG ( "Has GameMode: ", ( CurrentGameMode ? "Yes" : "No" ) );
+	{
+	LOG_DEBUG ( "=== WORLD STATE ===" );
+	LOG_DEBUG ( "Name: ", GetName () );
+	LOG_DEBUG ( "UUID: ", GetShortUUID () );
+	LOG_DEBUG ( "GameInstance: ", ( OwningGameInstance ? OwningGameInstance->GetName () : "None" ) );
+	LOG_DEBUG ( "Is Playing: ", ( bIsPlaying ? "Yes" : "No" ) );
+	LOG_DEBUG ( "Current Level: ", ( CurrentLevel ? CurrentLevel->GetName () : "None" ) );
+	LOG_DEBUG ( "Has GameMode: ", ( CurrentGameMode ? "Yes" : "No" ) );
 
-    if (CurrentGameMode)
-        {
-        LOG_DEBUG ( "GameMode: ", CurrentGameMode->GetName () );
-        LOG_DEBUG ( "GameMode Class: ", CurrentGameMode->GetObjectClassName () );
-        }
+	if (CurrentGameMode)
+		{
+		LOG_DEBUG ( "GameMode: ", CurrentGameMode->GetName () );
+		LOG_DEBUG ( "GameMode Class: ", CurrentGameMode->GetObjectClassName () );
+		}
 
-    LOG_DEBUG ( "Total Levels: ", Levels.size () );
+	LOG_DEBUG ( "Total Levels: ", Levels.size () );
 
-    for (size_t i = 0; i < Levels.size (); ++i)
-        {
-        LOG_DEBUG ( "  [", i, "] ", Levels[ i ]->GetName (),
-                    " (Active: ", ( Levels[ i ] == CurrentLevel ? "Yes" : "No" ), ")" );
-        }
+	for (size_t i = 0; i < Levels.size (); ++i)
+		{
+		LOG_DEBUG ( "  [", i, "] ", Levels[ i ]->GetName (),
+					" (Active: ", ( Levels[ i ] == CurrentLevel ? "Yes" : "No" ), ")" );
+		}
 
-    LOG_DEBUG ( "===================" );
-    }
+	LOG_DEBUG ( "===================" );
+	}

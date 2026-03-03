@@ -12,6 +12,8 @@
 
 namespace CEMath
 {
+    struct Quaternion;
+
     struct Matrix4x4
     {
 		
@@ -23,9 +25,13 @@ namespace CEMath
         Matrix4x4(float diagonal);
         Matrix4x4(const float data[16]); // array in column-major order
         Matrix4x4(const Matrix4x4& other);
-
+        Matrix4x4 ( const Vector3D & xAxis, const Vector3D & yAxis, const Vector3D & zAxis, const Vector3D & position );
 		// constructors from components (row-major)
-        
+        // Конструктор из позиции, кватерниона (поворот) и масштаба
+        Matrix4x4 ( const Vector3D & translation, const Quaternion & rotation, const Vector3D & scale );
+        Matrix4x4 ( const Quaternion & rotation, const Vector3D & scale );
+        // Конструктор из позиции и кватерниона (поворот с единичным масштабом)
+        Matrix4x4 ( const Vector3D & translation, const Quaternion & rotation );
         Matrix4x4(float m00, float m10, float m20, float m30,
             float m01, float m11, float m21, float m31,
             float m02, float m12, float m22, float m32,

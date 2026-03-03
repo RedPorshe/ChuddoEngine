@@ -375,8 +375,7 @@ bool CGravityComponent::SweepMovement ( CBaseCollisionComponent * collision,
         outHitNormal = closestNormal;
         outHitComponent = closestComponent;
 
-        LOG_DEBUG ( "[SWEEP] Hit at t=", closestHitTime, " normal=(",
-                    closestNormal.x, ",", closestNormal.y, ",", closestNormal.z, ")" );
+        
         return true;
         }
 
@@ -425,7 +424,7 @@ void CGravityComponent::Fall ( float DeltaTime )
                 {
                 m_VerticalVelocity = 0.0f;
                 bIsOnGround = true;
-                LOG_DEBUG ( "[FALL LANDING] Приземлились на Y=", newY );
+              
                 }
             else
                 {

@@ -8,6 +8,8 @@ CTerrainActor::CTerrainActor ( CObject * inOwner, const std::string & inDisplayN
     {
     bIsTerrain = true;
     LOG_DEBUG ( "[TERRAIN ACTOR] Created: ", GetName () );
+    SetMovableState ( EMovableState::STATIC );
+    DestroyGravity ();
     }
 
 CTerrainActor::~CTerrainActor ()

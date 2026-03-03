@@ -45,7 +45,7 @@ class CWorld : public CObject
         bool HasLevels () const { return !Levels.empty (); }
 
         // ========== RENDER INFO ==========
-        FRenderInfo CollectRenderInfo ();
+        void CollectRenderInfo (FRenderInfo * Info);
         FCameraInfo FindActiveCamera ();
 
         // ========== GAME MODE MANAGEMENT ==========

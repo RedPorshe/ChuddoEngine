@@ -36,6 +36,7 @@ CActor::~CActor ()
 
 void CActor::BeginPlay ()
     {
+   
     LOG_DEBUG ( "[ACTOR] BeginPlay: ", GetName () );
     if (GetActorLocation ().IsZero ())
         {
@@ -60,6 +61,7 @@ void CActor::BeginPlay ()
        this->GetRootComponent ()->SetCollisionEnabled ( bIsCollisionEnabled );
        this->GetRootComponent ()->UpdateTransform ();
         }
+    bIsStarted = true;
     }
 
 void CActor::Tick ( float deltaTime )
@@ -176,8 +178,8 @@ FRenderCollection CActor::GetRenderInfo () const
             if (!collision || !collision->IsCollisionEnabled ()) return;
 
             FVector worldLoc = collision->GetWorldLocation ();
-            FQuat worldRot = GetActorRotationQuat ();
-
+            FQuat worldRot = collision->GetRotationQuat ();
+            FVector WorldScale = collision->GetScale ();
             FVector debugColor = FVector ( 0.0f, 1.0f, 0.0f );
 
             if (collision->ShouldBlockWith ( collision ))
@@ -191,13 +193,12 @@ FRenderCollection CActor::GetRenderInfo () const
                         {
                         if (auto * sphere = dynamic_cast< const CSphereComponent * >( collision ))
                             {
-                            Collection.DebugCollisions.push_back (
-                                FCollisionDebugInfo::CreateSphere (
-                                    worldLoc,
-                                    sphere->GetRadius (),
-                                    debugColor
-                                )
-                            );
+                            FCollisionDebugInfo Info {};
+                            Info.CreateSphere ( worldLoc,
+                                                sphere->GetRadius (),
+                                                debugColor );
+                            Info.WorldScale = WorldScale;
+                            Collection.DebugCollisions.push_back ( Info );
                             }
                         break;
                         }
@@ -205,14 +206,15 @@ FRenderCollection CActor::GetRenderInfo () const
                         {
                         if (auto * box = dynamic_cast< const CBoxComponent * >( collision ))
                             {
-                            Collection.DebugCollisions.push_back (
-                                FCollisionDebugInfo::CreateBox (
-                                    worldLoc,
-                                    worldRot,
-                                    box->GetHalfExtents (),
-                                    debugColor
-                                )
+                            FCollisionDebugInfo Info {};
+                            Info.WorldScale = WorldScale;
+                            Info.CreateBox (
+                                worldLoc,
+                                worldRot,
+                                box->GetHalfExtents (),
+                                debugColor
                             );
+                            Collection.DebugCollisions.push_back ( Info );
                             }
                         break;
                         }
@@ -220,15 +222,16 @@ FRenderCollection CActor::GetRenderInfo () const
                         {
                         if (auto * capsule = dynamic_cast< const CCapsuleComponent * >( collision ))
                             {
-                            Collection.DebugCollisions.push_back (
-                                FCollisionDebugInfo::CreateCapsule (
-                                    worldLoc,
-                                    worldRot,
-                                    capsule->GetRadius (),
-                                    capsule->GetHalfHeight (),
-                                    debugColor
-                                )
+                            FCollisionDebugInfo Info {};
+                            Info.WorldScale = WorldScale;
+                            Info.CreateCapsule (
+                                worldLoc,
+                                worldRot,
+                                capsule->GetRadius (),
+                                capsule->GetHalfHeight (),
+                                debugColor
                             );
+                            Collection.DebugCollisions.push_back (Info );
                             }
                         break;
                         }
@@ -236,15 +239,16 @@ FRenderCollection CActor::GetRenderInfo () const
                         {
                         if (auto * cylinder = dynamic_cast< const CCylinderComponent * >( collision ))
                             {
-                            Collection.DebugCollisions.push_back (
-                                FCollisionDebugInfo::CreateCylinder (
-                                    worldLoc,
-                                    worldRot,
-                                    cylinder->GetRadius (),
-                                    cylinder->GetHeight (),
-                                    debugColor
-                                )
+                            FCollisionDebugInfo Info {};
+                            Info.WorldScale = WorldScale;
+                            Info.CreateCylinder (
+                                worldLoc,
+                                worldRot,
+                                cylinder->GetRadius (),
+                                cylinder->GetHeight (),
+                                debugColor
                             );
+                            Collection.DebugCollisions.push_back ( Info);
                             }
                         break;
                         }
@@ -252,15 +256,16 @@ FRenderCollection CActor::GetRenderInfo () const
                         {
                         if (auto * cone = dynamic_cast< const CConeComponent * >( collision ))
                             {
-                            Collection.DebugCollisions.push_back (
-                                FCollisionDebugInfo::CreateCone (
-                                    worldLoc,
-                                    worldRot,
-                                    cone->GetRadius (),
-                                    cone->GetHeight (),
-                                    debugColor
-                                )
+                            FCollisionDebugInfo Info {};
+                            Info.WorldScale = WorldScale;
+                            Info.CreateCone (
+                                worldLoc,
+                                worldRot,
+                                cone->GetRadius (),
+                                cone->GetHeight (),
+                                debugColor
                             );
+                            Collection.DebugCollisions.push_back (Info);
                             }
                         break;
                         }

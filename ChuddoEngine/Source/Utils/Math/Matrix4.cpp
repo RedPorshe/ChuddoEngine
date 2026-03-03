@@ -1,4 +1,5 @@
 #include "Utils/Math/Matrix4.h"
+#include "Utils/Math/Quaternion.h"
 
 namespace CEMath
 {
@@ -21,6 +22,71 @@ namespace CEMath
         for (int i = 0; i < 16; ++i)
             m[i] = data[i];
     }
+
+
+    Matrix4x4::Matrix4x4 ( const Quaternion & rotation, const Vector3D & scale )
+        {
+        Quaternion rot = rotation.Normalized ();
+
+        float xx = rot.x * rot.x;
+        float yy = rot.y * rot.y;
+        float zz = rot.z * rot.z;
+        float xy = rot.x * rot.y;
+        float xz = rot.x * rot.z;
+        float yz = rot.y * rot.z;
+        float wx = rot.w * rot.x;
+        float wy = rot.w * rot.y;
+        float wz = rot.w * rot.z;
+
+        // Только поворотная часть с масштабом
+        m[ 0 ] = ( 1.0f - 2.0f * ( yy + zz ) ) * scale.x;
+        m[ 1 ] = ( 2.0f * ( xy + wz ) ) * scale.x;
+        m[ 2 ] = ( 2.0f * ( xz - wy ) ) * scale.x;
+        m[ 3 ] = 0.0f;
+
+        m[ 4 ] = ( 2.0f * ( xy - wz ) ) * scale.y;
+        m[ 5 ] = ( 1.0f - 2.0f * ( xx + zz ) ) * scale.y;
+        m[ 6 ] = ( 2.0f * ( yz + wx ) ) * scale.y;
+        m[ 7 ] = 0.0f;
+
+        m[ 8 ] = ( 2.0f * ( xz + wy ) ) * scale.z;
+        m[ 9 ] = ( 2.0f * ( yz - wx ) ) * scale.z;
+        m[ 10 ] = ( 1.0f - 2.0f * ( xx + yy ) ) * scale.z;
+        m[ 11 ] = 0.0f;
+
+        m[ 12 ] = 0.0f;
+        m[ 13 ] = 0.0f;
+        m[ 14 ] = 0.0f;
+        m[ 15 ] = 1.0f;
+        }
+
+    Matrix4x4::Matrix4x4 ( const Vector3D & xAxis, const Vector3D & yAxis, const Vector3D & zAxis, const Vector3D & position )
+        {
+            // Первая колонка (ось X)
+        m[ 0 ] = xAxis.x;
+        m[ 1 ] = xAxis.y;
+        m[ 2 ] = xAxis.z;
+        m[ 3 ] = 0.0f;
+
+        // Вторая колонка (ось Y)
+        m[ 4 ] = yAxis.x;
+        m[ 5 ] = yAxis.y;
+        m[ 6 ] = yAxis.z;
+        m[ 7 ] = 0.0f;
+
+        // Третья колонка (ось Z)
+        m[ 8 ] = zAxis.x;
+        m[ 9 ] = zAxis.y;
+        m[ 10 ] = zAxis.z;
+        m[ 11 ] = 0.0f;
+
+        // Четвёртая колонка (позиция)
+        m[ 12 ] = position.x;
+        m[ 13 ] = position.y;
+        m[ 14 ] = position.z;
+        m[ 15 ] = 1.0f;
+        }
+
 
     Matrix4x4::Matrix4x4(const Matrix4x4& other)
     {
@@ -414,6 +480,57 @@ namespace CEMath
 
         return *this;
     }
+
+
+    Matrix4x4::Matrix4x4 ( const Vector3D & translation, const Quaternion & rotation, const Vector3D & scale )
+        {
+            // Нормализуем кватернион для безопасности
+        Quaternion rot = rotation.Normalized ();
+
+        // Получаем матрицу поворота из кватерниона
+        float xx = rot.x * rot.x;
+        float yy = rot.y * rot.y;
+        float zz = rot.z * rot.z;
+        float xy = rot.x * rot.y;
+        float xz = rot.x * rot.z;
+        float yz = rot.y * rot.z;
+        float wx = rot.w * rot.x;
+        float wy = rot.w * rot.y;
+        float wz = rot.w * rot.z;
+
+        // Матрица 3x3 поворота с применением масштаба
+        // Первая колонка (ось X) с масштабом по X
+        m[ 0 ] = ( 1.0f - 2.0f * ( yy + zz ) ) * scale.x;
+        m[ 1 ] = ( 2.0f * ( xy + wz ) ) * scale.x;
+        m[ 2 ] = ( 2.0f * ( xz - wy ) ) * scale.x;
+        m[ 3 ] = 0.0f;
+
+        // Вторая колонка (ось Y) с масштабом по Y
+        m[ 4 ] = ( 2.0f * ( xy - wz ) ) * scale.y;
+        m[ 5 ] = ( 1.0f - 2.0f * ( xx + zz ) ) * scale.y;
+        m[ 6 ] = ( 2.0f * ( yz + wx ) ) * scale.y;
+        m[ 7 ] = 0.0f;
+
+        // Третья колонка (ось Z) с масштабом по Z
+        m[ 8 ] = ( 2.0f * ( xz + wy ) ) * scale.z;
+        m[ 9 ] = ( 2.0f * ( yz - wx ) ) * scale.z;
+        m[ 10 ] = ( 1.0f - 2.0f * ( xx + yy ) ) * scale.z;
+        m[ 11 ] = 0.0f;
+
+        // Четвёртая колонка (позиция)
+        m[ 12 ] = translation.x;
+        m[ 13 ] = translation.y;
+        m[ 14 ] = translation.z;
+        m[ 15 ] = 1.0f;
+        }
+
+    Matrix4x4::Matrix4x4 ( const Vector3D & translation, const Quaternion & rotation )
+        : Matrix4x4 ( translation, rotation, Vector3D ( 1.0f, 1.0f, 1.0f ) )
+        {
+            // Делегируем конструктору с единичным масштабом
+        }
+
+
 
     Matrix4x4& Matrix4x4::Identity()
     {

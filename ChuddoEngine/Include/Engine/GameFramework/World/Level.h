@@ -7,6 +7,7 @@
 #include <functional>
 #include <string>
 #include <limits>
+#include "Core/Engine.h"
 
 // Forward declarations
 class CWorld;
@@ -183,7 +184,8 @@ class CLevel : public CObject
 
             if (bIsPlaying)
                 {
-                newActor->BeginPlay ();               
+                newActor->BeginPlay ();      
+               
                 }
 
             return newActor;

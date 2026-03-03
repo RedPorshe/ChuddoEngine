@@ -39,6 +39,7 @@ struct FVulkanInfo
 	std::unique_ptr<IVulkanManager> SwapChainManager;
 	std::unique_ptr<IVulkanManager> CommandManager;
 	std::unique_ptr<IVulkanManager> SyncManager;
+	std::unique_ptr<IVulkanManager> DescriptorManager;
 	std::unique_ptr<IVulkanManager> PipelineManager;
 	std::unique_ptr<IVulkanManager> BufferManager;
 	std::unique_ptr<IVulkanManager> RenderPassManager;
