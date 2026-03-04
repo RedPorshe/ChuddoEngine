@@ -279,6 +279,7 @@ class CActor : public CObject
         bool m_bDrawCollisions = false;
         float DebugTimer = 0.f;
         bool bIsStarted = false;
+        int saveBeginPlayCount = 0;
         public:
             bool ActorStartedBeginPlay () const { return bIsStarted; }
     };

@@ -236,8 +236,8 @@ CActor * CLevel::SpawnActorByClass ( const std::string & ClassName, const std::s
 		Actors.push_back ( NewActor );
 		ActorsSpawnedThisTick++;
 
-		// Устанавливаем позицию СРАЗУ после создания
-		NewActor->SetActorLocation ( SpawnLocation, true );  // true = телепорт (мгновенно)
+		
+		NewActor->SetActorLocation ( SpawnLocation, true );  
 		if (NewActor->GetRootComponent ())
 			{
 			NewActor->GetRootComponent ()->UpdateTransform ();

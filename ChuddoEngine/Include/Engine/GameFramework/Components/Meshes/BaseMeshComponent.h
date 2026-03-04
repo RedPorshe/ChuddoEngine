@@ -44,7 +44,7 @@ class CBaseMeshComponent : public CSceneComponent
          * Создать Vulkan ресурсы (буферы и т.д.)
          * @param BufferManager - менеджер буферов для создания ресурсов
          */
-        virtual void CreateRenderResources ( CBufferManager * BufferManager );
+        virtual void CreateRenderResources (  );
         
         /**
          * Уничтожить Vulkan ресурсы

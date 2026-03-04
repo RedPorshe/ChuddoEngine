@@ -157,9 +157,8 @@ void CCharacter::SpawnCube ()
     BeginPlay ();
     if (!GetWorld () || !GetWorld ()->GetCurrentLevel ()) return;
 
-    auto level = GetWorld ()->GetCurrentLevel ();
-    FVector SpawnOffset = GetActorForwardVector () * 600.f;
-    FVector spawnLocation = GetActorLocation () + SpawnOffset ;
+    
+    FVector spawnLocation = GetActorLocation ();
 
     auto cubeActor = SpawnActor<CActor> ( "TestCube", spawnLocation );
     if (!cubeActor) return;

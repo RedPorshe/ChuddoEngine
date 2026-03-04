@@ -79,7 +79,7 @@ FTerrainRenderInfo CTerrainMeshComponent::GetTerrainInfo ()
 
     // Матрица трансформации
    // Info.Model = GetTransformMatrix ();
-    Info.Model = FMat4 (m_WorldTransform.Location,m_WorldTransform.Rotation,m_WorldTransform.Scale);
+    Info.Model = FMat4 (GetLocation(), GetRotationQuat(), GetScale ());
 
 
     // Данные о размерах террейна
@@ -139,7 +139,7 @@ void CTerrainMeshComponent::UpdateFromTerrain ()
         auto * bufferManager = CEngine::Get ().GetRenderer ()->GetBufferManager ();
         if (bufferManager)
             {
-            CreateRenderResources ( bufferManager );
+            CreateRenderResources (  );
             }
         }
 

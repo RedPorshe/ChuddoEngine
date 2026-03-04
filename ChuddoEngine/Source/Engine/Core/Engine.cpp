@@ -296,7 +296,7 @@ void CEngine::CreateTestWorld ()
 
 		//Terrain->GenerateHilly ( 45, 45, 15.f );
 		Terrain->GenerateNoise ( 100, 300, 25.f );
-		Terrain->SetActorLocation ( 0.f, 0.f, 0.f, true ); // true явно указываю что нужно телепортировать актора, потому что нету тиков
+		Terrain->SetActorLocation ( 500.f, 0.f, 500.f, true ); // true явно указываю что нужно телепортировать актора, потому что нету тиков
 		Terrain->SetDrawCollisions ( true );
 		float startHeight = Terrain->GetTerrainMeshComponent ()->GetTerrainComponent ()->GetHeightAtWorld ( FVector { 500.f, 150.3322f, 500.f } );
 		start->SetActorLocation ( FVector { 500.f, startHeight + 50.f, 500.f }, true ); // true явно указываю что нужно телепортировать актора, потому что нету тиков
