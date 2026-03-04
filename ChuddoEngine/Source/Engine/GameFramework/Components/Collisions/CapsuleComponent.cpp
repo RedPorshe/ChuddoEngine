@@ -14,6 +14,9 @@ CCapsuleComponent::CCapsuleComponent ( CObject * inOwner, const std::string & In
 	SetChannelAsPawn ();
 	SetResponseToChannel ( ECollisionChannel::WorldDynamic, ECollisionResponse::BLOCK );
 	SetResponseToChannel ( ECollisionChannel::WorldStatic, ECollisionResponse::BLOCK );
+	SetResponseToChannel ( ECollisionChannel::Trigger, ECollisionResponse::OVERLAP );
+	SetResponseToChannel ( ECollisionChannel::Character, ECollisionResponse::BLOCK );
+	SetResponseToChannel ( ECollisionChannel::Pawn, ECollisionResponse::BLOCK );
 	LOG_DEBUG ( "CapsuleComponent created: ", GetName (),
 				", Radius: ", m_Radius,
 				", HalfHeight: ", m_HalfHeight );

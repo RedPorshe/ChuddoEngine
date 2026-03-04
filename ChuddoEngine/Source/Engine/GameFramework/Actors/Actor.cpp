@@ -37,12 +37,12 @@ CActor::~CActor ()
 void CActor::BeginPlay ()
 	{
 	if (ActorStartedBeginPlay ()) return;
-	CEngine::Get ().UpdateRenderInfo ();
+	
 
 	LOG_DEBUG ( "[ACTOR] BeginPlay: ", GetName () );
 	if (GetActorLocation ().IsZero ())
 		{
-		if (GetRootComponent () && GetRootComponent ()->IdDyrty ())
+		if (GetRootComponent () && GetRootComponent ()->IdDirty ())
 			{
 			LOG_WARN ( "[", GetName (), "] Transform on begin play Dirty updating transform" );
 			GetRootComponent ()->UpdateTransform ();
@@ -71,18 +71,10 @@ void CActor::Tick ( float deltaTime )
 	{
 	if (IsPendingToDestroy ()) return;
 
-	// Сначала физика
+	if (RootComponent->IdDirty ()) RootComponent->UpdateTransform ();
 	UpdatePhysics ( deltaTime );
-	saveBeginPlayCount++;
-	if (saveBeginPlayCount == 1)
-		{
-		if (bIsStarted)
-			{
-			bIsStarted = false;
-			BeginPlay ();
-			}
-		}
-	// Интерполяция позиции
+
+	
 	if (bIsLerpingLocation && RootComponent)
 		{
 		LocationLerpAlpha += deltaTime * LerpSpeed;
@@ -105,7 +97,7 @@ void CActor::Tick ( float deltaTime )
 			}
 		}
 
-		// Интерполяция вращения
+		
 	if (bIsLerpingRotation && RootComponent)
 		{
 		RotationLerpAlpha += deltaTime * LerpSpeed;
@@ -154,7 +146,7 @@ FRenderCollection CActor::GetRenderInfo () const
 	{
 	FRenderCollection Collection;
 
-	// Сбор мешей и террейнов
+	
 	for (auto * comp : ActorComponents)
 		{
 		if (CBaseMeshComponent * mesh = dynamic_cast< CBaseMeshComponent * >( comp ))
@@ -181,7 +173,7 @@ FRenderCollection CActor::GetRenderInfo () const
 			}
 		}
 
-		// Сбор отладочной информации о коллизиях
+	
 	if (m_bDrawCollisions)
 		{
 		auto ProcessCollisionComponent = [ & ] ( const CBaseCollisionComponent * collision )
@@ -344,6 +336,14 @@ CLevel * CActor::GetLevel () const
 CWorld * CActor::GetWorld () const
 	{
 	return CGameInstance::Get ().GetWorld ();
+	}
+
+void CActor::InitializeAllComponents ()
+	{
+	for (auto comp : ActorComponents)
+		{
+		comp->InitComponent ();
+		}
 	}
 
 std::vector<FMeshInfo> CActor::GetRenderMeshes () const
@@ -684,6 +684,7 @@ void CActor::RotateActor ( const FQuat & DeltaRotation, bool Interpolate )
 	if (!Interpolate)
 		{
 		RootComponent->SetRotation ( targetQuat );
+		RootComponent->UpdateTransform ();
 		return;
 		}
 
@@ -692,6 +693,7 @@ void CActor::RotateActor ( const FQuat & DeltaRotation, bool Interpolate )
 	RotationLerpAlpha = 0.0f;
 	bIsLerpingRotation = true;
 	}
+
 
 void CActor::AddActorWorldOffset ( const FVector & DeltaLocation, bool Interpolate )
 	{
@@ -709,45 +711,7 @@ void CActor::AddActorLocalOffset ( const FVector & DeltaLocation, bool Interpola
 	AddActorWorldOffset ( worldDelta, Interpolate );
 	}
 
-void CActor::AddActorWorldRotation ( const FQuat & DeltaRotation, bool Interpolate )
-	{
-	if (!RootComponent) return;
 
-	FQuat currentQuat = RootComponent->GetRotationQuat ();
-	FQuat newRotation = currentQuat * DeltaRotation;
-	newRotation.Normalize ();
-
-	if (!Interpolate)
-		{
-		RootComponent->SetRotation ( newRotation );
-		return;
-		}
-
-	TargetRotation = newRotation;
-	LerpStartRotation = currentQuat;
-	RotationLerpAlpha = 0.0f;
-	bIsLerpingRotation = true;
-	}
-
-void CActor::AddActorLocalRotation ( const FQuat & DeltaRotation, bool Interpolate )
-	{
-	if (!RootComponent) return;
-
-	FQuat currentQuat = RootComponent->GetRotationQuat ();
-	FQuat newRotation = DeltaRotation * currentQuat;
-	newRotation.Normalize ();
-
-	if (!Interpolate)
-		{
-		RootComponent->SetRotation ( newRotation );
-		return;
-		}
-
-	TargetRotation = newRotation;
-	LerpStartRotation = currentQuat;
-	RotationLerpAlpha = 0.0f;
-	bIsLerpingRotation = true;
-	}
 
 void CActor::MoveActorInDirection ( const FVector & Direction, float Distance, bool Interpolate )
 	{
@@ -764,7 +728,7 @@ void CActor::RotateAroundAxis ( const FVector & Axis, float AngleDegrees, bool I
 	if (!RootComponent || Axis.IsZero ()) return;
 
 	FQuat rotationQuat ( Axis.Normalized (), CEMath::DegreesToRadians ( AngleDegrees ) );
-	AddActorLocalRotation ( rotationQuat, Interpolate );
+	RotateActor ( rotationQuat, Interpolate );
 	}
 
 void CActor::SetCollisionEnabled ( bool value )
@@ -778,13 +742,12 @@ void CActor::SetCollisionEnabled ( bool value )
 
 void CActor::OnComponentBeginOverlap ( CBaseCollisionComponent * other )
 	{
-		// Пусто для переопределения
+	if (!other) return;	
 	}
 
 void CActor::OnComponentEndOverlap ( CBaseCollisionComponent * other )
 	{
-	if (!other) return;
-	LOG_ERROR ( "OnComponentEndOverlap with : ", other->GetOwnerActor ()->GetName (), " for ", GetName () );
+	if (!other) return;	
 	}
 
 void CActor::SetActorName ( const std::string & newName )
@@ -796,10 +759,15 @@ void CActor::OnComponentHit ( CBaseCollisionComponent * other )
 	{
 	if (!other || !m_Gravity) return;
 
+	if (CTerrainComponent * terrain = dynamic_cast< CTerrainComponent * >( other ))
+		{
+		m_Gravity->SetVerticalVelocity ( 0.0f );
+		}
 	CBaseCollisionComponent * myCollision = FindComponent<CBaseCollisionComponent> ();
 	if (myCollision && ( myCollision->ShouldBlockWith ( other ) || other->ShouldBlockWith ( myCollision ) ))
 		{
-		m_Gravity->SetVerticalVelocity ( 0.0f );
+		
+		
 		}
 	}
 

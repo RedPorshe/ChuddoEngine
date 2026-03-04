@@ -237,31 +237,19 @@ void CBaseCollisionComponent::OnBeginOverlap ( CBaseCollisionComponent * other )
         return;
 
     OverlappingComponents.insert ( other );
-
-    if (other->OverlappingComponents.find ( this ) == other->OverlappingComponents.end ())
-        {
-        other->OverlappingComponents.insert ( this );
-        other->OnBeginOverlap ( this );
-        }
+  
     GetOwnerActor ()->OnComponentBeginOverlap ( other );
     }
-
 void CBaseCollisionComponent::OnEndOverlap ( CBaseCollisionComponent * other )
     {
     if (!other || !GetOwnerActor ())
         return;
-
+   
     if (OverlappingComponents.find ( other ) == OverlappingComponents.end ())
         return;
-
+    
     OverlappingComponents.erase ( other );
 
-    if (other->OverlappingComponents.find ( this ) != other->OverlappingComponents.end ())
-        {
-        other->OverlappingComponents.erase ( this );
-        other->OnEndOverlap ( this );
-        }
-    LOG_ERROR ( "End overlaping ", GetName () );
     GetOwnerActor ()->OnComponentEndOverlap ( other );
     }
 
@@ -281,8 +269,7 @@ FVector CBaseCollisionComponent::GetExtremePoint ( const FVector & Direction ) c
 
 FVector CBaseCollisionComponent::GetTopPoint () const
     {
-        // По умолчанию используем направление вверх (0,1,0) или (0,0,1) в зависимости от вашей системы координат
-        // Предположим, что Y - вверх
+        
     return GetExtremePoint ( FVector ( 0.0f, 1.0f, 0.0f ) );
     }
 

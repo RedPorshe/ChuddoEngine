@@ -22,6 +22,7 @@ void CInputComponent::InitComponent ()
     if (inputSystem)
         {
         inputSystem->RegisterInputComponent ( this );
+        m_mouseSensevity = inputSystem->GetMouseSensitivity ();
         }
     }
 
@@ -33,12 +34,15 @@ void CInputComponent::Tick ( float DeltaTime )
 void CInputComponent::OnBeginPlay ()
     {
     Super::OnBeginPlay ();
+    
     }
 
 void CInputComponent::OnEndPlay ()
     {
     UnbindAll ();
     }
+
+
 
     // ========== Input query methods ==========
 
@@ -108,7 +112,7 @@ FVector2D CInputComponent::GetScrollDelta () const
     return inputSystem ? inputSystem->GetScrollDelta () : FVector2D ( 0.0f );
     }
 
-    // ========== Binding methods ==========
+    // ========== Binding methods (int версии - ядро) ==========
 
 void CInputComponent::BindAction ( const std::string & actionName, int button, EInputEvent eventType,
                                    std::function<void ()> callback )
@@ -148,38 +152,30 @@ void CInputComponent::BindAxis ( const std::string & axisName, int positiveKey, 
         }
     }
 
-void CInputComponent::BindMouseAxisX ( const std::string & axisName, std::function<void ( float )> callback )
+void CInputComponent::BindMouseAxis ( const std::string & axisName, int mouseAxis,
+                                      std::function<void ( float )> callback )
     {
     auto * inputSystem = GetInputSystem ();
     if (inputSystem)
         {
-        inputSystem->BindMouseAxis ( axisName, EMouseAxis::MouseX, callback, this );
+        inputSystem->BindMouseAxis ( axisName, mouseAxis, callback, this );
         m_BoundAxes.push_back ( axisName );
-        LOG_DEBUG ( "[INPUTCOMPONENT] Bound mouse X axis: ", axisName );
+
+        const char * axisStr = "";
+        if (mouseAxis == ToInt ( EMouseAxis::MouseX ))
+            axisStr = "Mouse X";
+        else if (mouseAxis == ToInt ( EMouseAxis::MouseY ))
+            axisStr = "Mouse Y";
+        else if (mouseAxis == ToInt ( EMouseAxis::MouseScroll ))
+            axisStr = "Mouse Scroll";
+        else
+            axisStr = "Unknown";
+
+        LOG_DEBUG ( "[INPUTCOMPONENT] Bound mouse axis: ", axisName, " to ", axisStr );
         }
     }
 
-void CInputComponent::BindMouseAxisY ( const std::string & axisName, std::function<void ( float )> callback )
-    {
-    auto * inputSystem = GetInputSystem ();
-    if (inputSystem)
-        {
-        inputSystem->BindMouseAxis ( axisName, EMouseAxis::MouseY, callback, this );
-        m_BoundAxes.push_back ( axisName );
-        LOG_DEBUG ( "[INPUTCOMPONENT] Bound mouse Y axis: ", axisName );
-        }
-    }
-
-void CInputComponent::BindMouseScroll ( const std::string & axisName, std::function<void ( float )> callback )
-    {
-    auto * inputSystem = GetInputSystem ();
-    if (inputSystem)
-        {
-        inputSystem->BindMouseAxis ( axisName, EMouseAxis::MouseScroll, callback, this );
-        m_BoundAxes.push_back ( axisName );
-        LOG_DEBUG ( "[INPUTCOMPONENT] Bound mouse scroll: ", axisName );
-        }
-    }
+    // ========== Специализированные методы для мыши ==========
 
 void CInputComponent::BindMouseAxisXWithSensitivity ( const std::string & axisName,
                                                       std::function<void ( float )> callback,
@@ -200,6 +196,8 @@ void CInputComponent::BindMouseAxisYWithSensitivity ( const std::string & axisNa
                      callback ( Value * sensitivity );
                      } );
     }
+
+    // ========== Управление биндингами ==========
 
 void CInputComponent::UnbindAction ( const std::string & actionName )
     {

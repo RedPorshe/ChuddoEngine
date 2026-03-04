@@ -57,18 +57,21 @@ void CMovementComponent::AddInputVector ( const FVector & WorldDirection, float 
 
 void CMovementComponent::AddPitchInput ( float Value )
     {
+    if (CEMath::IsZero ( Value )) return;
     PitchInputAccumulator += Value;
     bHasRotationInput = true;
     }
 
 void CMovementComponent::AddYawInput ( float Value )
     {
+    if (CEMath::IsZero ( Value )) return;
     YawInputAccumulator += Value;
     bHasRotationInput = true;
     }
 
 void CMovementComponent::AddRollInput ( float Value )
     {
+    if (CEMath::IsZero ( Value )) return;
     RollInputAccumulator += Value;
     bHasRotationInput = true;
     }
@@ -126,21 +129,23 @@ void CMovementComponent::ProcessRotationInput ( float DeltaTime )
     {
     if (!bHasRotationInput || !OwnerPawn) return;
 
+
     if (YawInputAccumulator != 0.0f)
         {
         FQuat YawRotation ( FVector::Up (), YawInputAccumulator );
-        OwnerPawn->AddActorWorldRotation ( YawRotation, true );
+        OwnerPawn->RotateActor ( YawRotation, true );
         }
 
     if (PitchInputAccumulator != 0.0f)
         {
-            // Для камеры - будет обрабатываться в наследниках
+        FQuat PitchRotation ( FVector::Right (), PitchInputAccumulator );
+        OwnerPawn->RotateActor ( PitchRotation, true );
         }
 
     if (RollInputAccumulator != 0.0f)
         {
         FQuat RollRotation ( FVector::Forward (), RollInputAccumulator );
-        OwnerPawn->AddActorWorldRotation ( RollRotation, true );
+        OwnerPawn->RotateActor ( RollRotation, true );
         }
 
     YawInputAccumulator = 0.0f;

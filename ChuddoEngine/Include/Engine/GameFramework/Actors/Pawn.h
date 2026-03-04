@@ -58,6 +58,9 @@ class CPawn : public CActor
         CController * Controller = nullptr;
         CInputComponent * m_InputComponent = nullptr;
 
+        bool bUseControllerRotaionYaw = false;
+        bool bUseControllerRotaionRoll = false;
+        bool bUseControllerRotaionPitch = false;
         // Состояние
         bool bInputEnabled = false;
     };

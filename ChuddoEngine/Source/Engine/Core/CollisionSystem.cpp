@@ -198,6 +198,7 @@ void CCollisionSystem::Update ( float deltaTime )
     // Core Collision Processing
     // ============================================================================
 
+
 void CCollisionSystem::ProcessCollisions ()
     {
         // Не обрабатываем коллизии во время выключения
@@ -237,6 +238,7 @@ void CCollisionSystem::ProcessCollisions ()
                 // Быстрая проверка каналов перед детальной коллизией
                 if (!compA->CanCollideWith ( compB ) || !compB->CanCollideWith ( compA ))
                     continue;
+
                 FCollisionInfo info {};
                 info.ComponentA = compA;
                 info.ComponentB = compB;
@@ -249,7 +251,29 @@ void CCollisionSystem::ProcessCollisions ()
                 }
             }
         }
+
+        // ВАЖНО: Обрабатываем пары, которые были в прошлом кадре, но исчезли в этом
+    for (const auto & pair : m_PreviousFrameCollisions)
+        {
+            // Если этой пары нет в текущем кадре, значит оверлап закончился
+        if (m_CurrentFrameCollisions.find ( pair ) == m_CurrentFrameCollisions.end ())
+            {
+            CBaseCollisionComponent * compA = pair.first;
+            CBaseCollisionComponent * compB = pair.second;
+
+            if (compA && compB)
+                {
+                    // Уведомляем об окончании оверлапа
+                compA->OnEndOverlap ( compB );
+                compB->OnEndOverlap ( compA );
+
+                FireCollisionEvent ( ECollisionEventType::END_OVERLAP,
+                                     FCollisionInfo { compA, compB, FVector (), FVector (), 0.0f } );
+                }
+            }
+        }
     }
+
 
     // ============================================================================
     // Capsule Collision Checks

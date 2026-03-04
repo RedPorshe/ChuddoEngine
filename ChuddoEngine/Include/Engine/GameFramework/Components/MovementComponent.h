@@ -3,7 +3,7 @@
 #include "Components/BaseComponent.h"
 
 class CPawn;
-
+class CController;
 class CMovementComponent : public CBaseComponent
     {
     CHUDDO_DECLARE_CLASS ( CMovementComponent, CBaseComponent );
@@ -15,6 +15,9 @@ class CMovementComponent : public CBaseComponent
         void InitComponent () override;
         void Tick ( float DeltaTime ) override;
         void OnBeginPlay () override;
+
+        CController * GetContoller () const { return Controller; }
+        void SetController ( CController * inController ) { Controller = inController; }
 
         // Input accumulation
         void AddInputVector ( const FVector & WorldDirection, float ScaleValue, bool bForce = false );
@@ -45,8 +48,12 @@ class CMovementComponent : public CBaseComponent
         void SetAccelerationRate (const float & value)  {  AccelerationRate = value; }
         float GetDecelerationRate () const { return DecelerationRate; }
         void SetDecelerationRate (const float & value)  { DecelerationRate = value; }
-       // void SetBrakingDeceleration ( float Decel ) { BrakingDeceleration = Decel; }
-       // float GetBrakingDeceleration () const { return BrakingDeceleration; }
+        void SetUseControllRotationYaw ( bool bUse ) { bUseControllerRotaionYaw = bUse; }
+        void SetUseControllRotationRoll ( bool bUse ) { bUseControllerRotaionRoll = bUse; }
+        void SetUseControllRotationPitch ( bool bUse ) { bUseControllerRotaionPitch = bUse; }
+        bool GetUseContollRotaionYaw () const { return bUseControllerRotaionYaw; }
+        bool GetUseContollRotaionRoll () const { return bUseControllerRotaionRoll; }
+        bool GetUseContollRotaionPitch () const { return bUseControllerRotaionPitch; }
 
     protected:
         virtual void ProcessMovementInput ( float DeltaTime );
@@ -66,12 +73,16 @@ class CMovementComponent : public CBaseComponent
         float MaxWalkSpeed = 600.0f;
         float MaxAirSpeed = 400.0f;
         float AirControl = 0.3f;
-        float AccelerationRate = 100.0f;   
-        float DecelerationRate = 10.f;
+        float AccelerationRate = 10.0f;   
+        float DecelerationRate = 7.f;
+
+        bool bUseControllerRotaionYaw = false;
+        bool bUseControllerRotaionRoll = false;
+        bool bUseControllerRotaionPitch = false;
 
         // State
         bool bIsGrounded = true;
-
+        CController * Controller = nullptr;
         // Owner
         CPawn * OwnerPawn = nullptr;
     };

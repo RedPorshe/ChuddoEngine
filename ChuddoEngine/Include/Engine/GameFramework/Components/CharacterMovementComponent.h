@@ -16,8 +16,12 @@ class CCharacterMovementComponent : public CMovementComponent
         // Прыжок
         void Jump ();
         void StopJumping ();
-        bool CanJump () const;
+        bool CanJump () const; 
 
+
+         void ProcessMovementInput ( float DeltaTime ) override;
+         void ProcessRotationInput ( float DeltaTime )override;
+        
         // Настройки прыжка
         void SetJumpHeight ( float Height ) { JumpHeight = Height; }
         float GetJumpHeight () const { return JumpHeight; }
@@ -28,13 +32,15 @@ class CCharacterMovementComponent : public CMovementComponent
         void SetCurrentJumpCount ( int Count ) { CurrentJumpCount = Count; }
         int GetCurrentJumpCount () const { return CurrentJumpCount; }
 
+       
+
         // Множитель для второго прыжка
         void SetAirJumpMultiplier ( float Multiplier ) { AirJumpMultiplier = Multiplier; }
         float GetAirJumpMultiplier () const { return AirJumpMultiplier; }
 
         bool IsJumping () const override { return bIsJumping || !bIsGrounded; }
     protected:
-
+      
         float JumpHeight = 10.0f;
         int MaxJumpCount = 1;
         int CurrentJumpCount = 0;

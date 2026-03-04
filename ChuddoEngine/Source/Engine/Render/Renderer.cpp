@@ -750,10 +750,6 @@ void CRenderer::RenderWorld ( VkCommandBuffer CommandBuffer, uint32_t ImageIndex
 	{
 	auto Info = CEngine::Get ().GetRenderInfo ();
 
-
-
-
-
 	if (!Info->IsValid ())
 		{
 		LOG_WARN ( "RenderWorld called but no valid render info" );
@@ -769,7 +765,7 @@ void CRenderer::RenderWorld ( VkCommandBuffer CommandBuffer, uint32_t ImageIndex
 
 	m_CommandManager->BeginCommandBuffer ( CommandBuffer );
 
-	// Begin render pass
+	
 	VkRenderPassBeginInfo renderPassInfo {};
 	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 	renderPassInfo.renderPass = m_RenderPassManager->GetMainRenderPass ();
@@ -786,7 +782,7 @@ void CRenderer::RenderWorld ( VkCommandBuffer CommandBuffer, uint32_t ImageIndex
 
 	vkCmdBeginRenderPass ( CommandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE );
 
-	// Set viewport and scissor
+	
 	VkViewport viewport {};
 	viewport.x = 0.0f;
 	viewport.y = 0.0f;
@@ -801,10 +797,10 @@ void CRenderer::RenderWorld ( VkCommandBuffer CommandBuffer, uint32_t ImageIndex
 	scissor.extent = extent;
 	vkCmdSetScissor ( CommandBuffer, 0, 1, &scissor );
 
-	// Render all world components
+	
 	RenderMeshes ( CommandBuffer, ImageIndex );
-	RenderDebugWireFrame ( CommandBuffer, ImageIndex );
 	RenderTerrain ( CommandBuffer, ImageIndex );
+	RenderDebugWireFrame ( CommandBuffer, ImageIndex );
 
 	vkCmdEndRenderPass ( CommandBuffer );
 	m_CommandManager->EndCommandBuffer ( CommandBuffer );

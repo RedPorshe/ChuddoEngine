@@ -13,7 +13,7 @@ CInputSystem * CInputSystem::GetInstance ()
     {
     if (s_Instance == nullptr)
         {
-        FEngineInfo Inform {};       
+        FEngineInfo Inform {};
         Inform.WindowHandle = nullptr;
         s_Instance = new CInputSystem ( Inform );
         }
@@ -138,7 +138,7 @@ void CInputSystem::ProcessControllerInput ( CController * Controller, float Delt
     InputComp->Tick ( DeltaTime );
     }
 
-    // ========== State queries ==========
+    // ========== State queries (int версии) ==========
 
 bool CInputSystem::IsKeyPressed ( int key ) const
     {
@@ -220,7 +220,7 @@ void CInputSystem::SetMousePosition ( const FVector2D & position )
         }
     }
 
-    // ========== Binding methods ==========
+    // ========== Binding methods (int версии - ядро) ==========
 
 void CInputSystem::BindAction ( const std::string & actionName, int button, EInputEvent eventType,
                                 InputActionDelegate delegate, CInputComponent * component )
@@ -261,7 +261,6 @@ void CInputSystem::BindAxis ( const std::string & axisName, int positiveKey, int
 
     LOG_DEBUG ( "[INPUTSYSTEM] Bound axis: ", axisName, " to keys: ", positiveKey, " / ", negativeKey );
     }
-
 void CInputSystem::BindMouseAxis ( const std::string & axisName, int mouseAxis,
                                    InputAxisDelegate delegate, CInputComponent * component )
     {
@@ -276,15 +275,45 @@ void CInputSystem::BindMouseAxis ( const std::string & axisName, int mouseAxis,
     m_AxisBindings[ axisName ] = binding;
 
     const char * axisStr = "";
-    switch (mouseAxis)
-        {
-            case EMouseAxis::MouseX: axisStr = "Mouse X"; break;
-            case EMouseAxis::MouseY: axisStr = "Mouse Y"; break;
-            case EMouseAxis::MouseScroll: axisStr = "Mouse Scroll"; break;
-        }
+    // Сравниваем с int значениями
+    if (mouseAxis == ToInt ( EMouseAxis::MouseX ))
+        axisStr = "Mouse X";
+    else if (mouseAxis == ToInt ( EMouseAxis::MouseY ))
+        axisStr = "Mouse Y";
+    else if (mouseAxis == ToInt ( EMouseAxis::MouseScroll ))
+        axisStr = "Mouse Scroll";
+    else
+        axisStr = "Unknown";
 
     LOG_DEBUG ( "[INPUTSYSTEM] Bound mouse axis: ", axisName, " to ", axisStr );
     }
+    // ========== Binding methods (enum class версии - обертки) ==========
+
+void CInputSystem::BindAction ( const std::string & actionName, EKeys key, EInputEvent eventType,
+                                InputActionDelegate delegate, CInputComponent * component )
+    {
+    BindAction ( actionName, ToInt ( key ), eventType, delegate, component );
+    }
+
+void CInputSystem::BindAction ( const std::string & actionName, EMouseButtons button, EInputEvent eventType,
+                                InputActionDelegate delegate, CInputComponent * component )
+    {
+    BindAction ( actionName, ToInt ( button ), eventType, delegate, component );
+    }
+
+void CInputSystem::BindAxis ( const std::string & axisName, EKeys positiveKey, EKeys negativeKey,
+                              InputAxisDelegate delegate, CInputComponent * component )
+    {
+    BindAxis ( axisName, ToInt ( positiveKey ), ToInt ( negativeKey ), delegate, component );
+    }
+
+void CInputSystem::BindMouseAxis ( const std::string & axisName, EMouseAxis mouseAxis,
+                                   InputAxisDelegate delegate, CInputComponent * component )
+    {
+    BindMouseAxis ( axisName, ToInt ( mouseAxis ), delegate, component );
+    }
+
+    // ========== Unbinding methods ==========
 
 void CInputSystem::UnbindAction ( const std::string & actionName, CInputComponent * component )
     {
@@ -330,6 +359,8 @@ void CInputSystem::UnbindAllForComponent ( CInputComponent * component )
 
     LOG_DEBUG ( "[INPUTSYSTEM] Unbound all for component: ", component->GetName () );
     }
+
+    // ========== Component registration ==========
 
 void CInputSystem::RegisterInputComponent ( CInputComponent * Component )
     {
@@ -407,7 +438,6 @@ void CInputSystem::ProcessActions ( float DeltaTime )
             }
         }
     }
-
 void CInputSystem::ProcessAxes ( float DeltaTime )
     {
     for (auto & [axisName, binding] : m_AxisBindings)
@@ -416,20 +446,44 @@ void CInputSystem::ProcessAxes ( float DeltaTime )
 
         if (binding.bIsMouseAxis)
             {
-                // Обработка осей мыши
-            switch (binding.mouseAxis)
+                // Обработка осей мыши - используем if-else вместо switch
+            if (binding.mouseAxis == ToInt ( EMouseAxis::MouseX ))
                 {
-                    case EMouseAxis::MouseX:
-                        value = m_MouseDelta.x * m_MouseSensitivity;
-                        break;
-                    case EMouseAxis::MouseY:
-                        value = m_MouseDelta.y * m_MouseSensitivity;
-                        break;
-                    case EMouseAxis::MouseScroll:
-                        value = m_ScrollDelta.y;
-                        break;
-                    default:
-                        value = 0.0f;
+                if(m_MouseDelta.x >0)
+                    {
+                    value = 1.f;
+                    }
+                else
+                    {
+                    value = -1.f;
+                    }
+             if (CEMath::IsZero ( m_MouseDelta.x ))
+                {
+                 value = 0.f;
+                }
+                }
+            else if (binding.mouseAxis == ToInt ( EMouseAxis::MouseY ))
+                {
+                if (m_MouseDelta.y > 0)
+                    {
+                    value = 1.f;
+                    }
+                else
+                    {
+                    value = -1.f;
+                    } 
+                if (CEMath::IsZero ( m_MouseDelta.y ))
+                    {
+                    value = 0.f;
+                    }
+                }
+            else if (binding.mouseAxis == ToInt ( EMouseAxis::MouseScroll ))
+                {
+                value = m_ScrollDelta.y;
+                }
+            else
+                {
+                value = 0.0f;
                 }
             }
         else
@@ -449,9 +503,7 @@ void CInputSystem::ProcessAxes ( float DeltaTime )
             binding.delegate ( value );
             }
         }
-    }
-
-    // ========== Callback handlers ==========
+    }    // ========== Callback handlers ==========
 
 void CInputSystem::HandleKey ( int key, int scancode, int action, int mods )
     {

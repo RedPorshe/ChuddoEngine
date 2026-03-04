@@ -71,8 +71,8 @@ void CTransformComponent::UpdateTransform ()
 		// Для корневого компонента:
 		// НЕ копируем relative в world, потому что world уже установлен через SetTransform()
 		// Просто нормализуем ротацию
-		m_WorldTransform.Rotation.Normalize ();
-
+		m_RelativeTransform.Rotation.Normalize ();
+		m_WorldTransform.Rotation = m_RelativeTransform.Rotation;
 		// Синхронизируем relative с world для консистентности
 		m_RelativeTransform = m_WorldTransform;
 		}
@@ -526,6 +526,7 @@ void CTransformComponent::SetRelativeScale ( float scale )
 
 void CTransformComponent::SetRotation ( const FQuat & inRotation )
 	{
+	
 	FQuat normalizedRotation = inRotation;
 	normalizedRotation.Normalize ();
 
@@ -542,7 +543,7 @@ void CTransformComponent::SetRotation ( const FQuat & inRotation )
 		{
 		m_RelativeTransform.Rotation = normalizedRotation;
 		}
-
+	
 	MarkTransformDirty ();
 	}
 
@@ -565,6 +566,7 @@ void CTransformComponent::SetRelativeRotation ( const FQuat & inRotation )
 	{
 	m_RelativeTransform.Rotation = inRotation;
 	m_RelativeTransform.Rotation.Normalize ();
+	LOG_DEBUG ( GetName (), " new relative rotation is : ", m_RelativeTransform.Rotation , " before update matrix");
 	MarkTransformDirty ();
 	}
 
@@ -633,6 +635,16 @@ FTransform CTransformComponent::GetParentTransform ()
 	// ============================================================================
 void CTransformComponent::AddLocalRotation ( const FQuat & DeltaRotation )
 	{
+
+	FQuat delta1 = DeltaRotation;
+	delta1.Normalize ();
+
+	// Проверим, не нулевая ли дельта
+	if (delta1.IsIdentity ())
+		{
+		LOG_WARN ( "Delta rotation is identity! void CTransformComponent::AddLocalRotation ( const FQuat & DeltaRotation )" );
+		return;
+		}
 		// Получаем текущее относительное вращение
 	FQuat currentRotation = m_RelativeTransform.Rotation;
 	currentRotation.Normalize ();
@@ -648,7 +660,7 @@ void CTransformComponent::AddLocalRotation ( const FQuat & DeltaRotation )
 	// Устанавливаем новое вращение
 	SetRelativeRotation ( newRotation );
 
-	LOG_DEBUG ( "[CTransformComponent] AddLocalRotation (quat): ", GetName () );
+	LOG_DEBUG ( "[CTransformComponent] AddLocalRotation (quat): ", GetName () , " ", newRotation);
 	}
 
 void CTransformComponent::AddLocalRotation ( const FVector & DeltaRotationDegrees )
@@ -677,6 +689,16 @@ void CTransformComponent::AddLocalRotation ( float PitchDegrees, float YawDegree
 	// ============================================================================
 void CTransformComponent::AddWorldRotation ( const FQuat & DeltaRotation )
 	{
+	FQuat delta = DeltaRotation;
+	delta.Normalize ();
+
+	// Проверим, не нулевая ли дельта
+	if (delta.IsIdentity ())
+		{
+		LOG_WARN ( "Delta rotation is identity!" );
+		return;
+		}
+
 	if (ParentTransform)
 		{
 		FQuat parentRotation = ParentTransform->GetRotationQuat ();

@@ -13,7 +13,8 @@ class CStaticMeshComponent : public CBaseMeshComponent
 		virtual void InitComponent () override;
 		virtual void Tick ( float DeltaTime ) override;
 		virtual void OnBeginPlay () override;
-		void CreateFallBackCube ();
+		void CreateFallBackCube ( float Size  = 10.0f  );
+		void ResizeCube ( float NewSize );
 		void CreateBolt ();
 	protected:
 	// ========== Переопределённые методы из CBaseMeshComponent ==========

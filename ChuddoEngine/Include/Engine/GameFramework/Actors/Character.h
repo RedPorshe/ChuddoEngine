@@ -19,6 +19,9 @@ class CCharacter : public CPawn
 
         void SpawnCube ();
         bool IsJumping () const;
+         void OnComponentBeginOverlap ( CBaseCollisionComponent * other ) override;
+         void OnComponentEndOverlap ( CBaseCollisionComponent * other ) override;
+         void OnComponentHit ( CBaseCollisionComponent * other )override;
 
     protected:
         void SetupPlayerInputComponent ( CInputComponent * InputComponent ) override;
@@ -26,13 +29,16 @@ class CCharacter : public CPawn
         void MoveForward ( float Value );
         void MoveUp ( float Value );
         void Jump ();
-
+        void LookUp ( float value );
+        void Turn ( float value );
+        void DebugInfo ( float dt ) override;
         CStaticMeshComponent * Mesh = nullptr;
         CCapsuleComponent * Capsule = nullptr;
         CCameraComponent * Camera = nullptr;
         CTerrainMeshComponent * terrainMesh = nullptr;
     private:
         void CreateCharacterMovementComponent ();
+        FQuat StartRotation = FQuat::Identity ();
     };
 
 REGISTER_CLASS_FACTORY ( CCharacter );

@@ -60,7 +60,7 @@ class CActor : public CObject
         virtual void BeginPlay ();
         virtual void Tick ( float deltaTime );
         virtual void EndPlay ();
-        void DebugInfo ( float deltaTime );
+        virtual void DebugInfo ( float deltaTime );
 
         void Destroy ();
         void SetPendingToDestroy ();
@@ -72,6 +72,8 @@ class CActor : public CObject
         CLevel * GetLevel () const;
         CWorld * GetWorld () const;
 
+        void InitializeAllComponents ();
+            
         // ------------------------------------------------------------------------
         // Component Management
         // ------------------------------------------------------------------------
@@ -154,8 +156,8 @@ class CActor : public CObject
         void AddActorWorldOffset ( const FVector & DeltaLocation, bool Interpolate = false );
         void AddActorLocalOffset ( const FVector & DeltaLocation, bool Interpolate = false );
 
-        void AddActorWorldRotation ( const FQuat & DeltaRotation, bool Interpolate = false );
-        void AddActorLocalRotation ( const FQuat & DeltaRotation, bool Interpolate = false );
+       
+       
 
         // ------------------------------------------------------------------------
         // Teleportation (Immediate)

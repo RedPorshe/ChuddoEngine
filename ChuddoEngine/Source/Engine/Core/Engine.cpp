@@ -100,6 +100,7 @@ bool CEngine::Initialize ()
 
 	// Устанавливаем все колбэки через диспетчер
 	glfwSetKeyCallback ( Info.WindowHandle, FGLFWDispatcher::KeyCallback );
+	
 	glfwSetMouseButtonCallback ( Info.WindowHandle, FGLFWDispatcher::MouseButtonCallback );
 	glfwSetCursorPosCallback ( Info.WindowHandle, FGLFWDispatcher::CursorPositionCallback );
 	glfwSetScrollCallback ( Info.WindowHandle, FGLFWDispatcher::ScrollCallback );

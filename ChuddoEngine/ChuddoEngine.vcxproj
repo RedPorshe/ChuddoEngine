@@ -240,6 +240,7 @@
     <ClInclude Include="Include\Engine\Core\InputSystem.h" />
     <ClInclude Include="Include\Engine\Core\Engine.h" />
     <ClInclude Include="Include\CoreMinimal.h" />
+    <ClInclude Include="Include\Engine\Core\KeyDefines.h" />
     <ClInclude Include="Include\Engine\Core\ObjectFactory.h" />
     <ClInclude Include="Include\Engine\GameFramework\Actors\Actor.h" />
     <ClInclude Include="Include\Engine\GameFramework\Actors\AIController.h" />

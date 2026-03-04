@@ -96,77 +96,99 @@ void CStaticMeshComponent::GenerateIndices ( std::vector<uint32_t> & OutIndices 
         }
     }
 
-void CStaticMeshComponent::CreateFallBackCube ()
+void CStaticMeshComponent::CreateFallBackCube ( float Size /* = 10.0f */ )
     {
+     // Очищаем старые данные
     StaticMesh_vertices.clear ();
     StaticMesh_indices.clear ();
 
-    // Вершины увеличенного куба (от -10 до 10) с ПРАВИЛЬНЫМИ нормалями
-    // Передняя грань (Z+)
-    StaticMesh_vertices.push_back ( { {-10.f, -10.f,  10.f}, {0,0,1}, {1,0,0}, {0,0} } ); // 0: красный
-    StaticMesh_vertices.push_back ( { { 10.f, -10.f,  10.f}, {0,0,1}, {0,1,0}, {1,0} } ); // 1: зелёный
-    StaticMesh_vertices.push_back ( { { 10.f,  10.f,  10.f}, {0,0,1}, {0,0,1}, {1,1} } ); // 2: синий
-    StaticMesh_vertices.push_back ( { {-10.f,  10.f,  10.f}, {0,0,1}, {1,1,0}, {0,1} } ); // 3: жёлтый
+    float h = Size; // половина размера (от -h до +h)
 
-    // Задняя грань (Z-)
-    StaticMesh_vertices.push_back ( { {-10.f, -10.f, -10.f}, {0,0,-1}, {0,1,1}, {1,0} } ); // 4: голубой
-    StaticMesh_vertices.push_back ( { { 10.f, -10.f, -10.f}, {0,0,-1}, {1,0,1}, {0,0} } ); // 5: розовый
-    StaticMesh_vertices.push_back ( { { 10.f,  10.f, -10.f}, {0,0,-1}, {1,1,1}, {0,1} } ); // 6: белый
-    StaticMesh_vertices.push_back ( { {-10.f,  10.f, -10.f}, {0,0,-1}, {0.5,0.5,0.5}, {1,1} } ); // 7: серый
+    // ============================================================================
+    // Вершины куба (24 вершины - по 4 на каждую грань)
+    // Каждая вершина имеет: позицию, нормаль, цвет, UV
+    // ============================================================================
 
-    // Левая грань (X-)
-    StaticMesh_vertices.push_back ( { {-10.f, -10.f, -10.f}, {-1,0,0}, {1,0,0}, {0,0} } ); // 8: красный
-    StaticMesh_vertices.push_back ( { {-10.f, -10.f,  10.f}, {-1,0,0}, {0,1,0}, {1,0} } ); // 9: зелёный
-    StaticMesh_vertices.push_back ( { {-10.f,  10.f,  10.f}, {-1,0,0}, {0,0,1}, {1,1} } ); // 10: синий
-    StaticMesh_vertices.push_back ( { {-10.f,  10.f, -10.f}, {-1,0,0}, {1,1,0}, {0,1} } ); // 11: жёлтый
+    // Передняя грань (Z+) - нормаль (0,0,1)
+    StaticMesh_vertices.push_back ( { {-h, -h,  h}, {0,0,1}, {1,0,0}, {0,0} } ); // 0: красный
+    StaticMesh_vertices.push_back ( { { h, -h,  h}, {0,0,1}, {0,1,0}, {1,0} } ); // 1: зелёный
+    StaticMesh_vertices.push_back ( { { h,  h,  h}, {0,0,1}, {0,0,1}, {1,1} } ); // 2: синий
+    StaticMesh_vertices.push_back ( { {-h,  h,  h}, {0,0,1}, {1,1,0}, {0,1} } ); // 3: жёлтый
 
-    // Правая грань (X+)
-    StaticMesh_vertices.push_back ( { { 10.f, -10.f, -10.f}, {1,0,0}, {0,1,1}, {1,0} } ); // 12: голубой
-    StaticMesh_vertices.push_back ( { { 10.f, -10.f,  10.f}, {1,0,0}, {1,0,1}, {0,0} } ); // 13: розовый
-    StaticMesh_vertices.push_back ( { { 10.f,  10.f,  10.f}, {1,0,0}, {1,1,1}, {0,1} } ); // 14: белый
-    StaticMesh_vertices.push_back ( { { 10.f,  10.f, -10.f}, {1,0,0}, {0.5,0.5,0.5}, {1,1} } ); // 15: серый
+    // Задняя грань (Z-) - нормаль (0,0,-1)
+    StaticMesh_vertices.push_back ( { {-h, -h, -h}, {0,0,-1}, {0,1,1}, {1,0} } ); // 4: голубой
+    StaticMesh_vertices.push_back ( { { h, -h, -h}, {0,0,-1}, {1,0,1}, {0,0} } ); // 5: розовый
+    StaticMesh_vertices.push_back ( { { h,  h, -h}, {0,0,-1}, {1,1,1}, {0,1} } ); // 6: белый
+    StaticMesh_vertices.push_back ( { {-h,  h, -h}, {0,0,-1}, {0.5,0.5,0.5}, {1,1} } ); // 7: серый
 
-    // Нижняя грань (Y-)
-    StaticMesh_vertices.push_back ( { {-10.f, -10.f, -10.f}, {0,-1,0}, {1,0,0}, {0,0} } ); // 16: красный
-    StaticMesh_vertices.push_back ( { { 10.f, -10.f, -10.f}, {0,-1,0}, {0,1,0}, {1,0} } ); // 17: зелёный
-    StaticMesh_vertices.push_back ( { { 10.f, -10.f,  10.f}, {0,-1,0}, {0,0,1}, {1,1} } ); // 18: синий
-    StaticMesh_vertices.push_back ( { {-10.f, -10.f,  10.f}, {0,-1,0}, {1,1,0}, {0,1} } ); // 19: жёлтый
+    // Левая грань (X-) - нормаль (-1,0,0)
+    StaticMesh_vertices.push_back ( { {-h, -h, -h}, {-1,0,0}, {1,0,0}, {0,0} } ); // 8: красный
+    StaticMesh_vertices.push_back ( { {-h, -h,  h}, {-1,0,0}, {0,1,0}, {1,0} } ); // 9: зелёный
+    StaticMesh_vertices.push_back ( { {-h,  h,  h}, {-1,0,0}, {0,0,1}, {1,1} } ); // 10: синий
+    StaticMesh_vertices.push_back ( { {-h,  h, -h}, {-1,0,0}, {1,1,0}, {0,1} } ); // 11: жёлтый
 
-    // Верхняя грань (Y+)
-    StaticMesh_vertices.push_back ( { {-10.f,  10.f, -10.f}, {0,1,0}, {0,1,1}, {1,0} } ); // 20: голубой
-    StaticMesh_vertices.push_back ( { { 10.f,  10.f, -10.f}, {0,1,0}, {1,0,1}, {0,0} } ); // 21: розовый
-    StaticMesh_vertices.push_back ( { { 10.f,  10.f,  10.f}, {0,1,0}, {1,1,1}, {0,1} } ); // 22: белый
-    StaticMesh_vertices.push_back ( { {-10.f,  10.f,  10.f}, {0,1,0}, {0.5,0.5,0.5}, {1,1} } ); // 23: серый
+    // Правая грань (X+) - нормаль (1,0,0)
+    StaticMesh_vertices.push_back ( { { h, -h, -h}, {1,0,0}, {0,1,1}, {1,0} } ); // 12: голубой
+    StaticMesh_vertices.push_back ( { { h, -h,  h}, {1,0,0}, {1,0,1}, {0,0} } ); // 13: розовый
+    StaticMesh_vertices.push_back ( { { h,  h,  h}, {1,0,0}, {1,1,1}, {0,1} } ); // 14: белый
+    StaticMesh_vertices.push_back ( { { h,  h, -h}, {1,0,0}, {0.5,0.5,0.5}, {1,1} } ); // 15: серый
 
+    // Нижняя грань (Y-) - нормаль (0,-1,0)
+    StaticMesh_vertices.push_back ( { {-h, -h, -h}, {0,-1,0}, {1,0,0}, {0,0} } ); // 16: красный
+    StaticMesh_vertices.push_back ( { { h, -h, -h}, {0,-1,0}, {0,1,0}, {1,0} } ); // 17: зелёный
+    StaticMesh_vertices.push_back ( { { h, -h,  h}, {0,-1,0}, {0,0,1}, {1,1} } ); // 18: синий
+    StaticMesh_vertices.push_back ( { {-h, -h,  h}, {0,-1,0}, {1,1,0}, {0,1} } ); // 19: жёлтый
+
+    // Верхняя грань (Y+) - нормаль (0,1,0)
+    StaticMesh_vertices.push_back ( { {-h,  h, -h}, {0,1,0}, {0,1,1}, {1,0} } ); // 20: голубой
+    StaticMesh_vertices.push_back ( { { h,  h, -h}, {0,1,0}, {1,0,1}, {0,0} } ); // 21: розовый
+    StaticMesh_vertices.push_back ( { { h,  h,  h}, {0,1,0}, {1,1,1}, {0,1} } ); // 22: белый
+    StaticMesh_vertices.push_back ( { {-h,  h,  h}, {0,1,0}, {0.5,0.5,0.5}, {1,1} } ); // 23: серый
+
+    // ============================================================================
     // Индексы для 6 граней (по 2 треугольника на грань)
-    // Передняя грань (Z+)
+    // ============================================================================
+
+    // Передняя грань (Z+) - индексы 0-3
     StaticMesh_indices.push_back ( 0 ); StaticMesh_indices.push_back ( 1 ); StaticMesh_indices.push_back ( 2 );
     StaticMesh_indices.push_back ( 0 ); StaticMesh_indices.push_back ( 2 ); StaticMesh_indices.push_back ( 3 );
 
-    // Задняя грань (Z-)
+    // Задняя грань (Z-) - индексы 4-7
     StaticMesh_indices.push_back ( 4 ); StaticMesh_indices.push_back ( 5 ); StaticMesh_indices.push_back ( 6 );
     StaticMesh_indices.push_back ( 4 ); StaticMesh_indices.push_back ( 6 ); StaticMesh_indices.push_back ( 7 );
 
-    // Левая грань (X-)
+    // Левая грань (X-) - индексы 8-11
     StaticMesh_indices.push_back ( 8 ); StaticMesh_indices.push_back ( 9 ); StaticMesh_indices.push_back ( 10 );
     StaticMesh_indices.push_back ( 8 ); StaticMesh_indices.push_back ( 10 ); StaticMesh_indices.push_back ( 11 );
 
-    // Правая грань (X+)
+    // Правая грань (X+) - индексы 12-15
     StaticMesh_indices.push_back ( 12 ); StaticMesh_indices.push_back ( 13 ); StaticMesh_indices.push_back ( 14 );
     StaticMesh_indices.push_back ( 12 ); StaticMesh_indices.push_back ( 14 ); StaticMesh_indices.push_back ( 15 );
 
-    // Нижняя грань (Y-)
+    // Нижняя грань (Y-) - индексы 16-19
     StaticMesh_indices.push_back ( 16 ); StaticMesh_indices.push_back ( 17 ); StaticMesh_indices.push_back ( 18 );
     StaticMesh_indices.push_back ( 16 ); StaticMesh_indices.push_back ( 18 ); StaticMesh_indices.push_back ( 19 );
 
-    // Верхняя грань (Y+)
+    // Верхняя грань (Y+) - индексы 20-23
     StaticMesh_indices.push_back ( 20 ); StaticMesh_indices.push_back ( 21 ); StaticMesh_indices.push_back ( 22 );
     StaticMesh_indices.push_back ( 20 ); StaticMesh_indices.push_back ( 22 ); StaticMesh_indices.push_back ( 23 );
+
     SetCollisionEnabled ();
 
     LOG_DEBUG ( "[", GetName (), "] Created fallback cube with ",
                 StaticMesh_vertices.size (), " vertices and ",
                 StaticMesh_indices.size (), " indices" );
+    }
+
+void CStaticMeshComponent::ResizeCube ( float NewSize )
+    {
+    CreateFallBackCube ( NewSize );
+
+    // Пересоздаём рендер ресурсы если компонент уже инициализирован
+    if (m_bRenderResourcesCreated)
+        {
+        CreateRenderResources ();
+        }
     }
 
 void CStaticMeshComponent::CreateBolt ()

@@ -20,7 +20,7 @@ class CTransformComponent : public CBaseComponent
 
         void UpdateTransform ();
         void MarkTransformDirty ();
-        bool IdDyrty () const { return bIsTransformDirty; }
+        bool IdDirty () const { return bIsTransformDirty; }
         void SetAutoGenerateCollisionComponent ( bool value = true, const FCollisionChannel & inChannel = FCollisionChannel::Static () );
 
         // Локальное вращение (относительно собственных осей)
