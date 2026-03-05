@@ -1,6 +1,6 @@
 #include "Components/InputComponent.h"
-#include "Actors/Pawn.h"
-#include "Actors/PlayerController.h"
+#include "Actors/Pawns/Pawn.h"
+#include "Actors/Controllers/PlayerController.h"
 #include "Core/InputSystem.h"
 #include <GLFW/glfw3.h>
 #include <algorithm>

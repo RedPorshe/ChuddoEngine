@@ -167,15 +167,15 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Source\Engine\GameFramework\Actors\AIController.cpp" />
-    <ClCompile Include="Source\Engine\GameFramework\Actors\PlayerController.cpp" />
+    <ClCompile Include="Source\Engine\GameFramework\Actors\Controllers\AIController.cpp" />
+    <ClCompile Include="Source\Engine\GameFramework\Actors\Controllers\PlayerController.cpp" />
     <ClCompile Include="Source\Engine\GameFramework\Components\CharacterMovementComponent.cpp" />
     <ClCompile Include="Source\Engine\GameFramework\Components\MovementComponent.cpp" />
     <ClCompile Include="Include\Engine\Render\Vulkan\Managers\WireframePipeline.cpp" />
     <ClCompile Include="Source\Engine\Render\Vulkan\Managers\DescriptorManager.cpp" />
     <ClCompile Include="Source\Engine\Render\Vulkan\VertexStructs\TerrainVertex.cpp" />
     <ClCompile Include="Source\Engine\Render\Vulkan\VertexStructs\MeshVertex.cpp" />
-    <ClCompile Include="Source\Engine\GameFramework\Actors\Character.cpp" />
+    <ClCompile Include="Source\Engine\GameFramework\Actors\Pawns\Character.cpp" />
     <ClCompile Include="Source\Engine\GameFramework\Components\Meshes\BaseMeshComponent.cpp" />
     <ClCompile Include="Source\Engine\GameFramework\Components\Meshes\StaticMeshComponent.cpp" />
     <ClCompile Include="Source\Engine\GameFramework\Components\Meshes\TerrainMeshComponent.cpp" />
@@ -195,8 +195,8 @@
     <ClCompile Include="Include\Test.cpp" />
     <ClCompile Include="Source\Engine\Core\InputSystem.cpp" />
     <ClCompile Include="Source\Engine\GameFramework\Actors\HUD.cpp" />
-    <ClCompile Include="Source\Engine\GameFramework\Actors\Pawn.cpp" />
-    <ClCompile Include="Source\Engine\GameFramework\Actors\Controller.cpp" />
+    <ClCompile Include="Source\Engine\GameFramework\Actors\Pawns\Pawn.cpp" />
+    <ClCompile Include="Source\Engine\GameFramework\Actors\Controllers\Controller.cpp" />
     <ClCompile Include="Source\Engine\GameFramework\Actors\PlayerStart.cpp" />
     <ClCompile Include="Source\Engine\GameFramework\Actors\TerrainActor.cpp" />
     <ClCompile Include="Source\Engine\GameFramework\Camera\CameraComponent.cpp" />
@@ -243,12 +243,12 @@
     <ClInclude Include="Include\Engine\Core\KeyDefines.h" />
     <ClInclude Include="Include\Engine\Core\ObjectFactory.h" />
     <ClInclude Include="Include\Engine\GameFramework\Actors\Actor.h" />
-    <ClInclude Include="Include\Engine\GameFramework\Actors\AIController.h" />
-    <ClInclude Include="Include\Engine\GameFramework\Actors\Character.h" />
+    <ClInclude Include="Include\Engine\GameFramework\Actors\Controllers\AIController.h" />
+    <ClInclude Include="Include\Engine\GameFramework\Actors\Pawns\Character.h" />
     <ClInclude Include="Include\Engine\GameFramework\Actors\HUD.h" />
-    <ClInclude Include="Include\Engine\GameFramework\Actors\Pawn.h" />
-    <ClInclude Include="Include\Engine\GameFramework\Actors\Controller.h" />
-    <ClInclude Include="Include\Engine\GameFramework\Actors\PlayerController.h" />
+    <ClInclude Include="Include\Engine\GameFramework\Actors\Pawns\Pawn.h" />
+    <ClInclude Include="Include\Engine\GameFramework\Actors\Controllers\Controller.h" />
+    <ClInclude Include="Include\Engine\GameFramework\Actors\Controllers\PlayerController.h" />
     <ClInclude Include="Include\Engine\GameFramework\Actors\PlayerStart.h" />
     <ClInclude Include="Include\Engine\GameFramework\Actors\TerrainActor.h" />
     <ClInclude Include="Include\Engine\GameFramework\Camera\CameraComponent.h" />

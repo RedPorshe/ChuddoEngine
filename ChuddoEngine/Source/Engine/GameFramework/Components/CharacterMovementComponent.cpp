@@ -1,6 +1,6 @@
 #include "Components/CharacterMovementComponent.h"
 #include "Components/GravityComponent.h"
-#include "Actors/Character.h"
+#include "Actors/Pawns/Character.h"
 #include "Camera/CameraComponent.h"
 #include "Components/TransformComponent.h"
 #include "Components/Collisions/CapsuleComponent.h"

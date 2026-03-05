@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Actors/Controller.h"
+#include "Actors/Controllers/Controller.h"
 
 class CPlayerController : public CController
     {

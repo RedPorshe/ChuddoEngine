@@ -1,4 +1,5 @@
 #include "Camera/CameraComponent.h"
+#include "Components/Collisions/SphereComponent.h"
 #include "Actors/Actor.h"
 #include "Render/RenderInfo.h"
 #include "Core/Engine.h"
@@ -8,6 +9,9 @@ CCameraComponent::CCameraComponent ( CObject * inOwner, const std::string & inDi
 	: Super ( inOwner, inDisplayName )
 	{
 	m_CameraInfo.Clear ();
+
+
+
 	}
 
 CCameraComponent::~CCameraComponent ()
@@ -21,6 +25,7 @@ void CCameraComponent::InitComponent ()
 void CCameraComponent::Tick ( float DeltaTime )
 	{
 	Super::Tick ( DeltaTime );
+
 	UpdateInfo ();
 	}
 
@@ -80,4 +85,6 @@ void CCameraComponent::UpdateInfo ()
 	m_CameraInfo.ViewMatrix = GetViewMatrix ();
 	m_CameraInfo.ProjectionMatrix = GetProjectionMatrix ( aspectRatio );
 	}
+
+
 

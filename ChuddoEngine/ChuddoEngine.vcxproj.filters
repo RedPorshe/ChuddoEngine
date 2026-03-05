@@ -84,7 +84,7 @@
     <ClCompile Include="Source\Engine\GameFramework\Components\Collisions\SphereComponent.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Engine\GameFramework\Actors\Pawn.cpp">
+    <ClCompile Include="Source\Engine\GameFramework\Actors\Pawns\Pawn.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\GameFramework\Components\InputComponent.cpp">
@@ -96,7 +96,7 @@
     <ClCompile Include="Source\Engine\GameFramework\GameMode.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Engine\GameFramework\Actors\Controller.cpp">
+    <ClCompile Include="Source\Engine\GameFramework\Actors\Controllers\Controller.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\GameFramework\Actors\PlayerStart.cpp">
@@ -177,7 +177,7 @@
     <ClCompile Include="Source\Engine\GameFramework\Components\Meshes\StaticMeshComponent.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Engine\GameFramework\Actors\Character.cpp">
+    <ClCompile Include="Source\Engine\GameFramework\Actors\Pawns\Character.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Include\Engine\Render\Vulkan\Managers\WireframePipeline.cpp">
@@ -198,10 +198,10 @@
     <ClCompile Include="Source\Engine\GameFramework\Components\CharacterMovementComponent.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Engine\GameFramework\Actors\PlayerController.cpp">
+    <ClCompile Include="Source\Engine\GameFramework\Actors\Controllers\PlayerController.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Engine\GameFramework\Actors\AIController.cpp">
+    <ClCompile Include="Source\Engine\GameFramework\Actors\Controllers\AIController.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine\Render\Vulkan\Managers\DescriptorManager.cpp">
@@ -281,7 +281,7 @@
     <ClInclude Include="Include\Engine\GameFramework\Components\Collisions\SphereComponent.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="Include\Engine\GameFramework\Actors\Pawn.h">
+    <ClInclude Include="Include\Engine\GameFramework\Actors\Pawns\Pawn.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="Include\Engine\GameFramework\Components\InputComponent.h">
@@ -293,7 +293,7 @@
     <ClInclude Include="Include\Engine\GameFramework\GameMode.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="Include\Engine\GameFramework\Actors\Controller.h">
+    <ClInclude Include="Include\Engine\GameFramework\Actors\Controllers\Controller.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="Include\Engine\GameFramework\Actors\HUD.h">
@@ -386,7 +386,7 @@
     <ClInclude Include="Include\Engine\GameFramework\Components\Meshes\StaticMeshComponent.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="Include\Engine\GameFramework\Actors\Character.h">
+    <ClInclude Include="Include\Engine\GameFramework\Actors\Pawns\Character.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="Include\Engine\Render\Vulkan\Managers\WireframePipeline.h">
@@ -410,10 +410,10 @@
     <ClInclude Include="Include\Engine\GameFramework\Components\CharacterMovementComponent.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="Include\Engine\GameFramework\Actors\PlayerController.h">
+    <ClInclude Include="Include\Engine\GameFramework\Actors\Controllers\PlayerController.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="Include\Engine\GameFramework\Actors\AIController.h">
+    <ClInclude Include="Include\Engine\GameFramework\Actors\Controllers\AIController.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="Include\Engine\Render\Vulkan\Managers\DescriptorManager.h">

@@ -1,6 +1,6 @@
 #include "Actors/HUD.h"
-#include "Actors/PlayerController.h"
-#include "Actors/Pawn.h"
+#include "Actors/Controllers/PlayerController.h"
+#include "Actors/Pawns/Pawn.h"
 #include "World/World.h"
 #include "Components/TransformComponent.h"
 #include "Components/GravityComponent.h"

@@ -1,5 +1,5 @@
 #pragma once
-#include "Actors/Pawn.h"
+#include "Actors/Pawns/Pawn.h"
 
 class CCapsuleComponent;
 class CStaticMeshComponent;
@@ -17,7 +17,7 @@ class CCharacter : public CPawn
         void Tick ( float DeltaTime ) override;
         void EndPlay () override;
 
-        void SpawnCube ();
+       
         bool IsJumping () const;
          void OnComponentBeginOverlap ( CBaseCollisionComponent * other ) override;
          void OnComponentEndOverlap ( CBaseCollisionComponent * other ) override;
@@ -25,16 +25,13 @@ class CCharacter : public CPawn
 
     protected:
         void SetupPlayerInputComponent ( CInputComponent * InputComponent ) override;
-        void MoveRight ( float value );
-        void MoveForward ( float Value );
-        void MoveUp ( float Value );
-        void Jump ();
-        void LookUp ( float value );
-        void Turn ( float value );
+      
+        void StartJump ();
+      
         void DebugInfo ( float dt ) override;
-        CStaticMeshComponent * Mesh = nullptr;
+        CStaticMeshComponent/*CSkeletalMeshComponent*/ * Mesh = nullptr; //class for mesh instance
         CCapsuleComponent * Capsule = nullptr;
-        CCameraComponent * Camera = nullptr;
+     
         CTerrainMeshComponent * terrainMesh = nullptr;
     private:
         void CreateCharacterMovementComponent ();

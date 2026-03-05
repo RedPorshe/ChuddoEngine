@@ -1,5 +1,5 @@
-#include "Actors/Controller.h"
-#include "Actors/Pawn.h"
+#include "Actors/Controllers/Controller.h"
+#include "Actors/Pawns/Pawn.h"
 #include "Actors/HUD.h"
 #include "GameFramework/GameMode.h"
 #include "Components/TransformComponent.h"

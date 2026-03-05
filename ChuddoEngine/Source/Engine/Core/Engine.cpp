@@ -14,9 +14,9 @@
 #include "Core/CollisionSystem.h"
 #include "Core/GLFWDispatcher.h"  
 #include "Actors/TerrainActor.h"
-#include "Actors/PlayerController.h"
-#include "Actors/Character.h"
-#include "Actors/Pawn.h"
+#include "Actors/Controllers/PlayerController.h"
+#include "Actors/Pawns/Character.h"
+#include "Actors/Pawns/Pawn.h"
 #include "Render/RenderInfo.h"
 #include "Render/Renderer.h"
 #include <iostream>
@@ -305,7 +305,7 @@ void CEngine::CreateTestWorld ()
 		LOG_DEBUG ( "Total actors after spawn: ", level->GetNumActors () );
 
 		auto gameMode = world->CreateGameMode<CGameMode> ( "SuperGameMode" );
-		gameMode->SetDefaultPawnClass ( "CCharacter" );
+		gameMode->SetDefaultPawnClass ( "CFirstPersonCharacter" );
 		world->BeginPlay ();
 		}
 	}

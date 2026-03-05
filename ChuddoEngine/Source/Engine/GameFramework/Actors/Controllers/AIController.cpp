@@ -1,5 +1,5 @@
-#include "Actors/AIController.h"
-#include "Actors/Pawn.h"
+#include "Actors/Controllers/AIController.h"
+#include "Actors/Pawns/Pawn.h"
 #include "Components/MovementComponent.h"
 
 CAIController::CAIController ( CObject * inOwner, const std::string & inDisplayName )

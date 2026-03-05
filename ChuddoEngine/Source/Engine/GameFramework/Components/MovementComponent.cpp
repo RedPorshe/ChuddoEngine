@@ -1,5 +1,5 @@
 #include "Components/MovementComponent.h"
-#include "Actors/Pawn.h"
+#include "Actors/Pawns/Pawn.h"
 #include "Components/GravityComponent.h"
 #include "Utils/Math/CE_MathHelpers.h"
 

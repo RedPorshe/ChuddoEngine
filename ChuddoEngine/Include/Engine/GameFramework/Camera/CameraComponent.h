@@ -3,6 +3,7 @@
 #include "Components/TransformComponent.h"
 #include "Render/RenderInfo.h"
 
+class CSphereComponent;
 
 
 class CCameraComponent : public CTransformComponent
@@ -33,6 +34,9 @@ class CCameraComponent : public CTransformComponent
         float GetNearClipPlane () const { return NearClipPlane; }
         float GetFarClipPlane () const { return FarClipPlane; }
         void UpdateInfo ();
+
+       
+
     protected:
         bool bIsVisible = true;
         // Camera-specific properties
@@ -40,6 +44,9 @@ class CCameraComponent : public CTransformComponent
         float NearClipPlane = 0.1f;
         float FarClipPlane = 5000.0f;
         FCameraInfo m_CameraInfo;
+      
+       
+      
     };
 
 REGISTER_CLASS_FACTORY ( CCameraComponent );

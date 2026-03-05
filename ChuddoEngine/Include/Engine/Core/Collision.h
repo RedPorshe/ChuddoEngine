@@ -14,11 +14,11 @@ enum class ECollisionShape : uint8_t
 	CAPSULE,
 	CYLINDER,
 	CONE,
-
+	
 
 	COMPOUND,
 	MESH,
-	TERRAIN,       // Ландшафт (heightfield)
+	TERRAIN,       
 
 
 	RAY,
@@ -38,9 +38,9 @@ enum class ECollisionChannel : uint16_t
 	Vehicle = 5,
 	Trigger = 6,
 	Interactable = 7,
-
+	Camera = 8,
 	// Пользовательские каналы начинаются здесь
-	CustomStart = 8,
+	CustomStart = 9,
 
 	// Максимальное количество каналов
 	MaxChannels = 64

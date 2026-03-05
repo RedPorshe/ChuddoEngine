@@ -1,9 +1,9 @@
 #include "Core/InputSystem.h"
 #include "Core/EngineInfo.h"
 #include "Components/InputComponent.h"
-#include "Actors/PlayerController.h"
+#include "Actors/Controllers/PlayerController.h"
 #include "Core/Engine.h"
-#include "Actors/Pawn.h"
+#include "Actors/Pawns/Pawn.h"
 #include <GLFW/glfw3.h>
 #include <algorithm>
 
