@@ -1,5 +1,7 @@
 #pragma once
 #include "Actors/Pawns/Pawn.h"
+#include "Components/InputComponent.h"
+
 
 class CCapsuleComponent;
 class CStaticMeshComponent;

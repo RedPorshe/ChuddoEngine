@@ -19,6 +19,9 @@ class CFirstPersonCharacter : public CCharacter
 	protected:
 		void SetupPlayerInputComponent ( CInputComponent * InputComponent ) override;
 		void DebugInfo ( float dt ) override;
+		void MoveForward ( float val );
+		void MoveRight ( float val );
+		void Jump ();
 
 		CCameraComponent * Camera = nullptr;
 	};
